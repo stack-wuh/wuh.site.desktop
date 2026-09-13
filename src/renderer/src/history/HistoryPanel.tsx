@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { CommitSummary, GitStatusSummary } from '@shared/types'
+import { Button } from '../components/ui/Button'
+import { Input } from '../components/ui/Input'
+import { Empty } from '../components/ui/Empty'
+import { uiConfirm } from '../components/ui/Dialog'
 import { useWorkspaceStore } from '../store'
 
 export function GitPanel(): React.JSX.Element {
@@ -44,8 +48,7 @@ export function GitPanel(): React.JSX.Element {
 
   const commit = (): void =>
     void run(async () => {
-      const msg =
-        message.trim() || `docs: update ${activePath ?? 'workspace'}`
+      const msg = message.trim() || `docs: update ${activePath ?? 'workspace'}`
       const paths = scope === 'file' && activePath ? [activePath] : undefined
       await window.api.gitCommit(msg, paths)
       setMessage('')
@@ -78,7 +81,13 @@ export function GitPanel(): React.JSX.Element {
         setError(plan.reason)
         return
       }
-      if (!confirm(`确认回退「${activePath}」？\n${plan.reason}`)) return
+      const ok = await uiConfirm({
+        title: '回退文件',
+        message: `确认回退「${activePath}」？\n${plan.reason}`,
+        okText: '回退',
+        danger: true
+      })
+      if (!ok) return
       await window.api.executeRevert(plan)
       await refresh()
     })
@@ -96,7 +105,13 @@ export function GitPanel(): React.JSX.Element {
         setError('action' in plan ? plan.reason : '无法回退')
         return
       }
-      if (!confirm(`确认 revert 提交 ${hash.slice(0, 7)}？\n将生成一个反向提交。`)) return
+      const ok = await uiConfirm({
+        title: 'Revert 提交',
+        message: `确认 revert 提交 ${hash.slice(0, 7)}？\n将生成一个反向提交，不改写远端历史。`,
+        okText: 'Revert',
+        danger: true
+      })
+      if (!ok) return
       await window.api.executeRevert(plan)
       await refresh()
     })
@@ -110,40 +125,49 @@ export function GitPanel(): React.JSX.Element {
     <div className="git-panel">
       <div className="panel-section">
         <div className="section-head">
-          <span>{status ? `${status.branch ?? '-'} ↑${status.ahead} ↓${status.behind}` : '…'}</span>
+          <span>
+            {status ? `${status.branch ?? '-'} ↑${status.ahead} ↓${status.behind}` : '…'}
+          </span>
           <span className="scope-toggle">
-            <button className={scope === 'all' ? 'active' : ''} onClick={() => setScope('all')}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={scope === 'all' ? 'active' : ''}
+              onClick={() => setScope('all')}
+            >
               全仓
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
               className={scope === 'file' ? 'active' : ''}
               disabled={!activePath}
               onClick={() => setScope('file')}
             >
               当前文件
-            </button>
+            </Button>
           </span>
         </div>
         <div className="commit-box">
-          <input
+          <Input
             placeholder="提交信息（留空自动生成）"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
           />
-          <button disabled={busy} onClick={commit}>
+          <Button variant="primary" disabled={busy} onClick={commit}>
             Commit
-          </button>
+          </Button>
         </div>
         <div className="row-actions">
-          <button disabled={busy} onClick={push}>
+          <Button disabled={busy} onClick={push}>
             Push ↑
-          </button>
-          <button disabled={busy} onClick={pull}>
+          </Button>
+          <Button disabled={busy} onClick={pull}>
             Pull ↓
-          </button>
-          <button disabled={busy || !activePath} onClick={revertFile}>
+          </Button>
+          <Button variant="danger" disabled={busy || !activePath} onClick={revertFile}>
             回退当前文件
-          </button>
+          </Button>
         </div>
         {error && <div className="error-text">{error}</div>}
         {status && status.files.length > 0 && (
@@ -161,20 +185,28 @@ export function GitPanel(): React.JSX.Element {
         <div className="section-head">
           <span>历史{logPath ? ` · ${logPath}` : ''}</span>
         </div>
-        <ul className="log-list">
-          {log.map((c) => (
-            <li key={c.hash}>
-              <div className="log-line">
-                <code>{c.shortHash}</code>
-                <span className="log-msg" title={c.message}>
-                  {c.message}
-                </span>
-                <button onClick={() => showDiff(c.hash)}>diff</button>
-                <button onClick={() => revertCommit(c.hash)}>revert</button>
-              </div>
-            </li>
-          ))}
-        </ul>
+        {log.length === 0 ? (
+          <Empty title="暂无提交历史" />
+        ) : (
+          <ul className="log-list">
+            {log.map((c) => (
+              <li key={c.hash}>
+                <div className="log-line">
+                  <code>{c.shortHash}</code>
+                  <span className="log-msg" title={c.message}>
+                    {c.message}
+                  </span>
+                  <Button size="sm" variant="ghost" onClick={() => showDiff(c.hash)}>
+                    diff
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => revertCommit(c.hash)}>
+                    revert
+                  </Button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
         {diff && <pre className="diff-view">{diff}</pre>}
       </div>
     </div>

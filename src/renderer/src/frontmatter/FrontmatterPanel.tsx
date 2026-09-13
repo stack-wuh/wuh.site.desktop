@@ -4,6 +4,8 @@ import {
   stringifyFrontmatter,
   type PostMeta
 } from '@shared/frontmatter'
+import { Button } from '../components/ui/Button'
+import { Input } from '../components/ui/Input'
 import { workspaceStore, useWorkspaceStore } from '../store'
 
 function toComma(v: unknown): string {
@@ -42,14 +44,14 @@ export function FrontmatterPanel(): React.JSX.Element | null {
     <div className="frontmatter-panel">
       <div className="fm-row">
         <label>标题</label>
-        <input
+        <Input
           value={toComma(draft.title)}
           onChange={(e) => set('title', e.target.value)}
         />
       </div>
       <div className="fm-row">
         <label>标签</label>
-        <input
+        <Input
           placeholder="逗号分隔"
           value={toComma(draft.labels)}
           onChange={(e) => set('labels', fromComma(e.target.value))}
@@ -57,28 +59,28 @@ export function FrontmatterPanel(): React.JSX.Element | null {
       </div>
       <div className="fm-row">
         <label>摘要</label>
-        <input
+        <Input
           value={toComma(draft.summary)}
           onChange={(e) => set('summary', e.target.value)}
         />
       </div>
       <div className="fm-row">
         <label>封面</label>
-        <input
+        <Input
           value={toComma(draft.cover)}
           onChange={(e) => set('cover', e.target.value)}
         />
       </div>
       <div className="fm-row">
         <label>关键词</label>
-        <input
+        <Input
           placeholder="逗号分隔"
           value={toComma(draft.keywords)}
           onChange={(e) => set('keywords', fromComma(e.target.value))}
         />
       </div>
       <div className="fm-actions">
-        <button onClick={apply}>应用到文档</button>
+        <Button onClick={apply}>应用到文档</Button>
       </div>
     </div>
   )

@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { IssueComment, IssueSummary } from '@shared/types'
+import { Button } from '../components/ui/Button'
+import { Select } from '../components/ui/Input'
+import { Textarea } from '../components/ui/Input'
+import { Empty } from '../components/ui/Empty'
 
 export function CommentsPanel(): React.JSX.Element {
   const [issues, setIssues] = useState<IssueSummary[]>([])
@@ -16,9 +20,7 @@ export function CommentsPanel(): React.JSX.Element {
         setIssues(list)
         if (list.length > 0 && selected == null) setSelected(list[0].number)
       })
-      .catch((err: unknown) =>
-        setError(err instanceof Error ? err.message : String(err))
-      )
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)))
     // 仅首挂载拉取一次
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -53,39 +55,43 @@ export function CommentsPanel(): React.JSX.Element {
 
   return (
     <div className="comments-panel">
-      <select
+      <Select
         value={selected ?? ''}
         onChange={(e) => setSelected(Number(e.target.value))}
+        style={{ width: '100%', margin: '8px 0' }}
       >
         {issues.map((i) => (
           <option key={i.number} value={i.number}>
             #{i.number} {i.title}
           </option>
         ))}
-      </select>
+      </Select>
       {error && <div className="error-text">{error}</div>}
-      <ul className="comment-list">
-        {comments.map((c) => (
-          <li key={c.id}>
-            <div className="comment-head">
-              <strong>{c.user}</strong>
-              <time>{new Date(c.createdAt).toLocaleString()}</time>
-            </div>
-            <div className="comment-body">{c.body}</div>
-          </li>
-        ))}
-        {comments.length === 0 && <li className="hint-text">暂无评论</li>}
-      </ul>
+      {comments.length === 0 ? (
+        <Empty title="暂无评论" hint="选中 Issue 后可直接回复" />
+      ) : (
+        <ul className="comment-list">
+          {comments.map((c) => (
+            <li key={c.id}>
+              <div className="comment-head">
+                <strong>{c.user}</strong>
+                <time>{new Date(c.createdAt).toLocaleString()}</time>
+              </div>
+              <div className="comment-body">{c.body}</div>
+            </li>
+          ))}
+        </ul>
+      )}
       <div className="comment-editor">
-        <textarea
+        <Textarea
           rows={3}
           placeholder="回复该 Issue…（Markdown）"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
         />
-        <button disabled={busy || !draft.trim() || selected == null} onClick={send}>
+        <Button variant="primary" disabled={busy || !draft.trim() || selected == null} onClick={send}>
           发送
-        </button>
+        </Button>
       </div>
     </div>
   )

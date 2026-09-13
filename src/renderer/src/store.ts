@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react'
+import { uiConfirm } from './components/ui/Dialog'
 
 export interface WorkspaceState {
   root: string | null
@@ -45,8 +46,14 @@ export const workspaceStore = {
     setState({ root })
   },
   async openFile(path: string): Promise<void> {
-    if (state.dirty && !confirm(`「${state.activePath}」有未保存的修改，确定放弃并打开新文件？`)) {
-      return
+    if (state.dirty) {
+      const ok = await uiConfirm({
+        title: '未保存的修改',
+        message: `「${state.activePath}」有未保存的修改，确定放弃并打开新文件？`,
+        okText: '放弃并打开',
+        danger: true
+      })
+      if (!ok) return
     }
     setState({ loading: true })
     try {

@@ -1,5 +1,7 @@
 export type PanelId = 'files' | 'git' | 'github' | 'settings'
 
+import { Button } from './ui/Button'
+
 const ITEMS: { id: PanelId; icon: string; title: string }[] = [
   { id: 'files', icon: '📄', title: '文件' },
   { id: 'git', icon: '⑂', title: 'Git 历史' },
@@ -14,14 +16,15 @@ export function ActivityBar(props: {
   return (
     <nav className="activity-bar">
       {ITEMS.map((item) => (
-        <button
+        <Button
           key={item.id}
+          variant="ghost"
           className={item.id === props.active ? 'active' : ''}
           title={item.title}
           onClick={() => props.onChange(item.id)}
         >
           {item.icon}
-        </button>
+        </Button>
       ))}
     </nav>
   )

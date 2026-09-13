@@ -1,0 +1,182 @@
+/* ---------- UI 原语（组件内部自实现，配合 theme tokens 的 CSS 变量） ---------- */
+
+.ui-btn {
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--bg-raised);
+  color: var(--fg);
+  cursor: pointer;
+  transition:
+    border-color 0.12s,
+    background 0.12s;
+}
+
+.ui-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.ui-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.ui-btn--md {
+  padding: 4px 12px;
+  font-size: 13px;
+}
+
+.ui-btn--sm {
+  padding: 1px 8px;
+  font-size: 12px;
+}
+
+.ui-btn--primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.ui-btn--primary:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.ui-btn--danger {
+  background: transparent;
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.ui-btn--danger:hover:not(:disabled) {
+  background: var(--danger);
+  color: #fff;
+}
+
+.ui-btn--ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--fg-dim);
+}
+
+.ui-btn--ghost:hover:not(:disabled) {
+  color: var(--fg);
+  background: var(--bg-raised);
+}
+
+.ui-btn--ghost.active {
+  color: var(--accent);
+}
+
+.ui-input,
+.ui-textarea,
+.ui-select {
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 4px 8px;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.ui-input:focus,
+.ui-textarea:focus,
+.ui-select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.ui-textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.ui-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #111;
+  border-radius: 10px;
+  padding: 1px 10px;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.ui-tag__remove {
+  border: none;
+  background: transparent;
+  color: inherit;
+  opacity: 0.65;
+  padding: 0 2px;
+  font-size: 13px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.ui-tag__remove:hover {
+  opacity: 1;
+}
+
+.ui-empty {
+  padding: 28px 16px;
+  text-align: center;
+  color: var(--fg-dim);
+}
+
+.ui-empty__icon {
+  font-size: 22px;
+  margin-bottom: 8px;
+  opacity: 0.7;
+}
+
+.ui-empty__title {
+  font-size: 13px;
+}
+
+.ui-empty__hint {
+  font-size: 12px;
+  margin-top: 4px;
+  opacity: 0.8;
+}
+
+.ui-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.ui-dialog {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  min-width: 360px;
+  max-width: 520px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+
+.ui-dialog__title {
+  padding: 12px 16px 0;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.ui-dialog__body {
+  padding: 12px 16px;
+}
+
+.ui-confirm-message {
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.ui-dialog__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 0 16px 14px;
+}

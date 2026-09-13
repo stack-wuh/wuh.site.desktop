@@ -118,17 +118,15 @@ body,
   border-right: 1px solid var(--border);
 }
 
-.activity-bar button {
+.activity-bar .ui-btn {
   width: 36px;
   height: 36px;
-  border: none;
-  background: transparent;
-  color: var(--fg-dim);
+  padding: 0;
   font-size: 16px;
   border-radius: 6px;
 }
 
-.activity-bar button.active {
+.activity-bar .ui-btn.active {
   color: var(--fg);
   background: var(--bg-raised);
 }
@@ -177,47 +175,13 @@ body,
   color: var(--fg-dim);
 }
 
-button {
-  background: var(--bg-raised);
-  color: var(--fg);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 3px 10px;
+/* 原生控件兜底样式（checkbox / color 等 ui 原语未覆盖的控件） */
+input[type='checkbox'],
+input[type='color'] {
+  accent-color: var(--accent);
   cursor: pointer;
-  font-size: 13px;
 }
 
-button:hover:not(:disabled) {
-  border-color: var(--accent);
-}
-
-button:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
-button.active {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-input,
-textarea,
-select {
-  background: var(--bg);
-  color: var(--fg);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 4px 8px;
-  font-size: 13px;
-  font-family: inherit;
-}
-
-input:focus,
-textarea:focus {
-  outline: none;
-  border-color: var(--accent);
-}
 
 /* ---------- 编辑器 ---------- */
 .editor-pane {
@@ -287,7 +251,7 @@ textarea:focus {
   color: var(--fg-dim);
 }
 
-.fm-row input {
+.fm-row .ui-input {
   flex: 1;
   min-width: 0;
 }
@@ -323,7 +287,7 @@ textarea:focus {
   margin-bottom: 6px;
 }
 
-.commit-box input {
+.commit-box .ui-input {
   flex: 1;
   min-width: 0;
 }
@@ -336,7 +300,7 @@ textarea:focus {
   align-items: center;
 }
 
-.row-actions input {
+.row-actions .ui-input {
   flex: 1;
   min-width: 0;
 }
@@ -496,7 +460,7 @@ textarea:focus {
   padding: 0 8px;
 }
 
-.comments-panel select {
+.comments-panel .ui-select {
   width: 100%;
   margin: 8px 0;
 }
@@ -526,7 +490,7 @@ textarea:focus {
   margin-top: 8px;
 }
 
-.comment-editor textarea {
+.comment-editor .ui-textarea {
   flex: 1;
   resize: vertical;
 }
@@ -545,7 +509,7 @@ textarea:focus {
   margin: 0 0 8px;
 }
 
-.settings-page .row-actions input {
+.settings-page .row-actions .ui-input {
   width: 100%;
 }
 

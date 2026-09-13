@@ -7,6 +7,8 @@ import { ActivityBar, type PanelId } from './components/ActivityBar'
 import { GitHubPanel } from './components/GitHubPanel'
 import { GitPanel } from './history/HistoryPanel'
 import { SettingsPage } from './settings/SettingsPage'
+import { ConfirmHost } from './components/ui/Dialog'
+import { useTheme } from './theme/ThemeProvider'
 import { useWorkspaceStore, workspaceStore } from './store'
 
 declare global {
@@ -42,6 +44,7 @@ export default function App(): React.JSX.Element {
   const [workspace, setWorkspace] = useState<WorkspaceInfo | null>(null)
   const [activePanel, setActivePanel] = useState<PanelId>('files')
   const store = useWorkspaceStore()
+  const { theme, toggle } = useTheme()
   useAutoCommit()
 
   useEffect(() => {
@@ -77,6 +80,13 @@ export default function App(): React.JSX.Element {
           </span>
         )}
         <button onClick={handleOpen}>打开文件夹</button>
+        <button
+          className="theme-toggle"
+          title={theme === 'dark' ? '切换到浅色' : '切换到深色'}
+          onClick={toggle}
+        >
+          {theme === 'dark' ? '🌙' : '☀️'}
+        </button>
       </header>
       <div className="app-body">
         <ActivityBar active={activePanel} onChange={setActivePanel} />
@@ -99,6 +109,7 @@ export default function App(): React.JSX.Element {
         <span>{store.activePath ?? 'no file'}</span>
         {store.dirty && <span className="dirty-dot">● 未保存</span>}
       </footer>
+      <ConfirmHost />
     </div>
   )
 }

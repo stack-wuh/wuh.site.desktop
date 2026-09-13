@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { LabelInfo } from '@shared/types'
+import { Button } from '../components/ui/Button'
+import { Input } from '../components/ui/Input'
+import { Tag } from '../components/ui/Tag'
+import { Empty } from '../components/ui/Empty'
+import { uiConfirm } from '../components/ui/Dialog'
 
 export function LabelsPanel(): React.JSX.Element {
   const [labels, setLabels] = useState<LabelInfo[]>([])
@@ -38,7 +43,13 @@ export function LabelsPanel(): React.JSX.Element {
 
   const remove = (label: string): void =>
     void (async () => {
-      if (!confirm(`删除标签「${label}」？`)) return
+      const ok = await uiConfirm({
+        title: '删除标签',
+        message: `删除标签「${label}」？`,
+        okText: '删除',
+        danger: true
+      })
+      if (!ok) return
       setBusy(true)
       try {
         await window.api.githubDeleteLabel(label)
@@ -53,30 +64,33 @@ export function LabelsPanel(): React.JSX.Element {
   return (
     <div className="labels-panel">
       <div className="label-create">
-        <input placeholder="标签名" value={name} onChange={(e) => setName(e.target.value)} />
+        <Input placeholder="标签名" value={name} onChange={(e) => setName(e.target.value)} />
         <input
           type="color"
           value={color}
           onChange={(e) => setColor(e.target.value)}
           className="color-input"
+          aria-label="标签颜色"
         />
-        <button disabled={busy || !name.trim()} onClick={upsert}>
+        <Button variant="primary" disabled={busy || !name.trim()} onClick={upsert}>
           保存
-        </button>
+        </Button>
       </div>
       {error && <div className="error-text">{error}</div>}
-      <ul className="label-list">
-        {labels.map((l) => (
-          <li key={l.name}>
-            <span className="label-chip" style={{ backgroundColor: `#${l.color}` }}>
-              {l.name}
-            </span>
-            <button disabled={busy} onClick={() => remove(l.name)}>
-              ×
-            </button>
-          </li>
-        ))}
-      </ul>
+      {labels.length === 0 ? (
+        <Empty title="仓库还没有标签" hint="输入名称后保存即可创建" />
+      ) : (
+        <ul className="label-list">
+          {labels.map((l) => (
+            <li key={l.name}>
+              <Tag color={`#${l.color}`}>{l.name}</Tag>
+              <Button size="sm" variant="ghost" disabled={busy} onClick={() => remove(l.name)}>
+                删除
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }

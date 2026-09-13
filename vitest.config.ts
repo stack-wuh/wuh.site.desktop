@@ -10,6 +10,9 @@ export default defineConfig({
     poolOptions: { threads: { singleThread: true } }
   },
   resolve: {
-    alias: { '@shared': resolve(__dirname, 'src/shared') }
+    alias: {
+      '@shared': resolve(__dirname, 'src/shared'),
+      '@renderer': resolve(__dirname, 'src/renderer/src')
+    }
   }
 })

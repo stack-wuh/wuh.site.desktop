@@ -117,6 +117,28 @@ const frontmatterField = StateField.define<DecorationSet>({
   provide: (f) => EditorView.decorations.from(f)
 })
 
+/** 编辑器主题跟随应用 CSS 变量（深/浅色切换自动生效） */
+const cmTheme = EditorView.theme({
+  '&': { color: 'var(--fg)', backgroundColor: 'var(--bg)' },
+  '&.cm-focused': { outline: 'none' },
+  '.cm-content': { caretColor: 'var(--accent)' },
+  '.cm-cursor, .cm-dropCursor': { borderLeftColor: 'var(--accent)' },
+  '.cm-gutters': {
+    backgroundColor: 'var(--bg-panel)',
+    color: 'var(--fg-dim)',
+    border: 'none'
+  },
+  '.cm-activeLine': { backgroundColor: 'rgba(127, 127, 127, 0.08)' },
+  '.cm-activeLineGutter': { backgroundColor: 'rgba(127, 127, 127, 0.12)' },
+  '.cm-selectionBackground': { backgroundColor: 'var(--accent-soft)' },
+  '&.cm-focused .cm-selectionBackground': { backgroundColor: 'var(--accent-soft)' },
+  '.cm-scroller': {
+    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+    lineHeight: '1.65'
+  },
+  '.cm-lineNumbers .cm-gutterElement': { padding: '0 8px 0 14px' }
+})
+
 export function CodeMirrorEditor(props: Props): React.JSX.Element {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const onChangeRef = useRef(props.onChange)
@@ -127,6 +149,7 @@ export function CodeMirrorEditor(props: Props): React.JSX.Element {
   const extensions = useMemo<Extension[]>(
     () => [
       basicSetup,
+      cmTheme,
       markdown({ base: markdownLanguage, codeLanguages: languages }),
       indentUnit.of('  '),
       frontmatterField,

@@ -20,6 +20,7 @@ wuh.site 项目的桌面端管理器 —— 通用 Markdown 编辑器，深度�
   - 评论管理：issue 评论浏览与回复
 - **结构化识别**：目录约定规则引擎，blog 内置预设（`{YYYY}/{YYYY-MM}` 年月目录、`$专题`、同名 `.assets`），命中后文件树自动切换为 年份/月份/专题 分组视图
 - **多平台预留**：publisher 适配器接口（`src/main/publishers/types.ts`），微信公众号 / Notion / 知乎 后置实现
+- **自持组件与主题**：不依赖站点组件库，`src/renderer/src/components/ui/` 内置 Button/Input/Textarea/Select/Tag/Empty/Dialog 等原语与命令式确认框；`src/renderer/src/theme/` 为 token 化双主题（深/浅色，标题栏切换，localStorage 持久化），CodeMirror 编辑器主题跟随 CSS 变量自动切换
 
 ## 开发
 
@@ -51,5 +52,8 @@ src/
 ├── shared/       # 主/渲染进程共享：IPC 契约 + 纯逻辑（frontmatter/imagePlan/structure/revert）
 ├── main/         # 主进程：workspace/images/git/gitRevert/credentials/github/uploader/publishers
 ├── preload/      # contextBridge：window.api（类型安全 IPC）
-└── renderer/     # React UI：FileTree / CodeMirror / Preview / Frontmatter / Git / GitHub / Settings
+└── renderer/     # React UI
+    ├── components/ui/   # 自持 UI 原语（Button/Input/Tag/Empty/Dialog/confirm）
+    ├── theme/           # token 化主题（dark/light）+ ThemeProvider
+    └── …                # FileTree / CodeMirror / Preview / Frontmatter / Git / GitHub / Settings
 ```

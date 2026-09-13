@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { AppSettings } from '@shared/types'
+import { Button } from '../components/ui/Button'
+import { Input } from '../components/ui/Input'
 
 export function SettingsPage(): React.JSX.Element {
   const [hasToken, setHasToken] = useState(false)
@@ -21,9 +23,7 @@ export function SettingsPage(): React.JSX.Element {
         setHasToken(s.hasToken)
         setSettings(s.settings)
       })
-      .catch((err: unknown) =>
-        setError(err instanceof Error ? err.message : String(err))
-      )
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)))
   }, [])
 
   const flash = (text: string): void => {
@@ -55,13 +55,14 @@ export function SettingsPage(): React.JSX.Element {
           </span>
         </div>
         <div className="row-actions">
-          <input
+          <Input
             type="password"
             placeholder="fine-grained PAT（仅存本地钥匙串）"
             value={tokenInput}
             onChange={(e) => setTokenInput(e.target.value)}
           />
-          <button
+          <Button
+            variant="primary"
             onClick={() =>
               void (async () => {
                 if (!tokenInput.trim()) return
@@ -77,9 +78,10 @@ export function SettingsPage(): React.JSX.Element {
             }
           >
             保存 Token
-          </button>
+          </Button>
           {hasToken && (
-            <button
+            <Button
+              variant="danger"
               onClick={() =>
                 void (async () => {
                   await window.api.clearGithubToken()
@@ -89,7 +91,7 @@ export function SettingsPage(): React.JSX.Element {
               }
             >
               清除
-            </button>
+            </Button>
           )}
         </div>
       </section>
@@ -110,13 +112,14 @@ export function SettingsPage(): React.JSX.Element {
         <div className="row-actions">
           <label>
             延时 ms
-            <input
+            <Input
               type="number"
               value={settings.autoCommitDelayMs}
               onChange={(e) =>
                 setSettings((s) => ({ ...s, autoCommitDelayMs: Number(e.target.value) }))
               }
               onBlur={() => void save({ autoCommitDelayMs: settings.autoCommitDelayMs })}
+              style={{ width: 90, marginLeft: 6 }}
             />
           </label>
         </div>
@@ -125,37 +128,31 @@ export function SettingsPage(): React.JSX.Element {
       <section>
         <h3>图床上传命令</h3>
         <div className="row-actions">
-          <input
+          <Input
             placeholder="例如：upload-img {file}（stdout 输出图片 URL）"
             value={settings.uploadCommand ?? ''}
-            onChange={(e) =>
-              setSettings((s) => ({ ...s, uploadCommand: e.target.value }))
-            }
+            onChange={(e) => setSettings((s) => ({ ...s, uploadCommand: e.target.value }))}
             onBlur={() => void save({ uploadCommand: settings.uploadCommand })}
           />
         </div>
         <p className="hint-text">
-          粘贴图片先落本地 .assets；「上传」按钮执行该命令（{`{file}`}=图片绝对路径）并替换链接。
+          粘贴图片先落本地 .assets；「上传」按钮执行该命令（{'{file}'}=图片绝对路径）并替换链接。
         </p>
       </section>
 
       <section>
-        <h3>Git 身份（可选，仅本仓库局部生效）</h3>
+        <h3>Git 身份（可选，仅当前仓库局部生效）</h3>
         <div className="row-actions">
-          <input
+          <Input
             placeholder="user.name"
             value={settings.gitUserName ?? ''}
-            onChange={(e) =>
-              setSettings((s) => ({ ...s, gitUserName: e.target.value }))
-            }
+            onChange={(e) => setSettings((s) => ({ ...s, gitUserName: e.target.value }))}
             onBlur={() => void save({ gitUserName: settings.gitUserName })}
           />
-          <input
+          <Input
             placeholder="user.email"
             value={settings.gitUserEmail ?? ''}
-            onChange={(e) =>
-              setSettings((s) => ({ ...s, gitUserEmail: e.target.value }))
-            }
+            onChange={(e) => setSettings((s) => ({ ...s, gitUserEmail: e.target.value }))}
             onBlur={() => void save({ gitUserEmail: settings.gitUserEmail })}
           />
         </div>

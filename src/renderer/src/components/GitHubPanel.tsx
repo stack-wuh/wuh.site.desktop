@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { IssuesPanel } from '../issues/IssuesPanel'
 import { LabelsPanel } from '../labels/LabelsPanel'
 import { CommentsPanel } from '../comments/CommentsPanel'
+import { Button } from './ui/Button'
 
 type Tab = 'issues' | 'labels' | 'comments'
 
@@ -18,13 +19,15 @@ export function GitHubPanel(): React.JSX.Element {
     <div className="github-panel">
       <div className="tab-bar">
         {TABS.map((t) => (
-          <button
+          <Button
             key={t.id}
+            variant="ghost"
+            size="sm"
             className={tab === t.id ? 'active' : ''}
             onClick={() => setTab(t.id)}
           >
             {t.label}
-          </button>
+          </Button>
         ))}
       </div>
       {tab === 'issues' && <IssuesPanel />}
