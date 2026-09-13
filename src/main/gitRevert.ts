@@ -30,6 +30,15 @@ implement('planRevert', async ([input]): Promise<RevertPlan> => {
       (await git.raw(['log', '--format=%h', '-n', '1', '--', path])).trim().length > 0
   }
 
+  // 无上游时「恢复到已推送状态」无从谈起，checkout 只能清脏改动，不能回退提交内容
+  if (!upstream && unpushed) {
+    return {
+      action: 'blocked',
+      reason:
+        '当前分支没有上游（远端）分支，无法一键恢复到已推送状态；请在历史面板选择具体提交执行 revert'
+    }
+  }
+
   return decide({ ...input, fileDirty, fileHasUnpushedCommits: unpushed, fileHasPushedCommits: pushed })
 })
 
@@ -38,10 +47,9 @@ implement('executeRevert', async ([plan]) => {
   if (plan.action === 'checkoutFile') {
     if (plan.from === 'upstream') {
       const upstream = await getUpstreamRef()
-      if (upstream) {
-        await git.checkout([upstream, '--', plan.path])
-        return
-      }
+      if (!upstream) throw new Error('上游分支不存在，无法恢复到已推送状态')
+      await git.checkout([upstream, '--', plan.path])
+      return
     }
     await git.checkout(['--', plan.path])
     return

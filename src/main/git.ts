@@ -1,6 +1,6 @@
 import { implement } from './ipc'
 import { getGit, getWorkspace } from './workspace'
-import { getToken } from './credentials'
+import { getToken, loadSettings } from './credentials'
 import type {
   CommitSummary,
   GitFileState,
@@ -56,7 +56,13 @@ async function pushWithCredential(): Promise<void> {
     return
   }
   const url = `https://x-access-token:${token}@github.com/${ws.github.owner}/${ws.github.repo}.git`
-  await git.raw(['push', url, `HEAD:${ws.branch}`])
+  try {
+    await git.raw(['push', url, `HEAD:${ws.branch}`])
+  } catch (err) {
+    // git 报错可能回显完整 URL（含凭证），脱敏后再抛出
+    const msg = err instanceof Error ? err.message : String(err)
+    throw new Error(msg.split(token).join('***'))
+  }
 }
 
 implement('gitStatus', async (): Promise<GitStatusSummary> => {
@@ -87,8 +93,15 @@ implement('gitCommit', async ([message, paths]) => {
   } else {
     await git.add('-A')
   }
-  const res = await git.commit(message, paths && paths.length > 0 ? paths : undefined)
-  return { hash: res.commit }
+  // 设置页配置的 git 身份以 -c 注入，仅本次命令生效，不写仓库配置
+  const settings = await loadSettings()
+  const args: string[] = []
+  if (settings.gitUserName?.trim()) args.push('-c', `user.name=${settings.gitUserName.trim()}`)
+  if (settings.gitUserEmail?.trim()) args.push('-c', `user.email=${settings.gitUserEmail.trim()}`)
+  args.push('commit', '-m', message)
+  if (paths && paths.length > 0) args.push('--', ...paths)
+  await git.raw(args)
+  return { hash: (await git.raw(['rev-parse', 'HEAD'])).trim() }
 })
 
 implement('gitPush', () => pushWithCredential())
