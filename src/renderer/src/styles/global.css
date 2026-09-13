@@ -1,0 +1,156 @@
+:root {
+  --bg: #1e1f22;
+  --bg-panel: #252629;
+  --bg-raised: #2d2e31;
+  --border: #3a3b3f;
+  --fg: #d7d7db;
+  --fg-dim: #8b8d92;
+  --accent: #5b9bf5;
+  --danger: #e06c75;
+  font-size: 14px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    'PingFang SC',
+    'Segoe UI',
+    sans-serif;
+}
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.title-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 40px;
+  padding: 0 12px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+}
+
+.title-bar .title {
+  font-weight: 600;
+}
+
+.title-bar .workspace-name {
+  color: var(--fg-dim);
+}
+
+.git-badge {
+  color: var(--accent);
+  font-size: 12px;
+}
+
+.app-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  background: var(--bg-panel);
+  border-right: 1px solid var(--border);
+  overflow: auto;
+}
+
+.work-area {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
+
+.editor-area {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.preview-area {
+  width: 42%;
+  min-width: 280px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--border);
+  overflow: auto;
+  background: var(--bg-panel);
+}
+
+.status-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 26px;
+  padding: 0 12px;
+  font-size: 12px;
+  color: var(--fg-dim);
+  background: var(--bg-panel);
+  border-top: 1px solid var(--border);
+}
+
+.dirty-dot {
+  color: var(--danger);
+}
+
+.placeholder {
+  padding: 16px;
+  color: var(--fg-dim);
+}
+
+button {
+  background: var(--bg-raised);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 3px 10px;
+  cursor: pointer;
+}
+
+button:hover {
+  border-color: var(--accent);
+}
+
+.activity-bar {
+  width: 44px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 8px;
+  gap: 4px;
+  background: var(--bg);
+  border-right: 1px solid var(--border);
+}
+
+.activity-bar button {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  color: var(--fg-dim);
+  font-size: 16px;
+  border-radius: 6px;
+}
+
+.activity-bar button.active {
+  color: var(--fg);
+  background: var(--bg-raised);
+}
