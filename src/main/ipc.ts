@@ -1,29 +1,10 @@
 import { ipcMain } from 'electron'
-import type {
-  AppSettings,
-  CommitDetail,
-  CommitSummary,
-  DesktopApi,
-  FileContent,
-  FileNode,
-  GitStatusSummary,
-  IssueComment,
-  IssueSummary,
-  LabelInfo,
-  PublishRequest,
-  PublishResult,
-  RevertDecisionInput,
-  RevertPlan,
-  SaveResult,
-  SavedImage,
-  SettingsStatus,
-  UploadResult,
-  WorkspaceInfo
-} from '@shared/types'
+import type { DesktopApi } from '@shared/types'
 
 /**
  * 按 DesktopApi 的方法名注册 ipcMain.handle。
  * channel 即方法名，preload 侧按同一契约转发，保证两端类型一致。
+ * 各业务模块通过 implement() 在加载时覆盖默认实现。
  */
 const handlers: {
   [K in keyof DesktopApi]: (payload: Parameters<DesktopApi[K]>) => ReturnType<DesktopApi[K]>
@@ -71,32 +52,10 @@ export function registerIpc(): void {
     ipcMain.removeHandler(name)
     ipcMain.handle(name, async (_event, ...payload: unknown[]) => {
       try {
-        return { ok: true, data: await fn(payload as never) }
+        return { ok: true, data: await (fn as (p: never) => unknown)(payload as never) }
       } catch (err) {
         return { ok: false, error: err instanceof Error ? err.message : String(err) }
       }
     })
   }
 }
-
-// 仅为了让上面 import 的类型在阶段骨架里被消费，避免 unused 报错
-export type IpcContract = [
-  WorkspaceInfo,
-  FileNode,
-  FileContent,
-  SaveResult,
-  SavedImage,
-  GitStatusSummary,
-  CommitSummary,
-  CommitDetail,
-  RevertDecisionInput,
-  RevertPlan,
-  IssueSummary,
-  IssueComment,
-  LabelInfo,
-  PublishRequest,
-  PublishResult,
-  UploadResult,
-  SettingsStatus,
-  AppSettings
-]

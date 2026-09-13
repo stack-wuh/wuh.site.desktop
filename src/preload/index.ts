@@ -5,17 +5,20 @@ import type { DesktopApi } from '@shared/types'
  * 与主进程 ipc.ts 的 handlers 表按方法名一一对应；
  * 返回值统一为 IpcResult 包装，在此拆包并抛错，渲染层直接拿到 data 或异常。
  */
-function invoke<K extends keyof DesktopApi>(
+async function invoke<K extends keyof DesktopApi>(
   name: K,
   ...args: Parameters<DesktopApi[K]>
-): Promise<ReturnType<DesktopApi[K]>> {
-  return ipcRenderer.invoke(name, ...args).then((res) => {
-    if (res && typeof res === 'object' && 'ok' in res) {
-      if (res.ok) return res.data as ReturnType<DesktopApi[K]>
-      throw new Error(res.error)
-    }
-    return res as ReturnType<DesktopApi[K]>
-  })
+): Promise<Awaited<ReturnType<DesktopApi[K]>>> {
+  const res = (await ipcRenderer.invoke(name, ...args)) as
+    | { ok: true; data: Awaited<ReturnType<DesktopApi[K]>> }
+    | { ok: false; error: string }
+    | unknown
+  if (res && typeof res === 'object' && 'ok' in res) {
+    const r = res as { ok: boolean; data?: unknown; error?: string }
+    if (r.ok) return r.data as Awaited<ReturnType<DesktopApi[K]>>
+    throw new Error(r.error ?? '未知错误')
+  }
+  throw new Error('IPC 响应格式异常')
 }
 
 const api: DesktopApi = {

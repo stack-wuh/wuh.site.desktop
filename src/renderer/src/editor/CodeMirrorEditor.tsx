@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react'
 import {
   EditorState,
+  Prec,
   RangeSetBuilder,
   StateField,
   type Extension,
@@ -15,7 +16,7 @@ import {
 import { basicSetup } from 'codemirror'
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown'
 import { languages } from '@codemirror/language-data'
-import { Prec, indentUnit } from '@codemirror/language'
+import { indentUnit } from '@codemirror/language'
 
 interface Props {
   /** 初始内容；key=docPath 保证换文件时整体重建 */

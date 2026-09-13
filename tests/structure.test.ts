@@ -52,8 +52,8 @@ describe('buildStructuredSections', () => {
       'docs/2024/2024-03/c.md'
     ])
 
-    expect(sections[1].groups?.map((g) => g.title)).toEqual(['$AST', '$pnpm'])
-    expect(sections[2].entries.map((e) => e.path)).toEqual(['README.md'])
+    expect(sections[1]?.groups?.map((g) => g.title)).toEqual(['$AST', '$pnpm'])
+    expect(sections[2]?.entries?.map((e) => e.path)).toEqual(['README.md'])
   })
 
   it('空输入返回空数组', () => {

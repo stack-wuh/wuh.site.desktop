@@ -1,0 +1,165 @@
+import { useEffect, useState } from 'react'
+import type { AppSettings } from '@shared/types'
+
+export function SettingsPage(): React.JSX.Element {
+  const [hasToken, setHasToken] = useState(false)
+  const [tokenInput, setTokenInput] = useState('')
+  const [settings, setSettings] = useState<AppSettings>({
+    autoCommit: false,
+    autoCommitDelayMs: 2000,
+    uploadCommand: null,
+    gitUserName: null,
+    gitUserEmail: null
+  })
+  const [msg, setMsg] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    void window.api
+      .getSettings()
+      .then((s) => {
+        setHasToken(s.hasToken)
+        setSettings(s.settings)
+      })
+      .catch((err: unknown) =>
+        setError(err instanceof Error ? err.message : String(err))
+      )
+  }, [])
+
+  const flash = (text: string): void => {
+    setMsg(text)
+    setTimeout(() => setMsg(null), 2500)
+  }
+
+  const save = (patch: Partial<AppSettings>): void =>
+    void (async () => {
+      try {
+        const s = await window.api.setSettings(patch)
+        setSettings(s.settings)
+        flash('已保存')
+      } catch (err) {
+        setError(err instanceof Error ? err.message : String(err))
+      }
+    })()
+
+  return (
+    <div className="settings-page">
+      {msg && <div className="ok-text">{msg}</div>}
+      {error && <div className="error-text">{error}</div>}
+
+      <section>
+        <h3>GitHub Token</h3>
+        <div className="row-actions">
+          <span className="hint-text">
+            {hasToken ? '✓ 已配置（存于系统钥匙串）' : '未配置 — Issues 发布 / Push 凭证注入不可用'}
+          </span>
+        </div>
+        <div className="row-actions">
+          <input
+            type="password"
+            placeholder="fine-grained PAT（仅存本地钥匙串）"
+            value={tokenInput}
+            onChange={(e) => setTokenInput(e.target.value)}
+          />
+          <button
+            onClick={() =>
+              void (async () => {
+                if (!tokenInput.trim()) return
+                try {
+                  await window.api.setGithubToken(tokenInput)
+                  setTokenInput('')
+                  setHasToken(true)
+                  flash('Token 已保存')
+                } catch (err) {
+                  setError(err instanceof Error ? err.message : String(err))
+                }
+              })()
+            }
+          >
+            保存 Token
+          </button>
+          {hasToken && (
+            <button
+              onClick={() =>
+                void (async () => {
+                  await window.api.clearGithubToken()
+                  setHasToken(false)
+                  flash('Token 已清除')
+                })()
+              }
+            >
+              清除
+            </button>
+          )}
+        </div>
+      </section>
+
+      <section>
+        <h3>自动提交</h3>
+        <label className="check-row">
+          <input
+            type="checkbox"
+            checked={settings.autoCommit}
+            onChange={(e) => {
+              setSettings((s) => ({ ...s, autoCommit: e.target.checked }))
+              void save({ autoCommit: e.target.checked })
+            }}
+          />
+          保存后延时自动 commit（防抖）
+        </label>
+        <div className="row-actions">
+          <label>
+            延时 ms
+            <input
+              type="number"
+              value={settings.autoCommitDelayMs}
+              onChange={(e) =>
+                setSettings((s) => ({ ...s, autoCommitDelayMs: Number(e.target.value) }))
+              }
+              onBlur={() => void save({ autoCommitDelayMs: settings.autoCommitDelayMs })}
+            />
+          </label>
+        </div>
+      </section>
+
+      <section>
+        <h3>图床上传命令</h3>
+        <div className="row-actions">
+          <input
+            placeholder="例如：upload-img {file}（stdout 输出图片 URL）"
+            value={settings.uploadCommand ?? ''}
+            onChange={(e) =>
+              setSettings((s) => ({ ...s, uploadCommand: e.target.value }))
+            }
+            onBlur={() => void save({ uploadCommand: settings.uploadCommand })}
+          />
+        </div>
+        <p className="hint-text">
+          粘贴图片先落本地 .assets；「上传」按钮执行该命令（{`{file}`}=图片绝对路径）并替换链接。
+        </p>
+      </section>
+
+      <section>
+        <h3>Git 身份（可选，仅本仓库局部生效）</h3>
+        <div className="row-actions">
+          <input
+            placeholder="user.name"
+            value={settings.gitUserName ?? ''}
+            onChange={(e) =>
+              setSettings((s) => ({ ...s, gitUserName: e.target.value }))
+            }
+            onBlur={() => void save({ gitUserName: settings.gitUserName })}
+          />
+          <input
+            placeholder="user.email"
+            value={settings.gitUserEmail ?? ''}
+            onChange={(e) =>
+              setSettings((s) => ({ ...s, gitUserEmail: e.target.value }))
+            }
+            onBlur={() => void save({ gitUserEmail: settings.gitUserEmail })}
+          />
+        </div>
+      </section>
+    </div>
+  )
+}

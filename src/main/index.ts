@@ -1,6 +1,6 @@
 import { BrowserWindow, app, shell } from 'electron'
 import { resolve } from 'node:path'
-import { registerIpc } from './ipc'
+import { bootstrapIpc } from './register-features'
 
 const isDev = !app.isPackaged
 
@@ -34,7 +34,7 @@ function createWindow(): BrowserWindow {
 }
 
 app.whenReady().then(() => {
-  registerIpc()
+  bootstrapIpc()
   createWindow()
 
   app.on('activate', () => {

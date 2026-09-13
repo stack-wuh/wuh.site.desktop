@@ -24,13 +24,14 @@
     "@lezer/highlight": "^1.2.3",
     "@octokit/rest": "^21.0.0",
     "codemirror": "^6.0.2",
-    "gray-matter": "^4.0.3",
+    "js-yaml": "^4.1.0",
     "markdown-it": "^15.0.2",
     "react": "19.2.5",
     "react-dom": "19.2.5",
     "simple-git": "^3.36.0"
   },
   "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
     "@types/markdown-it": "^14.2.0",
     "@types/node": "^26.5.1",
     "@types/react": "^19.3.0",

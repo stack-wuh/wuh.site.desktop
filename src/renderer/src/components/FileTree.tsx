@@ -1,9 +1,23 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { FileNode } from '@shared/types'
+import {
+  BLOG_PRESET,
+  buildStructuredSections,
+  classifyRelPath,
+  type StructuredSection
+} from '@shared/structure'
 import { workspaceStore } from '../store'
 
 function isMarkdown(name: string): boolean {
   return name.endsWith('.md') || name.endsWith('.markdown')
+}
+
+function collectMarkdownPaths(nodes: FileNode[], out: string[] = []): string[] {
+  for (const n of nodes) {
+    if (n.type === 'dir') collectMarkdownPaths(n.children ?? [], out)
+    else if (isMarkdown(n.name)) out.push(n.path)
+  }
+  return out
 }
 
 function Node(props: { node: FileNode; depth: number }): React.JSX.Element {
@@ -21,10 +35,7 @@ function Node(props: { node: FileNode; depth: number }): React.JSX.Element {
           <span className="caret">{open ? '▾' : '▸'}</span>
           {node.name}
         </div>
-        {open &&
-          node.children?.map((child) => (
-            <Node key={child.path} node={child} depth={depth + 1} />
-          ))}
+        {open && node.children?.map((child) => <Node key={child.path} node={child} depth={depth + 1} />)}
       </div>
     )
   }
@@ -42,8 +53,71 @@ function Node(props: { node: FileNode; depth: number }): React.JSX.Element {
   )
 }
 
+function StructuredView(props: {
+  sections: StructuredSection[]
+  roots: FileNode[]
+}): React.JSX.Element {
+  const { sections } = props
+  const [openKeys, setOpenKeys] = useState<Set<string>>(new Set())
+
+  const toggle = (key: string): void =>
+    setOpenKeys((s) => {
+      const next = new Set(s)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+
+  const row = (path: string, name: string, depth: number): React.JSX.Element => (
+    <div
+      key={path}
+      className="tree-row file"
+      style={{ paddingLeft: depth * 14 + 22 }}
+      onClick={() => void workspaceStore.openFile(path)}
+    >
+      {name}
+    </div>
+  )
+
+  return (
+    <div className="file-tree">
+      {sections.map((section) => (
+        <div key={section.kind} className="struct-section">
+          <div className="struct-title">{section.title}</div>
+          {section.kind === 'other'
+            ? section.entries?.map((e) => row(e.path, e.name, 1))
+            : section.groups?.map((g) => {
+                const key = `${section.kind}:${g.title}`
+                const open = openKeys.has(key) || section.kind === 'years'
+                return (
+                  <div key={key}>
+                    <div
+                      className="tree-row dir"
+                      style={{ paddingLeft: 8 }}
+                      onClick={() => toggle(key)}
+                    >
+                      <span className="caret">{open ? '▾' : '▸'}</span>
+                      {g.title}
+                    </div>
+                    {open &&
+                      g.entries.map((e) =>
+                        row(
+                          e.path,
+                          section.kind === 'years' ? `${e.month ?? ''} / ${e.name}` : e.name,
+                          2
+                        )
+                      )}
+                  </div>
+                )
+              })}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export function FileTree(): React.JSX.Element {
-  const [tree, setTree] = useState<FileNode[]>([])
+  const [tree, setTree] = useState<FileNode[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const root = workspaceStore.get().root
 
@@ -62,8 +136,21 @@ export function FileTree(): React.JSX.Element {
     }
   }, [root])
 
+  const sections = useMemo(() => {
+    if (!tree) return null
+    const mdPaths = collectMarkdownPaths(tree)
+    // 命中 blog 结构化约定的文件过半才切换结构化视图，通用目录保持普通树
+    const matched = mdPaths.filter(
+      (p) => classifyRelPath(p).kind !== 'other'
+    ).length
+    return mdPaths.length >= 4 && matched >= mdPaths.length / 2
+      ? buildStructuredSections(mdPaths, BLOG_PRESET)
+      : null
+  }, [tree])
+
   if (error) return <div className="placeholder">读取失败：{error}</div>
-  if (tree.length === 0) return <div className="placeholder">打开一个文件夹开始（左上角按钮）</div>
+  if (tree === null) return <div className="placeholder">打开一个文件夹开始（左上角按钮）</div>
+  if (sections) return <StructuredView sections={sections} roots={tree} />
 
   return (
     <div className="file-tree">

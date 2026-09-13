@@ -1,10 +1,13 @@
+import { useState } from 'react'
 import { CodeMirrorEditor } from './CodeMirrorEditor'
 import { useDirtyState } from './useDirtyState'
-import { useWorkspaceStore } from '../store'
+import { FrontmatterPanel } from '../frontmatter/FrontmatterPanel'
+import { useWorkspaceStore, workspaceStore } from '../store'
 
 export function EditorPane(): React.JSX.Element {
   const { activePath, content, dirty } = useWorkspaceStore()
   const { save } = useDirtyState()
+  const [showFm, setShowFm] = useState(false)
 
   if (!activePath || content == null) {
     return <div className="placeholder">从左侧选择一个 Markdown 文件开始编辑</div>
@@ -14,10 +17,14 @@ export function EditorPane(): React.JSX.Element {
     <div className="editor-pane">
       <div className="editor-toolbar">
         <span className="doc-path">{activePath}</span>
+        <button className={showFm ? 'active' : ''} onClick={() => setShowFm((v) => !v)}>
+          frontmatter
+        </button>
         <button disabled={!dirty} onClick={() => void save()}>
           保存 ⌘S
         </button>
       </div>
+      {showFm && <FrontmatterPanel />}
       <div className="editor-scroll">
         <CodeMirrorEditor
           key={activePath}
