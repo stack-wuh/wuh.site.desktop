@@ -1,12 +1,17 @@
 export type PanelId = 'files' | 'git' | 'github' | 'settings'
 
+import { FileText, GitBranch, Settings } from 'lucide-react'
+import { GithubIcon } from './ui/GithubIcon'
 import { Button } from './ui/Button'
+import { AppIcon } from './ui/AppIcon'
 
-const ITEMS: { id: PanelId; icon: string; title: string }[] = [
-  { id: 'files', icon: '📄', title: '文件' },
-  { id: 'git', icon: '⑂', title: 'Git 历史' },
-  { id: 'github', icon: '◉', title: 'GitHub' },
-  { id: 'settings', icon: '⚙', title: '设置' }
+import type { IconComponent } from './ui/AppIcon'
+
+const ITEMS: { id: PanelId; icon: IconComponent; title: string }[] = [
+  { id: 'files', icon: FileText, title: '文件' },
+  { id: 'git', icon: GitBranch, title: 'Git 历史' },
+  { id: 'github', icon: GithubIcon, title: 'GitHub' },
+  { id: 'settings', icon: Settings, title: '设置' }
 ]
 
 export function ActivityBar(props: {
@@ -23,7 +28,7 @@ export function ActivityBar(props: {
           title={item.title}
           onClick={() => props.onChange(item.id)}
         >
-          {item.icon}
+          <AppIcon icon={item.icon} size="lg" />
         </Button>
       ))}
     </nav>

@@ -1,0 +1,135 @@
+/* ---------- 预览区：博客阅读态排版（对齐站点正文语言） ---------- */
+
+.markdown-body {
+  padding: 20px 26px;
+  line-height: var(--line-height-body);
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4 {
+  line-height: var(--line-height-heading);
+  margin: 1.4em 0 0.6em;
+  color: var(--text-primary);
+}
+
+.markdown-body h1 {
+  font-size: var(--font-size-lg);
+}
+
+.markdown-body h2 {
+  font-size: var(--font-size-md);
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--chrome-border);
+}
+
+.markdown-body h2::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 0.9em;
+  background: var(--primary-color);
+  border-radius: 2px;
+  margin-right: 8px;
+  vertical-align: -0.12em;
+}
+
+.markdown-body h3 {
+  font-size: var(--font-size-base);
+}
+
+.markdown-body p {
+  margin: 0.8em 0;
+}
+
+.markdown-body a {
+  color: var(--primary-color);
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in oklab, var(--primary-color) 45%, transparent);
+}
+
+.markdown-body a:hover {
+  border-bottom-color: var(--primary-color);
+}
+
+.markdown-body pre {
+  background: var(--background-color);
+  border: 1px solid var(--chrome-border);
+  padding: 12px 14px;
+  border-radius: var(--border-radius-base);
+  overflow: auto;
+  line-height: 1.6;
+}
+
+.markdown-body code {
+  font-family: var(--font-mono);
+  background: color-mix(in oklab, var(--primary-color) 8%, transparent);
+  color: var(--primary-color);
+  border-radius: var(--border-radius-sm);
+  padding: 1px 5px;
+  font-size: 0.88em;
+}
+
+.markdown-body pre code {
+  background: transparent;
+  color: var(--text-primary);
+  padding: 0;
+}
+
+.markdown-body img {
+  max-width: 100%;
+  border-radius: var(--border-radius-base);
+}
+
+.markdown-body blockquote {
+  margin: 1em 0;
+  padding: 4px 16px;
+  border-left: 3px solid var(--primary-color);
+  background: color-mix(in oklab, var(--primary-color) 5%, transparent);
+  color: var(--text-secondary);
+  border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  padding-left: 1.6em;
+}
+
+.markdown-body li {
+  margin: 0.3em 0;
+}
+
+.markdown-body table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+  font-size: 0.94em;
+}
+
+.markdown-body th,
+.markdown-body td {
+  border: 1px solid var(--chrome-border);
+  padding: 6px 12px;
+  text-align: left;
+}
+
+.markdown-body th {
+  background: var(--chrome-raised);
+  font-weight: 700;
+}
+
+.markdown-body hr {
+  border: none;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--primary-color) 45%, transparent),
+    transparent
+  );
+  margin: 2em 0;
+}

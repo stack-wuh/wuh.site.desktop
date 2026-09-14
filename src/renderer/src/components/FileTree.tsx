@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
+import { ChevronDown, ChevronRight } from 'lucide-react'
+import { AppIcon } from './ui/AppIcon'
 import type { FileNode } from '@shared/types'
 import {
   BLOG_PRESET,
@@ -32,7 +34,7 @@ function Node(props: { node: FileNode; depth: number }): React.JSX.Element {
           style={{ paddingLeft: depth * 14 + 8 }}
           onClick={() => setOpen((v) => !v)}
         >
-          <span className="caret">{open ? '▾' : '▸'}</span>
+          <span className="caret"><AppIcon icon={open ? ChevronDown : ChevronRight} size="xs" /></span>
           {node.name}
         </div>
         {open && node.children?.map((child) => <Node key={child.path} node={child} depth={depth + 1} />)}
@@ -96,7 +98,7 @@ function StructuredView(props: {
                       style={{ paddingLeft: 8 }}
                       onClick={() => toggle(key)}
                     >
-                      <span className="caret">{open ? '▾' : '▸'}</span>
+                      <span className="caret"><AppIcon icon={open ? ChevronDown : ChevronRight} size="xs" /></span>
                       {g.title}
                     </div>
                     {open &&

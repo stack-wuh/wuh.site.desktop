@@ -8,7 +8,10 @@ import { GitHubPanel } from './components/GitHubPanel'
 import { GitPanel } from './history/HistoryPanel'
 import { SettingsPage } from './settings/SettingsPage'
 import { ConfirmHost } from './components/ui/Dialog'
-import { useTheme } from './theme/ThemeProvider'
+import { AppearanceMenu } from './components/AppearanceMenu'
+import { AppIcon } from './components/ui/AppIcon'
+import { Button } from './components/ui/Button'
+import { FolderOpen } from 'lucide-react'
 import { useWorkspaceStore, workspaceStore } from './store'
 
 declare global {
@@ -44,7 +47,6 @@ export default function App(): React.JSX.Element {
   const [workspace, setWorkspace] = useState<WorkspaceInfo | null>(null)
   const [activePanel, setActivePanel] = useState<PanelId>('files')
   const store = useWorkspaceStore()
-  const { theme, toggle } = useTheme()
   useAutoCommit()
 
   useEffect(() => {
@@ -79,14 +81,13 @@ export default function App(): React.JSX.Element {
             {workspace.github.owner}/{workspace.github.repo}
           </span>
         )}
-        <button onClick={handleOpen}>打开文件夹</button>
-        <button
-          className="theme-toggle"
-          title={theme === 'dark' ? '切换到浅色' : '切换到深色'}
-          onClick={toggle}
-        >
-          {theme === 'dark' ? '🌙' : '☀️'}
-        </button>
+        <span className="title-actions">
+          <Button size="sm" onClick={handleOpen}>
+            <AppIcon icon={FolderOpen} size="sm" />
+            打开文件夹
+          </Button>
+          <AppearanceMenu />
+        </span>
       </header>
       <div className="app-body">
         <ActivityBar active={activePanel} onChange={setActivePanel} />

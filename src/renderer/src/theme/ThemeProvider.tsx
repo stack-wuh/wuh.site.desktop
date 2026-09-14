@@ -1,46 +1,91 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-import { PALETTES, paletteToCssVars, type ThemeName } from './tokens'
+import {
+  buildThemeCss,
+  type ColorScheme,
+  type ThemeFamily
+} from './tokens'
 
-const STORAGE_KEY = 'wd:theme'
+const STORAGE_KEY = 'wd.theme'
 
-interface ThemeContextValue {
-  theme: ThemeName
-  toggle: () => void
+export interface ThemeState {
+  family: ThemeFamily
+  scheme: ColorScheme
+}
+
+interface ThemeContextValue extends ThemeState {
+  setFamily: (family: ThemeFamily) => void
+  setScheme: (scheme: ColorScheme) => void
+  toggleScheme: () => void
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
-  theme: 'dark',
-  toggle: () => undefined
+  family: 'wine',
+  scheme: 'dark',
+  setFamily: () => undefined,
+  setScheme: () => undefined,
+  toggleScheme: () => undefined
 })
 
-function initialTheme(): ThemeName {
+function readStored(): ThemeState {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY)
-    if (saved === 'light' || saved === 'dark') return saved
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<ThemeState>
+      return {
+        family: parsed.family === 'plain' ? 'plain' : 'wine',
+        scheme: parsed.scheme === 'light' ? 'light' : 'dark'
+      }
+    }
   } catch {
-    // localStorage 不可用时走默认深色
+    // 存储不可用时走默认
   }
-  return 'dark'
+  return { family: 'wine', scheme: 'dark' }
+}
+
+/** 主题 CSS 只注入一次（变量路由全靠 data 属性切换） */
+let styleInjected = false
+function injectThemeCss(): void {
+  if (styleInjected) return
+  const style = document.createElement('style')
+  style.id = 'wd-theme-vars'
+  style.textContent = buildThemeCss()
+  document.head.appendChild(style)
+  styleInjected = true
+}
+
+function applyAttrs(state: ThemeState): void {
+  const root = document.documentElement
+  root.setAttribute('data-theme-family', state.family)
+  root.setAttribute('data-color-scheme', state.scheme)
 }
 
 export function ThemeProvider(props: { children: React.ReactNode }): React.JSX.Element {
-  const [theme, setTheme] = useState<ThemeName>(initialTheme)
+  const [state, setState] = useState<ThemeState>(readStored)
 
   useEffect(() => {
-    const vars = paletteToCssVars(PALETTES[theme])
-    for (const [key, value] of Object.entries(vars)) {
-      document.documentElement.style.setProperty(key, value)
-    }
+    // 无闪动：先禁过渡，应用属性并强制重排，再恢复（对齐站点 data-no-transition 方案）
+    const root = document.documentElement
+    root.setAttribute('data-no-transition', '')
+    injectThemeCss()
+    applyAttrs(state)
+    void root.offsetHeight
+    root.removeAttribute('data-no-transition')
     try {
-      localStorage.setItem(STORAGE_KEY, theme)
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
     } catch {
       // 忽略持久化失败
     }
-  }, [theme])
+  }, [state])
 
-  const toggle = (): void => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))
+  const value: ThemeContextValue = {
+    ...state,
+    setFamily: (family) => setState((s) => ({ ...s, family })),
+    setScheme: (scheme) => setState((s) => ({ ...s, scheme })),
+    toggleScheme: () =>
+      setState((s) => ({ ...s, scheme: s.scheme === 'dark' ? 'light' : 'dark' }))
+  }
 
-  return <ThemeContext.Provider value={{ theme, toggle }}>{props.children}</ThemeContext.Provider>
+  return <ThemeContext.Provider value={value}>{props.children}</ThemeContext.Provider>
 }
 
 export function useTheme(): ThemeContextValue {

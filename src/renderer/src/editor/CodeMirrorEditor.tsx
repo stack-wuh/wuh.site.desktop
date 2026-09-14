@@ -119,21 +119,21 @@ const frontmatterField = StateField.define<DecorationSet>({
 
 /** 编辑器主题跟随应用 CSS 变量（深/浅色切换自动生效） */
 const cmTheme = EditorView.theme({
-  '&': { color: 'var(--fg)', backgroundColor: 'var(--bg)' },
+  '&': { color: 'var(--text-primary)', backgroundColor: 'var(--background-color)' },
   '&.cm-focused': { outline: 'none' },
-  '.cm-content': { caretColor: 'var(--accent)' },
-  '.cm-cursor, .cm-dropCursor': { borderLeftColor: 'var(--accent)' },
+  '.cm-content': { caretColor: 'var(--primary-color)' },
+  '.cm-cursor, .cm-dropCursor': { borderLeftColor: 'var(--primary-color)' },
   '.cm-gutters': {
-    backgroundColor: 'var(--bg-panel)',
-    color: 'var(--fg-dim)',
+    backgroundColor: 'var(--chrome-panel)',
+    color: 'var(--text-muted)',
     border: 'none'
   },
   '.cm-activeLine': { backgroundColor: 'rgba(127, 127, 127, 0.08)' },
   '.cm-activeLineGutter': { backgroundColor: 'rgba(127, 127, 127, 0.12)' },
-  '.cm-selectionBackground': { backgroundColor: 'var(--accent-soft)' },
-  '&.cm-focused .cm-selectionBackground': { backgroundColor: 'var(--accent-soft)' },
+  '.cm-selectionBackground': { backgroundColor: 'color-mix(in oklab, var(--primary-color) 25%, transparent)' },
+  '&.cm-focused .cm-selectionBackground': { backgroundColor: 'color-mix(in oklab, var(--primary-color) 25%, transparent)' },
   '.cm-scroller': {
-    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+    fontFamily: "var(--font-mono)",
     lineHeight: '1.65'
   },
   '.cm-lineNumbers .cm-gutterElement': { padding: '0 8px 0 14px' }

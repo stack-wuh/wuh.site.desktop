@@ -28,7 +28,8 @@
     "markdown-it": "^15.0.2",
     "react": "19.2.5",
     "react-dom": "19.2.5",
-    "simple-git": "^3.36.0"
+    "simple-git": "^3.36.0",
+    "lucide-react": "^1.16.0"
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
