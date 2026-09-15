@@ -1,26 +1,39 @@
-export type PanelId = 'files' | 'git' | 'github' | 'settings'
-
-import { FileText, GitBranch, Settings } from 'lucide-react'
+import { BookOpen, Eye, FileText, GitBranch, MessageSquare, Settings, Sparkles, Tag } from 'lucide-react'
+import type { PluginIconName } from '@shared/plugin'
 import { GithubIcon } from './ui/GithubIcon'
 import { Button } from './ui/Button'
-import { AppIcon } from './ui/AppIcon'
+import { AppIcon, type IconComponent } from './ui/AppIcon'
 
-import type { IconComponent } from './ui/AppIcon'
+export interface ActivityItem {
+  id: string
+  icon: IconComponent
+  title: string
+}
 
-const ITEMS: { id: PanelId; icon: IconComponent; title: string }[] = [
-  { id: 'files', icon: FileText, title: '文件' },
-  { id: 'git', icon: GitBranch, title: 'Git 历史' },
-  { id: 'github', icon: GithubIcon, title: 'GitHub' },
-  { id: 'settings', icon: Settings, title: '设置' }
-]
+/** 插件 manifest 图标白名单 → 宿主同源图标组件（图标资源由核心自持，插件不携带） */
+const PLUGIN_ICON_COMPONENTS: Record<PluginIconName, IconComponent> = {
+  'file-text': FileText,
+  'git-branch': GitBranch,
+  github: GithubIcon,
+  tag: Tag,
+  message: MessageSquare,
+  eye: Eye,
+  sparkles: Sparkles,
+  book: BookOpen
+}
+
+export function pluginIcon(name: PluginIconName): IconComponent {
+  return PLUGIN_ICON_COMPONENTS[name]
+}
 
 export function ActivityBar(props: {
-  active: PanelId
-  onChange: (id: PanelId) => void
+  items: ActivityItem[]
+  active: string
+  onChange: (id: string) => void
 }): React.JSX.Element {
   return (
     <nav className="activity-bar">
-      {ITEMS.map((item) => (
+      {props.items.map((item) => (
         <Button
           key={item.id}
           variant="ghost"

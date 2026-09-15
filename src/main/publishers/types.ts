@@ -17,6 +17,11 @@ export function registerPublisher(p: Publisher): void {
   registry.set(p.id, p)
 }
 
+/** 插件启用状态变化时用于移除桥接 publisher */
+export function unregisterPublisher(id: string): void {
+  registry.delete(id)
+}
+
 export function getPublisher(id: string): Publisher | undefined {
   return registry.get(id)
 }

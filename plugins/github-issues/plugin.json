@@ -1,0 +1,19 @@
+{
+  "id": "github-issues",
+  "name": "GitHub Issues",
+  "version": "1.0.0",
+  "description": "把文档发布为 Issue（publisher 贡献）、标签管理与 Issue 评论回复",
+  "logic": "logic/publisher.js",
+  "views": [
+    {
+      "id": "github",
+      "area": "sidebar",
+      "title": "GitHub",
+      "icon": "github",
+      "entry": "view/index.html",
+      "order": 30
+    }
+  ],
+  "publishers": [{ "id": "github-issues", "label": "GitHub Issues" }],
+  "permissions": ["net.github.api", "publish.register", "document.read.write"]
+}

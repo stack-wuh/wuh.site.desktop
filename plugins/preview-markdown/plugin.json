@@ -1,0 +1,18 @@
+{
+  "id": "preview-markdown",
+  "name": "Markdown 预览",
+  "version": "1.0.0",
+  "description": "文档正文实时渲染预览：渲染经宿主管线执行，相对图片路径由宿主解析",
+  "views": [
+    {
+      "id": "preview",
+      "area": "preview",
+      "title": "预览",
+      "icon": "eye",
+      "entry": "view/index.html",
+      "order": 10
+    }
+  ],
+  "publishers": [],
+  "permissions": ["render.execute", "document.read.write"]
+}

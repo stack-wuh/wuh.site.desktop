@@ -2,10 +2,13 @@ import { Octokit } from '@octokit/rest'
 import { implement } from '../ipc'
 import { getWorkspace } from '../workspace'
 import { getToken } from '../credentials'
+import { buildIssueBody } from '@shared/frontmatter'
 import type {
   IssueComment,
   IssueSummary,
-  LabelInfo
+  LabelInfo,
+  PublishRequest,
+  PublishResult
 } from '@shared/types'
 
 async function client(): Promise<{ octokit: Octokit; owner: string; repo: string }> {
@@ -123,4 +126,37 @@ implement('githubUpsertLabel', async ([label]) => {
 implement('githubDeleteLabel', async ([name]) => {
   const { octokit, owner, repo } = await client()
   await octokit.issues.deleteLabel({ owner, repo, name })
+})
+
+/**
+ * 创建/更新 Issue（原 publishers/github-issues 的执行端收编于此）。
+ * metadata 以 HTML 注释尾注追加（站点 blog 消费规范），发布编排逻辑归插件。
+ */
+implement('githubUpsertIssue', async ([req]): Promise<PublishResult> => {
+  const { octokit, owner, repo } = await client()
+  const body = buildIssueBody(req.body, req.metadata)
+  try {
+    if (req.issueNumber) {
+      const res = await octokit.issues.update({
+        owner,
+        repo,
+        issue_number: req.issueNumber,
+        title: req.title,
+        body,
+        labels: req.labels
+      })
+      return { ok: true, url: res.data.html_url, issueNumber: res.data.number, created: false }
+    }
+    if (!req.title) return { ok: false, error: 'frontmatter 缺少 title，无法发布' }
+    const res = await octokit.issues.create({
+      owner,
+      repo,
+      title: req.title,
+      body,
+      labels: req.labels
+    })
+    return { ok: true, url: res.data.html_url, issueNumber: res.data.number, created: true }
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) }
+  }
 })

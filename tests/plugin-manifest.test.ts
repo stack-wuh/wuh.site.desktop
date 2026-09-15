@@ -1,0 +1,110 @@
+import { describe, expect, it } from 'vitest'
+import { validateManifest, PLUGIN_PERMISSIONS } from '@shared/plugin'
+
+function validManifest(): Record<string, unknown> {
+  return {
+    id: 'preview-markdown',
+    name: 'Markdown 预览',
+    version: '1.0.0',
+    logic: 'logic.js',
+    views: [
+      { id: 'preview', area: 'preview', title: '预览', icon: 'eye', entry: 'view/index.html', order: 10 }
+    ],
+    publishers: [],
+    permissions: ['render.execute', 'document.read.write']
+  }
+}
+
+describe('validateManifest', () => {
+  it('接受合法 manifest 并返回窄化类型', () => {
+    const res = validateManifest(validManifest())
+    expect(res.ok).toBe(true)
+    if (res.ok) {
+      expect(res.manifest.id).toBe('preview-markdown')
+      expect(res.manifest.views[0]?.entry).toBe('view/index.html')
+      expect(res.manifest.permissions).toContain('render.execute')
+    }
+  })
+
+  it('拒绝非对象输入', () => {
+    for (const bad of [null, undefined, 42, 'x', []]) {
+      const res = validateManifest(bad)
+      expect(res.ok).toBe(false)
+    }
+  })
+
+  it('id 禁止路径字符', () => {
+    for (const id of ['../evil', 'a/b', 'A_B 中', '']) {
+      const res = validateManifest({ ...validManifest(), id })
+      expect(res.ok).toBe(false)
+      if (!res.ok) expect(res.errors.join(' ')).toMatch(/id/)
+    }
+  })
+
+  it('未知权限被拒绝且错误信息指明权限名', () => {
+    const res = validateManifest({ ...validManifest(), permissions: ['shell.exec'] })
+    expect(res.ok).toBe(false)
+    if (!res.ok) expect(res.errors.join(' ')).toContain('shell.exec')
+  })
+
+  it('视图入口必须是相对 .html 且禁止越界', () => {
+    const bad = [
+      { ...validManifest(), views: [{ id: 'v', area: 'preview', title: 't', icon: 'eye', entry: '/abs.html' }] },
+      { ...validManifest(), views: [{ id: 'v', area: 'preview', title: 't', icon: 'eye', entry: '../escape.html' }] },
+      { ...validManifest(), views: [{ id: 'v', area: 'preview', title: 't', icon: 'eye', entry: 'view/no.ts' }] }
+    ]
+    for (const raw of bad) {
+      const res = validateManifest(raw)
+      expect(res.ok).toBe(false)
+    }
+  })
+
+  it('视图 id 与区域、图标受控', () => {
+    const dup = validateManifest({
+      ...validManifest(),
+      views: [
+        { id: 'x', area: 'sidebar', title: 'a', icon: 'tag', entry: 'a.html' },
+        { id: 'x', area: 'preview', title: 'b', icon: 'tag', entry: 'b.html' }
+      ]
+    })
+    expect(dup.ok).toBe(false)
+    if (!dup.ok) expect(dup.errors.join(' ')).toMatch(/重复/)
+
+    const badArea = validateManifest({
+      ...validManifest(),
+      views: [{ id: 'x', area: 'statusbar', title: 'a', icon: 'tag', entry: 'a.html' }]
+    })
+    expect(badArea.ok).toBe(false)
+
+    const badIcon = validateManifest({
+      ...validManifest(),
+      views: [{ id: 'x', area: 'sidebar', title: 'a', icon: '💀', entry: 'a.html' }]
+    })
+    expect(badIcon.ok).toBe(false)
+  })
+
+  it('publisher 贡献 id 唯一且字段完整', () => {
+    const res = validateManifest({
+      ...validManifest(),
+      publishers: [
+        { id: 'gh', label: 'GitHub' },
+        { id: 'gh', label: 'dup' }
+      ]
+    })
+    expect(res.ok).toBe(false)
+    if (!res.ok) expect(res.errors.join(' ')).toMatch(/publisher/)
+  })
+
+  it('logic 入口必须是相对 .js 且禁止越界', () => {
+    for (const logic of ['../x.js', '/abs.js', 'logic.ts']) {
+      const res = validateManifest({ ...validManifest(), logic })
+      expect(res.ok).toBe(false)
+      if (!res.ok) expect(res.errors.join(' ')).toMatch(/logic/)
+    }
+  })
+
+  it('权限枚举非空且唯一', () => {
+    expect(PLUGIN_PERMISSIONS.length).toBeGreaterThan(0)
+    expect(new Set(PLUGIN_PERMISSIONS).size).toBe(PLUGIN_PERMISSIONS.length)
+  })
+})

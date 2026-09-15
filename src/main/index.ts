@@ -5,9 +5,16 @@ import { bootstrapIpc } from './register-features'
 
 const isDev = !app.isPackaged
 
-// 预览渲染本地图片用的安全协议：不走 webSecurity 关闭路线，dev/prod 行为一致
+// 预览渲染本地图片用的安全协议：不走 webSecurity 关闭路线，dev/prod 行为一致。
+// standard+secure+corsEnabled：插件视图运行在 secure 的 plugin:// 帧中，
+// 跨源加载本地图片需要协议本身具备可信源与 CORS 资格（否则混合内容拦截）。
+// plugin://<id>：插件静态资源与沙箱帧加载协议（standard+secure，供 opaque 帧 fetch）
 protocol.registerSchemesAsPrivileged([
-  { scheme: 'local-resource', privileges: { supportFetchAPI: true, stream: true } }
+  {
+    scheme: 'local-resource',
+    privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true, corsEnabled: true }
+  },
+  { scheme: 'plugin', privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true } }
 ])
 
 function createWindow(): BrowserWindow {
@@ -53,7 +60,13 @@ app.whenReady().then(() => {
   })
 
   bootstrapIpc()
-  createWindow()
+    .catch((err) => {
+      // 插件引导失败不阻塞窗口：宿主功能照常，渲染层按空插件注册表运行
+      console.error('bootstrapIpc failed:', err)
+    })
+    .finally(() => {
+      createWindow()
+    })
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()

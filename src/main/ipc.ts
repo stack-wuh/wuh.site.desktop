@@ -31,6 +31,7 @@ const handlers: {
   githubListLabels: () => { throw new Error('not implemented') },
   githubUpsertLabel: () => { throw new Error('not implemented') },
   githubDeleteLabel: () => { throw new Error('not implemented') },
+  githubUpsertIssue: () => { throw new Error('not implemented') },
   publish: () => { throw new Error('not implemented') },
   uploadImage: () => { throw new Error('not implemented') },
   getSettings: () => { throw new Error('not implemented') },
@@ -45,6 +46,13 @@ export function implement<K extends keyof DesktopApi>(
   fn: (payload: Parameters<DesktopApi[K]>) => ReturnType<DesktopApi[K]>
 ): void {
   handlers[name] = fn as (typeof handlers)[typeof name]
+}
+
+/** 供插件 broker 复用同一能力表；channel 名即 DesktopApi 方法名。白名单在 broker 层强制 */
+export async function callHandler(name: string, payload: unknown[]): Promise<unknown> {
+  const entry = (handlers as unknown as Record<string, unknown>)[name]
+  if (typeof entry !== 'function') throw new Error(`未知能力: ${name}`)
+  return await (entry as (p: unknown[]) => unknown)(payload)
 }
 
 export function registerIpc(): void {

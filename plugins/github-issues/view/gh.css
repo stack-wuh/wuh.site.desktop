@@ -1,0 +1,205 @@
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  background: transparent;
+}
+
+.gh-panel {
+  padding: 10px 12px;
+}
+
+.tab-bar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.placeholder {
+  padding: 10px 2px;
+  color: var(--text-muted);
+}
+
+.error-text {
+  margin: 8px 0;
+  padding: 8px 10px;
+  border-radius: var(--border-radius-sm);
+  background: color-mix(in oklab, var(--danger-color) 10%, transparent);
+  color: var(--danger-color);
+}
+
+.ok-text {
+  margin: 8px 0;
+  color: var(--success-color);
+}
+
+.hint-text {
+  margin-top: 8px;
+  color: var(--text-muted);
+  font-size: 0.9em;
+}
+
+.gh-btn {
+  font: inherit;
+  padding: 4px 10px;
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--chrome-border);
+  background: var(--chrome-raised);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.gh-btn:hover:not(:disabled) {
+  background: var(--chrome-hover);
+}
+
+.gh-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.gh-btn.primary {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: var(--background-color);
+}
+
+.gh-btn.ghost {
+  border-color: transparent;
+  background: transparent;
+}
+
+.gh-btn.active {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.issue-list,
+.label-list,
+.comment-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.issue-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--chrome-border);
+}
+
+.issue-num {
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.issue-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.issue-labels em {
+  font-style: normal;
+  font-size: 0.85em;
+  color: var(--text-secondary);
+  margin-left: 4px;
+}
+
+.label-create {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.label-create input:not([type='color']) {
+  flex: 1;
+  min-width: 0;
+}
+
+.gh-panel input:not([type='color']),
+.gh-panel select,
+.gh-panel textarea {
+  font: inherit;
+  padding: 5px 8px;
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--chrome-border);
+  background: var(--chrome-panel);
+  color: var(--text-primary);
+}
+
+.gh-panel input[type='color'] {
+  width: 34px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--chrome-border);
+  border-radius: var(--border-radius-sm);
+  background: var(--chrome-panel);
+}
+
+.gh-panel select,
+.gh-panel textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.gh-panel textarea {
+  resize: vertical;
+}
+
+.label-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px 0;
+}
+
+.tag {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  border: 1px solid;
+  font-size: 0.85em;
+}
+
+.comment-list li {
+  padding: 6px 0;
+  border-bottom: 1px solid var(--chrome-border);
+}
+
+.comment-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.comment-head time {
+  color: var(--text-muted);
+  font-size: 0.85em;
+}
+
+.comment-body {
+  margin-top: 4px;
+  white-space: pre-wrap;
+  color: var(--text-secondary);
+}
+
+.comment-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}

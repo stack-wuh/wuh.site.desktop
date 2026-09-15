@@ -1,0 +1,159 @@
+/* Git 面板样式：仅使用宿主注入的主题 token（设计同源） */
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  background: transparent;
+}
+
+.placeholder {
+  padding: 12px;
+  color: var(--text-muted);
+}
+
+.error-text {
+  margin: 8px 12px;
+  padding: 8px 10px;
+  border-radius: var(--border-radius-sm);
+  background: color-mix(in oklab, var(--danger-color) 10%, transparent);
+  color: var(--danger-color);
+}
+
+.panel-section {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--chrome-border);
+}
+
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: var(--text-secondary);
+}
+
+.scope-toggle {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.gi-btn {
+  font: inherit;
+  padding: 4px 10px;
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--chrome-border);
+  background: var(--chrome-raised);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.gi-btn:hover:not(:disabled) {
+  background: var(--chrome-hover);
+}
+
+.gi-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.gi-btn.primary {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: var(--background-color);
+}
+
+.gi-btn.danger {
+  border-color: color-mix(in oklab, var(--danger-color) 55%, transparent);
+  color: var(--danger-color);
+}
+
+.gi-btn.ghost {
+  border-color: transparent;
+  background: transparent;
+}
+
+.gi-btn.active {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.commit-box {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.commit-box input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  padding: 5px 8px;
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--chrome-border);
+  background: var(--chrome-panel);
+  color: var(--text-primary);
+}
+
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.status-list,
+.log-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+.status-list li {
+  padding: 2px 0;
+  color: var(--text-secondary);
+}
+
+.status-list li.untracked {
+  color: var(--success-color);
+}
+
+.status-list li.deleted {
+  color: var(--danger-color);
+}
+
+.log-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+}
+
+.log-line code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  color: var(--text-muted);
+}
+
+.log-msg {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diff-view {
+  margin: 8px 0 0;
+  padding: 10px;
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--chrome-border);
+  background: var(--chrome-panel);
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+  line-height: 1.5;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
