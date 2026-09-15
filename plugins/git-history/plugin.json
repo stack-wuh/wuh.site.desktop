@@ -1,0 +1,18 @@
+{
+  "id": "git-history",
+  "name": "Git 历史与回退",
+  "version": "1.0.0",
+  "description": "工作区状态、提交/推送/拉取与提交历史回退（revert-only 语义由宿主能力保证）",
+  "views": [
+    {
+      "id": "git",
+      "area": "sidebar",
+      "title": "Git 历史",
+      "icon": "git-branch",
+      "entry": "view/index.html",
+      "order": 20
+    }
+  ],
+  "publishers": [],
+  "permissions": ["git.status.read", "git.history.write", "document.read.write"]
+}

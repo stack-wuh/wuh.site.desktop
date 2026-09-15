@@ -1,4 +1,21 @@
-/* ---------- 预览区：博客阅读态排版（对齐站点正文语言） ---------- */
+/* 预览排版：移植自宿主旧 preview.css（token 由宿主经 SDK 注入，保持设计同源） */
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  background: transparent;
+}
+
+.placeholder {
+  padding: 20px 26px;
+  color: var(--text-muted);
+}
+
+.error-text {
+  padding: 20px 26px;
+  color: var(--danger-color);
+}
 
 .markdown-body {
   padding: 20px 26px;

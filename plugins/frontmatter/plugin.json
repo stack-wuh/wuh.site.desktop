@@ -1,0 +1,18 @@
+{
+  "id": "frontmatter",
+  "name": "Frontmatter 助手",
+  "version": "1.0.0",
+  "description": "文档头结构化表单：解析/编辑 YAML frontmatter，仅重写文档头部不动正文",
+  "views": [
+    {
+      "id": "frontmatter",
+      "area": "sidebar",
+      "title": "Frontmatter",
+      "icon": "book",
+      "entry": "view/index.html",
+      "order": 40
+    }
+  ],
+  "publishers": [],
+  "permissions": ["document.read.write"]
+}

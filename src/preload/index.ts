@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { DesktopApi } from '@shared/types'
+import type { DesktopApi, IpcResult } from '@shared/types'
+import type { PluginDispatchPayload, PluginHostApi, PluginListResult, PluginSessionInfo } from '@shared/plugin'
 
 /**
  * 与主进程 ipc.ts 的 handlers 表按方法名一一对应；
@@ -44,6 +45,7 @@ const api: DesktopApi = {
   githubListLabels: () => invoke('githubListLabels'),
   githubUpsertLabel: (l) => invoke('githubUpsertLabel', l),
   githubDeleteLabel: (n) => invoke('githubDeleteLabel', n),
+  githubUpsertIssue: (req) => invoke('githubUpsertIssue', req),
   publish: (req) => invoke('publish', req),
   uploadImage: (abs) => invoke('uploadImage', abs),
   getSettings: () => invoke('getSettings'),
@@ -53,3 +55,35 @@ const api: DesktopApi = {
 }
 
 contextBridge.exposeInMainWorld('api', api)
+
+/**
+ * host↔主进程插件通道：与 DesktopApi 同样的 IpcResult 解包；
+ * 仅宿主自用，插件帧无 preload、拿不到本对象。
+ */
+async function pluginInvoke<T>(channel: string, ...args: unknown[]): Promise<T> {
+  const res = (await ipcRenderer.invoke(channel, ...args)) as IpcResult<T>
+  if (res && typeof res === 'object' && 'ok' in res) {
+    if (res.ok) return res.data
+    throw new Error(res.error ?? '未知错误')
+  }
+  throw new Error('IPC 响应格式异常')
+}
+
+const pluginApi: PluginHostApi = {
+  list: () => pluginInvoke<PluginListResult>('plugin:list'),
+  createSession: (pluginId) => pluginInvoke<PluginSessionInfo>('plugin:createSession', pluginId),
+  setEnabled: async (pluginId, enabled) => {
+    await pluginInvoke<null>('plugin:setEnabled', pluginId, enabled)
+  },
+  invoke: (sessionId, method, args) => pluginInvoke<unknown>('plugin:invoke', sessionId, method, args),
+  onDispatch: (cb) => {
+    const handler = (_event: Electron.IpcRendererEvent, payload: PluginDispatchPayload): void => cb(payload)
+    ipcRenderer.on('plugin:dispatch', handler)
+    return () => ipcRenderer.removeListener('plugin:dispatch', handler)
+  },
+  dispatchReply: async (requestId, result) => {
+    await pluginInvoke<null>('plugin:dispatchReply', requestId, result)
+  }
+}
+
+contextBridge.exposeInMainWorld('pluginApi', pluginApi)

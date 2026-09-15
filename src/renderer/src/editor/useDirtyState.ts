@@ -9,10 +9,7 @@ export function useDirtyState(): {
   const { dirty } = useWorkspaceStore()
 
   const save = useCallback(async (): Promise<void> => {
-    const { activePath, content } = workspaceStore.get()
-    if (!activePath || content == null) return
-    await window.api.writeFile(activePath, content)
-    workspaceStore.markSaved()
+    await workspaceStore.saveActive()
   }, [])
 
   useEffect(() => {

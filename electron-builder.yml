@@ -5,6 +5,8 @@ directories:
   buildResources: build
 files:
   - out/**
+  # 内置官方参考插件：主进程 protocol handler 经 app.getAppPath()/plugins 读取（asar 内 fs 支持）
+  - plugins/**
   - package.json
 asar: true
 npmRebuild: false

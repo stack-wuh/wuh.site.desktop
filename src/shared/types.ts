@@ -209,6 +209,8 @@ export interface DesktopApi {
   githubListLabels(): Promise<LabelInfo[]>
   githubUpsertLabel(label: LabelInfo): Promise<void>
   githubDeleteLabel(name: string): Promise<void>
+  /** 供插件 publisher 执行发布：创建或更新 Issue，metadata 尾注由主进程拼装 */
+  githubUpsertIssue(req: PublishRequest): Promise<PublishResult>
   publish(req: PublishRequest): Promise<PublishResult>
   uploadImage(absPath: string): Promise<UploadResult>
   getSettings(): Promise<SettingsStatus>

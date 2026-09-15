@@ -1,24 +1,35 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { FileText, FolderOpen, Settings } from 'lucide-react'
 import type { AppSettings, WorkspaceInfo } from '@shared/types'
 import { FileTree } from './components/FileTree'
 import { EditorPane } from './editor/EditorPane'
-import { Preview } from './preview/Preview'
-import { ActivityBar, type PanelId } from './components/ActivityBar'
-import { GitHubPanel } from './components/GitHubPanel'
-import { GitPanel } from './history/HistoryPanel'
+import { ActivityBar, pluginIcon, type ActivityItem } from './components/ActivityBar'
 import { SettingsPage } from './settings/SettingsPage'
 import { ConfirmHost } from './components/ui/Dialog'
 import { AppearanceMenu } from './components/AppearanceMenu'
 import { AppIcon } from './components/ui/AppIcon'
 import { Button } from './components/ui/Button'
-import { FolderOpen } from 'lucide-react'
 import { useWorkspaceStore, workspaceStore } from './store'
+import {
+  bootstrapPluginsHost,
+  broadcastTheme,
+  listPreviewViews,
+  listSidebarViews,
+  PluginView,
+  setWorkspaceInfo
+} from './plugins/PluginFrameHost'
+import { useTheme } from './theme/ThemeProvider'
 
 declare global {
   interface Window {
     api: import('@shared/types').DesktopApi
+    pluginApi: import('@shared/plugin').PluginHostApi
   }
 }
+
+export const PLUGIN_PANEL_PREFIX = 'plugin:'
+export const pluginPanelKey = (pluginId: string, viewId: string): string =>
+  `${PLUGIN_PANEL_PREFIX}${pluginId}:${viewId}`
 
 /** 设置里开启后：编辑停顿 N ms 自动保存并 commit（防抖，只在脏状态触发） */
 function useAutoCommit(): void {
@@ -45,18 +56,49 @@ function useAutoCommit(): void {
 
 export default function App(): React.JSX.Element {
   const [workspace, setWorkspace] = useState<WorkspaceInfo | null>(null)
-  const [activePanel, setActivePanel] = useState<PanelId>('files')
+  const [activePanel, setActivePanel] = useState<string>('files')
+  const [pluginsReady, setPluginsReady] = useState(false)
   const store = useWorkspaceStore()
+  const { family, scheme } = useTheme()
   useAutoCommit()
 
   useEffect(() => {
-    void window.api.getWorkspace().then(setWorkspace)
+    void window.api.getWorkspace().then((info) => {
+      setWorkspace(info)
+      setWorkspaceInfo(info)
+    })
+    void bootstrapPluginsHost()
+      .then(() => setPluginsReady(true))
+      .catch((err: unknown) => console.error('插件引导失败', err))
   }, [])
+
+  // 主题切换同步进全部插件帧（token 快照经 CSS 注入，设计同源）
+  useEffect(() => {
+    if (pluginsReady) broadcastTheme()
+  }, [family, scheme, pluginsReady])
+
+  const sidebarViews = useMemo(() => (pluginsReady ? listSidebarViews() : []), [pluginsReady])
+  const previewView = useMemo(() => (pluginsReady ? listPreviewViews()[0] : undefined), [pluginsReady])
+
+  const items: ActivityItem[] = [
+    { id: 'files', icon: FileText, title: '文件' },
+    ...sidebarViews.map(({ pluginId, view }) => ({
+      id: pluginPanelKey(pluginId, view.id),
+      icon: pluginIcon(view.icon),
+      title: view.title
+    })),
+    { id: 'settings', icon: Settings, title: '设置' }
+  ]
+
+  const activePluginPanel = activePanel.startsWith(PLUGIN_PANEL_PREFIX)
+    ? sidebarViews.find((entry) => pluginPanelKey(entry.pluginId, entry.view.id) === activePanel)
+    : undefined
 
   const handleOpen = (): void => {
     void window.api.openWorkspace().then((info) => {
       if (info) {
         setWorkspace(info)
+        setWorkspaceInfo(info)
         workspaceStore.reset()
       }
     })
@@ -90,19 +132,27 @@ export default function App(): React.JSX.Element {
         </span>
       </header>
       <div className="app-body">
-        <ActivityBar active={activePanel} onChange={setActivePanel} />
+        <ActivityBar items={items} active={activePanel} onChange={setActivePanel} />
         <aside className="sidebar">
           {activePanel === 'files' && <FileTree />}
-          {activePanel === 'git' && <GitPanel />}
-          {activePanel === 'github' && <GitHubPanel />}
           {activePanel === 'settings' && <SettingsPage />}
+          {activePluginPanel && (
+            <PluginView pluginId={activePluginPanel.pluginId} view={activePluginPanel.view} />
+          )}
+          {activePanel.startsWith(PLUGIN_PANEL_PREFIX) && !activePluginPanel && (
+            <div className="placeholder">该插件视图已停用</div>
+          )}
         </aside>
         <main className="work-area">
           <section className="editor-area">
             <EditorPane />
           </section>
           <section className="preview-area">
-            <Preview />
+            {previewView ? (
+              <PluginView pluginId={previewView.pluginId} view={previewView.view} />
+            ) : (
+              <div className="placeholder">预览区（未启用提供预览视图的插件）</div>
+            )}
           </section>
         </main>
       </div>
