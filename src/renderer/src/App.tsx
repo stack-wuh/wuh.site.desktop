@@ -54,13 +54,55 @@ function useAutoCommit(): void {
   }, [dirty, activePath, settings])
 }
 
+/** 主区视图：work = 编辑器+预览，settings = 全屏设置页（盖住 ActivityBar+侧栏，未来 tab 化的挂载点） */
+export type MainView = 'work' | 'settings'
+
 export default function App(): React.JSX.Element {
   const [workspace, setWorkspace] = useState<WorkspaceInfo | null>(null)
   const [activePanel, setActivePanel] = useState<string>('files')
+  const [mainView, setMainView] = useState<MainView>('work')
   const [pluginsReady, setPluginsReady] = useState(false)
   const store = useWorkspaceStore()
   const { family, scheme } = useTheme()
   useAutoCommit()
+
+  /** 焦点移回触发元素（ActivityBar 设置按钮），interaction.md 焦点管理要求 */
+  const focusSettingsTrigger = (): void => {
+    document.querySelector<HTMLButtonElement>('.activity-bar button[title="设置"]')?.focus()
+  }
+
+  const openSettings = (): void => setMainView('settings')
+
+  const closeSettings = (): void => {
+    // 设置页盖住 ActivityBar，返回后按钮才重新挂载，延迟到渲染完成再还焦点
+    setMainView('work')
+    setTimeout(focusSettingsTrigger, 0)
+  }
+
+  // Cmd/Ctrl+, 开/关设置；Esc 返回编辑器。确认框打开时让位给 Dialog 自己的 Esc 处理
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent): void => {
+      if ((e.metaKey || e.ctrlKey) && e.key === ',') {
+        e.preventDefault()
+        if (mainView === 'settings') closeSettings()
+        else openSettings()
+        return
+      }
+      if (e.key === 'Escape' && mainView === 'settings' && !document.querySelector('.ui-dialog-overlay')) {
+        closeSettings()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [mainView])
+
+  const handlePanelChange = (id: string): void => {
+    if (id === 'settings') {
+      openSettings()
+      return
+    }
+    setActivePanel(id)
+  }
 
   useEffect(() => {
     void window.api.getWorkspace().then((info) => {
@@ -132,29 +174,34 @@ export default function App(): React.JSX.Element {
         </span>
       </header>
       <div className="app-body">
-        <ActivityBar items={items} active={activePanel} onChange={setActivePanel} />
-        <aside className="sidebar">
-          {activePanel === 'files' && <FileTree />}
-          {activePanel === 'settings' && <SettingsPage />}
-          {activePluginPanel && (
-            <PluginView pluginId={activePluginPanel.pluginId} view={activePluginPanel.view} />
-          )}
-          {activePanel.startsWith(PLUGIN_PANEL_PREFIX) && !activePluginPanel && (
-            <div className="placeholder">该插件视图已停用</div>
-          )}
-        </aside>
-        <main className="work-area">
-          <section className="editor-area">
-            <EditorPane />
-          </section>
-          <section className="preview-area">
-            {previewView ? (
-              <PluginView pluginId={previewView.pluginId} view={previewView.view} />
-            ) : (
-              <div className="placeholder">预览区（未启用提供预览视图的插件）</div>
-            )}
-          </section>
-        </main>
+        {mainView === 'settings' ? (
+          <SettingsPage onBack={closeSettings} />
+        ) : (
+          <>
+            <ActivityBar items={items} active={activePanel} onChange={handlePanelChange} />
+            <aside className="sidebar">
+              {activePanel === 'files' && <FileTree />}
+              {activePluginPanel && (
+                <PluginView pluginId={activePluginPanel.pluginId} view={activePluginPanel.view} />
+              )}
+              {activePanel.startsWith(PLUGIN_PANEL_PREFIX) && !activePluginPanel && (
+                <div className="placeholder">该插件视图已停用</div>
+              )}
+            </aside>
+            <main className="work-area">
+              <section className="editor-area">
+                <EditorPane />
+              </section>
+              <section className="preview-area">
+                {previewView ? (
+                  <PluginView pluginId={previewView.pluginId} view={previewView.view} />
+                ) : (
+                  <div className="placeholder">预览区（未启用提供预览视图的插件）</div>
+                )}
+              </section>
+            </main>
+          </>
+        )}
       </div>
       <footer className="status-bar">
         <span>{store.activePath ?? 'no file'}</span>

@@ -563,14 +563,51 @@ body :is(.title-bar, .sidebar, .activity-bar, .status-bar, .editor-toolbar, .pre
   flex: 1;
 }
 
-/* ===== 设置页 ===== */
+/* ===== 设置页（全屏视图：盖住 ActivityBar + 侧栏 + 主区） ===== */
 
-.settings-page {
-  padding: 12px;
+.app-body > .settings-page {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  padding: 20px 32px 40px;
+  background: var(--background-color);
+  outline: none;
+  animation: settings-enter 200ms ease-out;
+}
+
+.settings-topbar {
+  max-width: 860px;
+  margin: 0 auto 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.settings-title {
+  margin: 0;
+  font-size: 18px;
+  color: var(--text-primary);
+}
+
+.settings-grid {
+  max-width: 860px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 16px;
+  align-items: start;
 }
 
 .settings-page section {
-  margin-bottom: 18px;
+  margin: 0;
+  padding: 16px;
+  background: var(--chrome-panel);
+  border: 1px solid var(--chrome-border);
+  border-radius: var(--border-radius-md);
+}
+
+.settings-page section .row-actions + .row-actions {
+  margin-top: 8px;
 }
 
 .settings-page h3 {
@@ -581,6 +618,34 @@ body :is(.title-bar, .sidebar, .activity-bar, .status-bar, .editor-toolbar, .pre
 
 .settings-page .row-actions .ui-input {
   width: 100%;
+  min-width: 0;
+}
+
+@keyframes settings-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-body > .settings-page {
+    animation: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-body > .settings-page {
+    padding: 16px 16px 32px;
+  }
+
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .check-row {
