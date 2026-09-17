@@ -76,6 +76,7 @@
 ## 结果
 - 实际耗时: —
 - 验证: tsc 双 tsconfig 全绿；vitest 基线 72/72 通过（chrome 变更 apply 前回归）
+- 发布: 随 chrome 变更分支一并发布（PR #2，stack-wuh/wuh.site.desktop），本变更不单开 PR；合并后随 chrome 变更一同归档
 
 ## 知识评估
 - **最终影响:** 新增（已完成）

@@ -4,7 +4,7 @@
   "name": "20260917-feature-shell-chrome-plugin-api",
   "type": "feature",
   "scope": "renderer-chrome",
-  "status": "branched",
+  "status": "published",
   "baseBranch": "main",
   "branch": "feature/20260917-feature-shell-chrome-plugin-api",
   "files": [
@@ -32,8 +32,8 @@
     "repository": null,
     "issue": null,
     "issueUrl": null,
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 2,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/2"
   },
   "review": {
     "conclusion": "pending",
@@ -42,8 +42,8 @@
   },
   "workflow": {
     "operation": null,
-    "checkpoint": null,
-    "planHash": "2c4be783f08388e0e99c31ec1bd317e4149d3af815f65746c73c6e81e43bb5ba",
+    "checkpoint": "pr:2",
+    "planHash": "ba9b1d75c1e930312d8950095adba6a74708bf493c22e7003b8854826abd523b",
     "updatedAt": null,
     "lastError": null
   }
