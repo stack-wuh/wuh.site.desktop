@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ChevronDown, ChevronRight } from 'lucide-react'
+import { IconChevronDown, IconChevronRight, IconFile, IconFolder, IconFolderOpen } from './icons'
 import { AppIcon } from './ui/AppIcon'
+import { Empty } from './ui/Empty'
 import type { FileNode } from '@shared/types'
 import {
   BLOG_PRESET,
@@ -34,7 +35,8 @@ function Node(props: { node: FileNode; depth: number }): React.JSX.Element {
           style={{ paddingLeft: depth * 14 + 8 }}
           onClick={() => setOpen((v) => !v)}
         >
-          <span className="caret"><AppIcon icon={open ? ChevronDown : ChevronRight} size="xs" /></span>
+          <span className="caret"><AppIcon icon={open ? IconChevronDown : IconChevronRight} size="xs" /></span>
+          <AppIcon icon={IconFolder} size="sm" className="tree-icon" />
           {node.name}
         </div>
         {open && node.children?.map((child) => <Node key={child.path} node={child} depth={depth + 1} />)}
@@ -50,6 +52,7 @@ function Node(props: { node: FileNode; depth: number }): React.JSX.Element {
         if (isMarkdown(node.name)) void workspaceStore.openFile(node.path)
       }}
     >
+      <AppIcon icon={IconFile} size="sm" className="tree-icon" />
       {node.name}
     </div>
   )
@@ -77,6 +80,7 @@ function StructuredView(props: {
       style={{ paddingLeft: depth * 14 + 22 }}
       onClick={() => void workspaceStore.openFile(path)}
     >
+      <AppIcon icon={IconFile} size="sm" className="tree-icon" />
       {name}
     </div>
   )
@@ -98,7 +102,8 @@ function StructuredView(props: {
                       style={{ paddingLeft: 8 }}
                       onClick={() => toggle(key)}
                     >
-                      <span className="caret"><AppIcon icon={open ? ChevronDown : ChevronRight} size="xs" /></span>
+                      <span className="caret"><AppIcon icon={open ? IconChevronDown : IconChevronRight} size="xs" /></span>
+                      <AppIcon icon={IconFolder} size="sm" className="tree-icon" />
                       {g.title}
                     </div>
                     {open &&
@@ -151,7 +156,15 @@ export function FileTree(): React.JSX.Element {
   }, [tree])
 
   if (error) return <div className="placeholder">读取失败：{error}</div>
-  if (tree === null) return <div className="placeholder">打开一个文件夹开始（左上角按钮）</div>
+  if (tree === null) {
+    return (
+      <Empty
+        icon={<AppIcon icon={IconFolderOpen} size="lg" />}
+        title="打开一个文件夹开始"
+        hint="左上角「打开文件夹」选择博客仓库"
+      />
+    )
+  }
   if (sections) return <StructuredView sections={sections} roots={tree} />
 
   return (

@@ -143,6 +143,10 @@ export const PLUGIN_SDK_JS = `(function () {
       confirm: function (opts) { return call('ui', 'confirm', [opts]); },
       openExternal: function (url) { return call('ui', 'openExternal', [url]); }
     },
+    statusBar: {
+      update: function (id, patch) { return call('statusBar', 'update', [id, patch || {}]); },
+      remove: function (id) { return call('statusBar', 'remove', [id]); }
+    },
     publisher: {
       register: function (id, handler) { publishers[id] = handler; }
     }
@@ -195,6 +199,12 @@ export interface WuhApi {
   ui: {
     confirm(opts: { title?: string; message: string; okText?: string; cancelText?: string; danger?: boolean }): Promise<boolean>
     openExternal(url: string): Promise<void>
+  }
+  statusBar: {
+    /** 更新 manifest 声明的状态项内容（未声明的 id 会被宿主拒绝） */
+    update(id: string, patch?: { text?: string; title?: string }): Promise<void>
+    /** 隐藏 manifest 声明的状态项 */
+    remove(id: string): Promise<void>
   }
   publisher: {
     register(id: string, handler: (req: unknown) => Promise<IpcResult<unknown>>): void

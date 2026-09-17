@@ -1,4 +1,4 @@
-import { FileText, Save } from 'lucide-react'
+import { IconFile, IconSave } from '../components/icons'
 import { CodeMirrorEditor } from './CodeMirrorEditor'
 import { useDirtyState } from './useDirtyState'
 import { Button } from '../components/ui/Button'
@@ -13,7 +13,7 @@ export function EditorPane(): React.JSX.Element {
   if (!activePath || content == null) {
     return (
       <Empty
-        icon={<AppIcon icon={FileText} size={28} />}
+        icon={<AppIcon icon={IconFile} size={28} />}
         title="从左侧选择一个 Markdown 文件开始编辑"
       />
     )
@@ -24,7 +24,7 @@ export function EditorPane(): React.JSX.Element {
       <div className="editor-toolbar">
         <span className="doc-path">{activePath}</span>
         <Button size="sm" disabled={!dirty} onClick={() => void save()}>
-          <AppIcon icon={Save} size="sm" />
+          <AppIcon icon={IconSave} size="sm" />
           保存 ⌘S
         </Button>
       </div>

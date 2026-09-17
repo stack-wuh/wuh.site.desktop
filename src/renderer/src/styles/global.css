@@ -132,9 +132,39 @@ body :is(.title-bar, .sidebar, .activity-bar, .status-bar, .editor-toolbar, .pre
 .sidebar {
   width: 280px;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
   background: var(--chrome-panel);
   border-right: 1px solid var(--chrome-border);
   overflow: auto;
+}
+
+.sidebar.collapsed {
+  display: none;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 8px 4px 14px;
+  border-bottom: 1px solid var(--chrome-border);
+  position: sticky;
+  top: 0;
+  background: var(--chrome-panel);
+  z-index: 1;
+}
+
+.sidebar-header .panel-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+}
+
+.sidebar-header .ui-btn {
+  padding: 4px;
 }
 
 .work-area {
@@ -163,9 +193,10 @@ body :is(.title-bar, .sidebar, .activity-bar, .status-bar, .editor-toolbar, .pre
 .status-bar {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 16px;
   height: 26px;
-  padding: 0 14px;
+  padding: 0 10px;
   font-size: 12px;
   font-family: var(--font-mono);
   color: var(--text-muted);
@@ -173,8 +204,42 @@ body :is(.title-bar, .sidebar, .activity-bar, .status-bar, .editor-toolbar, .pre
   border-top: 1px solid var(--chrome-border);
 }
 
-.dirty-dot {
+.status-zone {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.status-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.status-item.doc-path {
+  min-width: 0;
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status-item.git-branch {
   color: var(--primary-color);
+}
+
+.status-item.dirty {
+  color: var(--primary-color);
+}
+
+.status-item.plugin-item {
+  color: var(--text-secondary);
+}
+
+.status-item.plugin-item svg {
+  color: var(--primary-color);
+  opacity: 0.8;
 }
 
 .placeholder {
@@ -189,24 +254,129 @@ body :is(.title-bar, .sidebar, .activity-bar, .status-bar, .editor-toolbar, .pre
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding-top: 8px;
-  gap: 4px;
+  padding: 8px 0;
   background: var(--background-color);
   border-right: 1px solid var(--chrome-border);
 }
 
-.activity-bar .ui-btn {
+.activity-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.activity-group.tail {
+  margin-top: auto;
+}
+
+.activity-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 38px;
   height: 38px;
   padding: 0;
+  border: none;
   border-radius: var(--border-radius-base);
+  background: transparent;
   color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    color var(--transition-fast) ease,
+    background var(--transition-fast) ease;
 }
 
-.activity-bar .ui-btn.active {
+.activity-item:hover {
+  color: var(--text-primary);
+  background: var(--chrome-hover);
+}
+
+.activity-item.active {
   color: var(--primary-color);
   background: color-mix(in oklab, var(--primary-color) 12%, transparent);
+}
+
+/* VSCode 式左缘激活指示条（贴 rail 左缘） */
+.activity-item::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  border-radius: 1px;
+  background: transparent;
+}
+
+.activity-item.active::before {
+  background: var(--primary-color);
+}
+
+.activity-item:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: -2px;
+}
+
+/* 徽标：数字 / 圆点（dot），右上角；颜色之外数字本身承载信息 */
+.activity-badge {
+  position: absolute;
+  top: 4px;
+  right: 3px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  border-radius: 7px;
+  background: var(--primary-color);
+  color: #fff;
+  font-size: 9px;
+  line-height: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.activity-badge.dot {
+  min-width: 8px;
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  top: 6px;
+  right: 5px;
+}
+
+/* 自绘 tooltip（替代原生 title），hover/键盘聚焦都可见 */
+.activity-item::after {
+  content: attr(data-tip);
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 4px 10px;
+  border-radius: var(--border-radius-sm);
+  background: var(--chrome-raised);
+  border: 1px solid var(--chrome-border);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-family: var(--font-sans);
+  white-space: nowrap;
+  box-shadow: var(--elevation-soft);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-fast) ease;
+  z-index: 60;
+}
+
+.activity-item:hover::after,
+.activity-item:focus-visible::after {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .activity-item,
+  .activity-item::after {
+    transition: none;
+  }
 }
 
 /* ===== 文件树 ===== */
@@ -242,6 +412,11 @@ body :is(.title-bar, .sidebar, .activity-bar, .status-bar, .editor-toolbar, .pre
 
 .tree-row.file.non-md {
   color: var(--text-muted);
+}
+
+.tree-row .tree-icon {
+  color: var(--text-muted);
+  margin-right: 4px;
 }
 
 .struct-section {

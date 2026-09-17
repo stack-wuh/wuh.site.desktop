@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { ChevronLeft } from 'lucide-react'
 import type { AppSettings } from '@shared/types'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { AppIcon } from '../components/ui/AppIcon'
+import { IconChevronLeft } from '../components/icons'
 
 export function SettingsPage(props: { onBack: () => void }): React.JSX.Element {
   const [hasToken, setHasToken] = useState(false)
@@ -54,7 +54,7 @@ export function SettingsPage(props: { onBack: () => void }): React.JSX.Element {
     <div className="settings-page" ref={pageRef} tabIndex={-1}>
       <div className="settings-topbar">
         <Button variant="ghost" onClick={props.onBack} aria-label="返回编辑器">
-          <AppIcon icon={ChevronLeft} size="sm" />
+          <AppIcon icon={IconChevronLeft} size="sm" />
           返回
         </Button>
         <h2 className="settings-title">设置</h2>

@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
-import { FileText, FolderOpen, Settings } from 'lucide-react'
 import type { AppSettings, WorkspaceInfo } from '@shared/types'
 import { FileTree } from './components/FileTree'
 import { EditorPane } from './editor/EditorPane'
-import { ActivityBar, pluginIcon, type ActivityItem } from './components/ActivityBar'
+import { ActivityBar, type ActivityItem } from './components/ActivityBar'
 import { SettingsPage } from './settings/SettingsPage'
 import { ConfirmHost } from './components/ui/Dialog'
 import { AppearanceMenu } from './components/AppearanceMenu'
+import { StatusBar } from './components/StatusBar'
 import { AppIcon } from './components/ui/AppIcon'
 import { Button } from './components/ui/Button'
+import { Empty } from './components/ui/Empty'
+import { IconFile, IconFolderOpen, IconPanelCollapse, IconSettings, pluginIcon } from './components/icons'
 import { useWorkspaceStore, workspaceStore } from './store'
 import {
   bootstrapPluginsHost,
@@ -60,15 +62,15 @@ export type MainView = 'work' | 'settings'
 export default function App(): React.JSX.Element {
   const [workspace, setWorkspace] = useState<WorkspaceInfo | null>(null)
   const [activePanel, setActivePanel] = useState<string>('files')
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mainView, setMainView] = useState<MainView>('work')
   const [pluginsReady, setPluginsReady] = useState(false)
-  const store = useWorkspaceStore()
   const { family, scheme } = useTheme()
   useAutoCommit()
 
   /** 焦点移回触发元素（ActivityBar 设置按钮），interaction.md 焦点管理要求 */
   const focusSettingsTrigger = (): void => {
-    document.querySelector<HTMLButtonElement>('.activity-bar button[title="设置"]')?.focus()
+    document.querySelector<HTMLButtonElement>('.activity-bar button[aria-label="设置"]')?.focus()
   }
 
   const openSettings = (): void => setMainView('settings')
@@ -101,7 +103,13 @@ export default function App(): React.JSX.Element {
       openSettings()
       return
     }
+    if (id === activePanel) {
+      // 再点当前面板图标：折叠/展开侧栏（VSCode 语义）
+      setSidebarCollapsed((v) => !v)
+      return
+    }
     setActivePanel(id)
+    setSidebarCollapsed(false)
   }
 
   useEffect(() => {
@@ -123,18 +131,21 @@ export default function App(): React.JSX.Element {
   const previewView = useMemo(() => (pluginsReady ? listPreviewViews()[0] : undefined), [pluginsReady])
 
   const items: ActivityItem[] = [
-    { id: 'files', icon: FileText, title: '文件' },
+    { id: 'files', icon: IconFile, title: '文件' },
     ...sidebarViews.map(({ pluginId, view }) => ({
       id: pluginPanelKey(pluginId, view.id),
       icon: pluginIcon(view.icon),
       title: view.title
-    })),
-    { id: 'settings', icon: Settings, title: '设置' }
+    }))
   ]
+  const tailItems: ActivityItem[] = [{ id: 'settings', icon: IconSettings, title: '设置' }]
 
   const activePluginPanel = activePanel.startsWith(PLUGIN_PANEL_PREFIX)
     ? sidebarViews.find((entry) => pluginPanelKey(entry.pluginId, entry.view.id) === activePanel)
     : undefined
+
+  const activePanelTitle =
+    activePanel === 'files' ? '文件' : (activePluginPanel?.view.title ?? '插件面板')
 
   const handleOpen = (): void => {
     void window.api.openWorkspace().then((info) => {
@@ -167,7 +178,7 @@ export default function App(): React.JSX.Element {
         )}
         <span className="title-actions">
           <Button size="sm" onClick={handleOpen}>
-            <AppIcon icon={FolderOpen} size="sm" />
+            <AppIcon icon={IconFolderOpen} size="sm" />
             打开文件夹
           </Button>
           <AppearanceMenu />
@@ -178,14 +189,31 @@ export default function App(): React.JSX.Element {
           <SettingsPage onBack={closeSettings} />
         ) : (
           <>
-            <ActivityBar items={items} active={activePanel} onChange={handlePanelChange} />
-            <aside className="sidebar">
+            <ActivityBar
+              items={items}
+              tailItems={tailItems}
+              active={activePanel}
+              onChange={handlePanelChange}
+            />
+            <aside className={`sidebar${sidebarCollapsed ? ' collapsed' : ''}`}>
+              <div className="sidebar-header">
+                <span className="panel-title">{activePanelTitle}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  title="折叠侧栏"
+                  aria-label="折叠侧栏"
+                  onClick={() => setSidebarCollapsed(true)}
+                >
+                  <AppIcon icon={IconPanelCollapse} size="sm" />
+                </Button>
+              </div>
               {activePanel === 'files' && <FileTree />}
               {activePluginPanel && (
                 <PluginView pluginId={activePluginPanel.pluginId} view={activePluginPanel.view} />
               )}
               {activePanel.startsWith(PLUGIN_PANEL_PREFIX) && !activePluginPanel && (
-                <div className="placeholder">该插件视图已停用</div>
+                <Empty title="该插件视图已停用" hint="可在设置页重新启用对应插件" />
               )}
             </aside>
             <main className="work-area">
@@ -196,17 +224,18 @@ export default function App(): React.JSX.Element {
                 {previewView ? (
                   <PluginView pluginId={previewView.pluginId} view={previewView.view} />
                 ) : (
-                  <div className="placeholder">预览区（未启用提供预览视图的插件）</div>
+                  <Empty
+                    icon={<AppIcon icon={pluginIcon('eye')} size="lg" />}
+                    title="预览区"
+                    hint="未启用提供预览视图的插件"
+                  />
                 )}
               </section>
             </main>
           </>
         )}
       </div>
-      <footer className="status-bar">
-        <span>{store.activePath ?? 'no file'}</span>
-        {store.dirty && <span className="dirty-dot">● 未保存</span>}
-      </footer>
+      <StatusBar workspace={workspace} />
       <ConfirmHost />
     </div>
   )

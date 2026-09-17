@@ -49,6 +49,20 @@ export interface PluginViewContribution {
   order: number
 }
 
+export type StatusItemAlignment = 'left' | 'right'
+
+/** 状态栏状态项贡献：声明制占位，运行时经 SDK statusBar.update/remove 更新内容或隐藏 */
+export interface PluginStatusItemContribution {
+  /** 插件内唯一，[a-z0-9][a-z0-9._-]* */
+  id: string
+  icon: PluginIconName
+  /** 默认文本（运行时可更新） */
+  text: string
+  alignment: StatusItemAlignment
+  /** 排序权重，小者在前，默认 100 */
+  order: number
+}
+
 export interface PluginPublisherContribution {
   id: string
   label: string
@@ -64,6 +78,7 @@ export interface PluginManifest {
   logic?: string
   views: PluginViewContribution[]
   publishers: PluginPublisherContribution[]
+  statusItems?: PluginStatusItemContribution[]
   permissions: PluginPermission[]
 }
 
@@ -107,12 +122,12 @@ export interface PluginHostApi {
 
 // ---------- 帧消息协议 ----------
 
-/** 插件帧 → host：service=cap 走主进程 broker；doc/render/ui 由 host 直接服务。
+/** 插件帧 → host：service=cap 走主进程 broker；doc/render/ui/statusBar 由 host 直接服务。
  * id 由各帧自己的序号发生器产出（host 用数字、SDK 用 rN 字符串，回显原样匹配）。 */
 export interface FrameInvoke {
   kind: 'invoke'
   id: number | string
-  service: 'cap' | 'doc' | 'render' | 'ui'
+  service: 'cap' | 'doc' | 'render' | 'ui' | 'statusBar'
   method: string
   args: unknown[]
 }
@@ -296,6 +311,54 @@ export function validateManifest(
     errors.push('logic 必须是字符串')
   }
 
+  // statusItems：可选，声明制状态项；运行时只能更新/隐藏已声明项
+  const statusItems: PluginStatusItemContribution[] = []
+  if (raw.statusItems !== undefined) {
+    if (!Array.isArray(raw.statusItems)) {
+      errors.push('statusItems 必须是数组')
+    } else {
+      if (raw.statusItems.length > 4) errors.push('statusItems 最多声明 4 项')
+      const itemIds = new Set<string>()
+      raw.statusItems.forEach((s, i) => {
+        if (!isRecord(s)) {
+          errors.push(`statusItems[${i}] 必须是对象`)
+          return
+        }
+        let valid = true
+        if (typeof s.id !== 'string' || !ID_RE.test(s.id)) {
+          errors.push(`statusItems[${i}].id 非法（须匹配 ${ID_RE}）: ${String(s.id)}`)
+          valid = false
+        } else if (itemIds.has(s.id)) {
+          errors.push(`statusItem id 重复: ${s.id}`)
+          valid = false
+        } else {
+          itemIds.add(s.id)
+        }
+        if (!(PLUGIN_ICONS as readonly string[]).includes(String(s.icon))) {
+          errors.push(`statusItems[${i}].icon 不在白名单: ${String(s.icon)}`)
+          valid = false
+        }
+        if (typeof s.text !== 'string' || !s.text.trim()) {
+          errors.push(`statusItems[${i}].text 必填`)
+          valid = false
+        }
+        if (s.alignment !== undefined && s.alignment !== 'left' && s.alignment !== 'right') {
+          errors.push(`statusItems[${i}].alignment 只能是 left/right: ${String(s.alignment)}`)
+          valid = false
+        }
+        if (valid) {
+          statusItems.push({
+            id: s.id as string,
+            icon: s.icon as PluginIconName,
+            text: s.text as string,
+            alignment: (s.alignment as StatusItemAlignment) ?? 'right',
+            order: typeof s.order === 'number' ? s.order : 100
+          })
+        }
+      })
+    }
+  }
+
   if (errors.length > 0) return { ok: false, errors }
   return {
     ok: true,
@@ -307,6 +370,7 @@ export function validateManifest(
       logic,
       views,
       publishers,
+      ...(statusItems.length > 0 ? { statusItems } : {}),
       permissions: perms
     }
   }
