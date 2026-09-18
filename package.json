@@ -11,8 +11,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "test": "vitest run",
     "test:watch": "vitest",
-    "dist": "electron-vite build && electron-builder --dir",
-    "dist:mac": "electron-vite build && electron-builder --mac --dir"
+    "dist": "electron-vite build && mise exec node@22 -- electron-builder --dir",
+    "dist:mac": "electron-vite build && mise exec node@22 -- electron-builder --mac --dir"
   },
   "dependencies": {
     "@codemirror/commands": "^6.11.0",

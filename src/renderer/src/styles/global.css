@@ -86,19 +86,15 @@ body :is(.title-bar, .sidebar, .activity-bar, .status-bar, .editor-toolbar, .pre
 }
 
 .title-bar .title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-weight: 700;
   color: var(--text-primary);
 }
 
-.title-bar .title::before {
-  content: '';
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--primary-color);
-  margin-right: 8px;
-  vertical-align: 1px;
+.title-bar .title svg {
+  flex-shrink: 0;
 }
 
 .title-bar .workspace-name {

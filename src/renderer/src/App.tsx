@@ -10,7 +10,7 @@ import { StatusBar } from './components/StatusBar'
 import { AppIcon } from './components/ui/AppIcon'
 import { Button } from './components/ui/Button'
 import { Empty } from './components/ui/Empty'
-import { IconFile, IconFolderOpen, IconPanelCollapse, IconSettings, pluginIcon } from './components/icons'
+import { IconFile, IconFolderOpen, IconLogo, IconPanelCollapse, IconSettings, pluginIcon } from './components/icons'
 import { useWorkspaceStore, workspaceStore } from './store'
 import {
   bootstrapPluginsHost,
@@ -160,7 +160,10 @@ export default function App(): React.JSX.Element {
   return (
     <div className="app-shell">
       <header className="title-bar">
-        <span className="title">wuh-site desktop</span>
+        <span className="title">
+          <IconLogo width={30} height={15} />
+          wuh-site desktop
+        </span>
         <span className="workspace-name">
           {workspace ? workspace.name : '未打开工作区'}
         </span>
