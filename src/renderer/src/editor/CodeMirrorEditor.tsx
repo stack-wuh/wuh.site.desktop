@@ -17,6 +17,25 @@ import { basicSetup } from 'codemirror'
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown'
 import { languages } from '@codemirror/language-data'
 import { indentUnit } from '@codemirror/language'
+import { workspaceStore } from '../store'
+
+/** 全文字数统计：CJK 字符逐字计 + 非 CJK 词计（状态栏展示口径） */
+function countWords(text: string): number {
+  const cjk = text.match(/[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/g)?.length ?? 0
+  const words = text
+    .replace(/[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean).length
+  return cjk + words
+}
+
+/** 光标/字数上报（状态栏展示），仅在有变化时写 store */
+function reportStatus(state: EditorState): void {
+  const head = state.selection.main.head
+  const line = state.doc.lineAt(head)
+  workspaceStore.setCursor({ line: line.number, col: head - line.from + 1 })
+  workspaceStore.setWordCount(countWords(state.doc.toString()))
+}
 
 interface Props {
   /** 初始内容；key=docPath 保证换文件时整体重建 */
@@ -171,6 +190,9 @@ export function CodeMirrorEditor(props: Props): React.JSX.Element {
         if (update.docChanged) {
           onChangeRef.current(update.state.doc.toString())
         }
+        if (update.docChanged || update.selectionSet) {
+          reportStatus(update.state)
+        }
       })
     ],
     // docPath 固定（key 重建），依赖仅初始化
@@ -186,6 +208,7 @@ export function CodeMirrorEditor(props: Props): React.JSX.Element {
       extensions
     })
     const view = new EditorView({ parent: containerRef.current, state })
+    reportStatus(view.state)
     return () => view.destroy()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

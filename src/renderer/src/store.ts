@@ -1,6 +1,11 @@
 import { useSyncExternalStore } from 'react'
 import { uiConfirm } from './components/ui/Dialog'
 
+export interface CursorPosition {
+  line: number
+  col: number
+}
+
 export interface WorkspaceState {
   root: string | null
   activePath: string | null
@@ -9,6 +14,10 @@ export interface WorkspaceState {
   saved: string | null
   dirty: boolean
   loading: boolean
+  /** 状态栏展示：光标 行/列（1-based） */
+  cursor: CursorPosition | null
+  /** 状态栏展示：全文字数（CJK 字符 + 非 CJK 词），null = 未知 */
+  wordCount: number | null
 }
 
 // ---------- 文档生命周期事件（插件 documentHooks 的事件源） ----------
@@ -51,7 +60,9 @@ let state: WorkspaceState = {
   content: null,
   saved: null,
   dirty: false,
-  loading: false
+  loading: false,
+  cursor: null,
+  wordCount: null
 }
 
 const listeners = new Set<() => void>()
@@ -74,7 +85,16 @@ export const workspaceStore = {
     }
   },
   reset(): void {
-    setState({ root: null, activePath: null, content: null, saved: null, dirty: false, loading: false })
+    setState({
+      root: null,
+      activePath: null,
+      content: null,
+      saved: null,
+      dirty: false,
+      loading: false,
+      cursor: null,
+      wordCount: null
+    })
     documentEvents.emit('doc.closed', {})
   },
   setRoot(root: string): void {
@@ -103,6 +123,22 @@ export const workspaceStore = {
   setContent(content: string): void {
     setState({ content, dirty: content !== state.saved })
     emitChangedDebounced()
+  },
+  /** 编辑器上报光标位置（状态栏展示） */
+  setCursor(cursor: CursorPosition): void {
+    if (
+      state.cursor &&
+      state.cursor.line === cursor.line &&
+      state.cursor.col === cursor.col
+    ) {
+      return
+    }
+    setState({ cursor })
+  },
+  /** 编辑器上报全文字数（状态栏展示） */
+  setWordCount(wordCount: number): void {
+    if (state.wordCount === wordCount) return
+    setState({ wordCount })
   },
   markSaved(): void {
     setState({ saved: state.content, dirty: false })

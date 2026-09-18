@@ -13,6 +13,15 @@
       "order": 10
     }
   ],
+  "statusItems": [
+    {
+      "id": "render-state",
+      "icon": "eye",
+      "text": "预览就绪",
+      "alignment": "right",
+      "order": 10
+    }
+  ],
   "publishers": [],
   "permissions": ["render.execute", "document.read.write"]
 }

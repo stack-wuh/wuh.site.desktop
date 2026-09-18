@@ -21,6 +21,13 @@ import type { WorkspaceInfo } from '@shared/types'
 import { buildThemeCss } from '../theme/tokens'
 import { uiConfirm } from '../components/ui/Dialog'
 import { documentEvents, workspaceStore } from '../store'
+import {
+  clearPluginStatusItems,
+  registerManifestStatusItems,
+  removeStatusItem,
+  updateStatusItem,
+  type StatusItemPatch
+} from './statusItems'
 import { renderService } from './renderPipeline'
 
 interface PendingCall {
@@ -101,7 +108,7 @@ function currentDocState(): { path: string | null; content: string | null; saved
 
 async function handleFrameInvoke(
   pluginId: string,
-  service: 'cap' | 'doc' | 'render' | 'ui',
+  service: 'cap' | 'doc' | 'render' | 'ui' | 'statusBar',
   method: string,
   args: unknown[]
 ): Promise<unknown> {
@@ -158,6 +165,19 @@ async function handleFrameInvoke(
         return null
       }
       throw new Error(`未知 UI 方法: ${method}`)
+    }
+    case 'statusBar': {
+      // 状态项为 manifest 声明制：运行时仅允许更新/隐藏自己声明的项，无额外权限
+      if (method === 'update') {
+        const [itemId, patch] = args as [string, StatusItemPatch]
+        updateStatusItem(pluginId, String(itemId), patch ?? {})
+        return null
+      }
+      if (method === 'remove') {
+        removeStatusItem(pluginId, String(args[0] ?? ''))
+        return null
+      }
+      throw new Error(`未知状态栏方法: ${method}`)
     }
     default:
       throw new Error(`未知服务: ${String(service)}`)
@@ -319,6 +339,7 @@ export async function bootstrapPluginsHost(): Promise<PluginListResult> {
       enabledRecords().map(async (record) => {
         const { id } = record.manifest
         sessions.set(id, await window.pluginApi.createSession(id))
+        registerManifestStatusItems(record.manifest)
         if (record.manifest.logic) {
           try {
             await openFrame(id, 'logic', pluginLogicUrl(id), null)
@@ -378,6 +399,9 @@ export async function togglePlugin(pluginId: string, enabled: boolean): Promise<
   await window.pluginApi.setEnabled(pluginId, enabled)
   const record = records.find((r) => r.manifest.id === pluginId)
   if (record) record.enabled = enabled
+  // 状态项跟随启停：停用清空，启用重新注册声明占位
+  if (enabled && record) registerManifestStatusItems(record.manifest)
+  else clearPluginStatusItems(pluginId)
 }
 
 /** 插件视图槽位：挂载/卸载沙箱帧 */

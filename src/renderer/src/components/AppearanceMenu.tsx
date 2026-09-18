@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { Check, Palette } from 'lucide-react'
 import { Button } from './ui/Button'
+import { AppIcon } from './ui/AppIcon'
+import { IconCheck, IconPalette } from './icons'
 import { useTheme } from '../theme/ThemeProvider'
 import type { ColorScheme, ThemeFamily } from '../theme/tokens'
 
@@ -31,7 +32,7 @@ export function AppearanceMenu(): React.JSX.Element {
   return (
     <div className="appearance-menu" ref={ref}>
       <Button variant="ghost" size="sm" title="外观" onClick={() => setOpen((v) => !v)}>
-        <Palette size={16} strokeWidth={2} />
+        <AppIcon icon={IconPalette} size="md" />
       </Button>
       {open && (
         <div className="appearance-pop">
@@ -44,7 +45,7 @@ export function AppearanceMenu(): React.JSX.Element {
                 onClick={() => setFamily(f.id)}
               >
                 {f.label}
-                {family === f.id && <Check size={14} strokeWidth={2} />}
+                {family === f.id && <AppIcon icon={IconCheck} size="sm" />}
               </button>
             ))}
           </div>
@@ -57,7 +58,7 @@ export function AppearanceMenu(): React.JSX.Element {
                 onClick={() => setScheme(s.id)}
               >
                 {s.label}
-                {scheme === s.id && <Check size={14} strokeWidth={2} />}
+                {scheme === s.id && <AppIcon icon={IconCheck} size="sm" />}
               </button>
             ))}
           </div>

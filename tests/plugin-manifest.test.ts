@@ -103,6 +103,58 @@ describe('validateManifest', () => {
     }
   })
 
+  it('statusItems 合法声明被接受且 alignment/order 补默认值', () => {
+    const res = validateManifest({
+      ...validManifest(),
+      statusItems: [{ id: 'render-state', icon: 'eye', text: '预览就绪' }]
+    })
+    expect(res.ok).toBe(true)
+    if (res.ok) {
+      expect(res.manifest.statusItems).toEqual([
+        { id: 'render-state', icon: 'eye', text: '预览就绪', alignment: 'right', order: 100 }
+      ])
+    }
+  })
+
+  it('statusItems 缺省时 manifest 不携带该字段', () => {
+    const res = validateManifest(validManifest())
+    expect(res.ok).toBe(true)
+    if (res.ok) expect(res.manifest.statusItems).toBeUndefined()
+  })
+
+  it('statusItems 非法输入被拒绝：白名单外图标/空 text/非法 alignment/重复 id/超量', () => {
+    const bad = [
+      { icon: '💀', text: 'x' },
+      { icon: 'eye', text: '' },
+      { icon: 'eye', text: 'x', alignment: 'center' },
+      { icon: 'eye', text: 'x', id: 'A_B 中' }
+    ]
+    for (const item of bad) {
+      const res = validateManifest({ ...validManifest(), statusItems: [item] })
+      expect(res.ok).toBe(false)
+    }
+    const dup = validateManifest({
+      ...validManifest(),
+      statusItems: [
+        { id: 'a', icon: 'eye', text: 'x' },
+        { id: 'a', icon: 'eye', text: 'y' }
+      ]
+    })
+    expect(dup.ok).toBe(false)
+    if (!dup.ok) expect(dup.errors.join(' ')).toMatch(/重复/)
+
+    const tooMany = validateManifest({
+      ...validManifest(),
+      statusItems: Array.from({ length: 5 }, (_, i) => ({ id: `s${i}`, icon: 'eye', text: 'x' }))
+    })
+    expect(tooMany.ok).toBe(false)
+  })
+
+  it('statusItems 不是数组被拒绝', () => {
+    const res = validateManifest({ ...validManifest(), statusItems: 'nope' })
+    expect(res.ok).toBe(false)
+  })
+
   it('权限枚举非空且唯一', () => {
     expect(PLUGIN_PERMISSIONS.length).toBeGreaterThan(0)
     expect(new Set(PLUGIN_PERMISSIONS).size).toBe(PLUGIN_PERMISSIONS.length)

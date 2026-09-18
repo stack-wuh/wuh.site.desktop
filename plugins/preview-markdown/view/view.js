@@ -6,6 +6,15 @@ const out = document.getElementById('out')
 let rendering = false
 let queued = false
 
+// 状态项运行时更新（manifest statusItems 声明）；宿主过旧无状态项时静默降级
+const setStatus = (text) => {
+  try {
+    void wuh.statusBar.update('render-state', { text }).catch(() => {})
+  } catch (err) {
+    /* 忽略：宿主不支持 statusBar API */
+  }
+}
+
 function fail(text) {
   out.textContent = ''
   const div = document.createElement('div')
@@ -22,6 +31,7 @@ async function refresh() {
     div.className = 'placeholder'
     div.textContent = '预览区（打开文档后实时渲染）'
     out.appendChild(div)
+    setStatus('无文档')
     return
   }
   if (rendering) {
@@ -29,11 +39,14 @@ async function refresh() {
     return
   }
   rendering = true
+  setStatus('渲染中…')
   try {
     const res = await wuh.render.render(doc.content)
     out.innerHTML = res.html
+    setStatus('预览就绪')
   } catch (err) {
     fail(err instanceof Error ? err.message : String(err))
+    setStatus('渲染失败')
   } finally {
     rendering = false
     if (queued) {
