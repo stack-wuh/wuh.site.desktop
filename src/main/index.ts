@@ -47,6 +47,15 @@ function createWindow(): BrowserWindow {
 }
 
 app.whenReady().then(() => {
+  // 开发期 Dock 图标（打包产物由 electron-builder 的 build/icon.icns 提供）
+  if (process.platform === 'darwin' && !app.isPackaged) {
+    try {
+      app.dock?.setIcon(resolve(app.getAppPath(), 'build/icon.png'))
+    } catch (err) {
+      console.warn('dev dock icon 设置失败:', err)
+    }
+  }
+
   protocol.handle('local-resource', (request) => {
     try {
       const { host, pathname } = new URL(request.url)
