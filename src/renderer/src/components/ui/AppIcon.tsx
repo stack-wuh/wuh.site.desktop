@@ -1,9 +1,10 @@
 /**
- * 图标渲染出口（对齐站点 icon-system）：lucide 线框、currentColor。
- * 图标一律从 components/icons 注册表取 Icon*，业务代码不直接 import lucide-react。
+ * 图标渲染出口（对齐站点 icon-system）：currentColor、单一规格出口。
+ * 字形来自自绘 chrome 图标集（components/icons/chrome.tsx）与品牌图标（brand.tsx）；
+ * 业务代码不直接 import 任何图标实现，一律取 components/icons 注册表的 Icon*。
  *
  * 场景规格：chrome/面板 16px（md）· 工具栏 14px（sm）· 正文内联 12px（xs）· 强调 20/24（lg/xl）。
- * 描边：≤14px 用 2 保证小尺寸清晰，>14px 用 1.75 —— 24 网格下笔画更细腻，避免发闷。
+ * 描边口径沿用 lucide 24 网格习惯：≤14px 传 2、>14px 传 1.75（chrome 集内部按 16/24 等比换算）。
  */
 export const ICON_SIZES = {
   xs: 12,

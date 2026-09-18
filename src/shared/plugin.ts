@@ -25,7 +25,7 @@ export type PluginPermission = (typeof PLUGIN_PERMISSIONS)[number]
 
 export type ViewArea = 'sidebar' | 'preview'
 
-/** 图标白名单：host 按名称映射到同源 lucide/品牌图标，插件不携带图标资源 */
+/** 图标白名单：host 按名称映射到自绘 chrome 图标集/品牌图标，插件不携带图标资源 */
 export const PLUGIN_ICONS = [
   'file-text',
   'git-branch',
