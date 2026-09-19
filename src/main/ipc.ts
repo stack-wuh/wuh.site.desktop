@@ -34,6 +34,7 @@ const handlers: {
   githubUpsertIssue: () => { throw new Error('not implemented') },
   publish: () => { throw new Error('not implemented') },
   uploadImage: () => { throw new Error('not implemented') },
+  getAboutActivity: () => { throw new Error('not implemented') },
   getSettings: () => { throw new Error('not implemented') },
   setSettings: () => { throw new Error('not implemented') },
   setGithubToken: () => { throw new Error('not implemented') },
