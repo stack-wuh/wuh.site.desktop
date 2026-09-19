@@ -3,7 +3,10 @@ import type { AppSettings } from '@shared/types'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { AppIcon } from '../components/ui/AppIcon'
-import { IconChevronLeft } from '../components/icons'
+import { IconChevronLeft, IconLogo } from '../components/icons'
+
+// electron-vite renderer define 注入（electron.vite.config.ts），构建期常量
+declare const __APP_VERSION__: string
 
 export function SettingsPage(props: { onBack: () => void }): React.JSX.Element {
   const [hasToken, setHasToken] = useState(false)
@@ -69,6 +72,14 @@ export function SettingsPage(props: { onBack: () => void }): React.JSX.Element {
           {error}
         </div>
       )}
+
+      <section className="settings-about" aria-label="关于本应用">
+        <IconLogo width={96} height={48} animated />
+        <div className="settings-about-meta">
+          <strong>wuh-site-desktop</strong>
+          <span className="hint-text">v{__APP_VERSION__}</span>
+        </div>
+      </section>
 
       <div className="settings-grid">
         <section>
