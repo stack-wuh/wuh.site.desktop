@@ -30,6 +30,8 @@ describe('build/icon.svg 设计源（Dock 图标 master）', () => {
 describe('build/icon.png 栅格化产物', () => {
   it(
     'build:icon 脚本可复现：重跑字节不变、尺寸 1024×1024',
+    // vitest 签名为 (name, options, fn)；脚本要跑 11 次 resvg 渲染 + iconutil，远超默认 5s
+    { timeout: 30000 },
     () => {
       expect(existsSync(PNG_PATH)).toBe(true)
       const before = readFileSync(PNG_PATH)
@@ -43,8 +45,6 @@ describe('build/icon.png 栅格化产物', () => {
       const after = readFileSync(PNG_PATH)
       expect(after.equals(before)).toBe(true)
       expect(pngSize(after)).toEqual({ width: 1024, height: 1024 })
-    },
-    // 脚本要跑 11 次 resvg 渲染 + iconutil，远超 vitest 默认 5s
-    { timeout: 30000 }
+    }
   )
 })
