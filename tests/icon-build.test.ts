@@ -28,18 +28,23 @@ describe('build/icon.svg 设计源（Dock 图标 master）', () => {
 })
 
 describe('build/icon.png 栅格化产物', () => {
-  it('build:icon 脚本可复现：重跑字节不变、尺寸 1024×1024', () => {
-    expect(existsSync(PNG_PATH)).toBe(true)
-    const before = readFileSync(PNG_PATH)
+  it(
+    'build:icon 脚本可复现：重跑字节不变、尺寸 1024×1024',
+    () => {
+      expect(existsSync(PNG_PATH)).toBe(true)
+      const before = readFileSync(PNG_PATH)
 
-    const run = spawnSync('node', [resolve(ROOT, 'scripts/build-icon.mjs')], {
-      cwd: ROOT,
-      encoding: 'utf8'
-    })
-    expect(run.status).toBe(0)
+      const run = spawnSync('node', [resolve(ROOT, 'scripts/build-icon.mjs')], {
+        cwd: ROOT,
+        encoding: 'utf8'
+      })
+      expect(run.status).toBe(0)
 
-    const after = readFileSync(PNG_PATH)
-    expect(after.equals(before)).toBe(true)
-    expect(pngSize(after)).toEqual({ width: 1024, height: 1024 })
-  })
+      const after = readFileSync(PNG_PATH)
+      expect(after.equals(before)).toBe(true)
+      expect(pngSize(after)).toEqual({ width: 1024, height: 1024 })
+    },
+    // 脚本要跑 11 次 resvg 渲染 + iconutil，远超 vitest 默认 5s
+    { timeout: 30000 }
+  )
 })
