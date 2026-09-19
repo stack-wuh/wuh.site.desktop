@@ -4,7 +4,7 @@
   "name": "20260919-feature-home-activity-heatmap",
   "type": "feature",
   "scope": "desktop",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": null,
   "files": [
@@ -30,18 +30,18 @@
     "repository": null,
     "issue": null,
     "issueUrl": null,
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 5,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/5"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "38083ec713b4dbd429be30ac8de15102f2a9c3c0",
-    "verifiedAt": "2026-09-19T16:25:45.054Z"
+    "verifiedCommit": "8e87c637f172fe997abd70cac49fe79988f2d4e3",
+    "verifiedAt": "2026-09-19T16:51:45.002Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": null,
-    "planHash": "d4f076f5284f3d96f016328b48c4c750ca49a8d9271c3f1ca708a9807bea107f",
+    "checkpoint": "merged-pr:5",
+    "planHash": "9442c55436cce1d446156096072903dbea95c83d0ca639b86a8e6344d6a24f8e",
     "updatedAt": null,
     "lastError": null
   },
