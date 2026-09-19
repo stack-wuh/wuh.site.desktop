@@ -15,6 +15,7 @@ import {
   Folder,
   FolderOpen,
   GitBranch,
+  House,
   MessageSquare,
   Palette,
   PanelLeftClose,
@@ -40,6 +41,7 @@ export const IconClose = X
 export const IconFile = FileText
 export const IconFolder = Folder
 export const IconFolderOpen = FolderOpen
+export const IconHome = House
 export const IconPalette = Palette
 export const IconPanelCollapse = PanelLeftClose
 export const IconSave = Save

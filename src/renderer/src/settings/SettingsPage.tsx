@@ -13,7 +13,8 @@ export function SettingsPage(props: { onBack: () => void }): React.JSX.Element {
     autoCommitDelayMs: 2000,
     uploadCommand: null,
     gitUserName: null,
-    gitUserEmail: null
+    gitUserEmail: null,
+    siteBaseUrl: null
   })
   const [msg, setMsg] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -164,6 +165,28 @@ export function SettingsPage(props: { onBack: () => void }): React.JSX.Element {
           <p className="hint-text">
             粘贴图片先落本地 .assets；「上传」按钮执行该命令（{'{file}'}=图片绝对路径）并替换链接。
           </p>
+        </section>
+
+        <section>
+          <h3>站点服务</h3>
+          <div className="row-actions">
+            <Input
+              placeholder="默认 https://wuh.site"
+              aria-label="站点服务地址"
+              value={settings.siteBaseUrl ?? ''}
+              onChange={(e) => setSettings((s) => ({ ...s, siteBaseUrl: e.target.value }))}
+              onBlur={(e) => {
+                const raw = e.target.value.trim()
+                if (raw && !/^https?:\/\//.test(raw)) {
+                  setError('站点地址必须是 http(s) URL')
+                  return
+                }
+                setSettings((s) => ({ ...s, siteBaseUrl: raw || null }))
+                void save({ siteBaseUrl: raw || null })
+              }}
+            />
+          </div>
+          <p className="hint-text">首页热力图数据来源（GET /api/about/activity）；留空使用默认主域名 wuh.site。</p>
         </section>
 
         <section>

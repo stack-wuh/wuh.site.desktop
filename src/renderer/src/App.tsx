@@ -1,16 +1,17 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { AppSettings, WorkspaceInfo } from '@shared/types'
 import { FileTree } from './components/FileTree'
 import { EditorPane } from './editor/EditorPane'
 import { ActivityBar, type ActivityItem } from './components/ActivityBar'
 import { SettingsPage } from './settings/SettingsPage'
+import { HomePage } from './home/HomePage'
 import { ConfirmHost } from './components/ui/Dialog'
 import { AppearanceMenu } from './components/AppearanceMenu'
 import { StatusBar } from './components/StatusBar'
 import { AppIcon } from './components/ui/AppIcon'
 import { Button } from './components/ui/Button'
 import { Empty } from './components/ui/Empty'
-import { IconFile, IconFolderOpen, IconPanelCollapse, IconSettings, pluginIcon } from './components/icons'
+import { IconFile, IconFolderOpen, IconHome, IconPanelCollapse, IconSettings, pluginIcon } from './components/icons'
 import { useWorkspaceStore, workspaceStore } from './store'
 import {
   bootstrapPluginsHost,
@@ -56,32 +57,50 @@ function useAutoCommit(): void {
   }, [dirty, activePath, settings])
 }
 
-/** 主区视图：work = 编辑器+预览，settings = 全屏设置页（盖住 ActivityBar+侧栏，未来 tab 化的挂载点） */
-export type MainView = 'work' | 'settings'
+/** 主区视图：work = 编辑器+预览；settings/home = 全屏视图（盖住 ActivityBar+侧栏，未来 tab 化的挂载点） */
+export type MainView = 'work' | 'settings' | 'home'
 
 export default function App(): React.JSX.Element {
   const [workspace, setWorkspace] = useState<WorkspaceInfo | null>(null)
   const [activePanel, setActivePanel] = useState<string>('files')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const [mainView, setMainView] = useState<MainView>('work')
+  // 启动默认进首页（home），打开文档/文件夹后进入工作区
+  const [mainView, setMainView] = useState<MainView>('home')
   const [pluginsReady, setPluginsReady] = useState(false)
+  // 全屏视图（settings）打开前的视图，关闭时还原
+  const viewBeforeSettingsRef = useRef<MainView>('work')
   const { family, scheme } = useTheme()
   useAutoCommit()
 
-  /** 焦点移回触发元素（ActivityBar 设置按钮），interaction.md 焦点管理要求 */
+  /** 焦点移回触发元素（ActivityBar 设置按钮），interaction.md 焦点管理要求；
+      从 home 返回时触发元素未挂载，查询为空即跳过 */
   const focusSettingsTrigger = (): void => {
     document.querySelector<HTMLButtonElement>('.activity-bar button[aria-label="设置"]')?.focus()
   }
 
-  const openSettings = (): void => setMainView('settings')
+  /** home 关闭时焦点归还 ActivityBar「首页」项（返回后按钮才重新挂载，延迟到渲染完成） */
+  const focusHomeTrigger = (): void => {
+    document.querySelector<HTMLButtonElement>('.activity-bar button[aria-label="首页"]')?.focus()
+  }
+
+  const closeHome = (): void => {
+    setMainView('work')
+    setTimeout(focusHomeTrigger, 0)
+  }
+
+  const openSettings = (): void => {
+    if (mainView !== 'settings') viewBeforeSettingsRef.current = mainView
+    setMainView('settings')
+  }
 
   const closeSettings = (): void => {
+    const target = viewBeforeSettingsRef.current === 'settings' ? 'work' : viewBeforeSettingsRef.current
     // 设置页盖住 ActivityBar，返回后按钮才重新挂载，延迟到渲染完成再还焦点
-    setMainView('work')
+    setMainView(target)
     setTimeout(focusSettingsTrigger, 0)
   }
 
-  // Cmd/Ctrl+, 开/关设置；Esc 返回编辑器。确认框打开时让位给 Dialog 自己的 Esc 处理
+  // Cmd/Ctrl+, 开/关设置；Esc 关全屏视图（settings/home）。确认框打开时让位给 Dialog 自己的 Esc 处理
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
       if ((e.metaKey || e.ctrlKey) && e.key === ',') {
@@ -90,8 +109,9 @@ export default function App(): React.JSX.Element {
         else openSettings()
         return
       }
-      if (e.key === 'Escape' && mainView === 'settings' && !document.querySelector('.ui-dialog-overlay')) {
-        closeSettings()
+      if (e.key === 'Escape' && !document.querySelector('.ui-dialog-overlay')) {
+        if (mainView === 'settings') closeSettings()
+        else if (mainView === 'home') closeHome()
       }
     }
     window.addEventListener('keydown', onKey)
@@ -99,6 +119,10 @@ export default function App(): React.JSX.Element {
   }, [mainView])
 
   const handlePanelChange = (id: string): void => {
+    if (id === 'home') {
+      setMainView('home')
+      return
+    }
     if (id === 'settings') {
       openSettings()
       return
@@ -131,6 +155,7 @@ export default function App(): React.JSX.Element {
   const previewView = useMemo(() => (pluginsReady ? listPreviewViews()[0] : undefined), [pluginsReady])
 
   const items: ActivityItem[] = [
+    { id: 'home', icon: IconHome, title: '首页' },
     { id: 'files', icon: IconFile, title: '文件' },
     ...sidebarViews.map(({ pluginId, view }) => ({
       id: pluginPanelKey(pluginId, view.id),
@@ -147,12 +172,13 @@ export default function App(): React.JSX.Element {
   const activePanelTitle =
     activePanel === 'files' ? '文件' : (activePluginPanel?.view.title ?? '插件面板')
 
-  const handleOpen = (): void => {
+  const handleOpen = (gotoWork = false): void => {
     void window.api.openWorkspace().then((info) => {
       if (info) {
         setWorkspace(info)
         setWorkspaceInfo(info)
         workspaceStore.reset()
+        if (gotoWork) setMainView('work')
       }
     })
   }
@@ -177,7 +203,7 @@ export default function App(): React.JSX.Element {
           </span>
         )}
         <span className="title-actions">
-          <Button size="sm" onClick={handleOpen}>
+          <Button size="sm" onClick={() => handleOpen()}>
             <AppIcon icon={IconFolderOpen} size="sm" />
             打开文件夹
           </Button>
@@ -187,6 +213,8 @@ export default function App(): React.JSX.Element {
       <div className="app-body">
         {mainView === 'settings' ? (
           <SettingsPage onBack={closeSettings} />
+        ) : mainView === 'home' ? (
+          <HomePage onBack={closeHome} onOpenWorkspace={() => handleOpen(true)} />
         ) : (
           <>
             <ActivityBar
