@@ -1,0 +1,46 @@
+<!--
+  Dock 图标设计源（master，暗底为默认变体）→ scripts/build-icon.mjs 栅格化为 build/icon.png
+  亮底变体：build:icon 脚本传 variant light 参数（XML 注释不能出现连续连字符，故此处不写原样参数名）
+
+  几何与 src/renderer/src/components/icons/brand.tsx 的 IconLogo 严格同源（120 网格 × 7，平移 +92/+302）：
+    W 笔1  M12 16 L27 44 L42 16   →  M176 414 L281 610 L386 414
+    W 笔2  M42 16 L57 44 L72 16   →  M386 414 L491 610 L596 414
+    条1    x84 y18 w24 h8 rx4     →  x680 y428 w168 h56 rx28
+    条2    x84 y34 w15 h8 rx4     →  x680 y540 w105 h56 rx28
+  改动任一处必须同步另一处。
+
+  亮底变体（light）按以下 token 整串替换（脚本 LIGHT_TOKENS 与此注释一一对应）：
+    BG_TOP   #3A1B1E                → #FFFDFB
+    BG_BOTTOM#150C0D                → #F3E1D3
+    MARK     #F8F3EE                → #2A1E16
+    RIM      rgba(255,255,255,0.08) → rgba(0,0,0,0.10)
+    GLOW_A   stop-opacity="0.14"    → stop-opacity="0.10"
+  PRIMARY #C94A44（wine light primary-500，品牌主色）两种变体保持不变。
+-->
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3A1B1E"/>
+      <stop offset="1" stop-color="#150C0D"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.42" cy="0.45" r="0.55">
+      <stop offset="0" stop-color="#C94A44" stop-opacity="0.14"/>
+      <stop offset="1" stop-color="#C94A44" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- macOS 圆角方底：824 内容区 / 185 圆角 -->
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#bg)"/>
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#glow)"/>
+  <rect x="101" y="101" width="822" height="822" rx="184" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="2"/>
+
+  <!-- W 字母标（两笔圆头 V） -->
+  <g fill="none" stroke="#F8F3EE" stroke-width="42" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M176 414 L281 610 L386 414"/>
+    <path d="M386 414 L491 610 L596 414"/>
+  </g>
+
+  <!-- primary 点缀双条 -->
+  <rect x="680" y="428" width="168" height="56" rx="28" fill="#C94A44"/>
+  <rect x="680" y="540" width="105" height="56" rx="28" fill="#F8F3EE" opacity="0.55"/>
+</svg>

@@ -773,6 +773,29 @@ body :is(.title-bar, .sidebar, .activity-bar, .status-bar, .editor-toolbar, .pre
   align-items: start;
 }
 
+.settings-about {
+  max-width: 860px;
+  margin: 0 auto 16px;
+  padding: 20px 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--chrome-panel);
+  border: 1px solid var(--chrome-border);
+  border-radius: var(--border-radius-md);
+}
+
+.settings-about-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settings-about-meta strong {
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+}
+
 .settings-page section {
   margin: 0;
   padding: 16px;
@@ -821,6 +844,59 @@ body :is(.title-bar, .sidebar, .activity-bar, .status-bar, .editor-toolbar, .pre
 
   .settings-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ===== 品牌标书写动效（IconLogo animated，入场一次） =====
+   描边书写属入场型展示动画（非过渡），时长取 token --motion-dur-write，
+   三段 stagger 总长约 800ms —— ui-patterns 150-300ms 过渡条款的有意例外，
+   见 brief 20260919-feature-brand-icon-redesign 决策。 */
+
+.brand-logo--animated .brand-logo__stroke {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: brand-logo-write var(--motion-dur-write) var(--motion-ease-out-soft) forwards;
+}
+
+.brand-logo--animated .brand-logo__stroke--2 {
+  animation-delay: 240ms;
+}
+
+.brand-logo--animated .brand-logo__bar {
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation: brand-logo-bar var(--motion-dur-quick) var(--motion-ease-out-soft) forwards;
+}
+
+.brand-logo--animated .brand-logo__bar--1 {
+  animation-delay: 520ms;
+}
+
+.brand-logo--animated .brand-logo__bar--2 {
+  animation-delay: 660ms;
+}
+
+@keyframes brand-logo-write {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes brand-logo-bar {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-logo--animated .brand-logo__stroke {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+
+  .brand-logo--animated .brand-logo__bar {
+    animation: none;
+    transform: none;
   }
 }
 
