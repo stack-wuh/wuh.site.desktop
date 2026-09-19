@@ -48,6 +48,7 @@ const api: DesktopApi = {
   githubUpsertIssue: (req) => invoke('githubUpsertIssue', req),
   publish: (req) => invoke('publish', req),
   uploadImage: (abs) => invoke('uploadImage', abs),
+  getAboutActivity: () => invoke('getAboutActivity'),
   getSettings: () => invoke('getSettings'),
   setSettings: (patch) => invoke('setSettings', patch),
   setGithubToken: (t) => invoke('setGithubToken', t),

@@ -831,7 +831,8 @@ body :is(.title-bar, .sidebar, .activity-bar, .status-bar, .editor-toolbar, .pre
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .app-body > .settings-page {
+  .app-body > .settings-page,
+  .app-body > .home-page {
     animation: none;
   }
 }
@@ -896,6 +897,75 @@ body :is(.title-bar, .sidebar, .activity-bar, .status-bar, .editor-toolbar, .pre
   .brand-logo--animated .brand-logo__bar {
     animation: none;
     transform: none;
+  }
+}
+
+/* ===== 首页（全屏视图：盖住 ActivityBar + 侧栏 + 主区） ===== */
+
+.app-body > .home-page {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  padding: 20px 32px 40px;
+  background: var(--background-color);
+  outline: none;
+  animation: settings-enter 200ms ease-out;
+}
+
+.home-topbar {
+  max-width: 900px;
+  margin: 0 auto 8px;
+  display: flex;
+}
+
+.home-body {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.home-title {
+  margin: 0;
+  font-size: 22px;
+  color: var(--text-primary);
+}
+
+.home-sub {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.home-card {
+  padding: 16px;
+  background: var(--chrome-panel);
+  border: 1px solid var(--chrome-border);
+  border-radius: var(--border-radius-md);
+}
+
+.home-card-title {
+  font-size: 13px;
+  margin: 0 0 12px;
+  color: var(--text-primary);
+}
+
+.home-retry {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.home-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .app-body > .home-page {
+    padding: 16px 16px 32px;
   }
 }
 

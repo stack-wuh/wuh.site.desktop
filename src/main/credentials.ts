@@ -9,7 +9,8 @@ const DEFAULT_SETTINGS: AppSettings = {
   autoCommitDelayMs: 2000,
   uploadCommand: null,
   gitUserName: null,
-  gitUserEmail: null
+  gitUserEmail: null,
+  siteBaseUrl: null
 }
 
 let cache: AppSettings | null = null

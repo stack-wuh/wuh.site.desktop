@@ -168,6 +168,37 @@ export interface StructureMatch {
   group: string | null
 }
 
+// ---------- 站点综合活动（首页热力图） ----------
+/** 与站点 server `GET /v2/about/activity`（经 /api/about/activity）的 UnifiedActivityHeatmap 契约同构 */
+export const ABOUT_ACTIVITY_CATEGORIES = [
+  'visits',
+  'published',
+  'updated',
+  'comments',
+  'guestbook',
+  'projectUpdates',
+  'githubContributions'
+] as const
+
+export type AboutActivityCategory = (typeof ABOUT_ACTIVITY_CATEGORIES)[number]
+export type AboutActivityLevel = 0 | 1 | 2 | 3 | 4
+
+export interface AboutActivityDay {
+  /** YYYY-MM-DD，升序，无活动日期补零 */
+  date: string
+  total: number
+  level: AboutActivityLevel
+  counts: Record<AboutActivityCategory, number>
+}
+
+export interface AboutActivityHeatmap {
+  startDate: string
+  endDate: string
+  timezone: string
+  total: number
+  days: AboutActivityDay[]
+}
+
 // ---------- Settings ----------
 export interface AppSettings {
   autoCommit: boolean
@@ -175,6 +206,8 @@ export interface AppSettings {
   uploadCommand: string | null
   gitUserName: string | null
   gitUserEmail: string | null
+  /** 站点服务地址（首页热力图数据源）；null = 默认主域名 https://wuh.site */
+  siteBaseUrl: string | null
 }
 
 export interface SettingsStatus {
@@ -213,6 +246,8 @@ export interface DesktopApi {
   githubUpsertIssue(req: PublishRequest): Promise<PublishResult>
   publish(req: PublishRequest): Promise<PublishResult>
   uploadImage(absPath: string): Promise<UploadResult>
+  /** 首页热力图：拉取站点综合活动（5min 内存缓存，失败回退过期缓存） */
+  getAboutActivity(): Promise<AboutActivityHeatmap>
   getSettings(): Promise<SettingsStatus>
   setSettings(patch: Partial<AppSettings>): Promise<SettingsStatus>
   setGithubToken(token: string): Promise<void>

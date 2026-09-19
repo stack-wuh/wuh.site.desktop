@@ -3,4 +3,5 @@
 | 变更 | 状态 | 路径 |
 |------|------|------|
 | 20260917-feature-settings-main-view | reviewed | shadow-docs/changes/20260917-feature-settings-main-view/brief.md |
-| 20260917-feature-shell-chrome-plugin-api | branched | shadow-docs/changes/20260917-feature-shell-chrome-plugin-api/brief.md |
+| 20260917-feature-shell-chrome-plugin-api | published | shadow-docs/changes/20260917-feature-shell-chrome-plugin-api/brief.md |
+| 20260919-feature-home-activity-heatmap | ✅ 完成 | shadow-docs/changes/archive/20260919-feature-home-activity-heatmap/brief.md |
