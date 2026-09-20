@@ -4,7 +4,7 @@
   "name": "20260918-feature-shell-float-layer",
   "type": "feature",
   "scope": "renderer-shell",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20260918-feature-shell-float-layer",
   "files": [
@@ -22,18 +22,18 @@
     "repository": null,
     "issue": null,
     "issueUrl": null,
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 7,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/7"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "e8f309f10e60735ef79172c897e449297feaa715",
-    "verifiedAt": "2026-09-20T07:59:56.089Z"
+    "verifiedCommit": "b9349d4362454ecf4d1f607a99d56bbb792d6763",
+    "verifiedAt": "2026-09-20T08:39:01.149Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": null,
-    "planHash": "f8e4e927d9d954d1cd9a1b6d44a10289109d3976184016d2ccfc8a788e7bbbc4",
+    "checkpoint": "merged-pr:7",
+    "planHash": "bcada4a810868c770b404216b74b71e1c9dff1b2cf6379e5d61daf645963187a",
     "updatedAt": null,
     "lastError": null
   },
