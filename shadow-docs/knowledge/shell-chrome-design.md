@@ -1,12 +1,13 @@
 ---
 title: 壳层 chrome 设计与插件扩展点
 domain: renderer-ui
-keywords: [图标注册表, AppIcon, Icon, ActivityBar, StatusBar, 状态栏, statusItems, 徽标, 插件贡献点, 主题 token, 品牌标, IconLogo, Dock 图标]
+keywords: [图标注册表, AppIcon, Icon, ActivityBar, StatusBar, 状态栏, statusItems, 徽标, 插件贡献点, 主题 token, 品牌标, IconLogo, Dock 图标, 浮窗, FloatLayer, float, toggle]
 scope: [src/renderer/src/components, src/renderer/src/plugins, src/shared/plugin.ts, src/plugin-sdk, build, scripts]
 status: active
 source:
   - changes/20260917-feature-shell-chrome-plugin-api/brief.md
   - changes/20260919-feature-brand-icon-redesign/brief.md
+  - changes/20260918-feature-shell-float-layer/brief.md
 verified: 2026-09-20
 ---
 
@@ -18,7 +19,9 @@ verified: 2026-09-20
 
 **品牌标（2026-09 重绘）**：`IconLogo` = W 字母标（两个圆头 V，120 网格几何 `M12 16 L27 44 L42 16` + `M42 16 L57 44 L72 16`，stroke 6）+ primary 双条点缀（x84 起 w24/w15）；`build/icon.svg` 为 Dock 图标 master（1024 网格、824/185 圆角方底，同一几何 ×7 平移映射），两者几何参数互相注释锚定，**改动任一处必须同步另一处**。`scripts/build-icon.mjs`（npm script `build:icon`，devDep `@resvg/resvg-js`）从 master 栅格化 `build/icon.png`（1024）+ `icon-light.png`（`--variant light`，按 svg 头部注释的 token 整串替换）+ macOS `iconutil` 合成 `build/icon.icns`；electron-builder 直接取 `build/icon.icns`。生成产物（png/icns）随仓库提交，保证干净克隆可打包。壳内展示落点：设置页「关于」区块（`animated` prop 开启书写动效 + `__APP_VERSION__` 构建期 define 版本）。
 
-**ActivityBar**：48px rail、左缘 2px 激活指示条（`::before`）、`ActivityItem.badge` 徽标位（数字 99+ 折叠 / `dot` 圆点）、`tailItems` 底部分组（设置固定底部）、`data-tip` 自绘 tooltip（hover 与 `:focus-visible` 均可见）+ `aria-label`；再点当前面板图标折叠/展开侧栏。
+**ActivityBar**：48px rail、左缘 2px 激活指示条（`::before`）、`ActivityItem.badge` 徽标位（数字 99+ 折叠 / `dot` 圆点）、`tailItems` 底部分组（设置固定底部）、`data-tip` 自绘 tooltip（hover 与 `:focus-visible` 均可见）+ `aria-label`；再点当前面板图标折叠/展开侧栏。另有 **toggle 型 item**（`toggleItems`/`openToggleKeys`/`onToggle`）：激活态=浮窗打开（`aria-pressed`），区别于面板选中态，点击走开/关而非选中。
+
+**浮窗层与 floats 注册表（2026-09-18 起）**：插件视图区域为 `views.area: 'sidebar' | 'float'`（preview 已移除），float 视图经 `FloatLayer`（`components/FloatLayer.tsx`）以浮窗形态按需唤起——头部拖拽、8 向缩放、点按置顶、最小化为左下角 chip（帧保持挂载，整窗 display:none）、Esc 关闭最顶层未最小化浮窗（确认框打开时让位）。状态注册表 `plugins/floats.ts` 为纯逻辑快照模块（与 statusItems 同构：`commit()` 产新引用 + useSyncExternalStore）；开合与几何是**进程内状态**，work 视图卸载（设置页/首页）时浮窗随之卸载、注册表保状态，返回后还原。浮窗内容复用 `PluginView` 帧宿主（plugin:// 沙箱协议不变）。
 
 **StatusBar**：`components/StatusBar.tsx` 左右分区——左区 = 当前文件路径 + git 分支(↑↓) + 插件 `left` 项；右区 = 光标行列 + 字数（store 的 `cursor`/`wordCount`，由 CodeMirrorEditor `updateListener` 上报，CJK 字符逐字计 + 非 CJK 词计）+ 插件 `right` 项 + 未保存态。
 
@@ -32,7 +35,8 @@ verified: 2026-09-20
 - 品牌/ Dock 图标几何改动必须同步 `brand.tsx` 与 `build/icon.svg`（含亮/暗变体 token 表），并重跑 `build:icon` 重新提交产物；`tests/icon-build.test.ts` 校验同源几何、产物尺寸与重跑可复现。
 - 应用版本号经 electron-vite renderer `define` 注入 `__APP_VERSION__`（构建期），不得新增 preload/broker 通道消费版本。
 - 插件可见性 API 扩展遵循「声明制优先」：先加 manifest schema + `validateManifest` 校验 + `tests/plugin-manifest.test.ts` 用例，运行时 API 只能操作声明过的资源。
-- `statusItems.ts` 变更后必须 `commit()` 产出新 state 引用（快照订阅依赖引用变化）。
+- `statusItems.ts` 变更后必须 `commit()` 产出新 state 引用（快照订阅依赖引用变化）；`floats.ts` 同构同理。
+- 主区禁止硬编码插件视图容器（预览已由固定分栏改为 float 浮窗）；新增视图区域一律走 manifest `views.area` 声明。
 
 ## 适用边界
 
@@ -42,7 +46,7 @@ verified: 2026-09-20
 
 - `grep "from 'lucide-react'" src/renderer/src` 排除 `components/icons` 应为空。
 - `vitest run tests/plugin-manifest.test.ts tests/plugin-statusitems.test.ts tests/icon-build.test.ts`（icon 用例覆盖设计源几何、PNG 尺寸与脚本重跑字节可复现）。
-- `pnpm dev` 四主题 × 亮暗走查：指示条/徽标/tooltip、状态项声明与运行时增删、键盘遍历、设置页「关于」区块动效与 reduced-motion 降级。
+- `pnpm dev` 四主题 × 亮暗走查：指示条/徽标/tooltip、状态项声明与运行时增删、键盘遍历、设置页「关于」区块动效与 reduced-motion 降级、浮窗拖拽/缩放/最小化 chip/Esc/多开与设置页·首页进出后还原。
 - `pnpm dist:mac` 产物 .app 图标应为品牌 icns（mac 上 builder 优先取 `build/icon.icns`）。
 
 ## 关联知识

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import type { AppSettings, WorkspaceInfo } from '@shared/types'
 import { FileTree } from './components/FileTree'
 import { EditorPane } from './editor/EditorPane'
@@ -8,6 +8,7 @@ import { HomePage } from './home/HomePage'
 import { ConfirmHost } from './components/ui/Dialog'
 import { AppearanceMenu } from './components/AppearanceMenu'
 import { StatusBar } from './components/StatusBar'
+import { FloatLayer } from './components/FloatLayer'
 import { AppIcon } from './components/ui/AppIcon'
 import { Button } from './components/ui/Button'
 import { Empty } from './components/ui/Empty'
@@ -16,11 +17,12 @@ import { useWorkspaceStore, workspaceStore } from './store'
 import {
   bootstrapPluginsHost,
   broadcastTheme,
-  listPreviewViews,
+  listFloatViews,
   listSidebarViews,
   PluginView,
   setWorkspaceInfo
 } from './plugins/PluginFrameHost'
+import { floatsStore, toggleFloat } from './plugins/floats'
 import { useTheme } from './theme/ThemeProvider'
 
 declare global {
@@ -152,7 +154,11 @@ export default function App(): React.JSX.Element {
   }, [family, scheme, pluginsReady])
 
   const sidebarViews = useMemo(() => (pluginsReady ? listSidebarViews() : []), [pluginsReady])
-  const previewView = useMemo(() => (pluginsReady ? listPreviewViews()[0] : undefined), [pluginsReady])
+  const floatViews = useMemo(() => (pluginsReady ? listFloatViews() : []), [pluginsReady])
+  // 浮窗开合快照：ActivityBar toggle 激活态与 FloatLayer 渲染共用
+  // （注册表 key 无前缀，toggle 项 id 带 PLUGIN_PANEL_PREFIX，此处映射）
+  const floatsSnapshot = useSyncExternalStore(floatsStore.subscribe, floatsStore.get)
+  const openKeys = new Set(floatsSnapshot.floats.map((f) => pluginPanelKey(f.pluginId, f.viewId)))
 
   const items: ActivityItem[] = [
     { id: 'home', icon: IconHome, title: '首页' },
@@ -163,7 +169,25 @@ export default function App(): React.JSX.Element {
       title: view.title
     }))
   ]
+  const toggleItems: ActivityItem[] = floatViews.map(({ pluginId, view }) => ({
+    id: pluginPanelKey(pluginId, view.id),
+    icon: pluginIcon(view.icon),
+    title: view.title
+  }))
   const tailItems: ActivityItem[] = [{ id: 'settings', icon: IconSettings, title: '设置' }]
+
+  const workAreaRef = useRef<HTMLElement | null>(null)
+
+  /** 浮窗 toggle：开/关由 floats 注册表裁决，几何以 work-area 为视口 */
+  const handleToggleFloat = (id: string): void => {
+    const decl = floatViews.find((entry) => pluginPanelKey(entry.pluginId, entry.view.id) === id)
+    if (!decl) return
+    const rect = workAreaRef.current?.getBoundingClientRect()
+    toggleFloat(
+      { pluginId: decl.pluginId, viewId: decl.view.id, title: decl.view.title, icon: decl.view.icon, entry: decl.view.entry },
+      { width: rect?.width ?? window.innerWidth, height: rect?.height ?? window.innerHeight }
+    )
+  }
 
   const activePluginPanel = activePanel.startsWith(PLUGIN_PANEL_PREFIX)
     ? sidebarViews.find((entry) => pluginPanelKey(entry.pluginId, entry.view.id) === activePanel)
@@ -219,6 +243,9 @@ export default function App(): React.JSX.Element {
           <>
             <ActivityBar
               items={items}
+              toggleItems={toggleItems}
+              openToggleKeys={openKeys}
+              onToggle={handleToggleFloat}
               tailItems={tailItems}
               active={activePanel}
               onChange={handlePanelChange}
@@ -244,21 +271,12 @@ export default function App(): React.JSX.Element {
                 <Empty title="该插件视图已停用" hint="可在设置页重新启用对应插件" />
               )}
             </aside>
-            <main className="work-area">
+            <main className="work-area" ref={workAreaRef}>
               <section className="editor-area">
                 <EditorPane />
               </section>
-              <section className="preview-area">
-                {previewView ? (
-                  <PluginView pluginId={previewView.pluginId} view={previewView.view} />
-                ) : (
-                  <Empty
-                    icon={<AppIcon icon={pluginIcon('eye')} size="lg" />}
-                    title="预览区"
-                    hint="未启用提供预览视图的插件"
-                  />
-                )}
-              </section>
+              {/* 预览等插件视图一律以浮窗形态按需唤起（views.area=float） */}
+              <FloatLayer containerRef={workAreaRef} />
             </main>
           </>
         )}

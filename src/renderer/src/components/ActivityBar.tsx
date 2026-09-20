@@ -43,6 +43,10 @@ function ActivityButton(props: {
 
 export function ActivityBar(props: {
   items: ActivityItem[]
+  /** toggle 型 item（浮窗开关）：激活态=浮窗打开，区别于面板选中态 */
+  toggleItems?: ActivityItem[]
+  openToggleKeys?: Set<string>
+  onToggle?: (id: string) => void
   /** 固定底部分组（如设置） */
   tailItems?: ActivityItem[]
   active: string
@@ -51,9 +55,28 @@ export function ActivityBar(props: {
   const render = (item: ActivityItem): React.JSX.Element => (
     <ActivityButton key={item.id} item={item} active={item.id === props.active} onChange={props.onChange} />
   )
+  const renderToggle = (item: ActivityItem): React.JSX.Element => {
+    const open = props.openToggleKeys?.has(item.id) ?? false
+    return (
+      <button
+        key={item.id}
+        type="button"
+        className={`activity-item${open ? ' active' : ''}`}
+        data-tip={item.title}
+        aria-label={item.title}
+        aria-pressed={open}
+        onClick={() => props.onToggle?.(item.id)}
+      >
+        <AppIcon icon={item.icon} size="md" />
+      </button>
+    )
+  }
   return (
     <nav className="activity-bar" aria-label="侧栏切换">
       <div className="activity-group">{props.items.map(render)}</div>
+      {props.toggleItems && props.toggleItems.length > 0 && (
+        <div className="activity-group">{props.toggleItems.map(renderToggle)}</div>
+      )}
       {props.tailItems && <div className="activity-group tail">{props.tailItems.map(render)}</div>}
     </nav>
   )

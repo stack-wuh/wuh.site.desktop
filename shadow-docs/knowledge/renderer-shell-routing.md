@@ -1,12 +1,13 @@
 ---
 title: Renderer 壳层双层路由约定
 domain: renderer-ui
-keywords: [设置页, 首页, 全屏视图, 路由, mainView, activePanel, ActivityBar, 面板切换, 焦点管理, prevView]
+keywords: [设置页, 首页, 全屏视图, 路由, mainView, activePanel, ActivityBar, 面板切换, 焦点管理, prevView, 浮窗, FloatLayer, work-area]
 scope: [src/renderer/src]
 status: active
 source:
   - changes/20260917-feature-settings-main-view/brief.md
   - changes/20260919-feature-home-activity-heatmap/brief.md
+  - changes/20260918-feature-shell-float-layer/brief.md
 verified: 2026-09-20
 ---
 
@@ -16,7 +17,9 @@ verified: 2026-09-20
 App 壳层（`src/renderer/src/App.tsx`）用两个互不统属的 state 做导航，无 router 库：
 
 - `activePanel: string`（`'files'` 历史值 | `'plugin:<pluginId>:<viewId>'`）——只管 280px 侧栏显示哪个面板（FileTree / 插件视图）。
-- `mainView: 'work' | 'settings' | 'home'`——管标题栏以下整块内容区：`work` 渲染 ActivityBar + 侧栏 + work-area（编辑器+预览）；非 work 渲染全屏视图，**ActivityBar、侧栏、编辑器、预览全部不渲染**，保留标题栏（状态栏属壳层，保留）。
+- `mainView: 'work' | 'settings' | 'home'`——管标题栏以下整块内容区：`work` 渲染 ActivityBar + 侧栏 + work-area；非 work 渲染全屏视图，**ActivityBar、侧栏、编辑器、浮窗全部不渲染**，保留标题栏（状态栏属壳层，保留）。
+
+work-area 结构（2026-09-18 起）：**单列**（editor-area 占满），固定 preview 分栏已移除；插件浮窗视图经 `FloatLayer` 挂在 work-area 内（`views.area: 'float'`，ActivityBar toggle 按需唤起）。浮窗开合与几何是**进程内注册表状态**（`plugins/floats.ts`）：非 work 视图卸载浮窗、注册表保状态，返回后还原——与 `activePanel` 同语义。
 
 设置页（`SettingsPage`）与首页（`HomePage`）是全屏视图，各自接收 `onBack` 回调关闭自身；首页还是**启动默认视图**（`mainView` 初始值为 `'home'`）。
 
@@ -29,6 +32,7 @@ App 壳层（`src/renderer/src/App.tsx`）用两个互不统属的 state 做导�
 - 新增全屏视图必须接入 prevView 关闭语义（打开时记录来源视图，关闭时还原），禁止硬编码关闭目标。
 - `mainView !== 'work'` 时 ActivityBar/侧栏整体不渲染；`activePanel` 状态保持不丢，返回后侧栏还原。
 - 编辑器内容依赖模块级 store 持久化（`key={activePath}` + `initialValue={content}`），全屏视图卸载 EditorPane 是安全的，新增全屏视图同样可放心卸载 work-area。
+- 主区插件视图禁止硬编码固定容器（预览分栏已移除）；新增视图一律走 manifest `views.area` 声明（`sidebar` | `float`），由 FloatLayer/侧栏承接。
 
 ## 适用边界
 适用于 App 壳层与渲染层导航。不适用于插件沙箱帧内部的视图导航（插件自管），也不适用于主进程窗口管理。
