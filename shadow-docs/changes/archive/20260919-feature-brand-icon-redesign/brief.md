@@ -4,7 +4,7 @@
   "name": "20260919-feature-brand-icon-redesign",
   "type": "feature",
   "scope": "desktop",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20260919-feature-brand-icon-redesign",
   "files": [
@@ -20,18 +20,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 4,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/4",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 6,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/6"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "38083ec713b4dbd429be30ac8de15102f2a9c3c0",
-    "verifiedAt": "2026-09-19T16:45:18.023Z"
+    "verifiedCommit": "baa1e9394bafac05da1e879c99a06ae1f62e71a4",
+    "verifiedAt": "2026-09-20T00:00:06.949Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:4",
-    "planHash": "aafcb9b7e9e01883c4216d67b8010e47ded0cb8b86f3cb76d124e4a9c8d80a37",
+    "checkpoint": "merged-pr:6",
+    "planHash": "86f817ba09b331980199134378d1912759b53662026125985950eaf56228c8c4",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
