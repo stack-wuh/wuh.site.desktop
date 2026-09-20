@@ -19,7 +19,7 @@ body,
 
 /* 主题切换 0.3s 平滑过渡（对齐站点）；初始化时由 data-no-transition 禁用 */
 body,
-body :is(.title-bar, .sidebar, .activity-bar, .status-bar, .editor-toolbar, .preview-area, .ui-btn, .ui-input, .ui-textarea, .ui-select, .ui-dialog, .tree-row) {
+body :is(.title-bar, .sidebar, .activity-bar, .status-bar, .editor-toolbar, .float-window, .ui-btn, .ui-input, .ui-textarea, .ui-select, .ui-dialog, .tree-row) {
   transition:
     background-color 0.3s ease,
     color 0.3s ease,
@@ -168,6 +168,7 @@ body :is(.title-bar, .sidebar, .activity-bar, .status-bar, .editor-toolbar, .pre
 }
 
 .work-area {
+  position: relative;
   display: flex;
   flex: 1;
   min-width: 0;
@@ -181,13 +182,171 @@ body :is(.title-bar, .sidebar, .activity-bar, .status-bar, .editor-toolbar, .pre
   background: var(--background-color);
 }
 
-.preview-area {
-  width: 42%;
+/* ===== 浮窗层 ===== */
+
+.float-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.float-layer > * {
+  pointer-events: auto;
+}
+
+.float-window {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
   min-width: 280px;
+  overflow: hidden;
+  background: var(--background-color);
+  border: 1px solid var(--chrome-border);
+  border-radius: var(--border-radius-base);
+  box-shadow: var(--elevation-card);
+  animation: float-in var(--transition-fast) ease-out;
+}
+
+.float-window.focused {
+  border-color: color-mix(in oklab, var(--primary-color) 35%, var(--chrome-border));
+}
+
+/* 最小化：整窗隐藏（帧保持挂载），入口收敛为角落 chip */
+.float-window.minimized {
+  display: none;
+}
+
+@keyframes float-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.float-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 6px 0 12px;
   flex-shrink: 0;
-  border-left: 1px solid var(--chrome-border);
-  overflow: auto;
+  color: var(--text-secondary);
   background: var(--chrome-panel);
+  border-bottom: 1px solid var(--chrome-border);
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+
+.float-header:active {
+  cursor: grabbing;
+}
+
+.float-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.float-actions {
+  display: flex;
+  align-items: center;
+}
+
+.float-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    color var(--transition-fast) ease,
+    background var(--transition-fast) ease;
+}
+
+.float-btn:hover {
+  color: var(--text-primary);
+  background: var(--chrome-hover);
+}
+
+.float-body {
+  flex: 1;
+  min-height: 0;
+  background: var(--chrome-panel);
+}
+
+/* 8 向缩放柄：命中区外扩到边框外，视觉不可见 */
+.float-resize {
+  position: absolute;
+  z-index: 2;
+  touch-action: none;
+}
+
+.float-resize.dir-n { top: -3px; left: 8px; right: 8px; height: 7px; cursor: ns-resize; }
+.float-resize.dir-s { bottom: -3px; left: 8px; right: 8px; height: 7px; cursor: ns-resize; }
+.float-resize.dir-e { right: -3px; top: 8px; bottom: 8px; width: 7px; cursor: ew-resize; }
+.float-resize.dir-w { left: -3px; top: 8px; bottom: 8px; width: 7px; cursor: ew-resize; }
+.float-resize.dir-ne { top: -3px; right: -3px; width: 14px; height: 14px; cursor: nesw-resize; }
+.float-resize.dir-nw { top: -3px; left: -3px; width: 14px; height: 14px; cursor: nwse-resize; }
+.float-resize.dir-se { bottom: -3px; right: -3px; width: 14px; height: 14px; cursor: nwse-resize; }
+.float-resize.dir-sw { bottom: -3px; left: -3px; width: 14px; height: 14px; cursor: nesw-resize; }
+
+/* 最小化收敛为左下角 chip 条 */
+.float-chips {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  display: flex;
+  gap: 6px;
+  max-width: calc(100% - 24px);
+  overflow-x: auto;
+}
+
+.float-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--chrome-border);
+  border-radius: 14px;
+  background: var(--chrome-raised);
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: var(--elevation-soft);
+  transition:
+    color var(--transition-fast) ease,
+    border-color var(--transition-fast) ease;
+}
+
+.float-chip:hover {
+  color: var(--text-primary);
+  border-color: var(--primary-color);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .float-window,
+  .float-chip,
+  .float-btn {
+    animation: none;
+    transition: none;
+  }
 }
 
 .status-bar {

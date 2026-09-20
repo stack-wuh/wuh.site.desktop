@@ -6,7 +6,7 @@
   "views": [
     {
       "id": "preview",
-      "area": "preview",
+      "area": "float",
       "title": "预览",
       "icon": "eye",
       "entry": "view/index.html",

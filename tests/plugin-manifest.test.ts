@@ -8,7 +8,7 @@ function validManifest(): Record<string, unknown> {
     version: '1.0.0',
     logic: 'logic.js',
     views: [
-      { id: 'preview', area: 'preview', title: '预览', icon: 'eye', entry: 'view/index.html', order: 10 }
+      { id: 'preview', area: 'float', title: '预览', icon: 'eye', entry: 'view/index.html', order: 10 }
     ],
     publishers: [],
     permissions: ['render.execute', 'document.read.write']
@@ -49,9 +49,9 @@ describe('validateManifest', () => {
 
   it('视图入口必须是相对 .html 且禁止越界', () => {
     const bad = [
-      { ...validManifest(), views: [{ id: 'v', area: 'preview', title: 't', icon: 'eye', entry: '/abs.html' }] },
-      { ...validManifest(), views: [{ id: 'v', area: 'preview', title: 't', icon: 'eye', entry: '../escape.html' }] },
-      { ...validManifest(), views: [{ id: 'v', area: 'preview', title: 't', icon: 'eye', entry: 'view/no.ts' }] }
+      { ...validManifest(), views: [{ id: 'v', area: 'float', title: 't', icon: 'eye', entry: '/abs.html' }] },
+      { ...validManifest(), views: [{ id: 'v', area: 'float', title: 't', icon: 'eye', entry: '../escape.html' }] },
+      { ...validManifest(), views: [{ id: 'v', area: 'float', title: 't', icon: 'eye', entry: 'view/no.ts' }] }
     ]
     for (const raw of bad) {
       const res = validateManifest(raw)
@@ -59,12 +59,33 @@ describe('validateManifest', () => {
     }
   })
 
+  it('float 区域视图合法且多 float 视图可共存', () => {
+    const res = validateManifest({
+      ...validManifest(),
+      views: [
+        { id: 'preview', area: 'float', title: '预览', icon: 'eye', entry: 'view/index.html', order: 10 },
+        { id: 'outline', area: 'float', title: '大纲', icon: 'book', entry: 'outline.html', order: 20 }
+      ]
+    })
+    expect(res.ok).toBe(true)
+    if (res.ok) expect(res.manifest.views).toHaveLength(2)
+  })
+
+  it('preview 区域已移除，声明即拒绝', () => {
+    const res = validateManifest({
+      ...validManifest(),
+      views: [{ id: 'preview', area: 'preview', title: '预览', icon: 'eye', entry: 'view/index.html' }]
+    })
+    expect(res.ok).toBe(false)
+    if (!res.ok) expect(res.errors.join(' ')).toMatch(/area/)
+  })
+
   it('视图 id 与区域、图标受控', () => {
     const dup = validateManifest({
       ...validManifest(),
       views: [
         { id: 'x', area: 'sidebar', title: 'a', icon: 'tag', entry: 'a.html' },
-        { id: 'x', area: 'preview', title: 'b', icon: 'tag', entry: 'b.html' }
+        { id: 'x', area: 'float', title: 'b', icon: 'tag', entry: 'b.html' }
       ]
     })
     expect(dup.ok).toBe(false)
