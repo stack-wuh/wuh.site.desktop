@@ -11,4 +11,7 @@
 | 20260920-feature-shell-two-column-layout | ✅ 完成 | shadow-docs/changes/archive/20260920-feature-shell-two-column-layout/brief.md |
 | 20260920-fix-plugin-frame-csp | ✅ 完成 | shadow-docs/changes/archive/20260920-fix-plugin-frame-csp/brief.md |
 | 20260921-feature-app-icon-wiring | ✅ 完成 | shadow-docs/changes/archive/20260921-feature-app-icon-wiring/brief.md |
-| 20260921-refactor-renderer-nextjs | branched | shadow-docs/changes/20260921-refactor-renderer-nextjs/brief.md |
+| 20260921-feature-new-blog-project-entry | proposed | shadow-docs/changes/20260921-feature-new-blog-project-entry/brief.md |
+| 20260921-feature-settings-redesign | ✅ 完成 | shadow-docs/changes/archive/20260921-feature-settings-redesign/brief.md |
+| 20260921-fix-plugin-frame-scheme-cors | published | shadow-docs/changes/20260921-fix-plugin-frame-scheme-cors/brief.md |
+| 20260921-refactor-renderer-nextjs | published | shadow-docs/changes/20260921-refactor-renderer-nextjs/brief.md |

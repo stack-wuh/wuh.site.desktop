@@ -4,7 +4,7 @@
   "name": "20260921-feature-settings-redesign",
   "type": "feature",
   "scope": "components/settings,components/ui,shadow-docs/knowledge",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "fix/20260921-fix-plugin-frame-scheme-cors",
   "branch": "feature/20260921-feature-settings-redesign",
   "files": [
@@ -17,21 +17,21 @@
     "shadow-docs/knowledge/shell-chrome-design.md"
   ],
   "github": {
-    "repository": null,
+    "repository": "stack-wuh/wuh.site.desktop",
     "issue": null,
     "issueUrl": null,
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 19,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/19"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "e10b2eb3fe1a1082d85df64de822db98e91d2470",
-    "verifiedAt": "2026-09-21T12:13:41.646Z"
+    "verifiedCommit": "8338779f6f89643c9ca2e78cb392bd6b2cb4aded",
+    "verifiedAt": "2026-09-21T12:28:17.023Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": null,
-    "planHash": "bb0b4acf01d10153b1898eb6d1a5a35c1b349e6cde08191148141c43dec7c4fb",
+    "checkpoint": "merged-pr:19",
+    "planHash": "049f0151f5b3dc51187e100472c6a66d1fc97ed41992da662cabbaff7fba761c",
     "updatedAt": null,
     "lastError": null
   },
