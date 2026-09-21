@@ -19,6 +19,7 @@ import {
   MessageSquare,
   Palette,
   PanelLeftClose,
+  PanelLeftOpen,
   Save,
   Settings,
   Sparkles,
@@ -44,6 +45,7 @@ export const IconFolderOpen = FolderOpen
 export const IconHome = House
 export const IconPalette = Palette
 export const IconPanelCollapse = PanelLeftClose
+export const IconPanelExpand = PanelLeftOpen
 export const IconSave = Save
 export const IconSettings = Settings
 

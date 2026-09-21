@@ -6,7 +6,7 @@
   "views": [
     {
       "id": "frontmatter",
-      "area": "sidebar",
+      "area": "main",
       "title": "Frontmatter",
       "icon": "book",
       "entry": "view/index.html",

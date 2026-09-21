@@ -7,7 +7,7 @@
   "views": [
     {
       "id": "github",
-      "area": "sidebar",
+      "area": "main",
       "title": "GitHub",
       "icon": "github",
       "entry": "view/index.html",

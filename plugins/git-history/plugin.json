@@ -6,7 +6,7 @@
   "views": [
     {
       "id": "git",
-      "area": "sidebar",
+      "area": "main",
       "title": "Git 历史",
       "icon": "git-branch",
       "entry": "view/index.html",
