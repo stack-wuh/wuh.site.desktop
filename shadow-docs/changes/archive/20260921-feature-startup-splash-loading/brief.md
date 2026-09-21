@@ -4,7 +4,7 @@
   "name": "20260921-feature-startup-splash-loading",
   "type": "feature",
   "scope": "desktop",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20260921-feature-startup-splash-loading",
   "files": [
@@ -23,18 +23,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 23,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/23",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 25,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/25"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "b184ff0fcc11b8adbdab965ca4fa701d31a5433a",
-    "verifiedAt": "2026-09-21T16:36:16.051Z"
+    "verifiedCommit": "68509aac5eca73622a8a63d0cd84a87850d8d952",
+    "verifiedAt": "2026-09-21T23:23:11.064Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:23",
-    "planHash": "7a0a9f6dc4325f0c7c007cd75b78f62cbab6f4c3e6b49cd61aed2865593bfa1c",
+    "checkpoint": "merged-pr:25",
+    "planHash": "18ae5b50ccbbedeff31fbfb1533387a4b6b11303d24fc8177f76b18fe81517c8",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
