@@ -4,7 +4,7 @@
   "name": "20260921-feature-plugin-task-capsule",
   "type": "feature",
   "scope": "src/shared,src/plugin-sdk,components,lib,plugins/github-issues,tests,shadow-docs/knowledge,shadow-docs",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20260921-feature-plugin-task-capsule",
   "files": [
@@ -30,13 +30,13 @@
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "28a904dd7475665c7b0319045f4aca74e955ba47",
-    "verifiedAt": "2026-09-21T23:32:40.573Z"
+    "verifiedCommit": "9b2b9e36551690aad8dc9380466d05cbdd6447d9",
+    "verifiedAt": "2026-09-21T23:36:52.162Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "pr:26",
-    "planHash": "4ad0b877d271f699be7b7ca33bdbf6886f00a08d64d1736296ae42151266d910",
+    "checkpoint": "merged-pr:26",
+    "planHash": "61a112f967cb77e06e4d5e7ab4985d255f55cb9fd3dd235f68608ff8855f9cbd",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
