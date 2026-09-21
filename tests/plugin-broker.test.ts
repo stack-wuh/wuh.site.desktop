@@ -16,7 +16,8 @@ function record(pluginId: string, permissions: PluginRecord['manifest']['permiss
   return {
     manifest: { id: pluginId, name: pluginId, version: '1.0.0', views: [], publishers: [], permissions },
     dir: `/plugins/${pluginId}`,
-    enabled: true
+    enabled: true,
+    approval: 'approved'
   }
 }
 
