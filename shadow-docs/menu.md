@@ -10,6 +10,7 @@
 | 壳层 chrome / 图标 | 图标 图标注册表 AppIcon Icon 品牌标 IconLogo Dock 图标 icon.svg 应用图标 ico 任务栏 SideMenu StatusBar 状态栏 徽标 tooltip 描边 主题 token styled-components CSP 用户面板 语言切换 | knowledge/shell-chrome-design.md |
 | 构建/工具链 | Next next.config 静态导出 app 协议 electron-vite 双进程 dev workspace pnpm 打包 electron-builder tsconfig vitest README | knowledge/renderer-shell-routing.md, knowledge/shell-chrome-design.md |
 | 插件状态项 | statusItems statusBar 状态项 贡献点 徽标位 声明制 | knowledge/shell-chrome-design.md |
+| 插件任务胶囊 | 任务 待办 任务列表 任务胶囊 TaskCapsule TaskPopover tasks 进度 statusItems 之外的状态聚合 | knowledge/shell-chrome-design.md |
 | 插件浮窗视图 | float 浮窗 预览 preview 视图区域 FloatLayer floats | knowledge/shell-chrome-design.md, knowledge/renderer-shell-routing.md |
 | 插件系统 | 插件 manifest loader 启用 停用 批准 approvals resolveApproval reload 重载 revealDir plugin-state broker 沙箱 帧 握手 ready 协议注册 corsEnabled problems | knowledge/plugin-architecture.md |
 

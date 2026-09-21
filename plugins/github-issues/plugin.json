@@ -15,5 +15,6 @@
     }
   ],
   "publishers": [{ "id": "github-issues", "label": "GitHub Issues" }],
+  "tasks": [{ "id": "publish", "title": "发布 Issue", "viewId": "github" }],
   "permissions": ["net.github.api", "publish.register", "document.read.write"]
 }

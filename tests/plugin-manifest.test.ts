@@ -194,6 +194,74 @@ describe('validateManifest', () => {
     expect(res.ok).toBe(false)
   })
 
+  // ---------- tasks（任务胶囊贡献点） ----------
+
+  const withTaskViews = () => ({
+    ...validManifest(),
+    views: [
+      { id: 'board', area: 'main', title: '看板', icon: 'book', entry: 'view/board.html', order: 5 },
+      { id: 'mini', area: 'float', title: '浮窗', icon: 'eye', entry: 'view/mini.html', order: 6 }
+    ]
+  })
+
+  it('tasks 合法声明被接受：viewId 指向 main 视图、缺省不携带字段', () => {
+    const res = validateManifest({
+      ...withTaskViews(),
+      tasks: [{ id: 'publish', title: '发布 Issue', viewId: 'board' }]
+    })
+    expect(res.ok).toBe(true)
+    if (res.ok) expect(res.manifest.tasks).toEqual([{ id: 'publish', title: '发布 Issue', viewId: 'board' }])
+
+    const bare = validateManifest(withTaskViews())
+    expect(bare.ok).toBe(true)
+    if (bare.ok) expect(bare.manifest.tasks).toBeUndefined()
+  })
+
+  it('tasks id 非法或重复被拒绝', () => {
+    const badId = validateManifest({ ...withTaskViews(), tasks: [{ id: 'A_B 中', title: 't' }] })
+    expect(badId.ok).toBe(false)
+    if (!badId.ok) expect(badId.errors.join(' ')).toMatch(/tasks/)
+
+    const dup = validateManifest({
+      ...withTaskViews(),
+      tasks: [
+        { id: 'a', title: 'x' },
+        { id: 'a', title: 'y' }
+      ]
+    })
+    expect(dup.ok).toBe(false)
+    if (!dup.ok) expect(dup.errors.join(' ')).toMatch(/重复/)
+  })
+
+  it('tasks.title 必填', () => {
+    const res = validateManifest({ ...withTaskViews(), tasks: [{ id: 'a', title: '  ' }] })
+    expect(res.ok).toBe(false)
+    if (!res.ok) expect(res.errors.join(' ')).toMatch(/title/)
+  })
+
+  it('tasks.viewId 须指向本插件已声明的 main 视图（不存在或 float 均拒绝）', () => {
+    const missing = validateManifest({ ...withTaskViews(), tasks: [{ id: 'a', title: 't', viewId: 'ghost' }] })
+    expect(missing.ok).toBe(false)
+    if (!missing.ok) expect(missing.errors.join(' ')).toMatch(/main/)
+
+    const floatView = validateManifest({ ...withTaskViews(), tasks: [{ id: 'a', title: 't', viewId: 'mini' }] })
+    expect(floatView.ok).toBe(false)
+    if (!floatView.ok) expect(floatView.errors.join(' ')).toMatch(/main/)
+  })
+
+  it('tasks 超过 8 条被拒绝', () => {
+    const res = validateManifest({
+      ...withTaskViews(),
+      tasks: Array.from({ length: 9 }, (_, i) => ({ id: `t${i}`, title: 'x' }))
+    })
+    expect(res.ok).toBe(false)
+  })
+
+  it('tasks 不是数组被拒绝', () => {
+    const res = validateManifest({ ...withTaskViews(), tasks: 'nope' })
+    expect(res.ok).toBe(false)
+  })
+
   it('权限枚举非空且唯一', () => {
     expect(PLUGIN_PERMISSIONS.length).toBeGreaterThan(0)
     expect(new Set(PLUGIN_PERMISSIONS).size).toBe(PLUGIN_PERMISSIONS.length)

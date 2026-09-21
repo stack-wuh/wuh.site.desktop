@@ -1,7 +1,7 @@
 ---
 title: 壳层 chrome 设计与插件扩展点
 domain: renderer-ui
-keywords: [图标注册表, AppIcon, Icon, SideMenu, 菜单栏, 两栏布局, StatusBar, 状态栏, statusItems, 徽标, 插件贡献点, 主题 token, 品牌标, IconLogo, Dock 图标, 应用图标, ico, 任务栏, 浮窗, FloatLayer, float, main, toggle, styled-components]
+keywords: [图标注册表, AppIcon, Icon, SideMenu, 菜单栏, 两栏布局, StatusBar, 状态栏, statusItems, 徽标, 插件贡献点, 主题 token, 品牌标, IconLogo, Dock 图标, 应用图标, ico, 任务栏, 浮窗, FloatLayer, float, main, toggle, styled-components, 任务胶囊, 任务贡献点, TaskCapsule, TaskPopover, tasks, 待办, 进度]
 scope: [app, components, lib, src/shared/plugin.ts, src/plugin-sdk, build, scripts]
 status: active
 source:
@@ -11,6 +11,7 @@ source:
   - changes/20260920-feature-shell-two-column-layout/brief.md
   - changes/20260921-feature-app-icon-wiring/brief.md
   - changes/20260921-refactor-renderer-nextjs/brief.md
+  - changes/20260921-feature-plugin-task-capsule/brief.md
   - changes/20260921-feature-startup-splash-loading/brief.md
 verified: 2026-09-22
 ---
@@ -33,7 +34,9 @@ verified: 2026-09-22
 
 **浮窗层与 floats 注册表（2026-09-18 起）**：插件视图区域为 `views.area: 'main' | 'float'`（preview 分栏与 sidebar 侧栏均已移除；`sidebar` 声明被 validateManifest 拒绝并指引迁移 main），float 视图经 `FloatLayer`（`components/FloatLayer.tsx`）以浮窗形态按需唤起——头部拖拽、8 向缩放、点按置顶、最小化为左下角 chip（帧保持挂载，整窗 display:none）、Esc 关闭最顶层未最小化浮窗（确认框打开时让位——用 `[data-dialog-overlay]` 稳定属性判定，styled 类名是哈希）。状态注册表 `lib/floats.ts` 为纯逻辑快照模块（与 statusItems 同构：`commit()` 产新引用 + useSyncExternalStore）；开合与几何是**进程内状态**。**FloatLayer 常驻右栏 main 容器**：浮窗与右栏页面（Home/设置/插件 main 视图）共存，切换页面不再卸载浮窗，几何视口 = main 容器。浮窗内容复用 `PluginView` 帧宿主（plugin:// 沙箱协议不变）。
 
-**StatusBar（2026-09-20 起为纯壳层骨架）**：左右分区仅承载插件 statusItems；编辑器相关分区（文件路径/光标行列/字数/未保存）与 git 分支徽标已随内置编辑器移除。
+**StatusBar（2026-09-22 起左区含任务胶囊）**：左区 = 壳层 `TaskCapsule`（跨插件任务聚合，见下）+ 插件 statusItems；右区仅插件 statusItems。编辑器相关分区（文件路径/光标行列/字数/未保存）与 git 分支徽标已随内置编辑器移除。
+
+**任务胶囊与 tasks 贡献点（2026-09-22 起）**：插件以 manifest `tasks` 声明任务占位（id 限 `[a-z0-9][a-z0-9._-]*`、title 必填、可选 `viewId` 须指向本插件已声明的 main 视图、每插件 ≤8 项）；SDK `wuh.tasks.upsert(id, patch)/remove(id)` 走帧协议 `tasks` 服务，由 `PluginFrameHost.handleFrameInvoke` 渲染层裁决（**主进程 broker 不参与，视图帧与逻辑帧同链路**）；patch 仅 status（`pending|in_progress|done`）/progress（`{current,total}`，**严格 typeof number 校验**——帧消息来自 postMessage 不可用 `Number()` 宽转）/detail，id/title/viewId 声明期不可变。注册表 `lib/tasks.ts` 与 statusItems/floats 同构（commit() 产新引用 + useSyncExternalStore）。壳层聚合：StatusBar 左区 `TaskCapsule`（无可见任务不渲染；显示 done/total，存在 in_progress 时附环形动效——**属持续状态指示非过渡动效**，800ms/圈，reduced-motion 静态降级）+ 点击弹 `TaskPopover`（用户快捷面板同族交互：Esc/点外关、面板内 stopPropagation；按插件分组列任务；`viewId` 条目 `router.push('/plugin/<pluginId>/<viewId>')` 跳来源视图）。**任务状态只能由插件经 SDK 单向上报，壳层不反向写**（Popover 条目仅查看/跳转）；插件停用清空、启用重注册。参考生产者：github-issues 发布流（逻辑帧内上报，失败回 pending + detail 原因）。
 
 **插件状态项 = manifest 声明 + 运行时更新**：manifest `statusItems`（id 限 `[a-z0-9][a-z0-9._-]*`、icon 白名单、text 必填、alignment 默认 right、order 默认 100、每插件 ≤4 项）；SDK `wuh.statusBar.update(id, patch)/remove(id)` 走帧协议 `statusBar` 服务，由渲染层宿主（`components/plugins/PluginFrameHost.tsx` 的 `handleFrameInvoke`）直接裁决，**主进程 broker 不参与**；注册表 `lib/statusItems.ts` 为纯逻辑模块（useSyncExternalStore 快照模式）。插件只能 update/remove 自己声明过的项；icon/alignment/order 运行时不可变；插件停用清空、启用重注册。
 
@@ -47,7 +50,8 @@ verified: 2026-09-22
 - 品牌/ Dock 图标几何改动必须同步 `components/icons/brand.tsx` 与 `build/icon.svg`（含亮/暗变体 token 表），并重跑 `build:icon` 重新提交产物（png/ico/icns）；`tests/icon-build.test.ts` 校验同源几何、产物尺寸、ico 容器结构与重跑可复现。
 - 应用版本号经 `next.config.ts` 的 `env.NEXT_PUBLIC_APP_VERSION` 构建期内联（消费方读 `process.env.NEXT_PUBLIC_APP_VERSION`），不得新增 preload/broker 通道消费版本。
 - 插件可见性 API 扩展遵循「声明制优先」：先加 manifest schema + `validateManifest` 校验 + `tests/plugin-manifest.test.ts` 用例，运行时 API 只能操作声明过的资源。
-- `statusItems.ts` 变更后必须 `commit()` 产出新 state 引用（快照订阅依赖引用变化）；`floats.ts` 同构同理。
+- `statusItems.ts` 变更后必须 `commit()` 产出新 state 引用（快照订阅依赖引用变化）；`floats.ts`、`tasks.ts` 同构同理。
+- 任务胶囊动效（spinner/旋转环）属**持续状态指示**，不适用 150-300ms 过渡规则；`prefers-reduced-motion: reduce` 下必须静态降级。壳层不得反向修改任务状态（单一写方 = 插件 SDK）。
 - 主区禁止硬编码插件视图容器；新增视图区域一律走 manifest `views.area` 声明（`main` | `float`）。
 - 任何 `useSyncExternalStore` 必须传第三参 `getServerSnapshot`（Next 静态导出预渲染硬要求）；插件帧的 `PluginView` 与浮窗层均在客户端组件内（'use client'）。
 
@@ -58,7 +62,7 @@ verified: 2026-09-22
 ## 验证方式
 
 - `grep -rn "from 'lucide-react'" components app` 排除 `components/icons` 应为空。
-- `pnpm test`（含 `tests/plugin-manifest.test.ts`、`tests/plugin-statusitems.test.ts`、`tests/plugin-assets.test.ts`、`tests/icon-build.test.ts`、`tests/theme.test.ts`）；icon 用例覆盖设计源几何、PNG 尺寸、ico 容器结构与脚本重跑字节可复现（需 devDep `@resvg/resvg-js` 已安装）。
+- `pnpm test`（含 `tests/plugin-manifest.test.ts`、`tests/plugin-statusitems.test.ts`、`tests/plugin-tasks.test.ts`、`tests/plugin-assets.test.ts`、`tests/icon-build.test.ts`、`tests/theme.test.ts`）；icon 用例覆盖设计源几何、PNG 尺寸、ico 容器结构与脚本重跑字节可复现（需 devDep `@resvg/resvg-js` 已安装）。
 - `pnpm dev` 四主题 × 亮暗走查：左栏展开/收起（瞬时 + label 淡入 + tail 组吸附左下）、指示条/徽标/tooltip（仅收起态）、右栏 Home ↔ 设置 ↔ 插件 main 切换、浮窗 toggle/拖拽/缩放/最小化 chip/Esc/多开与页面切换后共存、状态项声明与运行时增删、键盘遍历、设置页「关于」区块动效与 reduced-motion 降级。
 - `pnpm dist` 产物应由 `app://` 协议加载（Windows `dist/win-unpacked` 可验）；`pnpm dist:mac` 产物 .app 图标应为品牌 icns（mac 上 builder 优先取 `build/icon.icns`）。
 
