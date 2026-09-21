@@ -11,7 +11,8 @@ source:
   - changes/20260920-feature-shell-two-column-layout/brief.md
   - changes/20260921-refactor-renderer-nextjs/brief.md
   - changes/20260921-feature-new-blog-project-entry/brief.md
-verified: 2026-09-21
+  - changes/20260921-feature-startup-splash-loading/brief.md
+verified: 2026-09-22
 ---
 
 # Renderer 壳层两栏布局与 App Router 路由约定
@@ -25,6 +26,8 @@ verified: 2026-09-21
 - `/plugin/<pluginId>/<viewId>` → PluginMainView（`views.area: 'main'` 的插件视图；`generateStaticParams` 从内置 `plugins/*/plugin.json` 构建期枚举）
 
 **静态导出约束**（`output: 'export'`，next.config.ts）：产物在 `dist/next/`，由主进程 `app://` 协议离线加载（`src/main/index.ts` 的 `resolveRendererFile`，含目录穿越校验）。动态路由**必须构建期枚举**——运行时安装的新插件视图不会预生成路由页（当前内置插件无影响；未来支持运行时安装时改 query/client state 兜底）。
+
+**启动加载路径（2026-09-22 起）**：主窗 `show: false` 后台加载，启动即现 **splash 窗**（`src/main/splash.html` 经 `?raw` 内嵌 + `data:` URL 加载的自包含静态页：品牌标 + 主题同值底色，亮暗随 `prefers-color-scheme`）；壳层 layout 挂载后经 `components/ShellReady.tsx`（双 rAF）发 `rendererReady` IPC（契约三处同步），主进程撤下 splash（淡出 240ms，`prefers-reduced-motion` 页内降级）并 show 主窗；prod 兜底 4s / dev 65s。**主题首帧地基**（根治无样式闪屏）：`app/layout.tsx` 服务端内联 `buildThemeCss()`（`<style id="wd-theme-vars">`）+ `<html>` 预置 wine/dark 默认属性 + pre-paint 内联脚本按 localStorage `wd.theme` 纠偏，配合 `experimental.inlineCss` 使首帧即终态样式；`ThemeProvider` 的注入退化为缺失兜底（DOM 存在性守卫）。
 
 `menuExpanded`（SideMenu 展开/收起）是 layout 内的客户端状态；菜单项 id 与路由段一一对应（`lib/routes.ts` 的 `pluginPanelKey` / `routeKeyFromPathname` 负责互转）。**设置页入口在左栏底部用户入口**（2026-09-21 起：悬停/聚焦弹快捷面板含「设置」项，点击入口本身也进设置页——用户模块接入前的替身），菜单项 id 不再含 `settings`。`FloatLayer` 常驻 main 容器叠加其上（浮窗与右栏页面**共存**，切换页面不卸载）。
 
@@ -40,6 +43,7 @@ verified: 2026-09-21
 - 浮窗开合与几何是进程内注册表状态（`lib/floats.ts`，commit() 产新引用 + useSyncExternalStore）；FloatLayer 几何视口 = main 容器。
 - 客户端组件一律 'use client'；服务端组件只做参数透传（`plugin/[...slug]/page.tsx` 为 async server component，接收 `params: Promise<...>`）。
 - 任何 `useSyncExternalStore` 必须传第三参 `getServerSnapshot`（静态导出预渲染要求，否则 `next build` 在预渲染阶段报错退出）。
+- 新增会首帧渲染的 CSS/主题能力时必须保持「构建期内联 + 属性路由」机制：不要把 token CSS 改回运行时注入，不要移除 layout 的 pre-paint 纠偏脚本（其键名与 ThemeProvider 的 `STORAGE_KEY` 锚点同步）。
 - 壳层不再展示工作区 UI；工作区信息两处 seed：layout 挂载时 `getWorkspace` 一次性 seed，以及**项目入口切换时 `applyWorkspaceSwitch` 重入**（`setWorkspaceInfo` + `workspaceStore.switchWorkspace` 失效 doc 状态 + `documentEvents.emit('workspace')` 经既有链路广播进全部插件帧，SDK `wuh.on('workspace')` 可感知）。最近项目持久化在主进程 `userData/recent-workspaces.json`（`setWorkspace` 成功即登记，cap 8）。
 
 ## 适用边界
@@ -51,7 +55,7 @@ verified: 2026-09-21
 - 读 `app/(shell)/layout.tsx` 与 `lib/routes.ts`：路由段 ↔ 菜单项映射、Cmd+, 切换、FloatLayer 常驻。
 - `pnpm typecheck`（node 侧 + tsconfig.next.json）+ `pnpm test` 回归（tsc + vitest）。
 - `pnpm dev` 手动路径：启动默认 Home（左栏可见）→ 左栏切设置/插件 main 视图 → `Ctrl+,` 切换设置 ↔ 首页 → 浮窗 toggle 开合、切页后浮窗仍在、Esc 关浮窗；左栏展开/收起瞬时切换。
-- 生产加载路径：`pnpm build` 后 `pnpm exec electron .` 应经 `app://shell/index.html` 加载（`dist/next` 产物）。
+- 生产加载路径：`app://shell/index.html` 仅在**打包产物**（`pnpm dist`）中生效；未打包 `electron .` 恒走 dev 路径（wait-on next dev）。splash 人工走查：启动即现品牌标 splash → 主窗带样式切换无白屏/乱序；`tests/splash.test.ts` 锁定 splash 静态契约。
 
 ## 关联知识
 

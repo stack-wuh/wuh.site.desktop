@@ -1,14 +1,33 @@
+/// <reference types="vite/client" />
 import { BrowserWindow, Menu, app, net, protocol, shell, type MenuItemConstructorOptions } from 'electron'
 import { existsSync, statSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { implement } from './ipc'
 import { isAllowedTopNavigation } from './navigationGuard'
 import { bootstrapIpc } from './register-features'
 import { PRIVILEGED_SCHEMES } from './schemes'
+import splashHtml from './splash.html?raw'
 
 const isDev = !app.isPackaged
 /** dev 渲染层地址（next dev，见 package.json dev 脚本双进程编排） */
 const DEV_RENDERER_URL = process.env['NEXT_DEV_URL'] ?? 'http://localhost:3000'
+
+/**
+ * 启动 splash：主窗就绪信号（rendererReady）或超时兜底，先到先得撤下。
+ * prod 兜底 4s；dev 需容忍 next dev 首次编译（waitForDevServer 上限 60s），放宽到 65s。
+ */
+const READY_TIMEOUT_MS = isDev ? 65_000 : 4_000
+/** 淡出缓冲：splash 页内过渡 200ms ease-out（reduced-motion 下页内自行降级为瞬时） */
+const SPLASH_FADE_MS = 240
+/** 当前主窗的撤下回调（createWindow 时注入；activate 重建窗口时覆盖） */
+let dismissSplash: (() => void) | null = null
+
+// 在 registerIpc() 前覆盖默认实现：渲染层壳层挂载即撤下 splash（模块级注册，早于 bootstrapIpc）
+implement('rendererReady', () => {
+  dismissSplash?.()
+  return Promise.resolve()
+})
 
 // 应用菜单仅承载编辑快捷键角色（Ctrl+C/V/Z 等系统输入依赖菜单角色）；
 // 窗口内不显示菜单栏（见 createWindow 的 setMenu(null)）。dev 下附带回退/开发者工具。
@@ -52,17 +71,43 @@ function resolveRendererFile(pathname: string): string | null {
   return null
 }
 
+/** 启动 splash 窗：?raw 内嵌的自包含静态页经 data: URL 加载，零外部依赖、即现即用 */
+function createSplashWindow(): BrowserWindow {
+  const splash = new BrowserWindow({
+    width: 320,
+    height: 200,
+    show: false,
+    frame: false,
+    resizable: false,
+    minimizable: false,
+    maximizable: false,
+    fullscreenable: false,
+    skipTaskbar: true,
+    // 淡出期主窗已在下层 show，置顶保证渐隐遮盖主窗而非被其遮盖
+    alwaysOnTop: true,
+    // sync: tokens.ts wine --background-900 dark（splash HTML 内亮暗自适应，此处兜底暗色）
+    backgroundColor: '#2f2a2a',
+    webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true }
+  })
+  splash.once('ready-to-show', () => splash.show())
+  void splash.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(splashHtml)}`)
+  return splash
+}
+
 function createWindow(): BrowserWindow {
   // dev 下从源码 build/ 取窗口/任务栏图标；打包后 build/ 不进 asar，由 exe 资源（win.icon / icns）承担
   const iconPath = join(app.getAppPath(), 'build/icon.png')
+  const splash = createSplashWindow()
   const win = new BrowserWindow({
     width: 1360,
     height: 860,
     minWidth: 960,
     minHeight: 600,
     title: 'wuh.site',
+    show: false,
     icon: existsSync(iconPath) ? iconPath : undefined,
-    backgroundColor: '#1e1f22',
+    // sync: tokens.ts wine --background-900 dark（消除窗底与 splash/首帧的色差闪烁）
+    backgroundColor: '#2f2a2a',
     webPreferences: {
       preload: resolve(__dirname, '../preload/index.js'),
       contextIsolation: true,
@@ -72,6 +117,21 @@ function createWindow(): BrowserWindow {
   })
   // Windows/Linux：不渲染系统菜单栏（快捷键角色仍由应用菜单生效）
   win.setMenu(null)
+
+  // 撤下 splash：先亮主窗（就绪信号保证已带样式；超时兜底则与旧行为一致），splash 置顶渐隐后销毁
+  let splashSettled = false
+  const settleSplash = (): void => {
+    if (splashSettled) return
+    splashSettled = true
+    win.show()
+    void splash.webContents
+      .executeJavaScript("document.body.classList.add('splash--hide')")
+      .catch(() => undefined)
+    setTimeout(() => splash.destroy(), SPLASH_FADE_MS)
+  }
+  dismissSplash = settleSplash
+  // 就绪信号兜底：渲染层信号丢失也必须亮出主窗
+  setTimeout(settleSplash, READY_TIMEOUT_MS)
 
   win.webContents.setWindowOpenHandler(({ url }) => {
     void shell.openExternal(url)

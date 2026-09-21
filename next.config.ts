@@ -19,6 +19,8 @@ const nextConfig: NextConfig = {
   distDir: './dist/next',
   // styled-components 必须经 SWC 转换：组件 ID 由文件+位置哈希，保证两端一致（与 site 同因同配）
   compiler: { styledComponents: true },
+  // CSS 内联进导出 HTML：离线 app:// 加载下消除 <link> 样式晚于首帧到达的无样式闪屏
+  experimental: { inlineCss: true },
   typescript: { tsconfigPath: './tsconfig.next.json', ignoreBuildErrors: true },
   // 导出模式不支持图片优化管线；桌面端无 next/image 消费
   images: { unoptimized: true },
