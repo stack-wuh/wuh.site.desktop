@@ -23,7 +23,7 @@ function createWindow(): BrowserWindow {
     height: 860,
     minWidth: 960,
     minHeight: 600,
-    title: 'wuh-site desktop',
+    title: 'wuh.site',
     backgroundColor: '#1e1f22',
     webPreferences: {
       preload: resolve(__dirname, '../preload/index.js'),
