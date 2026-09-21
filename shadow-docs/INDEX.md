@@ -7,3 +7,4 @@
 | 20260918-feature-shell-float-layer | ✅ 完成 | shadow-docs/changes/archive/20260918-feature-shell-float-layer/brief.md |
 | 20260919-feature-brand-icon-redesign | ✅ 完成 | shadow-docs/changes/archive/20260919-feature-brand-icon-redesign/brief.md |
 | 20260919-feature-home-activity-heatmap | ✅ 完成 | shadow-docs/changes/archive/20260919-feature-home-activity-heatmap/brief.md |
+| 20260920-feature-shell-two-column-layout | ✅ 完成 | shadow-docs/changes/archive/20260920-feature-shell-two-column-layout/brief.md |

@@ -4,7 +4,7 @@
   "name": "20260920-feature-shell-two-column-layout",
   "type": "feature",
   "scope": "src/renderer/src,src/shared,tests,shadow-docs/knowledge",
-  "status": "committed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20260920-feature-shell-two-column-layout",
   "files": [
@@ -25,21 +25,21 @@
     "tests/plugin-manifest.test.ts"
   ],
   "github": {
-    "repository": null,
+    "repository": "stack-wuh/wuh.site.desktop",
     "issue": null,
     "issueUrl": null,
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 8,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/8"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "ce5e5f371d1a1a105b56c27dcfb68ab73736ca53",
-    "verifiedAt": "2026-09-21T03:34:24.597Z"
+    "verifiedCommit": "9dd0d3eb0edda3d031add6af6f9b0e3982cea3c8",
+    "verifiedAt": "2026-09-21T03:52:51.767Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "c8e94cc9fde9b37fb735cac034b054f39aff151b",
-    "planHash": "7b0b747e5b1a9fce2d40891f6c34613e032fbc4ed67a51e1ed31b4e12b04fb66",
+    "checkpoint": "merged-pr:8",
+    "planHash": "2aa1463ba49b334507f36a3dcc54f21cdbbd1bd4a46b2fbcf90bd1b6fd189b73",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
