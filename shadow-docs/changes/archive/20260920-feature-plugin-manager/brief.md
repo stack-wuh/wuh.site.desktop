@@ -4,7 +4,7 @@
   "name": "20260920-feature-plugin-manager",
   "type": "feature",
   "scope": "plugin-manager",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20260920-feature-plugin-manager",
   "files": [
@@ -23,18 +23,18 @@
     "repository": null,
     "issue": null,
     "issueUrl": null,
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 10,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/10"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "512d245a0093c55c1fd4106b65e6b375ffd007fc",
-    "verifiedAt": "2026-09-21T05:21:40.590Z"
+    "verifiedCommit": "ca787029ddac9b84cf9ffe66e52439135d5fe8b2",
+    "verifiedAt": "2026-09-21T06:08:50.920Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": null,
-    "planHash": "82af234ca69cd49c1dd187aee78c9dcaff8eabb16d741fd4480ea29a0c13ee29",
+    "checkpoint": "merged-pr:10",
+    "planHash": "e7343af19ce3ee9ba340e803fc0200ca93f81770c918629d9630de8ca1047f8e",
     "updatedAt": null,
     "lastError": null
   },
