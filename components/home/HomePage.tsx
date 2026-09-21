@@ -5,9 +5,11 @@ import styled, { keyframes } from 'styled-components'
 import { Heatmap } from './Heatmap'
 import { buildHeatmapViewData } from './heatmapData'
 import { useAboutActivity } from './useAboutActivity'
+import { ProjectSection } from './ProjectSection'
 
 /**
- * 首页（两栏布局起为右栏默认页面，项目门面）：
+ * 首页（两栏布局起为右栏默认页面；2026-09-21 定位升级为「新建博客」项目入口）：
+ * 上方项目区块（打开本地目录 / clone / 最近项目），下方综合活动热力图保持不变。
  * 无返回按钮/Esc/焦点归还语义，左栏 SideMenu 常驻可见，
  * 页面互斥切换由 App Router 路由段裁决。
  */
@@ -103,6 +105,8 @@ export function HomePage(): React.JSX.Element {
             {data ? `最近 365 天 · 共 ${data.total} 次输出 · 数据来自 wuh.site` : '输出节奏总览'}
           </Sub>
         </header>
+
+        <ProjectSection />
 
         <Card aria-label="综合活动热力图">
           <CardTitle>综合活动热力图</CardTitle>

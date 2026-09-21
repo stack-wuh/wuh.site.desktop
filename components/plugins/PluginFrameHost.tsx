@@ -458,6 +458,22 @@ export function setWorkspaceInfo(info: WorkspaceInfo | null): void {
   hostWorkspace = info
 }
 
+/**
+ * 工作区切换生效链（打开本地目录 / clone / 最近项目打开共用）：
+ * 重入 seed 宿主信息 + doc 状态失效 + workspace 事件广播
+ * （wireHostOnce 后 documentEvents 自动透传进全部插件帧，SDK wuh.on 可感知）。
+ */
+export function applyWorkspaceSwitch(info: WorkspaceInfo): void {
+  setWorkspaceInfo(info)
+  workspaceStore.switchWorkspace(info.root)
+  documentEvents.emit('workspace', {
+    root: info.root,
+    name: info.name,
+    isGitRepo: info.isGitRepo,
+    branch: info.branch
+  })
+}
+
 export function broadcastTheme(): void {
   broadcast('theme', themePayload())
 }

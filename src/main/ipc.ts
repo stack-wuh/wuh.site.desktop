@@ -11,6 +11,9 @@ const handlers: {
 } = {
   ping: () => Promise.resolve('pong'),
   openWorkspace: () => { throw new Error('not implemented') },
+  cloneWorkspace: () => { throw new Error('not implemented') },
+  openWorkspaceByPath: () => { throw new Error('not implemented') },
+  listRecentWorkspaces: () => { throw new Error('not implemented') },
   getWorkspace: () => { throw new Error('not implemented') },
   readTree: () => { throw new Error('not implemented') },
   readFile: () => { throw new Error('not implemented') },

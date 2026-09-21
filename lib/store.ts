@@ -2,8 +2,8 @@ import { useSyncExternalStore } from 'react'
 
 /**
  * 文档状态 store（两栏布局起为插件 doc 服务的宿主侧状态源）：
- * 内置编辑器已移除，宿主不再有写入 UI——content 仅经帧协议 doc.set 更新，
- * activePath/root 保留字段语义（未来默认编辑插件回归时复用），当前恒为初始值。
+ * 内置编辑器已移除，宿主不再有写入 UI——content 仅经帧协议 doc.set 更新；
+ * 工作区可经首页项目入口切换（2026-09-21 起），切换时 doc 状态整体失效（switchWorkspace）。
  */
 export interface WorkspaceState {
   root: string | null
@@ -16,7 +16,7 @@ export interface WorkspaceState {
 
 // ---------- 文档生命周期事件（插件 documentHooks 的事件源） ----------
 
-export type DocEventName = 'doc.opened' | 'doc.saved' | 'doc.changed' | 'doc.closed'
+export type DocEventName = 'doc.opened' | 'doc.saved' | 'doc.changed' | 'doc.closed' | 'workspace'
 type DocEventListener = (name: DocEventName, payload: Record<string, unknown>) => void
 
 const docListeners = new Set<DocEventListener>()
@@ -89,6 +89,11 @@ export const workspaceStore = {
     if (!activePath || content == null) return
     await window.api.writeFile(activePath, content)
     this.markSaved()
+  },
+  /** 工作区切换：doc 状态归属旧工作区，整体失效并广播 doc.changed（root 供 doc 服务解析新根） */
+  switchWorkspace(root: string | null): void {
+    setState({ root, activePath: null, content: null, saved: null, dirty: false })
+    documentEvents.emit('doc.changed', { path: null, dirty: false })
   }
 }
 
