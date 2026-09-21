@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Dock 图标栅格化 — build/icon.svg（设计源）→ build/icon.png（1024×1024）+ build/icon.icns
+ * Dock 图标栅格化 — build/icon.svg（设计源）→ build/icon.png（1024×1024）+ build/icon.ico（Windows）+ build/icon.icns
  *
  * 用法:
  *   node scripts/build-icon.mjs                 # 暗底变体（默认）
@@ -8,6 +8,7 @@
  *
  * 变体按 build/icon.svg 头部注释的 token 整串替换，亮/暗两版几何完全同源。
  * macOS 上额外用 iconutil 合成 icon.icns（mac 打包直接取用，不依赖 electron-builder 的转换器）。
+ * Windows 产物 icon.ico 随 dark 变体产出（PNG 压缩条目，Vista+ 全支持）。
  */
 import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -60,6 +61,36 @@ export function renderPng(svg, width = 1024) {
   return resvg.render().asPng()
 }
 
+/** ICO 各条目尺寸；256 在目录项里记 0 */
+const ICO_SIZES = [16, 24, 32, 48, 64, 128, 256]
+
+/**
+ * ICO 容器组包：ICONDIR(6B) + ICONDIRENTRY(16B×N) + PNG 数据块依次排列。
+ * 条目直接嵌 PNG（Vista+ 全支持），无需手写 BMP 双图。
+ * @param {{size: number, data: Buffer}[]} entries
+ * @returns {Buffer}
+ */
+export function buildIco(entries) {
+  const header = Buffer.alloc(6)
+  header.writeUInt16LE(0, 0)
+  header.writeUInt16LE(1, 2) // type 1 = icon
+  header.writeUInt16LE(entries.length, 4)
+  const dir = Buffer.alloc(16 * entries.length)
+  let offset = header.length + dir.length
+  entries.forEach((entry, i) => {
+    const e = i * 16
+    const code = entry.size >= 256 ? 0 : entry.size
+    dir.writeUInt8(code, e)
+    dir.writeUInt8(code, e + 1)
+    dir.writeUInt16LE(1, e + 4) // planes
+    dir.writeUInt16LE(32, e + 6) // bitCount
+    dir.writeUInt32LE(entry.data.length, e + 8)
+    dir.writeUInt32LE(offset, e + 12)
+    offset += entry.data.length
+  })
+  return Buffer.concat([header, dir, ...entries.map((entry) => entry.data)])
+}
+
 /** macOS iconutil 合成 icns；非 darwin 跳过（返回 null） */
 function buildIcns(svg) {
   if (process.platform !== 'darwin') return null
@@ -89,6 +120,9 @@ function main() {
   if (variant === 'dark') {
     const icns = buildIcns(scaled)
     if (icns) process.stdout.write(`build/icon.icns (${existsSync(icns) ? 'ok' : 'missing'})\n`)
+    const ico = buildIco(ICO_SIZES.map((size) => ({ size, data: renderPng(scaled, size) })))
+    writeFileSync(resolve(ROOT, 'build/icon.ico'), ico)
+    process.stdout.write(`build/icon.ico (${ico.length} bytes)\n`)
   }
 }
 

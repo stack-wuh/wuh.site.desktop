@@ -1,5 +1,6 @@
 import { BrowserWindow, app, net, protocol, shell } from 'electron'
-import { resolve } from 'node:path'
+import { existsSync } from 'node:fs'
+import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { bootstrapIpc } from './register-features'
 
@@ -18,12 +19,15 @@ protocol.registerSchemesAsPrivileged([
 ])
 
 function createWindow(): BrowserWindow {
+  // dev 下从源码 build/ 取窗口/任务栏图标；打包后 build/ 不进 asar，由 exe 资源（win.icon / icns）承担
+  const iconPath = join(app.getAppPath(), 'build/icon.png')
   const win = new BrowserWindow({
     width: 1360,
     height: 860,
     minWidth: 960,
     minHeight: 600,
     title: 'wuh.site',
+    icon: existsSync(iconPath) ? iconPath : undefined,
     backgroundColor: '#1e1f22',
     webPreferences: {
       preload: resolve(__dirname, '../preload/index.js'),
