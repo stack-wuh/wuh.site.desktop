@@ -2,9 +2,13 @@ import { BrowserWindow, Menu, app, net, protocol, shell, type MenuItemConstructo
 import { existsSync, statSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { isAllowedTopNavigation } from './navigationGuard'
 import { bootstrapIpc } from './register-features'
+import { PRIVILEGED_SCHEMES } from './schemes'
 
 const isDev = !app.isPackaged
+/** dev 渲染层地址（next dev，见 package.json dev 脚本双进程编排） */
+const DEV_RENDERER_URL = process.env['NEXT_DEV_URL'] ?? 'http://localhost:3000'
 
 // 应用菜单仅承载编辑快捷键角色（Ctrl+C/V/Z 等系统输入依赖菜单角色）；
 // 窗口内不显示菜单栏（见 createWindow 的 setMenu(null)）。dev 下附带回退/开发者工具。
@@ -28,23 +32,8 @@ const appMenu = Menu.buildFromTemplate([
 ])
 Menu.setApplicationMenu(appMenu)
 
-// 预览渲染本地图片用的安全协议：不走 webSecurity 关闭路线，dev/prod 行为一致。
-// standard+secure+corsEnabled：插件视图运行在 secure 的 plugin:// 帧中，
-// 跨源加载本地图片需要协议本身具备可信源与 CORS 资格（否则混合内容拦截）。
-// plugin://<id>：插件静态资源与沙箱帧加载协议（standard+secure，供 opaque 帧 fetch）
-// app://<host>/<path>：Next 静态导出产物（dist/next）离线加载协议，standard+secure
-// 使其成为可信源，与 plugin:// 沙箱帧的 CSP/混合内容规则兼容
-protocol.registerSchemesAsPrivileged([
-  {
-    scheme: 'local-resource',
-    privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true, corsEnabled: true }
-  },
-  { scheme: 'plugin', privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true } },
-  {
-    scheme: 'app',
-    privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true, corsEnabled: true }
-  }
-])
+// 自定义协议特权注册（逐条 scheme 的取舍见 ./schemes）：不走关闭 webSecurity 的路线，dev/prod 行为一致
+protocol.registerSchemesAsPrivileged(PRIVILEGED_SCHEMES)
 
 // __dirname = <appRoot>/out/main；Next 导出根 = <appRoot>/dist/next
 const RENDERER_DIST = resolve(__dirname, '../../dist/next')
@@ -89,14 +78,20 @@ function createWindow(): BrowserWindow {
     return { action: 'deny' }
   })
 
+  // 顶层导航白名单：页面内容（含沙箱插件帧）不得把宿主窗口导航到壳层之外。
+  // loadURL 发起的导航不触发本事件，故不会波及壳层自身的加载路径。
+  win.webContents.on('will-navigate', (event, url) => {
+    if (isAllowedTopNavigation(url, { isDev, devUrl: DEV_RENDERER_URL })) return
+    console.warn('已拦截顶层导航:', url)
+    event.preventDefault()
+  })
+
   if (isDev) {
-    // dev 渲染层由 `next dev`(3000) 提供（见 package.json dev 脚本双进程编排）；
-    // 主进程自旋等待就绪，避免 next dev 未起时白屏竞态
-    const devUrl = process.env['NEXT_DEV_URL'] ?? 'http://localhost:3000'
+    // 主进程自旋等待 dev 就绪，避免 next dev 未起时白屏竞态
     const waitForDevServer = async (): Promise<boolean> => {
       for (let i = 0; i < 120; i++) {
         try {
-          await net.fetch(devUrl)
+          await net.fetch(DEV_RENDERER_URL)
           return true
         } catch {
           await new Promise((r) => setTimeout(r, 500))
@@ -105,7 +100,7 @@ function createWindow(): BrowserWindow {
       return false
     }
     void waitForDevServer().then((ready) => {
-      if (ready) void win.loadURL(devUrl)
+      if (ready) void win.loadURL(DEV_RENDERER_URL)
       else win.loadURL('data:text/html,<h1 style="font-family:sans-serif">next dev 未就绪（60s 超时）</h1>')
     })
   } else {

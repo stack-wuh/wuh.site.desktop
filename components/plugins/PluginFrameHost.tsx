@@ -247,9 +247,12 @@ function openFrame(pluginId: string, frameKey: string, url: string, hostEl: HTML
     channel.port1.start()
 
     let settled = false
+    // load 监听在 appendChild 之前注册（不会漏事件）；loaded 用于超时后的分层归因
+    let loaded = false
     iframe.addEventListener(
       'load',
       () => {
+        loaded = true
         iframe.contentWindow?.postMessage({ kind: 'wuh:connect' }, '*', [channel.port2])
         sendHello(frame, frameKey === 'logic' ? null : frameKey)
       },
@@ -265,7 +268,11 @@ function openFrame(pluginId: string, frameKey: string, url: string, hostEl: HTML
       if (settled) return
       settled = true
       closeFrame(key)
-      reject(new Error(`插件帧未就绪（${HELLO_TIMEOUT_MS}ms 超时）: ${url}`))
+      // 分层归因：load 未触发属导航层；已 load 却无 ready 属帧内脚本层（协议 CORS 资格/脚本报错）
+      const layer = loaded
+        ? '帧文档已加载但未完成握手——帧内脚本未执行（查协议 CORS 资格与脚本报错）'
+        : '帧文档未触发 load——导航未完成（查协议注册与页面 CSP frame-src）'
+      reject(new Error(`插件帧未就绪（${HELLO_TIMEOUT_MS}ms 超时，${layer}）: ${url}`))
     }, HELLO_TIMEOUT_MS)
 
     if (hostEl) {
