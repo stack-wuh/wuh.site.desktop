@@ -11,6 +11,7 @@ import { IconHome, IconSettings, pluginIcon } from './components/icons'
 import {
   bootstrapPluginsHost,
   broadcastTheme,
+  hostGeneration,
   listFloatViews,
   listMainViews,
   PluginView,
@@ -70,8 +71,10 @@ export default function App(): React.JSX.Element {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  const mainViews = useMemo(() => (pluginsReady ? listMainViews() : []), [pluginsReady])
-  const floatViews = useMemo(() => (pluginsReady ? listFloatViews() : []), [pluginsReady])
+  // 宿主代际：插件启停/重载时 +1，驱动菜单与浮窗视图列表刷新
+  const generation = useSyncExternalStore(hostGeneration.subscribe, hostGeneration.get)
+  const mainViews = useMemo(() => (pluginsReady ? listMainViews() : []), [pluginsReady, generation])
+  const floatViews = useMemo(() => (pluginsReady ? listFloatViews() : []), [pluginsReady, generation])
   // 浮窗开合快照：SideMenu toggle 激活态与 FloatLayer 渲染共用
   // （注册表 key 无前缀，toggle 项 id 带 PLUGIN_PANEL_PREFIX，此处映射）
   const floatsSnapshot = useSyncExternalStore(floatsStore.subscribe, floatsStore.get)
@@ -108,6 +111,13 @@ export default function App(): React.JSX.Element {
   const activeMainView = rightRoute.startsWith(PLUGIN_PANEL_PREFIX)
     ? mainViews.find((entry) => pluginPanelKey(entry.pluginId, entry.view.id) === rightRoute)
     : undefined
+
+  // 插件停用/重载后路由失效：回退 home（一次性修正，不阻塞渲染）
+  useEffect(() => {
+    if (rightRoute.startsWith(PLUGIN_PANEL_PREFIX) && !activeMainView && pluginsReady) {
+      setRightRoute('home')
+    }
+  }, [rightRoute, activeMainView, pluginsReady])
 
   return (
     <div className="app-shell">
