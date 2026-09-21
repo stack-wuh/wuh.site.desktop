@@ -1,15 +1,25 @@
 /**
- * 插件 loader（主进程）：扫描插件目录、校验 manifest、维护启用状态，
+ * 插件 loader（主进程）：扫描插件目录、校验 manifest、维护启用/批准状态，
  * 并把 broker / protocol / publisher 桥接接成一条线。
  *
  * 首期插件源：应用内置 plugins/ 目录（官方参考插件）与 userData/plugins/（本地第三方）。
- * 市场/审核/分发为非目标；启用/禁用持久化在 userData/plugin-state.json。
+ * 启用/批准持久化在 userData/plugin-state.json：
+ * - disabled: 用户显式禁用列表
+ * - approvals: 插件 id → 批准时 manifest 权限快照（权限变更即失效待重批）
+ * 有效启用 = 未禁用 且 resolveApproval === 'approved'。
+ * 市场/审核/分发为非目标。
  */
-import { app, ipcMain } from 'electron'
+import { app, ipcMain, shell } from 'electron'
 import fsp from 'node:fs/promises'
 import path from 'node:path'
 import { randomUUID } from 'node:crypto'
-import { validateManifest, type PluginRecord } from '@shared/plugin'
+import {
+  resolveApproval,
+  samePermissions,
+  validateManifest,
+  type ApprovalMap,
+  type PluginRecord
+} from '@shared/plugin'
 import type { IpcResult, PublishResult } from '@shared/types'
 import { callHandler } from '../ipc'
 import { getToken } from '../credentials'
@@ -20,28 +30,34 @@ import { PLUGIN_SDK_JS } from '../../plugin-sdk'
 
 interface LoadState {
   disabled: string[]
+  approvals: Record<string, string[]>
 }
 
 const records = new Map<string, PluginRecord>()
 const problems: { dir: string; errors: string[] }[] = []
 const bridgePublisherIds = new Set<string>()
+/** 当前批准快照（与 state 文件同步），扫描与启停共用 */
+let approvals: Record<string, string[]> = {}
 
 function stateFile(): string {
   return path.join(app.getPath('userData'), 'plugin-state.json')
 }
 
-async function loadDisabled(): Promise<Set<string>> {
+async function loadState(): Promise<LoadState> {
   try {
     const raw = JSON.parse(await fsp.readFile(stateFile(), 'utf-8')) as Partial<LoadState>
-    return new Set(Array.isArray(raw.disabled) ? raw.disabled : [])
+    return {
+      disabled: Array.isArray(raw.disabled) ? raw.disabled : [],
+      approvals: raw.approvals && typeof raw.approvals === 'object' ? raw.approvals : {}
+    }
   } catch {
-    return new Set()
+    return { disabled: [], approvals: {} }
   }
 }
 
-async function saveDisabled(disabled: Set<string>): Promise<void> {
+async function saveState(state: LoadState): Promise<void> {
   await fsp.mkdir(path.dirname(stateFile()), { recursive: true })
-  await fsp.writeFile(stateFile(), JSON.stringify({ disabled: [...disabled] }, null, 2), 'utf-8')
+  await fsp.writeFile(stateFile(), JSON.stringify(state, null, 2), 'utf-8')
 }
 
 async function scanDir(baseDir: string, disabled: Set<string>): Promise<void> {
@@ -65,10 +81,12 @@ async function scanDir(baseDir: string, disabled: Set<string>): Promise<void> {
         problems.push({ dir, errors: [`插件 id 重复: ${checked.manifest.id}（保留先扫描到的目录）`] })
         continue
       }
+      const approval = resolveApproval(checked.manifest, approvals as ApprovalMap)
       records.set(checked.manifest.id, {
         manifest: checked.manifest,
         dir,
-        enabled: !disabled.has(checked.manifest.id)
+        enabled: !disabled.has(checked.manifest.id) && approval === 'approved',
+        approval
       })
     } catch (err) {
       problems.push({ dir, errors: [`plugin.json 读取/解析失败: ${err instanceof Error ? err.message : String(err)}`] })
@@ -109,21 +127,51 @@ function syncBridgePublishers(): void {
   }
 }
 
-export async function setPluginEnabled(pluginId: string, enabled: boolean): Promise<IpcResult<null>> {
+export async function setPluginEnabled(
+  pluginId: string,
+  enabled: boolean,
+  approvedPermissions?: string[]
+): Promise<IpcResult<null>> {
   const record = records.get(pluginId)
   if (!record) return { ok: false, error: `插件不存在: ${pluginId}` }
-  const disabled = await loadDisabled()
-  if (enabled) disabled.delete(pluginId)
-  else disabled.add(pluginId)
-  await saveDisabled(disabled)
-  record.enabled = enabled
+  const state = await loadState()
+  const disabled = new Set(state.disabled)
+
+  if (enabled) {
+    const current = resolveApproval(record.manifest, approvals as ApprovalMap)
+    if (current !== 'approved') {
+      // 未批准/权限已变：必须携带与 manifest 完全一致的权限数组才放行
+      if (!approvedPermissions || !samePermissions(approvedPermissions, record.manifest.permissions)) {
+        return { ok: false, error: `插件 ${pluginId} 需先批准与 manifest 一致的权限列表` }
+      }
+      approvals[pluginId] = [...new Set(approvedPermissions)]
+    } else if (approvedPermissions && !samePermissions(approvedPermissions, record.manifest.permissions)) {
+      return { ok: false, error: `批准列表与插件 ${pluginId} 的 manifest 权限不一致` }
+    }
+    disabled.delete(pluginId)
+  } else {
+    disabled.add(pluginId)
+  }
+
+  approvals = { ...approvals }
+  await saveState({ disabled: [...disabled], approvals })
+  const approval = resolveApproval(record.manifest, approvals as ApprovalMap)
+  record.enabled = !disabled.has(pluginId) && approval === 'approved'
+  record.approval = approval
   syncBridgePublishers()
   return { ok: true, data: null }
 }
 
 export function bootstrapPlugins(): Promise<void> {
+  return rescan()
+}
+
+/** 重扫双目录并重建 records / 桥接 / IPC（reload 与首次引导共用，幂等） */
+export function rescan(): Promise<void> {
   return (async () => {
-    const disabled = await loadDisabled()
+    const state = await loadState()
+    approvals = { ...state.approvals }
+    const disabled = new Set(state.disabled)
     records.clear()
     problems.length = 0
     await scanDir(path.join(app.getAppPath(), 'plugins'), disabled)
@@ -149,9 +197,21 @@ export function bootstrapPlugins(): Promise<void> {
       return { ok: true, data: { records: listPluginRecords(), problems: [...problems] } }
     })
     ipcMain.removeHandler('plugin:setEnabled')
-    ipcMain.handle('plugin:setEnabled', async (_e, pluginId: string, enabled: boolean) =>
-      setPluginEnabled(pluginId, enabled)
+    ipcMain.handle('plugin:setEnabled', async (_e, pluginId: string, enabled: boolean, approvedPermissions?: string[]) =>
+      setPluginEnabled(pluginId, enabled, approvedPermissions)
     )
+    ipcMain.removeHandler('plugin:reload')
+    ipcMain.handle('plugin:reload', async () => {
+      await rescan()
+      return { ok: true, data: { records: listPluginRecords(), problems: [...problems] } }
+    })
+    ipcMain.removeHandler('plugin:revealDir')
+    ipcMain.handle('plugin:revealDir', async (_e, pluginId: string) => {
+      const record = records.get(pluginId)
+      if (!record) return { ok: false, error: `插件不存在: ${pluginId}` }
+      await shell.openPath(record.dir)
+      return { ok: true, data: null }
+    })
 
     syncBridgePublishers()
   })()

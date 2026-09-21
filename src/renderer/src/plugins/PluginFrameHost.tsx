@@ -16,7 +16,7 @@ import type {
   PluginViewContribution,
   ToHostMessage
 } from '@shared/plugin'
-import { pluginLogicUrl, pluginViewUrl } from '@shared/plugin'
+import { pluginLogicUrl, pluginViewUrl, resolveApproval } from '@shared/plugin'
 import type { WorkspaceInfo } from '@shared/types'
 import { buildThemeCss } from '../theme/tokens'
 import { uiConfirm } from '../components/ui/Dialog'
@@ -330,49 +330,93 @@ function broadcast(name: string, payload?: unknown): void {
 
 export async function bootstrapPluginsHost(): Promise<PluginListResult> {
   if (bootPromise) return bootPromise
-  bootPromise = (async () => {
-    const result = await window.pluginApi.list()
-    records = result.records
-    sessions = new Map()
-
-    await Promise.all(
-      enabledRecords().map(async (record) => {
-        const { id } = record.manifest
-        sessions.set(id, await window.pluginApi.createSession(id))
-        registerManifestStatusItems(record.manifest)
-        if (record.manifest.logic) {
-          try {
-            await openFrame(id, 'logic', pluginLogicUrl(id), null)
-          } catch (err) {
-            console.error(`插件 ${id} 逻辑帧启动失败`, err)
-          }
-        }
-      })
-    )
-
-    renderService.setRuleDispatcher(async (pluginId, token, method, payload) =>
-      String(await requestFrame(pluginId, 'logic', 'renderRule', method, [token, payload]))
-    )
-
-    window.pluginApi.onDispatch((dispatch) => {
-      requestFrame(dispatch.pluginId, 'logic', 'publisher', 'publish', dispatch.args).then(
-        (data) => {
-          void window.pluginApi.dispatchReply(dispatch.requestId, { ok: true, data })
-        },
-        (err: unknown) => {
-          void window.pluginApi.dispatchReply(dispatch.requestId, {
-            ok: false,
-            error: err instanceof Error ? err.message : String(err)
-          })
-        }
-      )
-    })
-
-    documentEvents.subscribe((name, payload) => broadcast(name, payload))
-
-    return result
-  })()
+  bootPromise = startHost()
   return bootPromise
+}
+
+/** 一次性接线：文档事件广播与 publisher 派发（动态查 frames，重载无需重挂） */
+let hostWired = false
+function wireHostOnce(): void {
+  if (hostWired) return
+  hostWired = true
+  window.pluginApi.onDispatch((dispatch) => {
+    requestFrame(dispatch.pluginId, 'logic', 'publisher', 'publish', dispatch.args).then(
+      (data) => {
+        void window.pluginApi.dispatchReply(dispatch.requestId, { ok: true, data })
+      },
+      (err: unknown) => {
+        void window.pluginApi.dispatchReply(dispatch.requestId, {
+          ok: false,
+          error: err instanceof Error ? err.message : String(err)
+        })
+      }
+    )
+  })
+  documentEvents.subscribe((name, payload) => broadcast(name, payload))
+}
+
+/** 引导核心：拉列表 → 建会话 → 开逻辑帧 → 接渲染派发（bootstrap 与 reload 共用） */
+async function startHost(): Promise<PluginListResult> {
+  const result = await window.pluginApi.list()
+  records = result.records
+  sessions = new Map()
+
+  await Promise.all(
+    enabledRecords().map(async (record) => {
+      const { id } = record.manifest
+      sessions.set(id, await window.pluginApi.createSession(id))
+      registerManifestStatusItems(record.manifest)
+      if (record.manifest.logic) {
+        try {
+          await openFrame(id, 'logic', pluginLogicUrl(id), null)
+        } catch (err) {
+          console.error(`插件 ${id} 逻辑帧启动失败`, err)
+        }
+      }
+    })
+  )
+
+  renderService.setRuleDispatcher(async (pluginId, token, method, payload) =>
+    String(await requestFrame(pluginId, 'logic', 'renderRule', method, [token, payload]))
+  )
+  wireHostOnce()
+  return result
+}
+
+// ---------- 宿主代际：启停/重载后壳层刷新视图列表的信号 ----------
+
+let generationSeq = 0
+const generationListeners = new Set<() => void>()
+
+export const hostGeneration = {
+  get: (): number => generationSeq,
+  subscribe(l: () => void): () => void {
+    generationListeners.add(l)
+    return () => {
+      generationListeners.delete(l)
+    }
+  },
+  bump(): void {
+    generationSeq += 1
+    generationListeners.forEach((l) => l())
+  }
+}
+
+/**
+ * 重载：主进程重扫目录，渲染层丢弃全部帧/规则/会话后重建。
+ * 代际 +1 驱动 App 刷新 SideMenu/浮窗视图列表；开合中的浮窗由注册表保留，
+ * 帧随 PluginView 重挂载重建。
+ */
+export async function rebootstrapPluginsHost(): Promise<PluginListResult> {
+  const result = await window.pluginApi.reload()
+  records = result.records
+  sessions = new Map()
+  for (const key of [...frames.keys()]) closeFrame(key)
+  renderService.reset()
+  bootPromise = null
+  await startHost()
+  hostGeneration.bump()
+  return result
 }
 
 export function setWorkspaceInfo(info: WorkspaceInfo | null): void {
@@ -395,13 +439,36 @@ export function listFloatViews(): { pluginId: string; view: PluginViewContributi
     .sort((a, b) => a.view.order - b.view.order)
 }
 
-export async function togglePlugin(pluginId: string, enabled: boolean): Promise<void> {
-  await window.pluginApi.setEnabled(pluginId, enabled)
+export async function togglePlugin(
+  pluginId: string,
+  enabled: boolean,
+  approvedPermissions?: string[]
+): Promise<void> {
+  await window.pluginApi.setEnabled(pluginId, enabled, approvedPermissions)
   const record = records.find((r) => r.manifest.id === pluginId)
-  if (record) record.enabled = enabled
-  // 状态项跟随启停：停用清空，启用重新注册声明占位
-  if (enabled && record) registerManifestStatusItems(record.manifest)
-  else clearPluginStatusItems(pluginId)
+  if (!record) return
+  record.enabled = enabled
+  record.approval = resolveApproval(record.manifest, {
+    [pluginId]: approvedPermissions ?? record.manifest.permissions
+  })
+
+  if (enabled) {
+    // 运行时启用：补建会话与逻辑帧（bootstrap 只处理启动时已启用的插件）
+    sessions.set(pluginId, await window.pluginApi.createSession(pluginId))
+    registerManifestStatusItems(record.manifest)
+    if (record.manifest.logic) {
+      try {
+        await openFrame(pluginId, 'logic', pluginLogicUrl(pluginId), null)
+      } catch (err) {
+        console.error(`插件 ${pluginId} 逻辑帧启动失败`, err)
+      }
+    }
+  } else {
+    closeFrame(FRAME_KEY(pluginId, 'logic'))
+    sessions.delete(pluginId)
+    clearPluginStatusItems(pluginId)
+  }
+  hostGeneration.bump()
 }
 
 /** 插件视图槽位：挂载/卸载沙箱帧 */

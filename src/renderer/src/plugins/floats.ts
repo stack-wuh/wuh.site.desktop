@@ -151,6 +151,13 @@ export function closeFloat(key: string): void {
   if (state.floats.length !== before) commit()
 }
 
+/** 停用插件时关闭其全部浮窗（PluginView 随注册表卸载，帧宿主收尾） */
+export function closePluginFloats(pluginId: string): void {
+  const before = state.floats.length
+  state.floats = state.floats.filter((f) => f.pluginId !== pluginId)
+  if (state.floats.length !== before) commit()
+}
+
 /** 开/关切换（ActivityBar toggle 语义：激活态=浮窗打开） */
 export function toggleFloat(decl: FloatDecl, viewport: FloatViewport): void {
   if (isOpen(floatKey(decl.pluginId, decl.viewId))) {

@@ -3,6 +3,7 @@ import type { AppSettings } from '@shared/types'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { AppIcon } from '../components/ui/AppIcon'
+import { PluginManagerSection } from '../components/PluginManagerSection'
 import { IconChevronLeft, IconLogo } from '../components/icons'
 
 // electron-vite renderer define 注入（electron.vite.config.ts），构建期常量
@@ -175,6 +176,7 @@ export function SettingsPage(props: { onBack: () => void }): React.JSX.Element {
           </div>
         </section>
       </div>
+      <PluginManagerSection />
     </div>
   )
 }

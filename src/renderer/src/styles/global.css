@@ -1011,3 +1011,99 @@ body :is(.title-bar, .side-menu, .main-area, .status-bar, .float-window, .ui-btn
   height: 100%;
   min-height: 0;
 }
+
+/* ===== 插件管理（设置页区块） ===== */
+
+.plugin-manage {
+  margin-top: 20px;
+  padding: 16px;
+  border: 1px solid var(--chrome-border);
+  border-radius: var(--border-radius-base);
+  background: var(--background-color);
+}
+
+.plugin-manage-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.plugin-manage-head h3 {
+  margin: 0;
+}
+
+.plugin-manage-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.plugin-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--chrome-border);
+  border-radius: var(--border-radius-sm);
+  background: var(--chrome-panel);
+}
+
+.plugin-card-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.plugin-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.plugin-card-title .hint-text {
+  font-family: var(--font-mono);
+}
+
+.plugin-card-main p {
+  margin: 4px 0 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plugin-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.plugin-approval {
+  padding: 1px 8px;
+  border-radius: 9px;
+  font-size: 11px;
+  border: 1px solid var(--chrome-border);
+  color: var(--text-muted);
+}
+
+.plugin-approval.changed {
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.plugin-problems {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.plugin-problems p {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -73,8 +73,12 @@ async function pluginInvoke<T>(channel: string, ...args: unknown[]): Promise<T> 
 const pluginApi: PluginHostApi = {
   list: () => pluginInvoke<PluginListResult>('plugin:list'),
   createSession: (pluginId) => pluginInvoke<PluginSessionInfo>('plugin:createSession', pluginId),
-  setEnabled: async (pluginId, enabled) => {
-    await pluginInvoke<null>('plugin:setEnabled', pluginId, enabled)
+  setEnabled: async (pluginId, enabled, approvedPermissions) => {
+    await pluginInvoke<null>('plugin:setEnabled', pluginId, enabled, approvedPermissions)
+  },
+  reload: () => pluginInvoke<PluginListResult>('plugin:reload'),
+  revealDir: async (pluginId) => {
+    await pluginInvoke<null>('plugin:revealDir', pluginId)
   },
   invoke: (sessionId, method, args) => pluginInvoke<unknown>('plugin:invoke', sessionId, method, args),
   onDispatch: (cb) => {

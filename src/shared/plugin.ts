@@ -86,7 +86,30 @@ export interface PluginManifest {
 export interface PluginRecord {
   manifest: PluginManifest
   dir: string
+  /** 有效启用 = 用户未禁用 且 权限批准有效（approved） */
   enabled: boolean
+  /** 批准状态：approved=快照一致；pending=从未批准；changed=manifest 权限与快照不一致 */
+  approval: PluginApprovalState
+}
+
+export type PluginApprovalState = 'approved' | 'pending' | 'changed'
+
+/** plugin-state.json 的 approvals 段：插件 id → 批准时 manifest 权限快照 */
+export type ApprovalMap = Readonly<Record<string, readonly string[]>>
+
+/** 权限集合相等：排序去重后逐项比较（顺序无关） */
+export function samePermissions(a: readonly string[], b: readonly string[]): boolean {
+  const norm = (list: readonly string[]) => [...new Set(list)].sort()
+  const x = norm(a)
+  const y = norm(b)
+  return x.length === y.length && x.every((v, i) => v === y[i])
+}
+
+/** 纯函数判定：批准快照 vs 当前 manifest 权限 */
+export function resolveApproval(manifest: PluginManifest, approvals: ApprovalMap): PluginApprovalState {
+  const snapshot = approvals[manifest.id]
+  if (!snapshot) return 'pending'
+  return samePermissions(snapshot, manifest.permissions) ? 'approved' : 'changed'
 }
 
 export interface PluginListResult {
@@ -114,7 +137,12 @@ export interface PluginDispatchPayload {
 export interface PluginHostApi {
   list(): Promise<PluginListResult>
   createSession(pluginId: string): Promise<PluginSessionInfo>
-  setEnabled(pluginId: string, enabled: boolean): Promise<void>
+  /** enabled=true 且插件未批准/权限已变时，必须携带与 manifest 完全一致的权限数组（批准写入快照） */
+  setEnabled(pluginId: string, enabled: boolean, approvedPermissions?: string[]): Promise<void>
+  /** 主进程重扫插件目录并重建 records（幂等） */
+  reload(): Promise<PluginListResult>
+  /** 在文件管理器中打开插件目录（仅限已注册插件 id） */
+  revealDir(pluginId: string): Promise<void>
   invoke(sessionId: string, method: string, args: unknown[]): Promise<unknown>
   onDispatch(cb: (payload: PluginDispatchPayload) => void): () => void
   dispatchReply(requestId: string, result: IpcResult<unknown>): Promise<void>
