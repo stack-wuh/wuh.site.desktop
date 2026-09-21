@@ -228,6 +228,8 @@ export type IpcResult<T> = { ok: true; data: T } | { ok: false; error: string }
 /** preload 暴露到 window.api 的完整面 */
 export interface DesktopApi {
   ping(): Promise<string>
+  /** 壳层 layout 挂载完成信号：主进程收到后撤下启动 splash 并显示主窗 */
+  rendererReady(): Promise<void>
   openWorkspace(): Promise<WorkspaceInfo | null>
   /** clone 公开 https 仓库为新工作区（git@ 形态自动转 https）；用户取消返回 null */
   cloneWorkspace(url: string): Promise<WorkspaceInfo | null>

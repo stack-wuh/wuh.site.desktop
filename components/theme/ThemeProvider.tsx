@@ -48,6 +48,11 @@ function readStored(): ThemeState {
 let styleInjected = false
 function injectThemeCss(): void {
   if (styleInjected) return
+  // 导出产物的 <head> 已内联同 id 样式（app/layout.tsx 首帧地基），存在即视为已注入
+  if (document.getElementById('wd-theme-vars')) {
+    styleInjected = true
+    return
+  }
   const style = document.createElement('style')
   style.id = 'wd-theme-vars'
   style.textContent = buildThemeCss()
