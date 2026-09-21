@@ -3,6 +3,7 @@ import fsp from 'node:fs/promises'
 import path from 'node:path'
 import { simpleGit, type SimpleGit } from 'simple-git'
 import { implement } from './ipc'
+import { recordRecent, readRecent } from './recentWorkspaces'
 import type { FileNode, GithubRemote, WorkspaceInfo } from '@shared/types'
 
 const IGNORED_DIRS = new Set([
@@ -70,6 +71,10 @@ export async function setWorkspace(root: string): Promise<WorkspaceInfo> {
 
   current = { root, name: path.basename(root), isGitRepo, branch, ahead, behind, github }
   gitClient = isGitRepo ? git : null
+  // 登记最近项目：打开/clone/列表点开三条路都经此收口。登记失败不阻断打开（仅提示性数据）
+  await recordRecent({ path: current.root, name: current.name }).catch((err: unknown) => {
+    console.error('最近项目登记失败:', err)
+  })
   return current
 }
 
@@ -148,6 +153,14 @@ async function buildTree(
 
 implement('openWorkspace', () => openWorkspaceDialog())
 implement('getWorkspace', async () => getWorkspace())
+implement('listRecentWorkspaces', () => readRecent())
+
+implement('openWorkspaceByPath', async ([p]) => {
+  const target = String(p ?? '')
+  const st = await fsp.stat(target).catch(() => null)
+  if (!st?.isDirectory()) throw new Error('项目目录不存在或不可访问')
+  return setWorkspace(target)
+})
 
 implement('readTree', async () => {
   const root = requireRoot()

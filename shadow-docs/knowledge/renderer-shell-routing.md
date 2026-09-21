@@ -10,6 +10,7 @@ source:
   - changes/20260918-feature-shell-float-layer/brief.md
   - changes/20260920-feature-shell-two-column-layout/brief.md
   - changes/20260921-refactor-renderer-nextjs/brief.md
+  - changes/20260921-feature-new-blog-project-entry/brief.md
 verified: 2026-09-21
 ---
 
@@ -19,7 +20,7 @@ verified: 2026-09-21
 
 渲染层为 **Next.js App Router 项目**（2026-09-21 起，从 electron-vite + React 迁移）：两栏布局（**预留通知条**（44px 空条，待更新/紧急通知）→ body（左栏 SideMenu + 右栏 main 容器）→ StatusBar）由 **`app/(shell)/layout.tsx` 持久化**，路由段互斥渲染右栏页面：
 
-- `/` → HomePage（默认入口 = 项目门面）
+- `/` → HomePage（默认入口 = **「新建博客」项目入口**，2026-09-21 起：项目区块承载打开本地目录 / clone 公开 https 仓库 / 最近项目列表；热力图保留其下）
 - `/settings` → SettingsPage
 - `/plugin/<pluginId>/<viewId>` → PluginMainView（`views.area: 'main'` 的插件视图；`generateStaticParams` 从内置 `plugins/*/plugin.json` 构建期枚举）
 
@@ -39,7 +40,7 @@ verified: 2026-09-21
 - 浮窗开合与几何是进程内注册表状态（`lib/floats.ts`，commit() 产新引用 + useSyncExternalStore）；FloatLayer 几何视口 = main 容器。
 - 客户端组件一律 'use client'；服务端组件只做参数透传（`plugin/[...slug]/page.tsx` 为 async server component，接收 `params: Promise<...>`）。
 - 任何 `useSyncExternalStore` 必须传第三参 `getServerSnapshot`（静态导出预渲染要求，否则 `next build` 在预渲染阶段报错退出）。
-- 壳层不再展示工作区 UI；getWorkspace 仅在 layout 挂载时 seed `setWorkspaceInfo`（供插件 doc 服务解析根路径）。
+- 壳层不再展示工作区 UI；工作区信息两处 seed：layout 挂载时 `getWorkspace` 一次性 seed，以及**项目入口切换时 `applyWorkspaceSwitch` 重入**（`setWorkspaceInfo` + `workspaceStore.switchWorkspace` 失效 doc 状态 + `documentEvents.emit('workspace')` 经既有链路广播进全部插件帧，SDK `wuh.on('workspace')` 可感知）。最近项目持久化在主进程 `userData/recent-workspaces.json`（`setWorkspace` 成功即登记，cap 8）。
 
 ## 适用边界
 
