@@ -10,3 +10,5 @@
 | 20260920-feature-plugin-manager | ✅ 完成 | shadow-docs/changes/archive/20260920-feature-plugin-manager/brief.md |
 | 20260920-feature-shell-two-column-layout | ✅ 完成 | shadow-docs/changes/archive/20260920-feature-shell-two-column-layout/brief.md |
 | 20260920-fix-plugin-frame-csp | ✅ 完成 | shadow-docs/changes/archive/20260920-fix-plugin-frame-csp/brief.md |
+| 20260921-feature-app-icon-wiring | ✅ 完成 | shadow-docs/changes/archive/20260921-feature-app-icon-wiring/brief.md |
+| 20260921-refactor-renderer-nextjs | branched | shadow-docs/changes/20260921-refactor-renderer-nextjs/brief.md |
