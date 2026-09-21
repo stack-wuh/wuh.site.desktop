@@ -4,7 +4,7 @@
   "name": "20260921-refactor-renderer-nextjs",
   "type": "refactor",
   "scope": "app,components,lib,src,tests,shadow-docs/knowledge",
-  "status": "reviewed",
+  "status": "published",
   "baseBranch": "main",
   "branch": "refactor/20260921-refactor-renderer-nextjs",
   "files": [
@@ -29,18 +29,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 12,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/12",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 14,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/14"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "8e82299ce7b4fa1371770ec3673341e60e29b86a",
-    "verifiedAt": "2026-09-21T10:16:49.872Z"
+    "verifiedCommit": "6c3fc5cec75c7fd69ef5ebb883e20e99c74482fa",
+    "verifiedAt": "2026-09-21T10:17:31.041Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "8e82299ce7b4fa1371770ec3673341e60e29b86a",
-    "planHash": "8cfe6b96c0ca47b215682ffadece436980b8a1a7bfd9d7897e6323a50fd9bc00",
+    "checkpoint": "pr:14",
+    "planHash": "ea767d0df25736668c7de90f40f15d7950bd4802f55f9335f87c3854002af1a7",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {

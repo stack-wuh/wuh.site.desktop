@@ -1,13 +1,14 @@
 ---
 title: 插件系统架构（loader/批准/重载）
 domain: plugin
-keywords: [插件, plugin, manifest, loader, 启用, 停用, 批准, approvals, resolveApproval, reload, 重载, revealDir, plugin-state, broker, 沙箱]
-scope: [src/main/plugins, src/shared/plugin.ts, src/plugin-sdk, src/preload/index.ts]
+keywords: [插件, plugin, manifest, loader, 启用, 停用, 批准, approvals, resolveApproval, reload, 重载, revealDir, plugin-state, broker, 沙箱, 帧, 握手, ready, corsEnabled, 协议注册]
+scope: [src/main/plugins, src/main/schemes.ts, src/shared/plugin.ts, src/plugin-sdk, src/preload/index.ts]
 status: active
 source:
   - changes/archive/20260915-feature-desktop-plugin-system/brief.md
   - changes/archive/20260920-feature-plugin-manager/brief.md
   - changes/20260921-refactor-renderer-nextjs/brief.md
+  - changes/20260921-fix-plugin-frame-scheme-cors/brief.md
 verified: 2026-09-21
 ---
 
@@ -27,6 +28,8 @@ verified: 2026-09-21
 
 **渲染层宿主**（`components/plugins/PluginFrameHost.tsx`，2026-09-21 迁移前路径为 `src/renderer/src/plugins/PluginFrameHost.tsx`）：`bootstrapPluginsHost` 只处理启动时已启用插件；`togglePlugin` 运行时启停——启用补建会话+逻辑帧+状态项注册，停用反向清理（配 `lib/floats.ts` 的 `closePluginFloats` 收起该插件浮窗）；`rebootstrapPluginsHost` 服务重载（主进程 rescan → 渲染层关全部帧 + `renderService.reset()` + 重建会话与逻辑帧）；`hostGeneration` 代际信号驱动两栏 shell layout 刷新 main/float 视图列表（失效插件路由段回退 Empty 兜底）。
 
+**帧可达性前提（2026-09-21 修定）**：`plugin://` 必须在 `src/main/schemes.ts` 注册为 `standard + secure + supportFetchAPI + stream + corsEnabled`。插件视图帧是 `sandbox="allow-scripts"` 的**不透明源帧**（`origin: null`），帧内 `<script type="module">`、SDK 下发与逻辑入口 `import()` 全是 **CORS 模式的跨源请求**；Chromium 只对 CORS 已启用的协议放行跨源脚本，缺 `corsEnabled` 表现为「帧导航成功但握手永不就绪」——宿主 5s 超时报「插件视图加载失败」，而真正的 CORS 报错只在帧内 DevTools 可见，故长期隐形。**排除项（勿再误判）**：帧失败与 sandbox token 无关，实测 `allow-scripts`／加 `allow-top-navigation-to-custom-protocols`／去 sandbox／`allow-same-origin` 四组帧导航**全部成功**；历史 brief 记的 `Navigation to external protocol blocked by sandbox` 属误归因——已注册为 privileged 的自定义 scheme 不判为外部协议，且 Electron 的 `HandleExternalProtocol` **恒消费导航**，加 token 只会让报错消失而帧仍不加载。
+
 ## 执行约束
 
 - 启停/批准只经 `plugin:setEnabled` 单通道，快照只存 plugin-state.json，不建第二状态源
@@ -34,6 +37,7 @@ verified: 2026-09-21
 - 新增插件能力必须先进 `CAPABILITY_METHODS` 白名单并绑定权限词表，禁止为单插件开特例通道
 - manifest `logic` 约定为经典脚本语义（顶层 await 允许；运行于沙箱 allow-scripts 不透明源帧）
 - 消息协议 kind（hello/ready/invoke/result/event/request/response）变更须同步 shared 类型、SDK 字符串与帧宿主三方
+- 受特权 scheme 表（`src/main/schemes.ts`）是协议能力的唯一声明点：改特权位（尤其 `corsEnabled`）必须同步 `tests/plugin-schemes.test.ts`，并回到帧内实机验证握手是否就绪
 
 ## 适用边界
 
@@ -41,8 +45,9 @@ verified: 2026-09-21
 
 ## 验证方式
 
-- `node node_modules/vitest/vitest.mjs run`（plugin-approval / plugin-manifest / plugin-broker / plugin-protocol / plugin-auth / plugin-assets / plugin-sdk / plugin-statusitems 全绿）
+- `node node_modules/vitest/vitest.mjs run`（plugin-approval / plugin-manifest / plugin-broker / plugin-protocol / plugin-auth / plugin-assets / plugin-sdk / plugin-statusitems / plugin-schemes / navigation-guard 全绿）
 - `tsc --noEmit` 双侧 + `electron-vite build`
+- 帧可达性回归（实机）：`pnpm dev` 打开插件 main 视图与浮窗，确认帧渲染出内容而非「插件帧未就绪」；失败文案已分层——「帧文档未触发 load」= 导航层，「已加载但未完成握手」= 帧内脚本层（先查协议 `corsEnabled` 与帧内 console）
 - CDP 走查：设置页插件区块 → 启用弹批准框 → 批准后 SideMenu 出现视图项 → 停用后消失；重载后菜单即时刷新
 
 ## 关联知识
