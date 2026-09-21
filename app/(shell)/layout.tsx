@@ -14,6 +14,7 @@ import { ConfirmHost } from '../../components/ui/Dialog'
 import { StatusBar } from '../../components/StatusBar'
 import { FloatLayer } from '../../components/FloatLayer'
 import { SideMenu, type SideMenuItem } from '../../components/SideMenu'
+import ShellReady from '../../components/ShellReady'
 import { IconHome, pluginIcon } from '../../components/icons'
 import {
   bootstrapPluginsHost,
@@ -171,6 +172,8 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
       </Body>
       <StatusBar />
       <ConfirmHost />
+      {/* 启动就绪信号（无 UI）：挂载即通知主进程撤下 splash */}
+      <ShellReady />
     </Shell>
   )
 }

@@ -10,6 +10,8 @@ const handlers: {
   [K in keyof DesktopApi]: (payload: Parameters<DesktopApi[K]>) => ReturnType<DesktopApi[K]>
 } = {
   ping: () => Promise.resolve('pong'),
+  // 默认即成功：splash 撤下逻辑由 index.ts 经 implement() 接管，此处仅保证 channel 存在
+  rendererReady: () => Promise.resolve(),
   openWorkspace: () => { throw new Error('not implemented') },
   cloneWorkspace: () => { throw new Error('not implemented') },
   openWorkspaceByPath: () => { throw new Error('not implemented') },

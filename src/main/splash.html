@@ -1,0 +1,67 @@
+<!doctype html>
+<!--
+  启动 Loading 页：随主进程 bundle 内嵌（?raw），运行时 data: URL 加载。
+  自包含约束：零外部引用、零脚本（主进程经 executeJavaScript 挂 splash--hide 触发淡出）。
+-->
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'" />
+    <title>wuh.site</title>
+    <style>
+      /* 颜色为 token 静态快照（独立文档拿不到壳层 CSS 变量），改动须与 tokens.ts 同步 */
+      :root {
+        /* sync: components/theme/tokens.ts wine --background-900 light */
+        --splash-bg: #F5F0EC;
+        /* sync: tokens.ts --text-primary = normal-900 light */
+        --splash-fg: #2A1E16;
+        /* sync: tokens.ts --primary-color = primary-500 light */
+        --splash-accent: #C94A44;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          /* sync: components/theme/tokens.ts wine --background-900 dark */
+          --splash-bg: #2f2a2a;
+          /* sync: tokens.ts --text-primary = normal-500 dark */
+          --splash-fg: #adadad;
+          /* sync: tokens.ts --primary-color = primary-500 dark */
+          --splash-accent: #E36A64;
+        }
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--splash-bg);
+      }
+      #splash {
+        transition: opacity 200ms ease-out;
+      }
+      body.splash--hide #splash {
+        opacity: 0;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #splash {
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="splash">
+      <!-- sync: components/icons/brand.tsx（与 build/icon.svg 三方互锚，改动任一处必须同步其余） -->
+      <svg viewBox="0 0 120 60" width="168" height="84" xmlns="http://www.w3.org/2000/svg" fill="none" role="img" aria-label="wuh.site">
+        <title>wuh.site</title>
+        <path d="M12 16 L27 44 L42 16" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M42 16 L57 44 L72 16" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+        <rect x="84" y="18" width="24" height="8" rx="4" fill="var(--splash-accent)" />
+        <rect x="84" y="34" width="15" height="8" rx="4" fill="currentColor" opacity=".55" />
+      </svg>
+    </div>
+  </body>
+</html>
