@@ -4,7 +4,7 @@
   "name": "20260921-fix-plugin-frame-scheme-cors",
   "type": "fix",
   "scope": "src/main,components/plugins,tests,shadow-docs/knowledge",
-  "status": "published",
+  "status": "archived",
   "baseBranch": "refactor/20260921-refactor-renderer-nextjs",
   "branch": "fix/20260921-fix-plugin-frame-scheme-cors",
   "files": [
@@ -25,13 +25,13 @@
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "6c3fc5cec75c7fd69ef5ebb883e20e99c74482fa",
-    "verifiedAt": "2026-09-21T11:40:32.361Z"
+    "verifiedCommit": "3e778a6ffe9411e16cc4187b90d086caaef3869c",
+    "verifiedAt": "2026-09-21T15:04:57.064Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "pr:16",
-    "planHash": "843e5c2dc329b04acc9c216fe88968a07b70960eb9dfb281c97504a65fcafe9b",
+    "checkpoint": "merged-pr:16",
+    "planHash": "841966baa7ce32b256e99c2fbcc65cda059673d3c1784d1a990b8dcedd3098ba",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
