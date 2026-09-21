@@ -4,7 +4,7 @@
   "name": "20260921-fix-plugin-frame-scheme-cors",
   "type": "fix",
   "scope": "src/main,components/plugins,tests,shadow-docs/knowledge",
-  "status": "reviewed",
+  "status": "published",
   "baseBranch": "refactor/20260921-refactor-renderer-nextjs",
   "branch": "fix/20260921-fix-plugin-frame-scheme-cors",
   "files": [
@@ -20,8 +20,8 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 15,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/15",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 16,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/16"
   },
   "review": {
     "conclusion": "passed",
@@ -30,8 +30,8 @@
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:15",
-    "planHash": "e10017ae4e4a63e83feed0c516bc25a4a3cad998ae7bbf8fc77a33b197e93f9d",
+    "checkpoint": "pr:16",
+    "planHash": "843e5c2dc329b04acc9c216fe88968a07b70960eb9dfb281c97504a65fcafe9b",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
