@@ -1,0 +1,144 @@
+/* ===== 基础（组件样式一律 styled-components；此处只保留全局地基） ===== */
+
+/* 站点同款自托管字体子集（快照自 apps/site/app/fonts + public/fonts） */
+@font-face {
+  font-family: 'Noto Sans SC';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./fonts/NotoSansSC-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Noto Sans SC';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./fonts/NotoSansSC-700.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./fonts/JetBrainsMono-400.woff2') format('woff2');
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: var(--background-color);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-synthesis: none;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* 主题切换 0.3s 平滑过渡（对齐站点）；初始化时由 data-no-transition 禁用 */
+body {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+[data-no-transition] * {
+  transition: none !important;
+}
+
+/* ===== 滚动条：站点同款 8px 主题色胶囊 ===== */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-color) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    var(--primary-color),
+    color-mix(in oklab, var(--primary-color) 78%, var(--accent-color))
+  );
+  border-radius: 8px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--primary-color) 88%, #fff),
+    var(--primary-color)
+  );
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* ===== 品牌标书写动效（IconLogo animated，入场一次） =====
+   描边书写属入场型展示动画（非过渡），时长取 token --motion-dur-write，
+   三段 stagger 总长约 800ms —— ui-patterns 150-300ms 过渡条款的有意例外，
+   见 brief 20260919-feature-brand-icon-redesign 决策。 */
+
+.brand-logo--animated .brand-logo__stroke {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: brand-logo-write var(--motion-dur-write) var(--motion-ease-out-soft) forwards;
+}
+
+.brand-logo--animated .brand-logo__stroke--2 {
+  animation-delay: 240ms;
+}
+
+.brand-logo--animated .brand-logo__bar {
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation: brand-logo-bar var(--motion-dur-quick) var(--motion-ease-out-soft) forwards;
+}
+
+.brand-logo--animated .brand-logo__bar--1 {
+  animation-delay: 520ms;
+}
+
+.brand-logo--animated .brand-logo__bar--2 {
+  animation-delay: 660ms;
+}
+
+@keyframes brand-logo-write {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes brand-logo-bar {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-logo--animated .brand-logo__stroke {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+
+  .brand-logo--animated .brand-logo__bar {
+    animation: none;
+    transform: none;
+  }
+}

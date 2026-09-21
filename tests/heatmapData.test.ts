@@ -3,7 +3,7 @@ import {
   buildHeatmapViewData,
   getMonthPositions,
   MONTH_LABELS
-} from '../src/renderer/src/home/heatmapData'
+} from '../components/home/heatmapData'
 import type { AboutActivityDay, AboutActivityHeatmap } from '@shared/types'
 
 // 2026-09-17 是周四（getDay=4）；2026-10-04 是周日（一周首日，跨月定位锚点）

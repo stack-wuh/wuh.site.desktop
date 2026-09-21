@@ -7,6 +7,7 @@ status: active
 source:
   - changes/archive/20260915-feature-desktop-plugin-system/brief.md
   - changes/archive/20260920-feature-plugin-manager/brief.md
+  - changes/20260921-refactor-renderer-nextjs/brief.md
 verified: 2026-09-21
 ---
 
@@ -24,7 +25,7 @@ verified: 2026-09-21
 
 **reload / revealDir 通道**：`plugin:reload` 幂等重跑 `rescan()`（重扫双目录 + 重建 records/桥接/IPC，`bootstrapPlugins` 与之共用同一实现）；`plugin:revealDir` 经 `shell.openPath` 打开插件目录，只认已注册插件 id，不接受任意路径。
 
-**渲染层宿主**（`src/renderer/src/plugins/PluginFrameHost.tsx`）：`bootstrapPluginsHost` 只处理启动时已启用插件；`togglePlugin` 运行时启停——启用补建会话+逻辑帧+状态项注册，停用反向清理（配 `floats.closePluginFloats` 收起该插件浮窗）；`rebootstrapPluginsHost` 服务重载（主进程 rescan → 渲染层关全部帧 + `renderService.reset()` + 重建会话与逻辑帧）；`hostGeneration` 代际信号驱动 App 刷新 mainViews/floatViews 列表、失效路由回退 home。
+**渲染层宿主**（`components/plugins/PluginFrameHost.tsx`，2026-09-21 迁移前路径为 `src/renderer/src/plugins/PluginFrameHost.tsx`）：`bootstrapPluginsHost` 只处理启动时已启用插件；`togglePlugin` 运行时启停——启用补建会话+逻辑帧+状态项注册，停用反向清理（配 `lib/floats.ts` 的 `closePluginFloats` 收起该插件浮窗）；`rebootstrapPluginsHost` 服务重载（主进程 rescan → 渲染层关全部帧 + `renderService.reset()` + 重建会话与逻辑帧）；`hostGeneration` 代际信号驱动两栏 shell layout 刷新 main/float 视图列表（失效插件路由段回退 Empty 兜底）。
 
 ## 执行约束
 
@@ -36,7 +37,7 @@ verified: 2026-09-21
 
 ## 适用边界
 
-适用于桌面端插件装载/启停/批准/重载机制与其官方参考插件。渲染层壳层布局（SideMenu/rightRoute/FloatLayer）见 renderer-shell-routing 与 shell-chrome-design 卡片；站点 web 端无关。
+适用于桌面端插件装载/启停/批准/重载机制与其官方参考插件。渲染层壳层布局与路由（SideMenu/App Router 路由段/FloatLayer）见 renderer-shell-routing 与 shell-chrome-design 卡片；站点 web 端无关。
 
 ## 验证方式
 
