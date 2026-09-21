@@ -30,6 +30,13 @@ import {
   updateStatusItem,
   type StatusItemPatch
 } from '../../lib/statusItems'
+import {
+  clearPluginTasks,
+  registerManifestTasks,
+  removeTask,
+  upsertTask,
+  type TaskPatch
+} from '../../lib/tasks'
 import { renderService } from '../../lib/renderPipeline'
 import styled from 'styled-components'
 
@@ -111,7 +118,7 @@ function currentDocState(): { path: string | null; content: string | null; saved
 
 async function handleFrameInvoke(
   pluginId: string,
-  service: 'cap' | 'doc' | 'render' | 'ui' | 'statusBar',
+  service: 'cap' | 'doc' | 'render' | 'ui' | 'statusBar' | 'tasks',
   method: string,
   args: unknown[]
 ): Promise<unknown> {
@@ -181,6 +188,19 @@ async function handleFrameInvoke(
         return null
       }
       throw new Error(`未知状态栏方法: ${method}`)
+    }
+    case 'tasks': {
+      // 任务为 manifest 声明制：运行时仅允许更新状态/隐藏自己声明的任务（视图帧与逻辑帧同链路），无额外权限
+      if (method === 'upsert') {
+        const [taskId, patch] = args as [string, TaskPatch]
+        upsertTask(pluginId, String(taskId), patch ?? {})
+        return null
+      }
+      if (method === 'remove') {
+        removeTask(pluginId, String(args[0] ?? ''))
+        return null
+      }
+      throw new Error(`未知任务方法: ${method}`)
     }
     default:
       throw new Error(`未知服务: ${String(service)}`)
@@ -376,6 +396,7 @@ async function startHost(): Promise<PluginListResult> {
       const { id } = record.manifest
       sessions.set(id, await window.pluginApi.createSession(id))
       registerManifestStatusItems(record.manifest)
+      registerManifestTasks(record.manifest)
       if (record.manifest.logic) {
         try {
           await openFrame(id, 'logic', pluginLogicUrl(id), null)
@@ -507,6 +528,7 @@ export async function togglePlugin(
     // 运行时启用：补建会话与逻辑帧（bootstrap 只处理启动时已启用的插件）
     sessions.set(pluginId, await window.pluginApi.createSession(pluginId))
     registerManifestStatusItems(record.manifest)
+    registerManifestTasks(record.manifest)
     if (record.manifest.logic) {
       try {
         await openFrame(pluginId, 'logic', pluginLogicUrl(pluginId), null)
@@ -518,6 +540,7 @@ export async function togglePlugin(
     closeFrame(FRAME_KEY(pluginId, 'logic'))
     sessions.delete(pluginId)
     clearPluginStatusItems(pluginId)
+    clearPluginTasks(pluginId)
   }
   hostGeneration.bump()
 }

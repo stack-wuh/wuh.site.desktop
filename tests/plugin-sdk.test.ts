@@ -20,4 +20,10 @@ describe('PLUGIN_SDK_JS', () => {
     expect(PLUGIN_SDK_JS).toContain('__startLogic')
     expect(PLUGIN_SDK_JS).toContain('window.wuh')
   })
+
+  it('暴露 tasks 运行时 API（upsert/remove 经 tasks 帧服务）', () => {
+    expect(PLUGIN_SDK_JS).toContain('tasks: {')
+    expect(PLUGIN_SDK_JS).toContain("call('tasks', 'upsert'")
+    expect(PLUGIN_SDK_JS).toContain("call('tasks', 'remove'")
+  })
 })

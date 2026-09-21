@@ -63,6 +63,16 @@ export interface PluginStatusItemContribution {
   order: number
 }
 
+/** 任务胶囊任务声明：声明制占位，运行时经 SDK tasks.upsert/remove 只能更新状态或隐藏 */
+export interface PluginTaskContribution {
+  /** 插件内唯一，[a-z0-9][a-z0-9._-]* */
+  id: string
+  /** 任务标题（运行时不可变，保证胶囊清单稳定） */
+  title: string
+  /** 可选跳转目标：须为本插件已声明的 area=main 视图 id（Popover 条目跳转去向） */
+  viewId?: string
+}
+
 export interface PluginPublisherContribution {
   id: string
   label: string
@@ -79,6 +89,7 @@ export interface PluginManifest {
   views: PluginViewContribution[]
   publishers: PluginPublisherContribution[]
   statusItems?: PluginStatusItemContribution[]
+  tasks?: PluginTaskContribution[]
   permissions: PluginPermission[]
 }
 
@@ -150,12 +161,12 @@ export interface PluginHostApi {
 
 // ---------- 帧消息协议 ----------
 
-/** 插件帧 → host：service=cap 走主进程 broker；doc/render/ui/statusBar 由 host 直接服务。
+/** 插件帧 → host：service=cap 走主进程 broker；doc/render/ui/statusBar/tasks 由 host 直接服务。
  * id 由各帧自己的序号发生器产出（host 用数字、SDK 用 rN 字符串，回显原样匹配）。 */
 export interface FrameInvoke {
   kind: 'invoke'
   id: number | string
-  service: 'cap' | 'doc' | 'render' | 'ui' | 'statusBar'
+  service: 'cap' | 'doc' | 'render' | 'ui' | 'statusBar' | 'tasks'
   method: string
   args: unknown[]
 }
@@ -391,6 +402,51 @@ export function validateManifest(
     }
   }
 
+  // tasks：可选，声明制任务；运行时只能更新状态/隐藏已声明项，viewId 跳转仅限本插件 main 视图
+  const tasks: PluginTaskContribution[] = []
+  if (raw.tasks !== undefined) {
+    if (!Array.isArray(raw.tasks)) {
+      errors.push('tasks 必须是数组')
+    } else {
+      if (raw.tasks.length > 8) errors.push('tasks 最多声明 8 项')
+      const taskIds = new Set<string>()
+      raw.tasks.forEach((t, i) => {
+        if (!isRecord(t)) {
+          errors.push(`tasks[${i}] 必须是对象`)
+          return
+        }
+        let valid = true
+        if (typeof t.id !== 'string' || !ID_RE.test(t.id)) {
+          errors.push(`tasks[${i}].id 非法（须匹配 ${ID_RE}）: ${String(t.id)}`)
+          valid = false
+        } else if (taskIds.has(t.id)) {
+          errors.push(`task id 重复: ${t.id}`)
+          valid = false
+        } else {
+          taskIds.add(t.id)
+        }
+        if (typeof t.title !== 'string' || !t.title.trim()) {
+          errors.push(`tasks[${i}].title 必填`)
+          valid = false
+        }
+        if (t.viewId !== undefined) {
+          const target = views.find((v) => v.id === t.viewId)
+          if (!target || target.area !== 'main') {
+            errors.push(`tasks[${i}].viewId 须指向本插件已声明的 main 视图: ${String(t.viewId)}`)
+            valid = false
+          }
+        }
+        if (valid) {
+          tasks.push({
+            id: t.id as string,
+            title: t.title as string,
+            ...(typeof t.viewId === 'string' ? { viewId: t.viewId } : {})
+          })
+        }
+      })
+    }
+  }
+
   if (errors.length > 0) return { ok: false, errors }
   return {
     ok: true,
@@ -403,6 +459,7 @@ export function validateManifest(
       views,
       publishers,
       ...(statusItems.length > 0 ? { statusItems } : {}),
+      ...(tasks.length > 0 ? { tasks } : {}),
       permissions: perms
     }
   }

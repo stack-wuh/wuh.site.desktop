@@ -147,6 +147,10 @@ export const PLUGIN_SDK_JS = `(function () {
       update: function (id, patch) { return call('statusBar', 'update', [id, patch || {}]); },
       remove: function (id) { return call('statusBar', 'remove', [id]); }
     },
+    tasks: {
+      upsert: function (id, patch) { return call('tasks', 'upsert', [id, patch || {}]); },
+      remove: function (id) { return call('tasks', 'remove', [id]); }
+    },
     publisher: {
       register: function (id, handler) { publishers[id] = handler; }
     }
@@ -204,6 +208,19 @@ export interface WuhApi {
     /** 更新 manifest 声明的状态项内容（未声明的 id 会被宿主拒绝） */
     update(id: string, patch?: { text?: string; title?: string }): Promise<void>
     /** 隐藏 manifest 声明的状态项 */
+    remove(id: string): Promise<void>
+  }
+  tasks: {
+    /** 更新 manifest 声明的任务状态（未声明的 id 会被宿主拒绝） */
+    upsert(
+      id: string,
+      patch?: {
+        status?: 'pending' | 'in_progress' | 'done'
+        progress?: { current: number; total: number }
+        detail?: string
+      }
+    ): Promise<void>
+    /** 隐藏 manifest 声明的任务 */
     remove(id: string): Promise<void>
   }
   publisher: {

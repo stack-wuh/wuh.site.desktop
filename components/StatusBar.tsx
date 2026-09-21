@@ -1,14 +1,15 @@
 'use client'
 
 /**
- * 状态栏（壳层骨架）：左右分区仅承载插件 statusItems（manifest 声明 + 运行时更新）。
- * 编辑器相关分区（文件路径/光标/字数/未保存）已随内置编辑器移除（两栏布局变更）。
+ * 状态栏（壳层骨架）：左区 = 任务胶囊（跨插件任务聚合）+ 插件 statusItems（manifest 声明 + 运行时更新），
+ * 右区 = 插件 statusItems。编辑器相关分区（文件路径/光标/字数/未保存）已随内置编辑器移除（两栏布局变更）。
  */
 import { useSyncExternalStore } from 'react'
 import styled from 'styled-components'
 import { AppIcon } from './ui/AppIcon'
 import { pluginIcon } from './icons'
 import { statusItemsStore, visibleStatusItems, type StatusItemState } from '../lib/statusItems'
+import { TaskCapsule } from './tasks/TaskCapsule'
 
 const Bar = styled.footer`
   display: flex;
@@ -64,6 +65,7 @@ export function StatusBar(): React.JSX.Element {
   return (
     <Bar>
       <Zone>
+        <TaskCapsule />
         {items
           .filter((s) => s.alignment === 'left')
           .map((s) => (
