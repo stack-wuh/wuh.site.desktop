@@ -4,8 +4,8 @@
   "name": "20260920-feature-shell-two-column-layout",
   "type": "feature",
   "scope": "src/renderer/src,src/shared,tests,shadow-docs/knowledge",
-  "status": "reviewed",
-  "baseBranch": "feature/20260918-feature-shell-float-layer",
+  "status": "committed",
+  "baseBranch": "main",
   "branch": "feature/20260920-feature-shell-two-column-layout",
   "files": [
     "shadow-docs/knowledge/renderer-shell-routing.md",
@@ -38,8 +38,8 @@
   },
   "workflow": {
     "operation": null,
-    "checkpoint": null,
-    "planHash": "aa313824448de5af6d1fb7805ba436df9848c2333b60ced8ea112d0afc9b2ad5",
+    "checkpoint": "c8e94cc9fde9b37fb735cac034b054f39aff151b",
+    "planHash": "7b0b747e5b1a9fce2d40891f6c34613e032fbc4ed67a51e1ed31b4e12b04fb66",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
