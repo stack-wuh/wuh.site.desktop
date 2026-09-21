@@ -109,7 +109,8 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
   const openKeys = new Set(floatsSnapshot.floats.map((f) => pluginPanelKey(f.pluginId, f.viewId)))
 
   const items: SideMenuItem[] = [
-    { id: 'home', icon: IconHome, title: '首页' },
+    // 首页 = 「新建博客」项目入口（路由 key 仍为 home / 路径 /，仅显示名升级）
+    { id: 'home', icon: IconHome, title: '新建博客' },
     ...mainViews.map(({ pluginId, view }) => ({
       id: pluginPanelKey(pluginId, view.id),
       icon: pluginIcon(view.icon),

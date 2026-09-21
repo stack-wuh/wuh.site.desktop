@@ -24,6 +24,13 @@ export interface FileNode {
   children?: FileNode[]
 }
 
+/** 最近打开的项目（userData/recent-workspaces.json，主进程独占读写） */
+export interface RecentWorkspace {
+  path: string
+  name: string
+  openedAt: number
+}
+
 // ---------- Files ----------
 export interface FileContent {
   path: string
@@ -222,6 +229,11 @@ export type IpcResult<T> = { ok: true; data: T } | { ok: false; error: string }
 export interface DesktopApi {
   ping(): Promise<string>
   openWorkspace(): Promise<WorkspaceInfo | null>
+  /** clone 公开 https 仓库为新工作区（git@ 形态自动转 https）；用户取消返回 null */
+  cloneWorkspace(url: string): Promise<WorkspaceInfo | null>
+  /** 从最近项目列表按路径打开（目录不存在时抛错） */
+  openWorkspaceByPath(path: string): Promise<WorkspaceInfo>
+  listRecentWorkspaces(): Promise<RecentWorkspace[]>
   getWorkspace(): Promise<WorkspaceInfo | null>
   readTree(): Promise<FileNode[]>
   readFile(relPath: string): Promise<FileContent>

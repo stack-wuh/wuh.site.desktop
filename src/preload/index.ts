@@ -25,6 +25,9 @@ async function invoke<K extends keyof DesktopApi>(
 const api: DesktopApi = {
   ping: () => invoke('ping'),
   openWorkspace: () => invoke('openWorkspace'),
+  cloneWorkspace: (url) => invoke('cloneWorkspace', url),
+  openWorkspaceByPath: (p) => invoke('openWorkspaceByPath', p),
+  listRecentWorkspaces: () => invoke('listRecentWorkspaces'),
   getWorkspace: () => invoke('getWorkspace'),
   readTree: () => invoke('readTree'),
   readFile: (p) => invoke('readFile', p),
