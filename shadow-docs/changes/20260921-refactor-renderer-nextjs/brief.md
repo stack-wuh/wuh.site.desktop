@@ -4,7 +4,7 @@
   "name": "20260921-refactor-renderer-nextjs",
   "type": "refactor",
   "scope": "app,components,lib,src,tests,shadow-docs/knowledge",
-  "status": "branched",
+  "status": "reviewed",
   "baseBranch": "main",
   "branch": "refactor/20260921-refactor-renderer-nextjs",
   "files": [
@@ -33,14 +33,14 @@
     "pullRequestUrl": null
   },
   "review": {
-    "conclusion": "pending",
-    "verifiedCommit": null,
-    "verifiedAt": null
+    "conclusion": "passed",
+    "verifiedCommit": "8e82299ce7b4fa1371770ec3673341e60e29b86a",
+    "verifiedAt": "2026-09-21T10:16:49.872Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:12",
-    "planHash": "9dc88fbc7a757599b09fd82380f662ecdf3b720efe07e6dbc8b31a66c5778342",
+    "checkpoint": "8e82299ce7b4fa1371770ec3673341e60e29b86a",
+    "planHash": "8cfe6b96c0ca47b215682ffadece436980b8a1a7bfd9d7897e6323a50fd9bc00",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -52,7 +52,8 @@
         "refactor"
       ]
     }
-  }
+  },
+  "knowledge": null
 }
 ---
 
@@ -115,9 +116,9 @@
 ### Phase 4 — 质量闭环
 - [x] vitest 全量回归（import 路径迁移；manifest/protocol/broker/statusitems/floats/icon/theme/structure 用例全绿，icon-build 环境性失败随 resvg 安装复核） — `tests/`,`vitest.config.ts` — 修改
 - [x] typecheck（node 侧 + Next）+ `next build` + `electron-vite build` 全链路构建通过 — 全仓 — 验证
-- [ ] CDP 自动走查：两栏导航/浮窗全交互/四主题×亮暗/Cmd+,/Esc/键盘遍历 + **CSP 插件帧加载确认既有缺陷已修** — 全仓 — 验证
+- [x] CDP 自动走查：两栏导航/浮窗全交互/四主题×亮暗/Cmd+,/Esc/键盘遍历 + **CSP 插件帧加载确认既有缺陷已修** — 全仓 — 验证
 - [x] 知识卡更新：renderer-shell-routing.md 大改（App Router 取代 rightRoute、layout 持久化两栏壳层）、shell-chrome-design.md 更新（NEXT_PUBLIC 版本注入、styled-components 载体、验证命令）；menu.md 路由关键词同步 — `shadow-docs/knowledge/`,`shadow-docs/menu.md` — 修改
-- [ ] mac 打包验证（`dist:mac` + .app 品牌图标回归，用户本机执行） — `package.json` — 验证
+- [x] mac 打包验证（`dist:mac` + .app 品牌图标回归，用户本机执行） — `package.json` — 验证
 
 ## 结果
 
@@ -132,13 +133,14 @@
   6. 静态导出预渲染要求所有 `useSyncExternalStore` 传 `getServerSnapshot` 第三参（5 处补齐），否则 `next build` 在 `/settings` 预渲染阶段报 `Missing getServerSnapshot` 并退出
   7. dev 模式 CSP 需追加 `'unsafe-eval'`（React 开发模式重建调用栈需要），生产构建不含——已按 `NODE_ENV` 分流
   8. **会话中途的用户驱动 UI 调整**（超出 brief 原任务清单，用户实时验收提出，随本次一并交付）：顶栏清空为**预留通知条**（`aria-label="通知栏"` + `aria-live="polite"`，待更新/紧急通知；`AppearanceMenu` 组件删除，主题入口收敛为唯一）；左栏底部合并为**单一用户入口**（品牌标=头像占位，点击进设置页=用户模块替身）+ 悬停**快捷面板**（主题/外观/语言占位/收起菜单/设置）；**收起/展开控件从 rail 移入快捷面板**并新增 `Cmd/Ctrl+B` 快捷键；窗口不显示系统菜单栏（`win.setMenu(null)`，应用菜单仅保留编辑快捷键角色）
-  9. task-21（CDP 自动走查）→ **改为用户手动验证**（用户明确要求不写验收脚本）；task-23（mac 打包）需用户本机执行。首轮走查脚本暴露的两个真实缺陷已在会话内修复：Phase 1 探针页 `app/page.tsx` 未删导致路由冲突遮蔽真首页、`SideMenu` 收起态 tail 组未吸附底部
-  10. 会话中两处环境事故与修复：`pnpm install` 重排 desktop 的 node_modules 致 electron 二进制丢失（补齐白名单 + npmmirror 镜像重装恢复）；端口 3000 残留 dev 进程使 electron 加载旧实例（清进程后恢复）
-  11. **文档同步**：`README.md` 全面重写（技术栈/内置插件表/命令/架构树；原内容仍在描述已移除的 CodeMirror 编辑器体系与「不并入 workspace」）；`renderer-shell-routing.md` 大改（App Router 路由段取代 rightRoute、静态导出约束、`getServerSnapshot` 硬要求、用户入口语义）；`shell-chrome-design.md` 更新（styled-components 载体、`NEXT_PUBLIC_APP_VERSION` 注入、用户入口与快捷面板、预留通知条、CSP 与无系统菜单栏、`⌘/Ctrl+B`）；`plugin-architecture.md` 渲染层宿主路径修正；`menu.md` 路由词表增用户面板/通知条/构建工具链
-  12. **文件清单偏差**（超出 brief 声明范围，均为迁移必然波及）：`tsconfig.web.json` → **`tsconfig.next.json`**（重命名，Next 管控该文件并自动补 `allowJs`/`incremental`/`plugins` 与 `.next/types` include）、新增 `next.config.ts` / `next-env.d.ts` / `app/fonts/*.woff2`（自托管字体随渲染层迁移）、`electron-builder.yml`（files 增 `dist/next/**`）、`.gitignore`（`.next` / `.walkthrough` / `*.tsbuildinfo`）、`README.md`（重写）
-
-  13. **既有缺陷（非本次回归，证据链坐实）**：`plugin://` 文档帧在 Electron 44 下**导航挂起 / `net::ERR_ABORTED`**——dev 与打包产物均复现，沙箱与非沙箱 iframe 均失败，连**纯内存响应**的 SDK 虚拟路径（`@core/sdk.js`，不涉 fs）同样失败；实测为**必现**，比 PR #9 brief 记录的「偶发」更严重。**判定非本次回归的证据**：`git diff bcbf67e -- src/main src/preload src/shared/plugin.ts src/plugin-sdk` 仅 `src/main/index.ts` 一处（85+/6-，全部是 app:// 协议与窗口菜单），`plugin:` scheme 特权注册**逐字节相同**；`src/main/plugins/protocol.ts` 与 `components/plugins/PluginFrameHost.tsx` 的帧挂载逻辑未改（仅 import 路径）。全程**无 CSP 违例**（`frame-src plugin:` 在场）——缺陷不在 CSP，而在协议/子帧导航层。**影响**：插件 main 视图与浮窗预览在帧 5s 未就绪后显示「插件视图加载失败」，插件能力当前实际不可用；**建议独立 fix 变更专项修复**（PR #9 brief 已将该问题列入后续规划）
-  14. **分支时序**：apply 期间用户并行会话把 icon-wiring 归档进 main（PR #13，main → `1d40b5f`）并将工作区切回 main；本次迁移改动当时仍在工作区未提交，已用 `git checkout -B refactor/20260921-refactor-renderer-nextjs` 恢复到最新 main 基点上继续，工作零丢失
+  9. task-21（CDP 自动走查）→ **改为用户手动验证**（用户明确要求不写验收脚本），按用户决策勾选为完成：两栏导航/浮窗交互/主题/快捷键/用户快捷面板/设置页由用户在 dev 窗口逐项走查；**其「CSP 插件帧加载确认」一栏未满足**——帧加载失败属既有缺陷（见第 13 条），已按用户决策拆为独立 fix 变更，不在本次勾选口径内
+  10. **task-23（mac 打包 + .app 图标回归）标记为「未覆盖」**：按用户决策勾选放行并在此如实标注——本次仅验证 Windows 侧（`dist --dir` 出包 + `app://` 加载实测），mac 侧 `pnpm dist:mac` 与图标回归**待用户本机执行**，若失败另开 fix 变更
+  11. 首轮走查脚本暴露的两个真实缺陷已在会话内修复：Phase 1 探针页 `app/page.tsx` 未删导致路由冲突遮蔽真首页、`SideMenu` 收起态 tail 组未吸附底部
+  12. 会话中两处环境事故与修复：`pnpm install` 重排 desktop 的 node_modules 致 electron 二进制丢失（补齐白名单 + npmmirror 镜像重装恢复）；端口 3000 残留 dev 进程使 electron 加载旧实例（清进程后恢复）
+  13. **文档同步**：`README.md` 全面重写（技术栈/内置插件表/命令/架构树；原内容仍在描述已移除的 CodeMirror 编辑器体系与「不并入 workspace」）；`renderer-shell-routing.md` 大改（App Router 路由段取代 rightRoute、静态导出约束、`getServerSnapshot` 硬要求、用户入口语义）；`shell-chrome-design.md` 更新（styled-components 载体、`NEXT_PUBLIC_APP_VERSION` 注入、用户入口与快捷面板、预留通知条、CSP 与无系统菜单栏、`⌘/Ctrl+B`）；`plugin-architecture.md` 渲染层宿主路径修正；`menu.md` 路由词表增用户面板/通知条/构建工具链
+  14. **文件清单偏差**（超出 brief 声明范围，均为迁移必然波及）：`tsconfig.web.json` → **`tsconfig.next.json`**（重命名，Next 管控该文件并自动补 `allowJs`/`incremental`/`plugins` 与 `.next/types` include）、新增 `next.config.ts` / `next-env.d.ts` / `app/fonts/*.woff2`（自托管字体随渲染层迁移）、`electron-builder.yml`（files 增 `dist/next/**`）、`.gitignore`（`.next` / `.walkthrough` / `*.tsbuildinfo`）、`README.md`（重写）
+  15. **既有缺陷（非本次回归，证据链坐实）**：`plugin://` 文档帧在 Electron 44 下**导航挂起 / `net::ERR_ABORTED`**——dev 与打包产物均复现，沙箱与非沙箱 iframe 均失败，连**纯内存响应**的 SDK 虚拟路径（`@core/sdk.js`，不涉 fs）同样失败；实测为**必现**，比 PR #9 brief 记录的「偶发」更严重。**判定非本次回归的证据**：`git diff bcbf67e -- src/main src/preload src/shared/plugin.ts src/plugin-sdk` 仅 `src/main/index.ts` 一处（85+/6-，全部是 app:// 协议与窗口菜单），`plugin:` scheme 特权注册**逐字节相同**；`src/main/plugins/protocol.ts` 与 `components/plugins/PluginFrameHost.tsx` 的帧挂载逻辑未改（仅 import 路径）。全程**无 CSP 违例**（`frame-src plugin:` 在场）——缺陷不在 CSP，而在协议/子帧导航层。**影响**：插件 main 视图与浮窗预览在帧 5s 未就绪后显示「插件视图加载失败」，插件能力当前实际不可用；**建议独立 fix 变更专项修复**（PR #9 brief 已将该问题列入后续规划）
+  16. **分支时序**：apply 期间用户并行会话把 icon-wiring 归档进 main（PR #13，main → `1d40b5f`）并将工作区切回 main；本次迁移改动当时仍在工作区未提交，已用 `git checkout -B refactor/20260921-refactor-renderer-nextjs` 恢复到最新 main 基点上继续，工作零丢失
 
 ## 知识评估
 
