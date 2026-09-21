@@ -10,7 +10,7 @@
 | 壳层 chrome / 图标 | 图标 图标注册表 AppIcon Icon 品牌标 IconLogo Dock 图标 icon.svg SideMenu StatusBar 状态栏 徽标 tooltip 描边 主题 token | knowledge/shell-chrome-design.md |
 | 插件状态项 | statusItems statusBar 状态项 贡献点 徽标位 声明制 | knowledge/shell-chrome-design.md |
 | 插件浮窗视图 | float 浮窗 预览 preview 视图区域 FloatLayer floats | knowledge/shell-chrome-design.md, knowledge/renderer-shell-routing.md |
-| 插件系统 | 插件 manifest broker 沙箱 publisher 权限 视图 | knowledge/plugin-architecture.md（未建，先读 `src/main/plugins/`、`src/shared/plugin.ts` 与对应 brief） |
+| 插件系统 | 插件 manifest loader 启用 停用 批准 approvals resolveApproval reload 重载 revealDir plugin-state broker 沙箱 problems | knowledge/plugin-architecture.md |
 
 ## 查阅流程
 
