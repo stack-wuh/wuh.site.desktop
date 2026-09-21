@@ -6,8 +6,8 @@
 
 | 技术域 | 关键词 | 应查阅 |
 |--------|--------|--------|
-| 渲染层导航/壳层 | 页面 面板 视图 路由 设置 全屏 弹窗 导航 ActivityBar 侧栏 tab 浮窗 FloatLayer toggle work-area | knowledge/renderer-shell-routing.md |
-| 壳层 chrome / 图标 | 图标 图标注册表 AppIcon Icon 品牌标 IconLogo Dock 图标 icon.svg StatusBar 状态栏 徽标 tooltip 描边 主题 token | knowledge/shell-chrome-design.md |
+| 渲染层导航/壳层 | 页面 视图 路由 设置 导航 SideMenu 菜单 两栏 展开 收起 rightRoute main-area 浮窗 FloatLayer toggle 首页 | knowledge/renderer-shell-routing.md |
+| 壳层 chrome / 图标 | 图标 图标注册表 AppIcon Icon 品牌标 IconLogo Dock 图标 icon.svg SideMenu StatusBar 状态栏 徽标 tooltip 描边 主题 token | knowledge/shell-chrome-design.md |
 | 插件状态项 | statusItems statusBar 状态项 贡献点 徽标位 声明制 | knowledge/shell-chrome-design.md |
 | 插件浮窗视图 | float 浮窗 预览 preview 视图区域 FloatLayer floats | knowledge/shell-chrome-design.md, knowledge/renderer-shell-routing.md |
 | 插件系统 | 插件 manifest broker 沙箱 publisher 权限 视图 | knowledge/plugin-architecture.md（未建，先读 `src/main/plugins/`、`src/shared/plugin.ts` 与对应 brief） |

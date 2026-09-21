@@ -71,6 +71,15 @@ describe('validateManifest', () => {
     if (res.ok) expect(res.manifest.views).toHaveLength(2)
   })
 
+  it('main 区域视图合法（右栏页面宿主）', () => {
+    const res = validateManifest({
+      ...validManifest(),
+      views: [{ id: 'board', area: 'main', title: '看板', icon: 'book', entry: 'view/board.html', order: 5 }]
+    })
+    expect(res.ok).toBe(true)
+    if (res.ok) expect(res.manifest.views[0]?.area).toBe('main')
+  })
+
   it('preview 区域已移除，声明即拒绝', () => {
     const res = validateManifest({
       ...validManifest(),
@@ -80,11 +89,20 @@ describe('validateManifest', () => {
     if (!res.ok) expect(res.errors.join(' ')).toMatch(/area/)
   })
 
+  it('sidebar 区域已废弃，声明即拒绝并指引迁移 main', () => {
+    const res = validateManifest({
+      ...validManifest(),
+      views: [{ id: 'list', area: 'sidebar', title: '列表', icon: 'tag', entry: 'view/list.html' }]
+    })
+    expect(res.ok).toBe(false)
+    if (!res.ok) expect(res.errors.join(' ')).toMatch(/main/)
+  })
+
   it('视图 id 与区域、图标受控', () => {
     const dup = validateManifest({
       ...validManifest(),
       views: [
-        { id: 'x', area: 'sidebar', title: 'a', icon: 'tag', entry: 'a.html' },
+        { id: 'x', area: 'main', title: 'a', icon: 'tag', entry: 'a.html' },
         { id: 'x', area: 'float', title: 'b', icon: 'tag', entry: 'b.html' }
       ]
     })
@@ -99,7 +117,7 @@ describe('validateManifest', () => {
 
     const badIcon = validateManifest({
       ...validManifest(),
-      views: [{ id: 'x', area: 'sidebar', title: 'a', icon: '💀', entry: 'a.html' }]
+      views: [{ id: 'x', area: 'main', title: 'a', icon: '💀', entry: 'a.html' }]
     })
     expect(badIcon.ok).toBe(false)
   })

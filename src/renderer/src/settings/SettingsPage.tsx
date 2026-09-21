@@ -57,7 +57,7 @@ export function SettingsPage(props: { onBack: () => void }): React.JSX.Element {
   return (
     <div className="settings-page" ref={pageRef} tabIndex={-1}>
       <div className="settings-topbar">
-        <Button variant="ghost" onClick={props.onBack} aria-label="返回编辑器">
+        <Button variant="ghost" onClick={props.onBack} aria-label="返回首页">
           <AppIcon icon={IconChevronLeft} size="sm" />
           返回
         </Button>
@@ -131,51 +131,6 @@ export function SettingsPage(props: { onBack: () => void }): React.JSX.Element {
               </Button>
             )}
           </div>
-        </section>
-
-        <section>
-          <h3>自动提交</h3>
-          <label className="check-row">
-            <input
-              type="checkbox"
-              checked={settings.autoCommit}
-              onChange={(e) => {
-                setSettings((s) => ({ ...s, autoCommit: e.target.checked }))
-                void save({ autoCommit: e.target.checked })
-              }}
-            />
-            保存后延时自动 commit（防抖）
-          </label>
-          <div className="row-actions">
-            <label>
-              延时 ms
-              <Input
-                type="number"
-                value={settings.autoCommitDelayMs}
-                onChange={(e) =>
-                  setSettings((s) => ({ ...s, autoCommitDelayMs: Number(e.target.value) }))
-                }
-                onBlur={() => void save({ autoCommitDelayMs: settings.autoCommitDelayMs })}
-                style={{ width: 90, marginLeft: 6 }}
-              />
-            </label>
-          </div>
-        </section>
-
-        <section>
-          <h3>图床上传命令</h3>
-          <div className="row-actions">
-            <Input
-              placeholder="例如：upload-img {file}（stdout 输出图片 URL）"
-              aria-label="图床上传命令"
-              value={settings.uploadCommand ?? ''}
-              onChange={(e) => setSettings((s) => ({ ...s, uploadCommand: e.target.value }))}
-              onBlur={() => void save({ uploadCommand: settings.uploadCommand })}
-            />
-          </div>
-          <p className="hint-text">
-            粘贴图片先落本地 .assets；「上传」按钮执行该命令（{'{file}'}=图片绝对路径）并替换链接。
-          </p>
         </section>
 
         <section>

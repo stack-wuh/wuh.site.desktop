@@ -1,11 +1,10 @@
 import { useSyncExternalStore } from 'react'
-import { uiConfirm } from './components/ui/Dialog'
 
-export interface CursorPosition {
-  line: number
-  col: number
-}
-
+/**
+ * 文档状态 store（两栏布局起为插件 doc 服务的宿主侧状态源）：
+ * 内置编辑器已移除，宿主不再有写入 UI——content 仅经帧协议 doc.set 更新，
+ * activePath/root 保留字段语义（未来默认编辑插件回归时复用），当前恒为初始值。
+ */
 export interface WorkspaceState {
   root: string | null
   activePath: string | null
@@ -13,11 +12,6 @@ export interface WorkspaceState {
   /** 最近一次保存/加载的内容，dirty 依据 */
   saved: string | null
   dirty: boolean
-  loading: boolean
-  /** 状态栏展示：光标 行/列（1-based） */
-  cursor: CursorPosition | null
-  /** 状态栏展示：全文字数（CJK 字符 + 非 CJK 词），null = 未知 */
-  wordCount: number | null
 }
 
 // ---------- 文档生命周期事件（插件 documentHooks 的事件源） ----------
@@ -59,10 +53,7 @@ let state: WorkspaceState = {
   activePath: null,
   content: null,
   saved: null,
-  dirty: false,
-  loading: false,
-  cursor: null,
-  wordCount: null
+  dirty: false
 }
 
 const listeners = new Set<() => void>()
@@ -84,67 +75,15 @@ export const workspaceStore = {
       listeners.delete(l)
     }
   },
-  reset(): void {
-    setState({
-      root: null,
-      activePath: null,
-      content: null,
-      saved: null,
-      dirty: false,
-      loading: false,
-      cursor: null,
-      wordCount: null
-    })
-    documentEvents.emit('doc.closed', {})
-  },
-  setRoot(root: string): void {
-    setState({ root })
-  },
-  async openFile(path: string): Promise<void> {
-    if (state.dirty) {
-      const ok = await uiConfirm({
-        title: '未保存的修改',
-        message: `「${state.activePath}」有未保存的修改，确定放弃并打开新文件？`,
-        okText: '放弃并打开',
-        danger: true
-      })
-      if (!ok) return
-    }
-    setState({ loading: true })
-    try {
-      const fc = await window.api.readFile(path)
-      setState({ activePath: path, content: fc.content, saved: fc.content, dirty: false, loading: false })
-      documentEvents.emit('doc.opened', { path })
-    } catch (err) {
-      setState({ loading: false })
-      alert(`打开失败：${err instanceof Error ? err.message : String(err)}`)
-    }
-  },
   setContent(content: string): void {
     setState({ content, dirty: content !== state.saved })
     emitChangedDebounced()
-  },
-  /** 编辑器上报光标位置（状态栏展示） */
-  setCursor(cursor: CursorPosition): void {
-    if (
-      state.cursor &&
-      state.cursor.line === cursor.line &&
-      state.cursor.col === cursor.col
-    ) {
-      return
-    }
-    setState({ cursor })
-  },
-  /** 编辑器上报全文字数（状态栏展示） */
-  setWordCount(wordCount: number): void {
-    if (state.wordCount === wordCount) return
-    setState({ wordCount })
   },
   markSaved(): void {
     setState({ saved: state.content, dirty: false })
     documentEvents.emit('doc.saved', { path: state.activePath })
   },
-  /** 写盘当前文档（host 自用与插件 documentHooks 的 save 入口） */
+  /** 写盘当前文档（插件 documentHooks 的 save 入口） */
   async saveActive(): Promise<void> {
     const { activePath, content } = state
     if (!activePath || content == null) return

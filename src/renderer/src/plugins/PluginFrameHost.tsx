@@ -383,9 +383,9 @@ export function broadcastTheme(): void {
   broadcast('theme', themePayload())
 }
 
-export function listSidebarViews(): { pluginId: string; view: PluginViewContribution }[] {
+export function listMainViews(): { pluginId: string; view: PluginViewContribution }[] {
   return enabledRecords()
-    .flatMap((r) => r.manifest.views.filter((v) => v.area === 'sidebar').map((view) => ({ pluginId: r.manifest.id, view })))
+    .flatMap((r) => r.manifest.views.filter((v) => v.area === 'main').map((view) => ({ pluginId: r.manifest.id, view })))
     .sort((a, b) => a.view.order - b.view.order)
 }
 
