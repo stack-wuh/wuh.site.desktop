@@ -1,0 +1,175 @@
+'use client'
+
+/**
+ * 两栏壳层（App Router layout 持久化）：标题栏 → app-body（左栏 SideMenu + 右栏 main 容器）→ StatusBar。
+ * 路由语义：'/'=Home（默认入口）/ '/settings' / '/plugin/<pluginId>/<viewId>'（插件 main 视图），
+ * SideMenu 菜单项与路由段一一对应；FloatLayer 常驻 main 容器，浮窗与右栏页面共存。
+ * 全屏视图体系已废止（2026-09-20）：Cmd/Ctrl+, 在 settings ↔ home 间切换；Esc 只关浮窗。
+ */
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
+import styled from 'styled-components'
+import { HomePage } from '../../components/home/HomePage'
+import { ConfirmHost } from '../../components/ui/Dialog'
+import { StatusBar } from '../../components/StatusBar'
+import { FloatLayer } from '../../components/FloatLayer'
+import { SideMenu, type SideMenuItem } from '../../components/SideMenu'
+import { IconHome, pluginIcon } from '../../components/icons'
+import {
+  bootstrapPluginsHost,
+  broadcastTheme,
+  hostGeneration,
+  listFloatViews,
+  listMainViews,
+  setWorkspaceInfo,
+  usePluginsReady
+} from '../../components/plugins/PluginFrameHost'
+import { floatsStore, toggleFloat } from '../../lib/floats'
+import { pluginPanelKey, routeKeyFromPathname } from '../../lib/routes'
+import { useTheme } from '../../components/theme/ThemeProvider'
+
+const Shell = styled.div`
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+`
+
+const TitleBar = styled.header`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 44px;
+  padding: 0 14px;
+  background: var(--chrome-panel);
+  border-bottom: 1px solid var(--chrome-border);
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease;
+`
+
+const Body = styled.div`
+  display: flex;
+  flex: 1;
+  min-height: 0;
+`
+
+/* 右栏：页面容器（Home / 设置 / 插件 main 视图路由段互斥，FloatLayer 叠加） */
+const MainArea = styled.main`
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  background: var(--background-color);
+  transition: background-color 0.3s ease;
+`
+
+export default function ShellLayout({ children }: { children: React.ReactNode }): React.JSX.Element {
+  const [menuExpanded, setMenuExpanded] = useState(false)
+  const pathname = usePathname()
+  const router = useRouter()
+  const pluginsReady = usePluginsReady()
+  const { family, scheme } = useTheme()
+
+  useEffect(() => {
+    // 工作区信息仅供插件 doc 服务解析根路径（壳层不再展示工作区 UI）
+    void window.api.getWorkspace().then(setWorkspaceInfo)
+    void bootstrapPluginsHost().catch((err: unknown) => console.error('插件引导失败', err))
+  }, [])
+
+  // 主题切换同步进全部插件帧（token 快照经 CSS 注入，设计同源）
+  useEffect(() => {
+    if (pluginsReady) broadcastTheme()
+  }, [family, scheme, pluginsReady])
+
+  // Cmd/Ctrl+, 在设置页与首页之间切换（右栏页面互斥，无 prevView 覆盖语义）
+  // Cmd/Ctrl+B 切换左栏展开/收起（Rail 底部按钮的快捷键等价入口）
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent): void => {
+      if ((e.metaKey || e.ctrlKey) && e.key === ',') {
+        e.preventDefault()
+        router.push(pathname.startsWith('/settings') ? '/' : '/settings')
+        return
+      }
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'b' || e.key === 'B')) {
+        e.preventDefault()
+        setMenuExpanded((v) => !v)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [pathname, router])
+
+  // 宿主代际：插件启停/重载时 +1，驱动菜单与浮窗视图列表刷新
+  const generation = useSyncExternalStore(hostGeneration.subscribe, hostGeneration.get, hostGeneration.get)
+  const mainViews = useMemo(() => (pluginsReady ? listMainViews() : []), [pluginsReady, generation])
+  const floatViews = useMemo(() => (pluginsReady ? listFloatViews() : []), [pluginsReady, generation])
+  // 浮窗开合快照：SideMenu toggle 激活态与 FloatLayer 渲染共用
+  // （注册表 key 无前缀，toggle 项 id 带 plugin: 前缀，此处映射）
+  const floatsSnapshot = useSyncExternalStore(floatsStore.subscribe, floatsStore.get, floatsStore.get)
+  const openKeys = new Set(floatsSnapshot.floats.map((f) => pluginPanelKey(f.pluginId, f.viewId)))
+
+  const items: SideMenuItem[] = [
+    { id: 'home', icon: IconHome, title: '首页' },
+    ...mainViews.map(({ pluginId, view }) => ({
+      id: pluginPanelKey(pluginId, view.id),
+      icon: pluginIcon(view.icon),
+      title: view.title
+    }))
+  ]
+  const toggleItems: SideMenuItem[] = floatViews.map(({ pluginId, view }) => ({
+    id: pluginPanelKey(pluginId, view.id),
+    icon: pluginIcon(view.icon),
+    title: view.title
+  }))
+
+  const mainAreaRef = useRef<HTMLElement | null>(null)
+
+  /** 浮窗 toggle：开/关由 floats 注册表裁决，几何以 main 容器为视口 */
+  const handleToggleFloat = (id: string): void => {
+    const decl = floatViews.find((entry) => pluginPanelKey(entry.pluginId, entry.view.id) === id)
+    if (!decl) return
+    const rect = mainAreaRef.current?.getBoundingClientRect()
+    toggleFloat(
+      { pluginId: decl.pluginId, viewId: decl.view.id, title: decl.view.title, icon: decl.view.icon, entry: decl.view.entry },
+      { width: rect?.width ?? window.innerWidth, height: rect?.height ?? window.innerHeight }
+    )
+  }
+
+  const active = routeKeyFromPathname(pathname)
+
+  return (
+    <Shell>
+      {/* 预留通知条：后期承载应用更新通知 / 紧急通知，当前无内容
+          （应用标题与外观菜单已移除——主题切换入口在左栏用户快捷面板） */}
+      <TitleBar aria-label="通知栏" aria-live="polite" />
+      <Body>
+        <SideMenu
+          expanded={menuExpanded}
+          onToggleExpanded={() => setMenuExpanded((v) => !v)}
+          items={items}
+          toggleItems={toggleItems}
+          openToggleKeys={openKeys}
+          onToggle={handleToggleFloat}
+          active={active}
+          onChange={(id) => {
+            if (id === 'home') router.push('/')
+            else if (id === 'settings') router.push('/settings')
+            else {
+              const [prefix, pluginId, viewId] = id.split(':')
+              if (prefix === 'plugin' && pluginId && viewId) router.push(`/plugin/${pluginId}/${viewId}`)
+            }
+          }}
+          onOpenUser={() => router.push('/settings')}
+          userActive={active === 'settings'}
+        />
+        <MainArea ref={mainAreaRef}>
+          {children}
+          {/* 插件浮窗视图（views.area=float）经注册表按需唤起，与右栏页面共存 */}
+          <FloatLayer containerRef={mainAreaRef} />
+        </MainArea>
+      </Body>
+      <StatusBar />
+      <ConfirmHost />
+    </Shell>
+  )
+}

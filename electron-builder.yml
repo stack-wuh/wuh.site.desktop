@@ -5,6 +5,8 @@ directories:
   buildResources: build
 files:
   - out/**
+  # Next 静态导出产物：主进程 app:// 协议加载（dist/next 由 next build 生成）
+  - dist/next/**
   # 内置官方参考插件：主进程 protocol handler 经 app.getAppPath()/plugins 读取（asar 内 fs 支持）
   - plugins/**
   - package.json

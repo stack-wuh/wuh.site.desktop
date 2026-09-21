@@ -8,7 +8,7 @@ import {
   statusItemKey,
   updateStatusItem,
   visibleStatusItems
-} from '@renderer/plugins/statusItems'
+} from '../lib/statusItems'
 
 function manifest(id: string, statusItems: PluginManifest['statusItems']): PluginManifest {
   return {
