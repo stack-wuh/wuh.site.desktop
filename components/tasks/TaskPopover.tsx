@@ -12,15 +12,16 @@ import styled, { keyframes } from 'styled-components'
 import { AppIcon } from '../ui/AppIcon'
 import { IconCheck } from '../icons'
 import { taskAggregate, tasksStore, visibleTasks, type TaskState, type TaskStatus } from '../../lib/tasks'
+import { EditorSection } from './EditorSection'
 
 const Pop = styled.div`
   position: absolute;
   bottom: calc(100% + 8px);
   left: 0;
   z-index: 70;
-  min-width: 264px;
-  max-width: 360px;
-  max-height: 320px;
+  min-width: 300px;
+  max-width: 380px;
+  max-height: 480px;
   overflow-y: auto;
   padding: 6px;
   background: var(--chrome-panel);
@@ -264,6 +265,8 @@ export function TaskPopover(props: { onClose: () => void }): React.JSX.Element {
           <PopLabel>暂无进行中的任务</PopLabel>
         </PopGroup>
       )}
+      {/* 编辑器分区：胶囊化后的功能入口（格式化/插入/文档操作/大纲/工作区/文件） */}
+      <EditorSection />
     </Pop>
   )
 }

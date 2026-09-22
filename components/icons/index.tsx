@@ -15,6 +15,7 @@ import {
   Copy,
   ExternalLink,
   Eye,
+  FilePlus2,
   FileText,
   Folder,
   FolderOpen,
@@ -22,19 +23,24 @@ import {
   Heading1,
   Heading2,
   House,
+  Image,
   Italic,
   Link2,
   List,
   ListOrdered,
+  ListTree,
   MessageSquare,
+  Minus,
   Palette,
   PanelLeftClose,
   PanelLeftOpen,
+  Plus,
   Quote,
   Save,
   Search,
   Settings,
   Sparkles,
+  Table,
   Tag,
   X
 } from 'lucide-react'
@@ -57,22 +63,28 @@ export const IconCopy = Copy
 export const IconExternalLink = ExternalLink
 export const IconEye = Eye
 export const IconFile = FileText
+export const IconFilePlus = FilePlus2
 export const IconFolder = Folder
 export const IconFolderOpen = FolderOpen
 export const IconHeading1 = Heading1
 export const IconHeading2 = Heading2
 export const IconHome = House
+export const IconImage = Image
 export const IconItalic = Italic
 export const IconLink = Link2
 export const IconList = List
 export const IconListOrdered = ListOrdered
+export const IconListTree = ListTree
+export const IconMinus = Minus
 export const IconPalette = Palette
 export const IconPanelCollapse = PanelLeftClose
 export const IconPanelExpand = PanelLeftOpen
+export const IconPlus = Plus
 export const IconQuote = Quote
 export const IconSave = Save
 export const IconSearch = Search
 export const IconSettings = Settings
+export const IconTable = Table
 
 // ---------- Status：状态 ----------
 

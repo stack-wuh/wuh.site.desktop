@@ -156,16 +156,7 @@ export function filterMarkdownFiles(paths: string[], query: string): string[] {
   return paths.filter((p) => p.toLowerCase().includes(q))
 }
 
-export type EditorMode = 'simple' | 'full'
-
-/** 简化/全量模式偏好解析：仅 'full' 进入全量，其余（null/垃圾值）一律简化版 */
-export function parseEditorMode(raw: string | null): EditorMode {
-  return raw === 'full' ? 'full' : 'simple'
-}
-
-export const EDITOR_MODE_STORAGE_KEY = 'desktop.editorMode'
-
-// ---------- Markdown 插入（全量版工具栏的纯逻辑） ----------
+// ---------- Markdown 插入（胶囊格式化命令的纯逻辑基础，位置计算供测试与等价路径） ----------
 
 export type MarkdownInsertAction =
   | 'h1'
