@@ -18,18 +18,12 @@ import { SettingSection } from './SettingSection'
 import { SettingsNav, type SettingsNavItem } from './SettingsNav'
 import { PluginManagerSection } from './PluginManagerSection'
 import { IconCheck, IconChevronLeft, IconLogo } from '../icons'
+import { useLocale } from '../../lib/i18n/context'
 
 // 构建期内联应用版本（next.config.ts env），不走 preload/broker 通道
 const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? '0.0.0'
 
 type FieldKey = 'githubToken' | 'siteBaseUrl' | 'gitUserName' | 'gitUserEmail'
-
-const NAV_ITEMS: SettingsNavItem[] = [
-  { id: 'about', label: '关于' },
-  { id: 'services', label: '服务' },
-  { id: 'git-identity', label: 'Git 身份' },
-  { id: 'plugins', label: '插件' }
-]
 
 const pageEnter = keyframes`
   from { opacity: 0; transform: translateY(6px); }
@@ -152,12 +146,13 @@ function errText(err: unknown): string {
 
 /** 行内保存成功指示：节点常驻（aria-live 才能可靠公告），show 控制内容 */
 function SavedFlash({ show }: { show: boolean }): React.JSX.Element {
+  const { t } = useLocale()
   return (
     <RowStatus role="status" aria-live="polite">
       {show && (
         <>
           <AppIcon icon={IconCheck} size="xs" />
-          已保存
+          {t('common.saved')}
         </>
       )}
     </RowStatus>
@@ -166,6 +161,13 @@ function SavedFlash({ show }: { show: boolean }): React.JSX.Element {
 
 export function SettingsPage(): React.JSX.Element {
   const router = useRouter()
+  const { t } = useLocale()
+  const navItems: SettingsNavItem[] = [
+    { id: 'about', label: t('settings.navAbout') },
+    { id: 'services', label: t('settings.navServices') },
+    { id: 'git-identity', label: t('settings.navGit') },
+    { id: 'plugins', label: t('settings.navPlugins') }
+  ]
   const [hasToken, setHasToken] = useState(false)
   const [tokenInput, setTokenInput] = useState('')
   const [settings, setSettings] = useState<AppSettings>({
@@ -229,11 +231,11 @@ export function SettingsPage(): React.JSX.Element {
     <Page ref={pageRef} tabIndex={-1}>
       <Content>
         <Topbar>
-          <Button variant="ghost" onClick={() => router.push('/')} aria-label="返回首页">
+          <Button variant="ghost" onClick={() => router.push('/')} aria-label={t('settings.backAria')}>
             <AppIcon icon={IconChevronLeft} size="sm" />
-            返回
+            {t('settings.back')}
           </Button>
-          <PageTitle>设置</PageTitle>
+          <PageTitle>{t('settings.title')}</PageTitle>
         </Topbar>
         {loadError && (
           <ErrorText role="alert" style={{ gridColumn: '1 / -1' }}>
@@ -241,11 +243,11 @@ export function SettingsPage(): React.JSX.Element {
           </ErrorText>
         )}
 
-        <SettingsNav items={NAV_ITEMS} containerRef={pageRef} />
+        <SettingsNav items={navItems} containerRef={pageRef} />
 
         <Sections>
-          <SettingSection id="about" title="关于" description="应用信息与版本">
-            <AboutBody aria-label="关于本应用">
+          <SettingSection id="about" title={t('settings.navAbout')} description={t('settings.aboutDesc')}>
+            <AboutBody aria-label={t('settings.aboutAria')}>
               <IconLogo width={96} height={48} animated />
               <AboutMeta>
                 <strong>wuh-site-desktop</strong>
@@ -254,21 +256,21 @@ export function SettingsPage(): React.JSX.Element {
             </AboutBody>
           </SettingSection>
 
-          <SettingSection id="services" title="服务" description="GitHub 凭证与站点数据源">
+          <SettingSection id="services" title={t('settings.navServices')} description={t('settings.servicesDesc')}>
             <SettingRow
               htmlFor="settings-github-token"
               label="GitHub Token"
               description={
                 <StatusLine>
                   <StatusDot $on={hasToken} aria-hidden />
-                  {hasToken ? '已配置 — 存于系统钥匙串' : '未配置 — Issues 发布 / Push 凭证注入不可用'}
+                  {hasToken ? t('settings.tokenConfigured') : t('settings.tokenMissing')}
                 </StatusLine>
               }
             >
               <Input
                 id="settings-github-token"
                 type="password"
-                placeholder="fine-grained PAT（仅存本地钥匙串）"
+                placeholder={t('settings.tokenPlaceholder')}
                 value={tokenInput}
                 onChange={(e) => setTokenInput(e.target.value)}
               />
@@ -288,7 +290,7 @@ export function SettingsPage(): React.JSX.Element {
                   })()
                 }
               >
-                保存 Token
+                {t('settings.saveToken')}
               </Button>
               {hasToken && (
                 <Button
@@ -305,7 +307,7 @@ export function SettingsPage(): React.JSX.Element {
                     })()
                   }
                 >
-                  清除
+                  {t('settings.clearToken')}
                 </Button>
               )}
               <SavedFlash show={savedField === 'githubToken'} />
@@ -314,18 +316,18 @@ export function SettingsPage(): React.JSX.Element {
 
             <SettingRow
               htmlFor="settings-site-base-url"
-              label="站点服务地址"
-              description="首页热力图数据来源（GET /api/about/activity）；留空使用默认主域名 wuh.site。"
+              label={t('settings.siteBaseUrl')}
+              description={t('settings.siteBaseUrlDesc')}
             >
               <Input
                 id="settings-site-base-url"
-                placeholder="默认 https://wuh.site"
+                placeholder={t('settings.siteBaseUrlPlaceholder')}
                 value={settings.siteBaseUrl ?? ''}
                 onChange={(e) => setSettings((s) => ({ ...s, siteBaseUrl: e.target.value }))}
                 onBlur={(e) => {
                   const raw = e.target.value.trim()
                   if (raw && !/^https?:\/\//.test(raw)) {
-                    markError('siteBaseUrl', '站点地址必须是 http(s) URL')
+                    markError('siteBaseUrl', t('settings.siteBaseUrlInvalid'))
                     return
                   }
                   setSettings((s) => ({ ...s, siteBaseUrl: raw || null }))
@@ -337,7 +339,7 @@ export function SettingsPage(): React.JSX.Element {
             </SettingRow>
           </SettingSection>
 
-          <SettingSection id="git-identity" title="Git 身份" description="可选，仅当前仓库局部生效">
+          <SettingSection id="git-identity" title={t('settings.navGit')} description={t('settings.gitDesc')}>
             <SettingRow htmlFor="settings-git-user-name" label="user.name">
               <Input
                 id="settings-git-user-name"

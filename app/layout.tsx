@@ -33,7 +33,7 @@ const THEME_STORAGE_KEY = 'wd.theme'
  * - <html> 预置默认主题（wine/dark），pre-paint 脚本按 localStorage 纠偏——首帧即终态主题，
  *   不再等 hydration 后的 useEffect。
  */
-const THEME_PREPAINT_SCRIPT = `(function(){try{var t=JSON.parse(localStorage.getItem('${THEME_STORAGE_KEY}')||'');var r=document.documentElement;if(t.family==='plain')r.setAttribute('data-theme-family','plain');if(t.scheme==='light')r.setAttribute('data-color-scheme','light')}catch(e){}})()`
+const THEME_PREPAINT_SCRIPT = `(function(){try{var t=JSON.parse(localStorage.getItem('${THEME_STORAGE_KEY}')||'');var r=document.documentElement;if(t.family==='plain')r.setAttribute('data-theme-family','plain');if(t.scheme==='light')r.setAttribute('data-color-scheme','light');else if(t.scheme==='dark')r.setAttribute('data-color-scheme','dark');else if(t.scheme==='system')r.setAttribute('data-color-scheme',matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}catch(e){}})()`
 
 export default function RootLayout({ children }: { children: ReactNode }): React.JSX.Element {
   return (

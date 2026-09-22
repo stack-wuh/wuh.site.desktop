@@ -6,6 +6,7 @@ import { Heatmap } from './Heatmap'
 import { buildHeatmapViewData } from './heatmapData'
 import { useAboutActivity } from './useAboutActivity'
 import { ProjectSection } from './ProjectSection'
+import { useLocale } from '../../lib/i18n/context'
 
 /**
  * 首页（两栏布局起为右栏默认页面；2026-09-21 定位升级为「新建博客」项目入口）：
@@ -82,17 +83,17 @@ const Retry = styled.div`
   margin-top: 8px;
 `
 
-function greeting(): string {
-  const h = new Date().getHours()
-  if (h < 5) return '夜深了'
-  if (h < 11) return '早上好'
-  if (h < 13) return '中午好'
-  if (h < 18) return '下午好'
-  return '晚上好'
+function greetingKey(h: number): string {
+  if (h < 5) return 'home.greetNight'
+  if (h < 11) return 'home.greetMorning'
+  if (h < 13) return 'home.greetNoon'
+  if (h < 18) return 'home.greetAfternoon'
+  return 'home.greetEvening'
 }
 
 export function HomePage(): React.JSX.Element {
   const { data, loading, error, retry } = useAboutActivity()
+  const { t } = useLocale()
 
   const view = buildHeatmapViewData(data)
 
@@ -100,28 +101,30 @@ export function HomePage(): React.JSX.Element {
     <Page className="home-page">
       <Body>
         <header>
-          <Title>{greeting()}</Title>
+          <Title>{t(greetingKey(new Date().getHours()))}</Title>
           <Sub>
-            {data ? `最近 365 天 · 共 ${data.total} 次输出 · 数据来自 wuh.site` : '输出节奏总览'}
+            {data
+              ? t('home.activitySummary', { count: data.total })
+              : t('home.activityFallback')}
           </Sub>
         </header>
 
         <ProjectSection />
 
-        <Card aria-label="综合活动热力图">
-          <CardTitle>综合活动热力图</CardTitle>
+        <Card aria-label={t('home.heatmapTitle')}>
+          <CardTitle>{t('home.heatmapTitle')}</CardTitle>
           <Heatmap
             data={view}
             loading={loading}
             error={error}
-            activityLabel="活动"
-            emptyLabel="暂无活动数据"
-            errorLabel="活动数据加载失败，请检查网络或站点服务设置"
+            activityLabel={t('home.activityLabel')}
+            emptyLabel={t('home.activityEmpty')}
+            errorLabel={t('home.activityError')}
           />
           {error && (
             <Retry>
               <Button size="sm" onClick={retry}>
-                重试
+                {t('common.retry')}
               </Button>
             </Retry>
           )}

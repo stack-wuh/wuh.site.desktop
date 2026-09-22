@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import styled from 'styled-components'
 import { Button } from './Button'
+import { useLocale } from '../../lib/i18n/context'
 
 const Overlay = styled.div`
   position: fixed;
@@ -110,6 +111,7 @@ export function uiConfirm(opts: ConfirmOptions): Promise<boolean> {
 
 /** 应用根部挂载一次，接住 uiConfirm 的请求 */
 export function ConfirmHost(): React.JSX.Element {
+  const { t } = useLocale()
   const [pending, setPending] = useState<{
     opts: ConfirmOptions
     resolve: (v: boolean) => void
@@ -134,12 +136,12 @@ export function ConfirmHost(): React.JSX.Element {
       onClose={() => close(false)}
       footer={
         <>
-          <Button onClick={() => close(false)}>{pending?.opts.cancelText ?? '取消'}</Button>
+          <Button onClick={() => close(false)}>{pending?.opts.cancelText ?? t('common.cancel')}</Button>
           <Button
             variant={pending?.opts.danger ? 'danger' : 'primary'}
             onClick={() => close(true)}
           >
-            {pending?.opts.okText ?? '确定'}
+            {pending?.opts.okText ?? t('common.ok')}
           </Button>
         </>
       }

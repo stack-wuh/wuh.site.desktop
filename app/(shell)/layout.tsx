@@ -28,6 +28,7 @@ import {
 import { floatsStore, toggleFloat } from '../../lib/floats'
 import { pluginPanelKey, routeKeyFromPathname } from '../../lib/routes'
 import { useTheme } from '../../components/theme/ThemeProvider'
+import { useLocale } from '../../lib/i18n/context'
 
 const Shell = styled.div`
   display: flex;
@@ -70,6 +71,7 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
   const router = useRouter()
   const pluginsReady = usePluginsReady()
   const { family, scheme } = useTheme()
+  const { t } = useLocale()
 
   useEffect(() => {
     // 工作区信息仅供插件 doc 服务解析根路径（壳层不再展示工作区 UI）
@@ -111,7 +113,7 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
 
   const items: SideMenuItem[] = [
     // 首页 = 「新建博客」项目入口（路由 key 仍为 home / 路径 /，仅显示名升级）
-    { id: 'home', icon: IconHome, title: '新建博客' },
+    { id: 'home', icon: IconHome, title: t('menu.home') },
     ...mainViews.map(({ pluginId, view }) => ({
       id: pluginPanelKey(pluginId, view.id),
       icon: pluginIcon(view.icon),
@@ -143,7 +145,7 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
     <Shell>
       {/* 预留通知条：后期承载应用更新通知 / 紧急通知，当前无内容
           （应用标题与外观菜单已移除——主题切换入口在左栏用户快捷面板） */}
-      <TitleBar aria-label="通知栏" aria-live="polite" />
+      <TitleBar aria-label={t('shell.noticeAria')} aria-live="polite" />
       <Body>
         <SideMenu
           expanded={menuExpanded}
