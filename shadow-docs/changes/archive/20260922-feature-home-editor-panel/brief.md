@@ -4,7 +4,7 @@
   "name": "20260922-feature-home-editor-panel",
   "type": "feature",
   "scope": "desktop",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20260922-feature-home-editor-panel",
   "files": [
@@ -21,18 +21,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 29,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/29",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 31,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/31"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "709e1a5d1bd0138cc8a89c18bfb3397e1eabda89",
-    "verifiedAt": "2026-09-22T03:26:54.624Z"
+    "verifiedCommit": "b1b780033872288230e656318d13875cfb1b41ae",
+    "verifiedAt": "2026-09-22T03:56:22.085Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:29",
-    "planHash": "796ab8d3867dff20bf9362ff8e4cbe69d006caa71c0f68c93e8878123d4458a2",
+    "checkpoint": "merged-pr:31",
+    "planHash": "14d68419dc27ab94b6d0afc447a1ad7a08cb3947d1f33aff15ee3bebbc945df6",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
