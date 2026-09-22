@@ -4,7 +4,7 @@
   "name": "20260922-feature-user-center-github-oauth",
   "type": "feature",
   "scope": "desktop",
-  "status": "branched",
+  "status": "committed",
   "baseBranch": "main",
   "branch": "feature/20260922-feature-user-center-github-oauth",
   "files": [
@@ -35,8 +35,8 @@
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:30",
-    "planHash": "925f95b893ae913492a2695ee71f0b791d83d18844c3c134c8d124b8b6cf737c",
+    "checkpoint": "66e4f3db49e9c69f44cb466a08c7636b59fdd45d",
+    "planHash": "25490be45f5e95a203f96dbfa3e449023ab9e600192bcac4b05d85fc97281edc",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {

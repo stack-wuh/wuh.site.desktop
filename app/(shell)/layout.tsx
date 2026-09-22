@@ -163,8 +163,9 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
               if (prefix === 'plugin' && pluginId && viewId) router.push(`/plugin/${pluginId}/${viewId}`)
             }
           }}
-          onOpenUser={() => router.push('/settings')}
-          userActive={active === 'settings'}
+          onOpenUser={() => router.push('/account')}
+          onOpenSettings={() => router.push('/settings')}
+          userActive={active === 'account'}
         />
         <MainArea ref={mainAreaRef}>
           {children}
