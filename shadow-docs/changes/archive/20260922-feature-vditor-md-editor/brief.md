@@ -4,7 +4,7 @@
   "name": "20260922-feature-vditor-md-editor",
   "type": "feature",
   "scope": "desktop",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20260922-feature-vditor-md-editor",
   "files": [
@@ -34,18 +34,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 41,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/41",
-    "pullRequest": null,
+    "pullRequest": 42,
     "pullRequestUrl": null
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "b77fe968b9d62847575f589c7cf8f3d95c3eab69",
-    "verifiedAt": "2026-09-22T12:12:04.642Z"
+    "verifiedCommit": "5c1af1789cb4ad0cbb44b43d026c3a47c8f61a0a",
+    "verifiedAt": "2026-09-22T12:22:36.026Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:41",
-    "planHash": "874aaee14588312851bcd61c4ee683168a6e082c947930e68ac67ae286c99bde",
+    "checkpoint": "merged-pr:42",
+    "planHash": "2623acb1199a56e955392bd83a577aba9f5d800297263204c9407416a417f828",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {

@@ -22,5 +22,6 @@
 | 20260922-feature-i18n-shell-locales | reviewed | shadow-docs/changes/20260922-feature-i18n-shell-locales/brief.md |
 | 20260922-feature-user-center-github-oauth | ✅ 完成 | shadow-docs/changes/archive/20260922-feature-user-center-github-oauth/brief.md |
 | 20260922-feature-user-identity-sync | ✅ 完成 | shadow-docs/changes/archive/20260922-feature-user-identity-sync/brief.md |
+| 20260922-feature-vditor-md-editor | ✅ 完成 | shadow-docs/changes/archive/20260922-feature-vditor-md-editor/brief.md |
 | 20260922-fix-git-identity-guard | ✅ 完成 | shadow-docs/changes/archive/20260922-fix-git-identity-guard/brief.md |
 | 20260922-fix-shell-avatar-app-icon | ✅ 完成 | shadow-docs/changes/archive/20260922-fix-shell-avatar-app-icon/brief.md |
