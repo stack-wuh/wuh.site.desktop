@@ -6,8 +6,9 @@
 
 | 技术域 | 关键词 | 应查阅 |
 |--------|--------|--------|
-| 渲染层导航/壳层 | 页面 视图 路由 路由段 App Router 设置 导航 SideMenu 菜单 两栏 展开 收起 快捷键 用户入口 快捷面板 通知条 main 容器 浮窗 FloatLayer toggle 首页 静态导出 export next | knowledge/renderer-shell-routing.md |
+| 渲染层导航/壳层 | 页面 视图 路由 路由段 App Router 设置 导航 SideMenu 菜单 两栏 展开 收起 快捷键 用户入口 用户中心 /account 快捷面板 通知条 main 容器 浮窗 FloatLayer toggle 首页 静态导出 export next | knowledge/renderer-shell-routing.md |
 | 壳层 chrome / 图标 | 图标 图标注册表 AppIcon Icon 品牌标 IconLogo Dock 图标 icon.svg 应用图标 ico 任务栏 SideMenu StatusBar 状态栏 徽标 tooltip 描边 主题 token styled-components CSP 用户面板 语言切换 | knowledge/shell-chrome-design.md |
+| 用户中心 / GitHub 授权 | 用户中心 account 授权 OAuth Device Flow GitHub 登录 token 凭证 身份 仓库列表 默认站点仓库 PAT scopes 失效 | knowledge/renderer-shell-routing.md, knowledge/shell-chrome-design.md |
 | 构建/工具链 | Next next.config 静态导出 app 协议 electron-vite 双进程 dev workspace pnpm 打包 electron-builder tsconfig vitest README | knowledge/renderer-shell-routing.md, knowledge/shell-chrome-design.md |
 | 插件状态项 | statusItems statusBar 状态项 贡献点 徽标位 声明制 | knowledge/shell-chrome-design.md |
 | 插件任务胶囊 | 任务 待办 任务列表 任务胶囊 TaskCapsule TaskPopover tasks 进度 statusItems 之外的状态聚合 | knowledge/shell-chrome-design.md |

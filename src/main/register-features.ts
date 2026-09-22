@@ -10,6 +10,7 @@ import './git'
 import './gitRevert'
 import './credentials'
 import './github/issues'
+import './github/identity'
 import './uploader'
 import './aboutActivity'
 

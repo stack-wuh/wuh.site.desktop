@@ -43,7 +43,13 @@ const handlers: {
   getSettings: () => { throw new Error('not implemented') },
   setSettings: () => { throw new Error('not implemented') },
   setGithubToken: () => { throw new Error('not implemented') },
-  clearGithubToken: () => { throw new Error('not implemented') }
+  clearGithubToken: () => { throw new Error('not implemented') },
+  startGithubDeviceFlow: () => { throw new Error('not implemented') },
+  getGithubDeviceFlowStatus: () => { throw new Error('not implemented') },
+  cancelGithubDeviceFlow: () => { throw new Error('not implemented') },
+  getGithubIdentity: () => { throw new Error('not implemented') },
+  listUserRepos: () => { throw new Error('not implemented') },
+  openExternal: () => { throw new Error('not implemented') }
 }
 
 /** 各业务模块调用以覆盖默认的 not implemented 实现 */

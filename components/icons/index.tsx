@@ -12,6 +12,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Code,
+  Copy,
+  ExternalLink,
   Eye,
   FileText,
   Folder,
@@ -30,6 +32,7 @@ import {
   PanelLeftOpen,
   Quote,
   Save,
+  Search,
   Settings,
   Sparkles,
   Tag,
@@ -50,6 +53,8 @@ export const IconChevronLeft = ChevronLeft
 export const IconChevronRight = ChevronRight
 export const IconClose = X
 export const IconCode = Code
+export const IconCopy = Copy
+export const IconExternalLink = ExternalLink
 export const IconEye = Eye
 export const IconFile = FileText
 export const IconFolder = Folder
@@ -66,6 +71,7 @@ export const IconPanelCollapse = PanelLeftClose
 export const IconPanelExpand = PanelLeftOpen
 export const IconQuote = Quote
 export const IconSave = Save
+export const IconSearch = Search
 export const IconSettings = Settings
 
 // ---------- Status：状态 ----------

@@ -56,7 +56,13 @@ const api: DesktopApi = {
   getSettings: () => invoke('getSettings'),
   setSettings: (patch) => invoke('setSettings', patch),
   setGithubToken: (t) => invoke('setGithubToken', t),
-  clearGithubToken: () => invoke('clearGithubToken')
+  clearGithubToken: () => invoke('clearGithubToken'),
+  startGithubDeviceFlow: () => invoke('startGithubDeviceFlow'),
+  getGithubDeviceFlowStatus: () => invoke('getGithubDeviceFlowStatus'),
+  cancelGithubDeviceFlow: () => invoke('cancelGithubDeviceFlow'),
+  getGithubIdentity: () => invoke('getGithubIdentity'),
+  listUserRepos: () => invoke('listUserRepos'),
+  openExternal: (url) => invoke('openExternal', url)
 }
 
 contextBridge.exposeInMainWorld('api', api)
