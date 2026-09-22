@@ -2,14 +2,52 @@
 
 /**
  * Picker 共享外壳（20260922 由首页 ProjectSection 拆迁）：
- * 样式骨架 + errText 工具。胶囊化后 picker 以「面板内容」形态嵌入
- * 胶囊编辑器分区（开合由胶囊面板统一管理），不再自带触发按钮与弹层。
+ * 样式骨架 + 触发按钮 + popover 开合 hook + errText 工具。
+ * 面板操作行（20260922-fix-editor-panel-controls 恢复）与胶囊面板共用。
  */
+import { useCallback, useEffect, useRef, useState } from 'react'
 import styled from 'styled-components'
 
 export const PickerWrap = styled.span`
   position: relative;
   display: inline-flex;
+`
+
+export const PickerButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  background: var(--chrome-raised);
+  border: 1px solid var(--chrome-border);
+  border-radius: var(--border-radius-base);
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  max-width: 220px;
+  transition:
+    background-color 150ms ease-out,
+    border-color 150ms ease-out;
+
+  &:hover {
+    background: var(--chrome-hover);
+    border-color: var(--primary-color);
+  }
+
+  &[aria-expanded='true'] {
+    border-color: var(--primary-color);
+    color: var(--text-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 1px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
 `
 
 export const PickerName = styled.span`
@@ -102,4 +140,27 @@ export const RowPath = styled.span`
 
 export function errText(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
+}
+
+/** popover 通用开合行为：Esc / 面板外 mousedown 关闭（20260922-fix-editor-panel-controls 恢复） */
+export function usePickerOpen(): [boolean, () => void, React.RefObject<HTMLSpanElement | null>] {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLSpanElement | null>(null)
+  const toggle = useCallback(() => setOpen((v) => !v), [])
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    const onDown = (e: MouseEvent): void => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    window.addEventListener('mousedown', onDown)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('mousedown', onDown)
+    }
+  }, [open])
+  return [open, toggle, ref]
 }

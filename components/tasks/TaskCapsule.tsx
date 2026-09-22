@@ -4,8 +4,9 @@
  * 任务胶囊（壳层 StatusBar 左区）：跨插件聚合任务贡献点（manifest tasks 声明 +
  * SDK tasks.upsert/remove 上报，注册表 lib/tasks.ts）。20260922 胶囊化演进：
  * 兼任「任务 + 编辑器」复合入口——有活动文档（草稿或已打开文件）即显示，
- * 点击弹出的 TaskPopover 内含编辑器分区；EditorCommandHost 常驻挂载，
- * 承载文档操作类命令（保存/另存为/新建/关闭 + SaveAs 对话框）。
+ * 点击弹出的 TaskPopover 内含编辑器分区（全局补充入口）。
+ * 文档操作命令宿主（EditorCommandHost）自 20260922-fix-editor-panel-controls
+ * 起常驻壳层 layout（单实例），面板操作行与胶囊在任意状态下均可用。
  *
  * 无可见任务且无活动文档时不渲染；有任务时显示聚合进度 done/total（存在
  * in_progress 时附加环形动效，reduced-motion 降级为静态）。Esc 与面板外
@@ -16,7 +17,6 @@ import styled, { keyframes } from 'styled-components'
 import { taskAggregate, tasksStore } from '../../lib/tasks'
 import { useWorkspaceStore } from '../../lib/store'
 import { useLocale } from '../../lib/i18n/context'
-import { EditorCommandHost } from './EditorSection'
 import { TaskPopover } from './TaskPopover'
 
 const Wrap = styled.span`
@@ -121,7 +121,6 @@ export function TaskCapsule(): React.JSX.Element | null {
         </span>
       </Capsule>
       {open && <TaskPopover onClose={() => setOpen(false)} />}
-      <EditorCommandHost />
     </Wrap>
   )
 }
