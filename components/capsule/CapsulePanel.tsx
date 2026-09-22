@@ -1,10 +1,11 @@
 'use client'
 
 /**
- * 任务清单面板：贴 StatusBar 胶囊上方弹出（与用户快捷面板同族交互——
- * Esc 关、点外关由胶囊侧统一处理，面板内点击不冒泡）。
- * 按插件分组列任务：状态标记 + 标题 + 进度/detail；声明了 viewId 的任务
- * 可点击跳转来源插件 main 视图。任务状态由插件经 SDK 单向上报，壳层只读。
+ * 壳层胶囊面板（正名自 TaskPopover）：贴胶囊**向下**弹出（胶囊位于主区右上；
+ * 与用户快捷面板同族交互——Esc 关、点外关由胶囊侧统一处理，面板内点击不冒泡）。
+ * 分区制：任务分区按插件分组列任务（状态标记 + 标题 + 进度/detail；声明了
+ * viewId 的任务可点击跳转来源插件 main 视图）+ 编辑器分区（EditorSection）。
+ * 任务状态由插件经 SDK 单向上报，壳层只读。后续新功能以分区接入。
  */
 import { useRouter } from 'next/navigation'
 import { useSyncExternalStore } from 'react'
@@ -12,13 +13,14 @@ import styled, { keyframes } from 'styled-components'
 import { AppIcon } from '../ui/AppIcon'
 import { IconCheck } from '../icons'
 import { taskAggregate, tasksStore, visibleTasks, type TaskState, type TaskStatus } from '../../lib/tasks'
-import { EditorSection } from './EditorSection'
+import { EditorSection } from './sections/EditorSection'
 
 const Pop = styled.div`
   position: absolute;
-  bottom: calc(100% + 8px);
-  left: 0;
+  top: calc(100% + 8px);
+  right: 0;
   z-index: 70;
+  pointer-events: auto;
   min-width: 300px;
   max-width: 380px;
   max-height: 480px;
@@ -232,7 +234,7 @@ function TaskRow(props: { task: TaskState; onNavigate: () => void }): React.JSX.
   return <Row>{inner}</Row>
 }
 
-export function TaskPopover(props: { onClose: () => void }): React.JSX.Element {
+export function CapsulePanel(props: { onClose: () => void }): React.JSX.Element {
   useSyncExternalStore(tasksStore.subscribe, tasksStore.get, tasksStore.get)
   const tasks = visibleTasks()
   const agg = taskAggregate()
@@ -245,7 +247,7 @@ export function TaskPopover(props: { onClose: () => void }): React.JSX.Element {
   }
 
   return (
-    <Pop role="dialog" aria-label="任务列表" data-testid="task-popover" onClick={(e) => e.stopPropagation()}>
+    <Pop role="dialog" aria-label="任务列表" data-testid="capsule-panel" onClick={(e) => e.stopPropagation()}>
       <PopHead>
         <strong>任务</strong>
         <PopCount>
