@@ -17,7 +17,8 @@ source:
   - changes/20260922-feature-user-center-github-oauth/brief.md
   - changes/20260922-feature-user-identity-sync/brief.md
   - changes/20260922-fix-shell-avatar-app-icon/brief.md
-verified: 2026-09-22
+  - changes/20260922-refactor-codemirror-editor/brief.md
+verified: 2026-09-23
 ---
 
 # 壳层 chrome 设计与插件扩展点
@@ -38,9 +39,9 @@ verified: 2026-09-22
 
 **浮窗层与 floats 注册表（2026-09-18 起）**：插件视图区域为 `views.area: 'main' | 'float'`（preview 分栏与 sidebar 侧栏均已移除；`sidebar` 声明被 validateManifest 拒绝并指引迁移 main），float 视图经 `FloatLayer`（`components/FloatLayer.tsx`）以浮窗形态按需唤起——头部拖拽、8 向缩放、点按置顶、最小化为左下角 chip（帧保持挂载，整窗 display:none）、Esc 关闭最顶层未最小化浮窗（确认框打开时让位——用 `[data-dialog-overlay]` 稳定属性判定，styled 类名是哈希）。状态注册表 `lib/floats.ts` 为纯逻辑快照模块（与 statusItems 同构：`commit()` 产新引用 + useSyncExternalStore）；开合与几何是**进程内状态**。**FloatLayer 常驻右栏 main 容器**：浮窗与右栏页面（Home/设置/插件 main 视图）共存，切换页面不再卸载浮窗，几何视口 = main 容器。浮窗内容复用 `PluginView` 帧宿主（plugin:// 沙箱协议不变）。
 
-**StatusBar（2026-09-22 起左区含任务胶囊）**：左区 = 壳层 `TaskCapsule`（跨插件任务聚合，见下）+ 插件 statusItems；右区仅插件 statusItems。编辑器相关分区（文件路径/光标行列/字数/未保存）与 git 分支徽标已随内置编辑器移除。
+**StatusBar（2026-09-22 起左区含任务胶囊）**：左区 = 壳层 `TaskCapsule`（跨插件任务聚合，见下）+ 插件 statusItems；右区仅插件 statusItems。编辑器相关分区（文件路径/光标行列/字数/未保存）与 git 分支徽标未随内置编辑器回归 StatusBar——编辑器功能入口在 TaskPopover 的**胶囊编辑器分区 EditorSection**（20260922-feature-vditor-md-editor 起）与首页编辑器面板动作行（预览 toggle 等），契约见 [主编辑器卡片](editor.md)。
 
-**任务胶囊与 tasks 贡献点（2026-09-22 起）**：插件以 manifest `tasks` 声明任务占位（id 限 `[a-z0-9][a-z0-9._-]*`、title 必填、可选 `viewId` 须指向本插件已声明的 main 视图、每插件 ≤8 项）；SDK `wuh.tasks.upsert(id, patch)/remove(id)` 走帧协议 `tasks` 服务，由 `PluginFrameHost.handleFrameInvoke` 渲染层裁决（**主进程 broker 不参与，视图帧与逻辑帧同链路**）；patch 仅 status（`pending|in_progress|done`）/progress（`{current,total}`，**严格 typeof number 校验**——帧消息来自 postMessage 不可用 `Number()` 宽转）/detail，id/title/viewId 声明期不可变。注册表 `lib/tasks.ts` 与 statusItems/floats 同构（commit() 产新引用 + useSyncExternalStore）。壳层聚合：StatusBar 左区 `TaskCapsule`（无可见任务不渲染；显示 done/total，存在 in_progress 时附环形动效——**属持续状态指示非过渡动效**，800ms/圈，reduced-motion 静态降级）+ 点击弹 `TaskPopover`（用户快捷面板同族交互：Esc/点外关、面板内 stopPropagation；按插件分组列任务；`viewId` 条目 `router.push('/plugin/<pluginId>/<viewId>')` 跳来源视图）。**任务状态只能由插件经 SDK 单向上报，壳层不反向写**（Popover 条目仅查看/跳转）；插件停用清空、启用重注册。参考生产者：github-issues 发布流（逻辑帧内上报，失败回 pending + detail 原因）。
+**任务胶囊与 tasks 贡献点（2026-09-22 起）**：插件以 manifest `tasks` 声明任务占位（id 限 `[a-z0-9][a-z0-9._-]*`、title 必填、可选 `viewId` 须指向本插件已声明的 main 视图、每插件 ≤8 项）；SDK `wuh.tasks.upsert(id, patch)/remove(id)` 走帧协议 `tasks` 服务，由 `PluginFrameHost.handleFrameInvoke` 渲染层裁决（**主进程 broker 不参与，视图帧与逻辑帧同链路**）；patch 仅 status（`pending|in_progress|done`）/progress（`{current,total}`，**严格 typeof number 校验**——帧消息来自 postMessage 不可用 `Number()` 宽转）/detail，id/title/viewId 声明期不可变。注册表 `lib/tasks.ts` 与 statusItems/floats 同构（commit() 产新引用 + useSyncExternalStore）。壳层聚合：StatusBar 左区 `TaskCapsule`（无可见任务不渲染；显示 done/total，存在 in_progress 时附环形动效——**属持续状态指示非过渡动效**，800ms/圈，reduced-motion 静态降级）+ 点击弹 `TaskPopover`（用户快捷面板同族交互：Esc/点外关、面板内 stopPropagation；按插件分组列任务；`viewId` 条目 `router.push('/plugin/<pluginId>/<viewId>')` 跳来源视图；Popover 还承载**胶囊编辑器分区 EditorSection**——格式化/插入/文档操作入口，经 editor-commands 命令通道与编辑器解耦，见 editor.md 卡）。**任务状态只能由插件经 SDK 单向上报，壳层不反向写**（Popover 条目仅查看/跳转）；插件停用清空、启用重注册。参考生产者：github-issues 发布流（逻辑帧内上报，失败回 pending + detail 原因）。
 
 **插件状态项 = manifest 声明 + 运行时更新**：manifest `statusItems`（id 限 `[a-z0-9][a-z0-9._-]*`、icon 白名单、text 必填、alignment 默认 right、order 默认 100、每插件 ≤4 项）；SDK `wuh.statusBar.update(id, patch)/remove(id)` 走帧协议 `statusBar` 服务，由渲染层宿主（`components/plugins/PluginFrameHost.tsx` 的 `handleFrameInvoke`）直接裁决，**主进程 broker 不参与**；注册表 `lib/statusItems.ts` 为纯逻辑模块（useSyncExternalStore 快照模式）。插件只能 update/remove 自己声明过的项；icon/alignment/order 运行时不可变；插件停用清空、启用重注册。
 

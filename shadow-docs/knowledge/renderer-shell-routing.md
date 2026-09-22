@@ -16,7 +16,8 @@ source:
   - changes/20260922-feature-user-center-github-oauth/brief.md
   - changes/20260922-feature-user-identity-sync/brief.md
   - changes/20260922-fix-shell-avatar-app-icon/brief.md
-verified: 2026-09-22
+  - changes/20260922-refactor-codemirror-editor/brief.md
+verified: 2026-09-23
 ---
 
 # Renderer 壳层两栏布局与 App Router 路由约定
@@ -25,7 +26,7 @@ verified: 2026-09-22
 
 渲染层为 **Next.js App Router 项目**（2026-09-21 起，从 electron-vite + React 迁移）：两栏布局（**预留通知条**（44px 空条，待更新/紧急通知）→ body（左栏 SideMenu + 右栏 main 容器）→ StatusBar）由 **`app/(shell)/layout.tsx` 持久化**，路由段互斥渲染右栏页面：
 
-- `/` → HomePage（默认入口 = **「新建博客」项目入口**，2026-09-21 起：项目区块承载打开本地目录 / clone 公开 https 仓库 / 最近项目列表；热力图保留其下）
+- `/` → HomePage（默认入口 = **「新建博客」项目入口**，2026-09-21 起：项目区块承载打开本地目录 / clone 公开 https 仓库 / 最近项目列表；活动散点图与主编辑器面板卡片依次其下）
 - `/settings` → SettingsPage（仅应用级设置；GitHub 凭证与 Git 提交身份已归拢至 `/account`）
 - `/account` → AccountPage（用户中心，2026-09-22 起：GitHub OAuth Device Flow 授权 + 身份/仓库/默认站点仓库 + Git 提交身份）
 - `/plugin/<pluginId>/<viewId>` → PluginMainView（`views.area: 'main'` 的插件视图；`generateStaticParams` 从内置 `plugins/*/plugin.json` 构建期枚举）
@@ -42,7 +43,7 @@ verified: 2026-09-22
 
 **全屏视图体系已废止**（2026-09-20）：设置页与首页都是右栏普通页面，左栏常驻。键盘语义：`Cmd/Ctrl+,` 在 settings ↔ home 间 `router.push` 切换；`Cmd/Ctrl+B` 切换左栏展开/收起（控件入口在用户快捷面板内）；Esc 只关最顶层浮窗（FloatLayer 内处理，确认框打开时让位——用 `[data-dialog-overlay]` 稳定属性判定，styled 类名是哈希）。页面自身 mount 聚焦（`tabIndex={-1}`）保留。
 
-**内置编辑器体系已移除**；`lib/store.ts`（workspaceStore）为插件 doc 服务（帧协议 `doc.get/set/save`）的宿主侧状态源。
+**内置编辑器已回归首页面板**（20260922-refactor-codemirror-editor 起：CodeMirror 6 源码编辑 + 分栏预览，见 [主编辑器卡片](editor.md)；2026-09-20 至 09-22 间曾有「内置编辑器已移除」窗口，其间 20260922-feature-vditor-md-editor 短暂引入 Vditor IR 后整体替换退场）。`lib/store.ts`（workspaceStore）既是首页编辑器的 content 状态源（content 双通道 + 防回环，见 editor.md 卡），也是插件 doc 服务（帧协议 `doc.get/set/save`）的宿主侧状态源。
 
 ## 执行约束
 

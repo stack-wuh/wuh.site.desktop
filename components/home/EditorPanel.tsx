@@ -1,12 +1,13 @@
 'use client'
 
 /**
- * 首页主编辑器面板（20260922-fix-editor-panel-controls 操作行恢复）：
- * 上方上下文行（项目菜单 + 文件筛选）→ 中央 Vditor IR 编辑区（主题桥接见
- * components/editor/MarkdownEditor）→ 下方动作行（文档状态 · 新建 · 保存）。
- * 文件相关交互全部收在上下两行（原始需求第三条）；新建/保存经 editor-commands
- * 命令通道发布，与胶囊全局入口同源——命令宿主常驻壳层 layout（单实例），
- * 冷启动态（无文档无任务）面板入口也全程可用。首页布局：问候 → 散点图 → 本面板。
+ * 首页主编辑器面板（20260922-fix-editor-panel-controls 操作行恢复；
+ * 20260922-refactor-codemirror-editor 起中央为 CodeMirror 6 源码编辑区，
+ * 动作行新增预览 toggle——开启后面板容器内分栏，窄容器纵向堆叠）：
+ * 上方上下文行（项目菜单 + 文件筛选）→ 中央编辑/预览区（主题桥接见
+ * components/editor/MarkdownEditor）→ 下方动作行（文档状态 · 预览 · 新建 · 保存）。
+ * 文件相关交互全部收在上下两行；新建/保存/预览经命令通道或本地状态，与胶囊
+ * 全局入口同源——命令宿主常驻壳层 layout（单实例）。首页布局：问候 → 散点图 → 本面板。
  */
 import { useEffect, useState } from 'react'
 import styled from 'styled-components'
@@ -15,7 +16,7 @@ import { useWorkspaceStore } from '../../lib/store'
 import { publishEditorCommand } from '../../lib/editor-commands'
 import { Button } from '../ui/Button'
 import { AppIcon } from '../ui/AppIcon'
-import { IconChevronDown, IconFile, IconFolderOpen, IconSave } from '../icons'
+import { IconChevronDown, IconEye, IconFile, IconFolderOpen, IconSave } from '../icons'
 import {
   PickerButton,
   PickerName,
@@ -26,7 +27,11 @@ import {
 import { FilePanelContent } from '../workspace/FilePicker'
 import { WorkspacePanelContent } from '../workspace/WorkspacePicker'
 import { MarkdownEditor } from '../editor/MarkdownEditor'
+import { PreviewPane } from '../editor/PreviewPane'
 import { useLocale } from '../../lib/i18n/context'
+
+/** 预览开关持久化键（与 wd.theme / wd.locale 同族命名） */
+const PREVIEW_STORAGE_KEY = 'wd.editorPreview'
 
 const Panel = styled.section`
   display: flex;
@@ -51,6 +56,35 @@ const ContextRow = styled.div`
   align-items: center;
   gap: 8px;
   padding: 0 8px 8px;
+`
+
+/* 容器查询宿主：分栏方向随面板实际宽度（非视口）切换 */
+const EditorBody = styled.div`
+  display: flex;
+  min-height: 0;
+  container-type: inline-size;
+`
+
+const Split = styled.div`
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: row;
+  max-height: 45vh;
+
+  /* 分栏间距：第二栏起画分隔线（方向切换时由查询内覆盖） */
+  & > * + * {
+    border-left: 1px solid var(--chrome-border);
+  }
+
+  @container (max-width: 700px) {
+    flex-direction: column;
+
+    & > * + * {
+      border-left: none;
+      border-top: 1px solid var(--chrome-border);
+    }
+  }
 `
 
 const ActionRow = styled.div`
@@ -159,6 +193,28 @@ function FilePicker(): React.JSX.Element {
 export function EditorPanel(): React.JSX.Element {
   const doc = useWorkspaceStore()
   const { t } = useLocale()
+  const [previewOn, setPreviewOn] = useState(false)
+
+  // 预览开关记忆：挂载后读取（防 SSR 预渲染 hydration 不匹配）
+  useEffect(() => {
+    try {
+      setPreviewOn(window.localStorage.getItem(PREVIEW_STORAGE_KEY) === '1')
+    } catch {
+      // 存储不可用（隐私模式）：记忆为纯增强，保持默认关闭
+    }
+  }, [])
+
+  const togglePreview = (): void => {
+    setPreviewOn((prev) => {
+      const next = !prev
+      try {
+        window.localStorage.setItem(PREVIEW_STORAGE_KEY, next ? '1' : '0')
+      } catch {
+        // 存储不可用（隐私模式）：仅本次会话内生效
+      }
+      return next
+    })
+  }
 
   const canSave = doc.activePath ? doc.dirty : (doc.content ?? '').length > 0
 
@@ -169,7 +225,12 @@ export function EditorPanel(): React.JSX.Element {
         <FilePicker />
       </ContextRow>
 
-      <MarkdownEditor />
+      <EditorBody>
+        <Split>
+          <MarkdownEditor />
+          {previewOn && <PreviewPane />}
+        </Split>
+      </EditorBody>
 
       <ActionRow>
         <DocChip title={doc.activePath ?? undefined}>
@@ -177,6 +238,16 @@ export function EditorPanel(): React.JSX.Element {
           {doc.dirty && <DirtyDot title={t('editor.dirtyTitle')} />}
         </DocChip>
         <Spacer />
+        <Button
+          size="sm"
+          variant="ghost"
+          aria-label={t('editor.preview')}
+          aria-pressed={previewOn}
+          title={t('editor.preview')}
+          onClick={togglePreview}
+        >
+          <AppIcon icon={IconEye} size="xs" decorative />
+        </Button>
         <Button
           size="sm"
           variant="ghost"
