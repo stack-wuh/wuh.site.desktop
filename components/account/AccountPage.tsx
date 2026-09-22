@@ -8,7 +8,7 @@
  */
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import type { AppSettings, DeviceFlowStart, GithubIdentity, RepoSummary, TokenKind } from '@shared/types'
+import type { AppSettings, DeviceFlowStart, GitIdentityDefault, GithubIdentity, RepoSummary, TokenKind } from '@shared/types'
 import styled, { keyframes } from 'styled-components'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
@@ -325,6 +325,21 @@ export function AccountPage(): React.JSX.Element {
   const [savedField, setSavedField] = useState<GitFieldKey | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<GitFieldKey, string>>>({})
   const savedTimer = useRef<number | null>(null)
+  // 本机 git 全局身份，仅作默认值展示（placeholder），不写入 settings
+  const [gitDefault, setGitDefault] = useState<GitIdentityDefault | null>(null)
+
+  useEffect(() => {
+    let alive = true
+    window.api
+      .getGitIdentityDefault()
+      .then((v) => {
+        if (alive) setGitDefault(v)
+      })
+      .catch(() => undefined) // 读取失败保持 null，placeholder 显示「本机未配置」
+    return () => {
+      alive = false
+    }
+  }, [])
 
   /** 有 token 时拉取身份（401 → stale 身份，不抛错） */
   const reloadIdentity = async (): Promise<void> => {
@@ -717,7 +732,7 @@ export function AccountPage(): React.JSX.Element {
             <SettingRow htmlFor="account-git-user-name" label="user.name">
               <Input
                 id="account-git-user-name"
-                placeholder="user.name"
+                placeholder={gitDefault?.name ?? t('account.gitUnset')}
                 value={settings?.gitUserName ?? ''}
                 onChange={(e) =>
                   setSettings((s) => (s ? { ...s, gitUserName: e.target.value } : s))
@@ -730,7 +745,7 @@ export function AccountPage(): React.JSX.Element {
             <SettingRow htmlFor="account-git-user-email" label="user.email">
               <Input
                 id="account-git-user-email"
-                placeholder="user.email"
+                placeholder={gitDefault?.email ?? t('account.gitUnset')}
                 value={settings?.gitUserEmail ?? ''}
                 onChange={(e) =>
                   setSettings((s) => (s ? { ...s, gitUserEmail: e.target.value } : s))

@@ -28,6 +28,7 @@ const handlers: {
   gitPull: () => { throw new Error('not implemented') },
   gitLog: () => { throw new Error('not implemented') },
   gitShow: () => { throw new Error('not implemented') },
+  getGitIdentityDefault: () => { throw new Error('not implemented') },
   planRevert: () => { throw new Error('not implemented') },
   executeRevert: () => { throw new Error('not implemented') },
   githubListIssues: () => { throw new Error('not implemented') },

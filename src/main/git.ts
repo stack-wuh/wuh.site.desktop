@@ -1,9 +1,11 @@
 import { implement } from './ipc'
 import { getGit, getWorkspace } from './workspace'
 import { getToken, loadSettings } from './credentials'
+import { simpleGit } from 'simple-git'
 import type {
   CommitSummary,
   GitFileState,
+  GitIdentityDefault,
   GitStatusSummary
 } from '@shared/types'
 
@@ -103,6 +105,25 @@ implement('gitCommit', async ([message, paths]) => {
   await git.raw(args)
   return { hash: (await git.raw(['rev-parse', 'HEAD'])).trim() }
 })
+
+/** 读本机 git 全局身份，作账户页 Git 提交身份的默认值展示；未配置或命令失败 → null */
+export async function readGlobalGitIdentity(run: {
+  raw(args: string[]): Promise<string>
+}): Promise<GitIdentityDefault> {
+  const read = async (key: string): Promise<string | null> => {
+    try {
+      const value = (await run.raw(['config', '--global', '--get', key])).trim()
+      return value.length > 0 ? value : null
+    } catch {
+      return null
+    }
+  }
+  const [name, email] = await Promise.all([read('user.name'), read('user.email')])
+  return { name, email }
+}
+
+// 裸实例（不依赖已打开仓库）：--global 读取在任意 cwd 下均可用
+implement('getGitIdentityDefault', () => readGlobalGitIdentity(simpleGit()))
 
 implement('gitPush', () => pushWithCredential())
 
