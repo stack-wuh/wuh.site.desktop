@@ -331,8 +331,9 @@ export function AccountPage(): React.JSX.Element {
 
   useEffect(() => {
     let alive = true
-    window.api
-      .getGitIdentityDefault()
+    // 方法访问也进 promise 链：dev 下渲染层先于 preload 更新时，契约偏差降级为 null 而非崩页
+    Promise.resolve()
+      .then(() => window.api.getGitIdentityDefault())
       .then((v) => {
         if (alive) setGitDefault(v)
       })
