@@ -3,7 +3,7 @@
 /**
  * 左栏菜单栏（两栏布局）：48px 图标 rail ↔ ~220px 图标+文字展开态，瞬时切换（禁 width 过渡）。
  * 纯导航不承载内容：菜单项选中态切换右栏页面（路由段），toggle 项开/关浮窗（aria-pressed）。
- * 底部固定：设置入口 + 用户占位区（品牌标 + 版本号，无用户体系不造假入口）。
+ * 底部固定：用户入口（已授权投影 GitHub 头像/用户名，未授权回落品牌标 + 应用名，数据来自全局身份 store）。
  * 能力沿袭：徽标（数字 99+ / dot）、data-tip 自绘 tooltip（仅收起态）、左缘激活指示条。
  */
 import { useEffect, useRef, useState } from 'react'
@@ -21,6 +21,7 @@ import { useTheme, type SchemeSetting } from './theme/ThemeProvider'
 import type { ThemeFamily } from './theme/tokens'
 import { useLocale } from '../lib/i18n/context'
 import { localeLabels, localeOrder, type Locale } from '../lib/i18n/locales'
+import { useGithubIdentity } from '../lib/identity'
 
 // 构建期内联应用版本（next.config.ts env，NEXT_PUBLIC_ 前缀），不走 preload/broker 通道
 const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? '0.0.0'
@@ -376,6 +377,39 @@ const UserMeta = styled.span`
   }
 `
 
+/** GitHub 头像（已授权时替换品牌标占位；圆形裁切，尺寸随展开态） */
+const UserAvatar = styled.img<{ $expanded: boolean }>`
+  width: ${(props) => (props.$expanded ? 24 : 20)}px;
+  height: ${(props) => (props.$expanded ? 24 : 20)}px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+`
+
+/** 快捷面板头部的身份行：小头像 + 用户名（未授权时仅标题，无头像） */
+const PopIdentity = styled.span`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+
+  & > strong {
+    font-size: 13px;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+`
+
+const PopAvatar = styled.img`
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+`
+
 const UserVersion = styled.span`
   font-size: 10px;
   font-family: var(--font-mono);
@@ -479,6 +513,9 @@ function UserQuickPanel(props: {
   onOpenUser: () => void
   onOpenSettings: () => void
   onClose: () => void
+  /** 已授权身份投影（null = 未授权，头部回落「用户」标题） */
+  displayName: string | null
+  avatarUrl: string | null
 }): React.JSX.Element {
   const { t, locale, setLocale } = useLocale()
   const { family, scheme, setFamily, setScheme } = useTheme()
@@ -495,7 +532,10 @@ function UserQuickPanel(props: {
   return (
     <UserPop role="menu" aria-label={t('pop.user')} onClick={(e) => e.stopPropagation()}>
       <PopHead>
-        <strong>{t('pop.user')}</strong>
+        <PopIdentity>
+          {props.avatarUrl && <PopAvatar src={props.avatarUrl} alt="" />}
+          <strong>{props.displayName ?? t('pop.user')}</strong>
+        </PopIdentity>
         <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
           v{APP_VERSION} · {t('pop.userHint')}
         </span>
@@ -616,6 +656,11 @@ export function SideMenu(props: {
 }): React.JSX.Element {
   const { expanded } = props
   const { t } = useLocale()
+  const identity = useGithubIdentity()
+  // 已授权（含非 stale）才投影 GitHub 身份；未授权/失效/尚未拉取一律回落品牌标
+  const authed = identity != null && !identity.stale
+  const displayName = authed && identity ? identity.name || identity.login : null
+  const avatarUrl = authed && identity && identity.avatarUrl ? identity.avatarUrl : null
   const [userOpen, setUserOpen] = useState(false)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -694,10 +739,14 @@ export function SideMenu(props: {
               aria-expanded={userOpen}
               onClick={props.onOpenUser}
             >
-              <IconLogo width={expanded ? 42 : 26} height={expanded ? 21 : 13} />
+              {avatarUrl ? (
+                <UserAvatar src={avatarUrl} $expanded={expanded} alt="" data-user-avatar />
+              ) : (
+                <IconLogo width={expanded ? 42 : 26} height={expanded ? 21 : 13} />
+              )}
               {expanded && (
                 <UserMeta>
-                  <strong>wuh-site</strong>
+                  <strong>{displayName ?? 'wuh-site'}</strong>
                   <UserVersion>v{APP_VERSION}</UserVersion>
                 </UserMeta>
               )}
@@ -709,6 +758,8 @@ export function SideMenu(props: {
                 onOpenUser={props.onOpenUser}
                 onOpenSettings={props.onOpenSettings}
                 onClose={() => setUserOpen(false)}
+                displayName={displayName}
+                avatarUrl={avatarUrl}
               />
             )}
           </UserAnchor>

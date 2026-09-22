@@ -20,6 +20,7 @@ import { uiConfirm } from '../ui/Dialog'
 import { GithubIcon } from '../ui/GithubIcon'
 import { IconCheck, IconChevronLeft, IconCopy, IconExternalLink, IconSearch } from '../icons'
 import { useLocale } from '../../lib/i18n/context'
+import { syncIdentity } from '../../lib/identity'
 
 const pageEnter = keyframes`
   from { opacity: 0; transform: translateY(6px); }
@@ -334,7 +335,10 @@ export function AccountPage(): React.JSX.Element {
       const status = await window.api.getSettings()
       setSettings(status.settings)
       setTokenKind(status.tokenKind)
-      setIdentity(status.hasToken ? await window.api.getGithubIdentity() : null)
+      const next = status.hasToken ? await window.api.getGithubIdentity() : null
+      setIdentity(next)
+      // 写穿全局身份 store：授权/断开即时反映到侧栏用户入口与首页问候
+      syncIdentity(next)
     } catch (err) {
       setIdentityError(errText(err))
     } finally {
