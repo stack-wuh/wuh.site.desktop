@@ -19,12 +19,7 @@ import { Switch } from '../ui/Switch'
 import { ErrorText, HintText } from '../ui/Text'
 import { SettingSection } from './SettingSection'
 import { pluginIcon } from '../icons'
-
-const APPROVAL_LABEL: Record<PluginRecord['approval'], string> = {
-  approved: '已批准',
-  pending: '待批准',
-  changed: '权限已变更'
-}
+import { useLocale } from '../../lib/i18n/context'
 
 const List = styled.ul`
   list-style: none;
@@ -154,6 +149,12 @@ function dirName(dir: string): string {
 }
 
 export function PluginManagerSection(): React.JSX.Element {
+  const { t } = useLocale()
+  const approvalLabel: Record<PluginRecord['approval'], string> = {
+    approved: t('settings.approvalApproved'),
+    pending: t('settings.approvalPending'),
+    changed: t('settings.approvalChanged')
+  }
   const [records, setRecords] = useState<PluginRecord[] | null>(null)
   const [problems, setProblems] = useState<{ dir: string; errors: string[] }[]>([])
   const [busy, setBusy] = useState<string | null>(null)
@@ -186,10 +187,12 @@ export function PluginManagerSection(): React.JSX.Element {
           } else {
             if (record.approval !== 'approved') {
               const ok = await uiConfirm({
-                title: `启用 ${record.manifest.name}`,
-                message: `该插件请求以下权限：${record.manifest.permissions.join('、') || '（无）'}`,
-                okText: '批准并启用',
-                cancelText: '取消'
+                title: t('settings.enableConfirmTitle', { name: record.manifest.name }),
+                message: t('settings.enableConfirmMsg', {
+                  perms: record.manifest.permissions.join(t('common.listJoiner')) || t('settings.permsNone')
+                }),
+                okText: t('settings.approveEnable'),
+                cancelText: t('common.cancel')
               })
               if (!ok) return
               await togglePlugin(id, true, record.manifest.permissions)
@@ -204,7 +207,7 @@ export function PluginManagerSection(): React.JSX.Element {
           setBusy(null)
         }
       })(),
-    [load]
+    [load, t]
   )
 
   const reload = useCallback((): void =>
@@ -233,24 +236,24 @@ export function PluginManagerSection(): React.JSX.Element {
   return (
     <SettingSection
       id="plugins"
-      title="插件"
-      description="启用、批准与目录；manifest 校验失败的目录一并列出"
+      title={t('settings.navPlugins')}
+      description={t('settings.pluginsDesc')}
       actions={
         <Button variant="ghost" size="sm" onClick={reload} disabled={busy !== null}>
-          重载插件
+          {t('settings.reloadPlugins')}
         </Button>
       }
     >
       {error && <ErrorText role="alert">{error}</ErrorText>}
       {records === null ? (
         <SkeletonWrap aria-busy="true">
-          <span hidden>插件加载中</span>
+          <span hidden>{t('settings.pluginsLoading')}</span>
           <SkeletonCard aria-hidden />
           <SkeletonCard aria-hidden />
           <SkeletonCard aria-hidden />
         </SkeletonWrap>
       ) : records.length === 0 ? (
-        <Empty title="未发现插件" hint="将插件目录放入内置 plugins/ 或 userData/plugins/ 后重载" />
+        <Empty title={t('settings.pluginsEmptyTitle')} hint={t('settings.pluginsEmptyHint')} />
       ) : (
         <List>
           {records.map((record) => {
@@ -271,7 +274,7 @@ export function PluginManagerSection(): React.JSX.Element {
                     <strong>{record.manifest.name}</strong>
                     <HintText style={{ margin: 0 }}>v{record.manifest.version}</HintText>
                     {record.approval !== 'approved' && (
-                      <Pill $accent={record.approval === 'changed'}>{APPROVAL_LABEL[record.approval]}</Pill>
+                      <Pill $accent={record.approval === 'changed'}>{approvalLabel[record.approval]}</Pill>
                     )}
                   </CardTitle>
                   <PermRow>
@@ -279,7 +282,7 @@ export function PluginManagerSection(): React.JSX.Element {
                     {permissions.length > 0 ? (
                       permissions.map((perm) => <Pill key={perm}>{perm}</Pill>)
                     ) : (
-                      <SourceText>权限：（无）</SourceText>
+                      <SourceText>{t('settings.permsNone')}</SourceText>
                     )}
                   </PermRow>
                 </CardMain>
@@ -288,14 +291,17 @@ export function PluginManagerSection(): React.JSX.Element {
                     variant="ghost"
                     size="sm"
                     onClick={() => reveal(record)}
-                    aria-label={`打开 ${record.manifest.name} 目录`}
+                    aria-label={t('settings.openDirAria', { name: record.manifest.name })}
                   >
-                    打开目录
+                    {t('settings.openDir')}
                   </Button>
                   <Switch
                     checked={record.enabled}
                     disabled={busy !== null}
-                    aria-label={`${record.enabled ? '停用' : '启用'} ${record.manifest.name}`}
+                    aria-label={t(
+                      record.enabled ? 'settings.pluginEnabledAria' : 'settings.pluginDisabledAria',
+                      { name: record.manifest.name }
+                    )}
                     onChange={() => toggle(record)}
                   />
                 </CardActions>

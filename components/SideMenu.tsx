@@ -9,9 +9,18 @@
 import { useEffect, useRef, useState } from 'react'
 import styled, { keyframes } from 'styled-components'
 import { AppIcon, type IconComponent } from './ui/AppIcon'
-import { IconCheck, IconLogo, IconPanelCollapse, IconPanelExpand, IconSettings } from './icons'
-import { useTheme } from './theme/ThemeProvider'
-import type { ColorScheme, ThemeFamily } from './theme/tokens'
+import {
+  IconCheck,
+  IconChevronRight,
+  IconLogo,
+  IconPanelCollapse,
+  IconPanelExpand,
+  IconSettings
+} from './icons'
+import { useTheme, type SchemeSetting } from './theme/ThemeProvider'
+import type { ThemeFamily } from './theme/tokens'
+import { useLocale } from '../lib/i18n/context'
+import { localeLabels, localeOrder, type Locale } from '../lib/i18n/locales'
 
 // 构建期内联应用版本（next.config.ts env，NEXT_PUBLIC_ 前缀），不走 preload/broker 通道
 const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? '0.0.0'
@@ -310,13 +319,6 @@ const PopGroup = styled.div`
   }
 `
 
-const PopLabel = styled.span`
-  font-size: 11px;
-  color: var(--text-muted);
-  padding: 2px 10px;
-  letter-spacing: 1px;
-`
-
 const PopHint = styled.span`
   font-size: 10px;
   font-family: var(--font-mono);
@@ -380,65 +382,156 @@ const UserVersion = styled.span`
   color: var(--text-muted);
 `
 
-/** 用户入口的悬停快捷面板：主题/外观/语言（占位）/收起菜单/设置 */
+/* 二级 popover：锚定触发行右侧（锚点相对定位，nav 不设 overflow:hidden 不裁剪） */
+const SubAnchor = styled.div`
+  position: relative;
+`
+
+const SubPop = styled.div`
+  position: absolute;
+  top: 0;
+  left: calc(100% + 8px);
+  z-index: 80;
+  min-width: 128px;
+  padding: 6px;
+  background: var(--chrome-panel);
+  border: 1px solid var(--chrome-border);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--elevation-card);
+`
+
+/** 二级 popover 行：hover/聚焦弹出手风琴选项（menuitemradio，当前项勾选），主题/外观/语言共用 */
+function PopSubmenu(props: {
+  label: string
+  items: { key: string; label: string; checked: boolean; onSelect: () => void }[]
+  /** 选中后是否关闭整个快捷面板（语言=是；主题/外观=否，便于连续试选） */
+  closeOnSelect?: boolean
+  onPanelClose?: () => void
+}): React.JSX.Element {
+  const [open, setOpen] = useState(false)
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const openNow = (): void => {
+    if (timer.current) {
+      clearTimeout(timer.current)
+      timer.current = null
+    }
+    setOpen(true)
+  }
+  /** 延迟关闭：允许指针移入二级 popover（与面板 180ms 语义一致） */
+  const scheduleClose = (): void => {
+    if (timer.current) clearTimeout(timer.current)
+    timer.current = setTimeout(() => {
+      timer.current = null
+      setOpen(false)
+    }, 180)
+  }
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current)
+    },
+    []
+  )
+
+  return (
+    <SubAnchor onMouseEnter={openNow} onMouseLeave={scheduleClose} onFocus={openNow} onBlur={scheduleClose}>
+      <PopItem
+        role="menuitem"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+      >
+        {props.label}
+        <span style={{ display: 'inline-flex' }}>
+          <AppIcon icon={IconChevronRight} size="sm" />
+        </span>
+      </PopItem>
+      {open && (
+        <SubPop role="menu" aria-label={props.label} onClick={(e) => e.stopPropagation()}>
+          {props.items.map((item) => (
+            <PopItem
+              key={item.key}
+              role="menuitemradio"
+              aria-checked={item.checked}
+              onClick={() => {
+                item.onSelect()
+                if (props.closeOnSelect) {
+                  setOpen(false)
+                  props.onPanelClose?.()
+                }
+              }}
+            >
+              {item.label}
+              {item.checked && <AppIcon icon={IconCheck} size="sm" />}
+            </PopItem>
+          ))}
+        </SubPop>
+      )}
+    </SubAnchor>
+  )
+}
+
+/** 用户入口的悬停快捷面板：主题/外观/语言均为二级 popover 行 */
 function UserQuickPanel(props: {
   expanded: boolean
   onToggleExpanded: () => void
   onOpenSettings: () => void
   onClose: () => void
 }): React.JSX.Element {
+  const { t, locale, setLocale } = useLocale()
   const { family, scheme, setFamily, setScheme } = useTheme()
+
   const families: { id: ThemeFamily; label: string }[] = [
-    { id: 'wine', label: '酒红' },
-    { id: 'plain', label: '素雅' }
+    { id: 'wine', label: t('pop.themeWine') },
+    { id: 'plain', label: t('pop.themePlain') }
   ]
-  const schemes: { id: ColorScheme; label: string }[] = [
-    { id: 'light', label: '浅色' },
-    { id: 'dark', label: '深色' }
+  const schemes: { id: SchemeSetting; label: string }[] = [
+    { id: 'system', label: t('pop.system') },
+    { id: 'light', label: t('pop.light') },
+    { id: 'dark', label: t('pop.dark') }
   ]
   return (
-    <UserPop role="menu" aria-label="用户快捷入口" onClick={(e) => e.stopPropagation()}>
+    <UserPop role="menu" aria-label={t('pop.user')} onClick={(e) => e.stopPropagation()}>
       <PopHead>
-        <strong>用户</strong>
+        <strong>{t('pop.user')}</strong>
         <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
-          v{APP_VERSION} · 用户模块未接入
+          v{APP_VERSION} · {t('pop.userPending')}
         </span>
       </PopHead>
-      <PopGroup role="group" aria-label="主题">
-        <PopLabel>主题</PopLabel>
-        {families.map((f) => (
-          <PopItem
-            key={f.id}
-            role="menuitemradio"
-            aria-checked={family === f.id}
-            onClick={() => setFamily(f.id)}
-          >
-            {f.label}
-            {family === f.id && <AppIcon icon={IconCheck} size="sm" />}
-          </PopItem>
-        ))}
+      <PopGroup role="group" aria-label={t('pop.theme')}>
+        <PopSubmenu
+          label={t('pop.theme')}
+          items={families.map((f) => ({
+            key: f.id,
+            label: f.label,
+            checked: family === f.id,
+            onSelect: () => setFamily(f.id)
+          }))}
+        />
       </PopGroup>
-      <PopGroup role="group" aria-label="外观">
-        <PopLabel>外观</PopLabel>
-        {schemes.map((s) => (
-          <PopItem
-            key={s.id}
-            role="menuitemradio"
-            aria-checked={scheme === s.id}
-            onClick={() => setScheme(s.id)}
-          >
-            {s.label}
-            {scheme === s.id && <AppIcon icon={IconCheck} size="sm" />}
-          </PopItem>
-        ))}
+      <PopGroup role="group" aria-label={t('pop.appearance')}>
+        <PopSubmenu
+          label={t('pop.appearance')}
+          items={schemes.map((s) => ({
+            key: s.id,
+            label: s.label,
+            checked: scheme === s.id,
+            onSelect: () => setScheme(s.id)
+          }))}
+        />
       </PopGroup>
-      <PopGroup role="group" aria-label="语言">
-        <PopLabel>语言</PopLabel>
-        {/* 语言切换待 i18n 接入，先以占位禁用项呈现，不造假入口 */}
-        <PopItem role="menuitem" disabled title="语言切换待 i18n 接入">
-          中文（简体）
-          <AppIcon icon={IconCheck} size="sm" />
-        </PopItem>
+      <PopGroup role="group" aria-label={t('pop.language')}>
+        <PopSubmenu
+          label={t('pop.language')}
+          closeOnSelect
+          onPanelClose={props.onClose}
+          items={localeOrder.map((id: Locale) => ({
+            key: id,
+            label: localeLabels[id].native,
+            checked: locale === id,
+            onSelect: () => setLocale(id)
+          }))}
+        />
       </PopGroup>
       <PopGroup>
         <PopItem
@@ -451,7 +544,7 @@ function UserQuickPanel(props: {
           <span className="icon" style={{ display: 'inline-flex' }}>
             <AppIcon icon={props.expanded ? IconPanelCollapse : IconPanelExpand} size="sm" />
           </span>
-          {props.expanded ? '收起菜单' : '展开菜单'}
+          {props.expanded ? t('pop.collapseMenu') : t('pop.expandMenu')}
           <PopHint>⌘/Ctrl+B</PopHint>
         </PopItem>
         <PopItem
@@ -464,7 +557,7 @@ function UserQuickPanel(props: {
           <span className="icon" style={{ display: 'inline-flex' }}>
             <AppIcon icon={IconSettings} size="sm" />
           </span>
-          设置
+          {t('pop.settings')}
         </PopItem>
       </PopGroup>
     </UserPop>
@@ -518,6 +611,7 @@ export function SideMenu(props: {
   userActive?: boolean
 }): React.JSX.Element {
   const { expanded } = props
+  const { t } = useLocale()
   const [userOpen, setUserOpen] = useState(false)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -573,7 +667,7 @@ export function SideMenu(props: {
     )
   }
   return (
-    <Nav $expanded={expanded} aria-label="主菜单">
+    <Nav $expanded={expanded} aria-label={t('menu.navAria')}>
       <Group $expanded={expanded}>{props.items.map(render)}</Group>
       {props.toggleItems && props.toggleItems.length > 0 && (
         <Group $expanded={expanded}>{props.toggleItems.map(renderToggle)}</Group>
@@ -591,7 +685,7 @@ export function SideMenu(props: {
               type="button"
               $expanded={expanded}
               $active={props.userActive === true}
-              aria-label="用户"
+              aria-label={t('menu.userAria')}
               aria-haspopup="menu"
               aria-expanded={userOpen}
               onClick={props.onOpenUser}

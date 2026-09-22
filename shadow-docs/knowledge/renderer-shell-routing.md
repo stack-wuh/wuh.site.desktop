@@ -12,6 +12,7 @@ source:
   - changes/20260921-refactor-renderer-nextjs/brief.md
   - changes/20260921-feature-new-blog-project-entry/brief.md
   - changes/20260921-feature-startup-splash-loading/brief.md
+  - changes/20260922-feature-i18n-shell-locales/brief.md
 verified: 2026-09-22
 ---
 
@@ -27,7 +28,9 @@ verified: 2026-09-22
 
 **静态导出约束**（`output: 'export'`，next.config.ts）：产物在 `dist/next/`，由主进程 `app://` 协议离线加载（`src/main/index.ts` 的 `resolveRendererFile`，含目录穿越校验）。动态路由**必须构建期枚举**——运行时安装的新插件视图不会预生成路由页（当前内置插件无影响；未来支持运行时安装时改 query/client state 兜底）。
 
-**启动加载路径（2026-09-22 起）**：主窗 `show: false` 后台加载，启动即现 **splash 窗**（`src/main/splash.html` 经 `?raw` 内嵌 + `data:` URL 加载的自包含静态页：品牌标 + 主题同值底色，亮暗随 `prefers-color-scheme`）；壳层 layout 挂载后经 `components/ShellReady.tsx`（双 rAF）发 `rendererReady` IPC（契约三处同步），主进程撤下 splash（淡出 240ms，`prefers-reduced-motion` 页内降级）并 show 主窗；prod 兜底 4s / dev 65s。**主题首帧地基**（根治无样式闪屏）：`app/layout.tsx` 服务端内联 `buildThemeCss()`（`<style id="wd-theme-vars">`）+ `<html>` 预置 wine/dark 默认属性 + pre-paint 内联脚本按 localStorage `wd.theme` 纠偏，配合 `experimental.inlineCss` 使首帧即终态样式；`ThemeProvider` 的注入退化为缺失兜底（DOM 存在性守卫）。
+**启动加载路径（2026-09-22 起）**：主窗 `show: false` 后台加载，启动即现 **splash 窗**（`src/main/splash.html` 经 `?raw` 内嵌 + `data:` URL 加载的自包含静态页：品牌标 + 主题同值底色，亮暗随 `prefers-color-scheme`）；壳层 layout 挂载后经 `components/ShellReady.tsx`（双 rAF）发 `rendererReady` IPC（契约三处同步），主进程撤下 splash（淡出 240ms，`prefers-reduced-motion` 页内降级）并 show 主窗；prod 兜底 4s / dev 65s。**主题首帧地基**（根治无样式闪屏）：`app/layout.tsx` 服务端内联 `buildThemeCss()`（`<style id="wd-theme-vars">`）+ `<html>` 预置 wine/dark 默认属性 + pre-paint 内联脚本按 localStorage `wd.theme` 纠偏（含 `system` 档 matchMedia 解析分支），配合 `experimental.inlineCss` 使首帧即终态样式；`ThemeProvider` 的注入退化为缺失兜底（DOM 存在性守卫）。
+
+**壳层 i18n（2026-09-22 起）**：`lib/i18n/locales.ts` 三语字典（zh/en/ja flat key，`{name}` 占位符）+ `lib/i18n/context.tsx` 的 `LocaleProvider`/`useT()`，持久化键 `wd.locale`（与 `wd.theme` 同模式）。**两段式渲染**：首帧固定 zh 与导出 HTML 一致（防 hydration mismatch），mount 后切存储 locale——启动切换的中文闪帧由 splash 窗覆盖，运行时切换即时。字典 key 集合一致性由 `tests/i18n.test.ts` 锁定。范围边界：仅壳层 chrome 文案；插件 manifest 标题与插件帧内容不在此机制内。
 
 `menuExpanded`（SideMenu 展开/收起）是 layout 内的客户端状态；菜单项 id 与路由段一一对应（`lib/routes.ts` 的 `pluginPanelKey` / `routeKeyFromPathname` 负责互转）。**设置页入口在左栏底部用户入口**（2026-09-21 起：悬停/聚焦弹快捷面板含「设置」项，点击入口本身也进设置页——用户模块接入前的替身），菜单项 id 不再含 `settings`。`FloatLayer` 常驻 main 容器叠加其上（浮窗与右栏页面**共存**，切换页面不卸载）。
 

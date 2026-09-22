@@ -7,6 +7,7 @@
  */
 import { useEffect, useState } from 'react'
 import styled from 'styled-components'
+import { useLocale } from '../../lib/i18n/context'
 
 export interface SettingsNavItem {
   id: string
@@ -104,6 +105,7 @@ const Item = styled.button<{ $active: boolean }>`
 
 export function SettingsNav(props: Props): React.JSX.Element {
   const { items, containerRef } = props
+  const { t } = useLocale()
   const [activeId, setActiveId] = useState(items[0]?.id ?? '')
 
   useEffect(() => {
@@ -136,7 +138,7 @@ export function SettingsNav(props: Props): React.JSX.Element {
   }
 
   return (
-    <Nav aria-label="设置分区导航">
+    <Nav aria-label={t('settings.navAria')}>
       {items.map((item) => (
         <Item
           key={item.id}

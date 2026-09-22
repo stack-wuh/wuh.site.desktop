@@ -13,6 +13,7 @@ import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 import { Empty } from '../ui/Empty'
 import { applyWorkspaceSwitch } from '../plugins/PluginFrameHost'
+import { useLocale } from '../../lib/i18n/context'
 
 const Section = styled.section`
   padding: 16px;
@@ -99,6 +100,7 @@ function errText(err: unknown): string {
 }
 
 export function ProjectSection(): React.JSX.Element {
+  const { t } = useLocale()
   const [url, setUrl] = useState('')
   const [cloning, setCloning] = useState(false)
   const [opening, setOpening] = useState(false)
@@ -161,40 +163,40 @@ export function ProjectSection(): React.JSX.Element {
   }
 
   return (
-    <Section aria-label="项目">
-      <SectionTitle>项目</SectionTitle>
+    <Section aria-label={t('project.section')}>
+      <SectionTitle>{t('project.section')}</SectionTitle>
       <Actions>
         <Button onClick={() => void openLocal()} disabled={opening || cloning}>
-          {opening ? '打开中…' : '打开本地目录'}
+          {opening ? t('project.opening') : t('project.openLocal')}
         </Button>
         <CloneForm>
           <UrlInput
             type="url"
-            placeholder="https://github.com/owner/repo.git（git@ 亦可）"
+            placeholder={t('project.cloneUrlPlaceholder')}
             value={url}
-            aria-label="远程仓库地址"
+            aria-label={t('project.cloneUrlAria')}
             onChange={(e) => setUrl(e.target.value)}
             disabled={cloning || opening}
           />
           <Button onClick={() => void clone()} disabled={!parsed || cloning || opening}>
-            {cloning ? 'Clone 中…' : 'Clone'}
+            {cloning ? t('project.opening') : 'Clone'}
           </Button>
         </CloneForm>
       </Actions>
-      {parsed && !cloning && <Hint>将 clone 到目录「{parsed.repoName}」（位置在选择框确认）</Hint>}
-      {cloning && <Hint>正在 clone {parsed?.ownerRepo ?? ''}，完成后自动打开…</Hint>}
+      {parsed && !cloning && <Hint>{t('project.cloneHintTo', { repo: parsed.repoName })}</Hint>}
+      {cloning && <Hint>{t('project.cloneHintDoing', { repo: parsed?.ownerRepo ?? '' })}</Hint>}
       {error && <ErrorText role="alert">{error}</ErrorText>}
 
-      <SectionTitle style={{ marginTop: 16 }}>最近项目</SectionTitle>
+      <SectionTitle style={{ marginTop: 16 }}>{t('project.recentTitle')}</SectionTitle>
       {recent.length === 0 ? (
-        <Empty title="暂无最近项目" hint="打开本地目录或 clone 一个仓库后出现在这里" />
+        <Empty title={t('project.recentEmptyTitle')} hint={t('project.recentEmptyHint')} />
       ) : (
         <RecentList>
           {recent.map((r) => (
             <RecentRow
               key={r.path}
               onClick={() => void openRecent(r.path)}
-              title={`打开 ${r.path}`}
+              title={t('project.recentRowTitle', { path: r.path })}
             >
               <span>{r.name}</span>
               <RecentPath>{r.path}</RecentPath>
