@@ -11,7 +11,7 @@
 | 用户中心 / GitHub 授权 | 用户中心 account 授权 OAuth Device Flow GitHub 登录 token 凭证 身份 头像 identity 仓库列表 默认站点仓库 PAT scopes 失效 | knowledge/renderer-shell-routing.md, knowledge/shell-chrome-design.md |
 | 构建/工具链 | Next next.config 静态导出 app 协议 electron-vite 双进程 dev workspace pnpm 打包 electron-builder tsconfig vitest README | knowledge/renderer-shell-routing.md, knowledge/shell-chrome-design.md |
 | 插件状态项 | statusItems statusBar 状态项 贡献点 徽标位 声明制 | knowledge/shell-chrome-design.md |
-| 插件任务胶囊 | 任务 待办 任务列表 任务胶囊 TaskCapsule TaskPopover tasks 进度 statusItems 之外的状态聚合 | knowledge/shell-chrome-design.md |
+| 壳层胶囊 | 胶囊 壳层胶囊 任务 待办 任务列表 任务胶囊 进度 TaskCapsule TaskPopover Capsule CapsulePanel tasks statusItems 之外的状态聚合 | knowledge/shell-chrome-design.md |
 | 插件浮窗视图 | float 浮窗 预览 preview 视图区域 FloatLayer floats | knowledge/shell-chrome-design.md, knowledge/renderer-shell-routing.md |
 | 插件系统 | 插件 manifest loader 启用 停用 批准 approvals resolveApproval reload 重载 revealDir plugin-state broker 沙箱 帧 握手 ready 协议注册 corsEnabled problems | knowledge/plugin-architecture.md |
 

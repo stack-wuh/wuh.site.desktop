@@ -3,7 +3,8 @@
 /**
  * 两栏壳层（App Router layout 持久化）：标题栏 → app-body（左栏 SideMenu + 右栏 main 容器）→ StatusBar。
  * 路由语义：'/'=Home（默认入口）/ '/settings' / '/plugin/<pluginId>/<viewId>'（插件 main 视图），
- * SideMenu 菜单项与路由段一一对应；FloatLayer 常驻 main 容器，浮窗与右栏页面共存。
+ * SideMenu 菜单项与路由段一一对应；FloatLayer 常驻 main 容器，浮窗与右栏页面共存；
+ * 壳层胶囊（Capsule）常驻 main 容器右上（20260922-feature-shell-capsule）。
  * 全屏视图体系已废止（2026-09-20）：Cmd/Ctrl+, 在 settings ↔ home 间切换；Esc 只关浮窗。
  */
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
@@ -13,8 +14,9 @@ import { HomePage } from '../../components/home/HomePage'
 import { ConfirmHost } from '../../components/ui/Dialog'
 import { StatusBar } from '../../components/StatusBar'
 import { FloatLayer } from '../../components/FloatLayer'
+import { Capsule } from '../../components/capsule/Capsule'
 import { SideMenu, type SideMenuItem } from '../../components/SideMenu'
-import { EditorCommandHost } from '../../components/tasks/EditorSection'
+import { EditorCommandHost } from '../../components/capsule/sections/EditorSection'
 import ShellReady from '../../components/ShellReady'
 import { IconHome, pluginIcon } from '../../components/icons'
 import {
@@ -175,6 +177,9 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
           {children}
           {/* 插件浮窗视图（views.area=float）经注册表按需唤起，与右栏页面共存 */}
           <FloatLayer containerRef={mainAreaRef} />
+          {/* 壳层胶囊：MainArea 右上常驻（挂点契约见 components/capsule/Capsule.tsx，
+              须挂在 MainArea 内、FloatLayer 之后——chip 低于浮窗、面板浮于浮窗） */}
+          <Capsule />
         </MainArea>
       </Body>
       <StatusBar />

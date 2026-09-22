@@ -1,30 +1,38 @@
 'use client'
 
 /**
- * 任务胶囊（壳层 StatusBar 左区）：跨插件聚合任务贡献点（manifest tasks 声明 +
- * SDK tasks.upsert/remove 上报，注册表 lib/tasks.ts）。20260922 胶囊化演进：
- * 兼任「任务 + 编辑器」复合入口——有活动文档（草稿或已打开文件）即显示，
- * 点击弹出的 TaskPopover 内含编辑器分区（全局补充入口）。
- * 文档操作命令宿主（EditorCommandHost）自 20260922-fix-editor-panel-controls
- * 起常驻壳层 layout（单实例），面板操作行与胶囊在任意状态下均可用。
+ * 壳层胶囊（固定命名 Capsule，正名自 TaskCapsule）：壳层一等聚合入口，
+ * v1 承载「任务 + 编辑器」复合内容——任务聚合来自 lib/tasks.ts 贡献点注册表，
+ * 活动文档提供编辑器入口；点击弹出的 CapsulePanel 内含任务分组与编辑器分区
+ * （分区即扩展点，后续更改统计/通知等以分区接入）。
  *
- * 无可见任务且无活动文档时不渲染；有任务时显示聚合进度 done/total（存在
- * in_progress 时附加环形动效，reduced-motion 降级为静态）。Esc 与面板外
- * 点击关闭——面板内点击不冒泡（点击型开合，非悬停型）。
+ * 挂点契约（20260922-feature-shell-capsule）：**常驻** MainArea 右上（空态显示
+ * 「就绪」，不再整体隐藏——修复冷启动不可见）。宿主 Wrap 绝对定位于右上且
+ * `pointer-events: none`（不遮挡页面点击），chip/面板本体 `auto`；宿主不设
+ * z-index（不建层叠上下文）——chip 靠 DOM 顺序压页面内容、低于浮窗窗口
+ * （FloatLayer z-index 2），面板 z-index 70 可浮于浮窗之上、低于 Dialog 100。
+ *
+ * 有任务显示聚合进度 done/total（存在 in_progress 时附加环形动效，reduced-motion
+ * 降级为静态）。Esc 与面板外点击关闭——面板内点击不冒泡（点击型开合，非悬停型）。
  */
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import styled, { keyframes } from 'styled-components'
 import { taskAggregate, tasksStore } from '../../lib/tasks'
 import { useWorkspaceStore } from '../../lib/store'
 import { useLocale } from '../../lib/i18n/context'
-import { TaskPopover } from './TaskPopover'
+import { CapsulePanel } from './CapsulePanel'
 
 const Wrap = styled.span`
-  position: relative;
+  /* MainArea 右上挂点：绝对定位 + pointer-events 穿透；不设 z-index（保持
+     层叠上下文开放，让面板 z-index 70 直接参与 MainArea 层叠，见头注释） */
+  position: absolute;
+  top: 10px;
+  right: 12px;
   display: inline-flex;
+  pointer-events: none;
 `
 
-const Capsule = styled.button`
+const CapsuleButton = styled.button`
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -37,6 +45,7 @@ const Capsule = styled.button`
   font-size: 11px;
   font-family: var(--font-mono);
   cursor: pointer;
+  pointer-events: auto;
   transition:
     background-color 150ms ease-out,
     border-color 150ms ease-out;
@@ -78,13 +87,13 @@ const Spinner = styled.span`
   }
 `
 
-export function TaskCapsule(): React.JSX.Element | null {
+export function Capsule(): React.JSX.Element {
   useSyncExternalStore(tasksStore.subscribe, tasksStore.get, tasksStore.get)
   const doc = useWorkspaceStore()
   const { t } = useLocale()
   const [open, setOpen] = useState(false)
   const agg = taskAggregate()
-  // 胶囊化：任务与活动文档任一存在即显示（编辑器功能入口常可达）
+  // 常驻胶囊：空态显示「就绪」；有任务显聚合进度，无任务有文档显编辑器入口
   const hasDoc = doc.activePath != null || doc.content != null
 
   useEffect(() => {
@@ -101,13 +110,11 @@ export function TaskCapsule(): React.JSX.Element | null {
     }
   }, [open])
 
-  if (agg.total === 0 && !hasDoc) return null
-
   return (
     <Wrap>
-      <Capsule
+      <CapsuleButton
         type="button"
-        data-testid="task-capsule"
+        data-testid="capsule"
         aria-label={t('capsule.title')}
         aria-haspopup="dialog"
         aria-expanded={open}
@@ -117,10 +124,12 @@ export function TaskCapsule(): React.JSX.Element | null {
         <span>
           {agg.total > 0
             ? t('capsule.tasks', { done: agg.done, total: agg.total })
-            : t('capsule.editorSection')}
+            : hasDoc
+              ? t('capsule.editorSection')
+              : t('capsule.ready')}
         </span>
-      </Capsule>
-      {open && <TaskPopover onClose={() => setOpen(false)} />}
+      </CapsuleButton>
+      {open && <CapsulePanel onClose={() => setOpen(false)} />}
     </Wrap>
   )
 }
