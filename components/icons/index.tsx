@@ -5,21 +5,30 @@
  * 分组：UI（操作）· Status（状态）· Plugin（manifest 图标白名单映射）· Brand（自绘，见 brand.tsx）。
  */
 import {
+  Bold,
   BookOpen,
   Check,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Code,
   Eye,
   FileText,
   Folder,
   FolderOpen,
   GitBranch,
+  Heading1,
+  Heading2,
   House,
+  Italic,
+  Link2,
+  List,
+  ListOrdered,
   MessageSquare,
   Palette,
   PanelLeftClose,
   PanelLeftOpen,
+  Quote,
   Save,
   Settings,
   Sparkles,
@@ -34,18 +43,28 @@ export { IconDiamond, IconLogo } from './brand'
 
 // ---------- UI：操作 ----------
 
+export const IconBold = Bold
 export const IconCheck = Check
 export const IconChevronDown = ChevronDown
 export const IconChevronLeft = ChevronLeft
 export const IconChevronRight = ChevronRight
 export const IconClose = X
+export const IconCode = Code
+export const IconEye = Eye
 export const IconFile = FileText
 export const IconFolder = Folder
 export const IconFolderOpen = FolderOpen
+export const IconHeading1 = Heading1
+export const IconHeading2 = Heading2
 export const IconHome = House
+export const IconItalic = Italic
+export const IconLink = Link2
+export const IconList = List
+export const IconListOrdered = ListOrdered
 export const IconPalette = Palette
 export const IconPanelCollapse = PanelLeftClose
 export const IconPanelExpand = PanelLeftOpen
+export const IconQuote = Quote
 export const IconSave = Save
 export const IconSettings = Settings
 
