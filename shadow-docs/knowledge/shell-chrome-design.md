@@ -14,6 +14,7 @@ source:
   - changes/20260921-feature-plugin-task-capsule/brief.md
   - changes/20260921-feature-startup-splash-loading/brief.md
   - changes/20260922-feature-i18n-shell-locales/brief.md
+  - changes/20260922-feature-user-center-github-oauth/brief.md
 verified: 2026-09-22
 ---
 
@@ -29,7 +30,7 @@ verified: 2026-09-22
 
 **SideMenu（2026-09-20 起，取代 ActivityBar）**：左栏菜单栏，两形态**瞬时切换**（禁 width 过渡，ui-patterns 布局位移动画禁令）——收起 = 48px 图标 rail，展开 = 220px 图标+文字（label 仅 opacity 淡入 200ms）。能力沿袭：左缘 2px 激活指示条（`::before`）、徽标位（数字 99+ 折叠 / `dot` 圆点，展开态转行内）、`data-tip` 自绘 tooltip（**仅收起态**显示，hover 与 `:focus-visible` 可见）+ `aria-label`、toggle 型 item（`toggleItems`/`openToggleKeys`/`onToggle`，激活态=浮窗打开 `aria-pressed`，区别于菜单选中态 `aria-current="page"`）。结构：顶部**直接是导航项**（首页 + 插件 main 视图）→ toggle 组（浮窗开关）→ **底部系统区**（`margin-top:auto` 吸附左下）：**仅用户入口**（`IconLogo` 头像占位 + 应用名/版本）。**展开/收起控件不占 rail 位置**——入口在用户快捷面板内（`⌘/Ctrl+B` 常驻快捷键）；低频 chrome 控件不占导航黄金位。
 
-**用户入口与快捷面板（2026-09-22 起，二级 popover 化）**：底部唯一入口 = 品牌标（头像占位）+ 应用名/版本；**点击**进入设置页（用户模块接入前的替身，`userActive` 命中 `/settings` 时高亮），**悬停/键盘聚焦**弹出 `UserQuickPanel`（`role="menu"`）：**主题（酒红/素雅）、外观（跟随系统/浅色/深色）、语言（中文/English/日本語）三组均为二级 popover 行**——通用 `PopSubmenu` 组件：行左文案右 chevron、hover/聚焦弹出选项子菜单（`menuitemradio`、当前项勾选、180ms 延迟移入、Esc、键盘可达）；语义差异：语言选中即关面板，主题/外观保持打开便于连续试选。外观 `system` 档实时解析系统明暗并监听切换（`data-color-scheme` 仍只写二值，token 路由与插件帧广播不变）。文案全部经 `useT()` 三语字典（机制见 renderer-shell-routing 卡 i18n 段）。**收起/展开菜单**（带 `⌘/Ctrl+B` 快捷键提示）、设置沿用行内项。面板定位 `left: calc(100% + 8px)` 贴入口右侧，二级 popover 锚定触发行右侧，延迟 180ms 关闭以允许指针移入；Esc 关闭；**Nav 不得设 `overflow: hidden`**（会裁剪面板、子菜单与 tooltip）。
+**用户入口与快捷面板（2026-09-22 起，二级 popover 化 + 用户中心直达）**：底部唯一入口 = 品牌标（头像占位）+ 应用名/版本；**点击**进入用户中心 `/account`（GitHub 授权 + 身份/仓库 + Git 提交身份，替身期「进设置页」行为已退役，`userActive` 命中 `/account` 时高亮），**悬停/键盘聚焦**弹出 `UserQuickPanel`（`role="menu"`）：**主题（酒红/素雅）、外观（跟随系统/浅色/深色）、语言（中文/English/日本語）三组均为二级 popover 行**——通用 `PopSubmenu` 组件：行左文案右 chevron、hover/聚焦弹出选项子菜单（`menuitemradio`、当前项勾选、180ms 延迟移入、Esc、键盘可达）；语义差异：语言选中即关面板，主题/外观保持打开便于连续试选。外观 `system` 档实时解析系统明暗并监听切换（`data-color-scheme` 仍只写二值，token 路由与插件帧广播不变）。文案全部经 `useT()` 三语字典（机制见 renderer-shell-routing 卡 i18n 段）。**收起/展开菜单**（带 `⌘/Ctrl+B` 快捷键提示）、**「设置」行内项独立指向 `/settings`**（应用设置与用户中心是两个目的地，SideMenu props `onOpenSettings` 与 `onOpenUser` 分离）。面板定位 `left: calc(100% + 8px)` 贴入口右侧，二级 popover 锚定触发行右侧，延迟 180ms 关闭以允许指针移入；Esc 关闭；**Nav 不得设 `overflow: hidden`**（会裁剪面板、子菜单与 tooltip）。
 
 **预留通知条（2026-09-21 起）**：壳层顶部原「标题栏」内容（应用标题 + 外观菜单）已清空，保留 44px 空条作为**更新通知 / 紧急通知**的预留位（`aria-label="通知栏"` + `aria-live="polite"`，当前无内容）。主题切换入口唯一落在左栏用户快捷面板；`AppearanceMenu` 组件已删除。
 

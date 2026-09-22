@@ -4,7 +4,7 @@
   "name": "20260922-feature-user-center-github-oauth",
   "type": "feature",
   "scope": "desktop",
-  "status": "committed",
+  "status": "reviewed",
   "baseBranch": "main",
   "branch": "feature/20260922-feature-user-center-github-oauth",
   "files": [
@@ -29,14 +29,14 @@
     "pullRequestUrl": null
   },
   "review": {
-    "conclusion": "pending",
-    "verifiedCommit": null,
-    "verifiedAt": null
+    "conclusion": "passed",
+    "verifiedCommit": "a795521fdfb71725d3de37c00111c6c3826f5911",
+    "verifiedAt": "2026-09-22T04:02:26.636Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "7fa4d856dc9c3ad22cef0150bcc1cfacfbb6cafb",
-    "planHash": "1c8de81c66e4a6315bcbc06df906bd4e6a88db17fbaa777626f3208611dcb4cb",
+    "checkpoint": "a795521fdfb71725d3de37c00111c6c3826f5911",
+    "planHash": "0d0eddc4be9eff0a2cc92aa623a814623c20d769dc4f0df128f6a0e9d93054ff",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -48,7 +48,8 @@
         "feature"
       ]
     }
-  }
+  },
+  "knowledge": null
 }
 ---
 
