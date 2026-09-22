@@ -7,6 +7,7 @@ import { buildHeatmapViewData } from './heatmapData'
 import { useAboutActivity } from './useAboutActivity'
 import { EditorPanel } from './EditorPanel'
 import { useLocale } from '../../lib/i18n/context'
+import { useGithubIdentity } from '../../lib/identity'
 
 /**
  * 首页（两栏布局起为右栏默认页面；2026-09-22 升级为写作工作台）：
@@ -95,6 +96,10 @@ function greetingKey(h: number): string {
 export function HomePage(): React.JSX.Element {
   const { data, loading, error, retry } = useAboutActivity()
   const { t } = useLocale()
+  const identity = useGithubIdentity()
+  // 已授权时问候带名（昵称优先，login 兜底）；未授权/失效回落纯问候
+  const authed = identity != null && !identity.stale
+  const displayName = authed && identity ? identity.name || identity.login : null
 
   const view = buildHeatmapViewData(data)
 
@@ -102,7 +107,11 @@ export function HomePage(): React.JSX.Element {
     <Page className="home-page">
       <Body>
         <header>
-          <Title>{t(greetingKey(new Date().getHours()))}</Title>
+          <Title>
+            {displayName
+              ? t('home.greetNamed', { greeting: t(greetingKey(new Date().getHours())), name: displayName })
+              : t(greetingKey(new Date().getHours()))}
+          </Title>
           <Sub>
             {data
               ? t('home.activitySummary', { count: data.total })

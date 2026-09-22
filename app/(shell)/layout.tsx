@@ -26,6 +26,7 @@ import {
   usePluginsReady
 } from '../../components/plugins/PluginFrameHost'
 import { floatsStore, toggleFloat } from '../../lib/floats'
+import { refreshIdentity } from '../../lib/identity'
 import { pluginPanelKey, routeKeyFromPathname } from '../../lib/routes'
 import { useTheme } from '../../components/theme/ThemeProvider'
 import { useLocale } from '../../lib/i18n/context'
@@ -77,6 +78,8 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
     // 工作区信息仅供插件 doc 服务解析根路径（壳层不再展示工作区 UI）
     void window.api.getWorkspace().then(setWorkspaceInfo)
     void bootstrapPluginsHost().catch((err: unknown) => console.error('插件引导失败', err))
+    // 全局身份一次拉取：侧栏用户入口/快捷面板、首页问候与用户中心共享同一份
+    void refreshIdentity().catch((err: unknown) => console.error('身份拉取失败', err))
   }, [])
 
   // 主题切换同步进全部插件帧（token 快照经 CSS 注入，设计同源）
