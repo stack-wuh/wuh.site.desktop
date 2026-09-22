@@ -4,7 +4,7 @@
   "name": "20260922-feature-git-identity-default",
   "type": "feature",
   "scope": "desktop",
-  "status": "branched",
+  "status": "reviewed",
   "baseBranch": "main",
   "branch": "feature/20260922-feature-git-identity-default",
   "files": [
@@ -23,14 +23,14 @@
     "pullRequestUrl": null
   },
   "review": {
-    "conclusion": "pending",
-    "verifiedCommit": null,
-    "verifiedAt": null
+    "conclusion": "passed",
+    "verifiedCommit": "e4ef780d0284c0332c754f40b621f4576fcff010",
+    "verifiedAt": "2026-09-22T07:12:09.135Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:34",
-    "planHash": "5281df56ba61081d8fa5cc2b99e62f56a24e66213c437660d94babfdca3e313a",
+    "checkpoint": "e4ef780d0284c0332c754f40b621f4576fcff010",
+    "planHash": "18e077894ab9a778eb7e8d7159ca1907b2f3b992daf40899561d41cf941abcc8",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -42,7 +42,8 @@
         "feature"
       ]
     }
-  }
+  },
+  "knowledge": null
 }
 ---
 
