@@ -1,25 +1,30 @@
 'use client'
 
 /**
- * 壳层胶囊（固定命名 Capsule，正名自 TaskCapsule）：壳层一等聚合入口，
- * v1 承载「任务 + 编辑器」复合内容——任务聚合来自 lib/tasks.ts 贡献点注册表，
- * 活动文档提供编辑器入口；点击弹出的 CapsulePanel 内含任务分组与编辑器分区
- * （分区即扩展点，后续更改统计/通知等以分区接入）。
+ * 壳层胶囊（固定命名 Capsule）：壳层一等聚合入口。20260923 醒目化重设计为
+ * 「状态信号舱」——视觉解剖对齐 ZCode/Claude Code/Codex 的胶囊：
+ * [状态环] + [标签·语义色计数] + [chevron 开合指示]，高度 18px→26px 对齐
+ * 编辑器胶囊命中区标准。
+ * - 状态环（左缘，编码任务聚合态）：空闲/部分完成=静默空心点；有 in_progress=
+ *   primary 旋转环（**持续状态指示非过渡动效**，800ms/圈，reduced-motion 静态
+ *   降级）；全部完成=success 实心点。
+ * - 标签：任务态整串 mono + 语义色（进行中=primary、全完成=success）；空态
+ *   「就绪」/编辑器入口常规 sans 次级色——醒目度来自语义色而非加重底色。
+ * - chevron：IconChevronDown 开合旋转 180°（150ms，reduced-motion 关闭）。
+ * - hover 抬升：elevation-card 阴影 + border primary。
  *
- * 挂点契约（20260922-feature-shell-capsule）：**常驻** MainArea 右上（空态显示
- * 「就绪」，不再整体隐藏——修复冷启动不可见）。宿主 Wrap 绝对定位于右上且
- * `pointer-events: none`（不遮挡页面点击），chip/面板本体 `auto`；宿主不设
- * z-index（不建层叠上下文）——chip 靠 DOM 顺序压页面内容、低于浮窗窗口
- * （FloatLayer z-index 2），面板 z-index 70 可浮于浮窗之上、低于 Dialog 100。
- *
- * 有任务显示聚合进度 done/total（存在 in_progress 时附加环形动效，reduced-motion
- * 降级为静态）。Esc 与面板外点击关闭——面板内点击不冒泡（点击型开合，非悬停型）。
+ * 挂点契约不变（20260922-feature-shell-capsule）：MainArea 右上常驻，宿主
+ * `pointer-events: none` + chip/面板 `auto`；宿主不设 z-index（不建层叠上下文
+ * ——chip 靠 DOM 顺序压页面内容、低于浮窗 z2，面板 z70 浮于浮窗、低于 Dialog
+ * 100），面板贴 chip 向下弹出，Esc/点外关。
  */
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import styled, { keyframes } from 'styled-components'
 import { taskAggregate, tasksStore } from '../../lib/tasks'
 import { useWorkspaceStore } from '../../lib/store'
 import { useLocale } from '../../lib/i18n/context'
+import { AppIcon } from '../ui/AppIcon'
+import { IconChevronDown } from '../icons'
 import { CapsulePanel } from './CapsulePanel'
 
 const Wrap = styled.span`
@@ -35,24 +40,26 @@ const Wrap = styled.span`
 const CapsuleButton = styled.button`
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  height: 18px;
-  padding: 0 8px;
+  gap: 8px;
+  height: 26px;
+  padding: 0 12px;
   background: var(--chrome-raised);
   border: 1px solid var(--chrome-border);
-  border-radius: 9px;
+  border-radius: 13px;
   color: var(--text-secondary);
-  font-size: 11px;
-  font-family: var(--font-mono);
+  font-size: 12px;
+  font-family: var(--font-sans);
   cursor: pointer;
   pointer-events: auto;
   transition:
     background-color 150ms ease-out,
-    border-color 150ms ease-out;
+    border-color 150ms ease-out,
+    box-shadow 150ms ease-out;
 
   &:hover {
     background: var(--chrome-hover);
     border-color: var(--primary-color);
+    box-shadow: var(--elevation-card);
   }
 
   &:focus-visible {
@@ -71,19 +78,96 @@ const spin = keyframes`
   }
 `
 
-const Spinner = styled.span`
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  border: 1.5px solid var(--chrome-border);
-  border-top-color: var(--primary-color);
-  box-sizing: border-box;
-  animation: ${spin} 800ms linear infinite;
+/* 状态环（左缘）：编码任务聚合态。
+   idle（空闲/部分完成）= 静默空心点；active（有 in_progress）= primary 旋转环；
+   done（全部完成）= success 实心点。 */
+const StatusRing = styled.span<{ $mode: 'idle' | 'active' | 'done' }>`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+
+  ${({ $mode }) =>
+    $mode === 'idle'
+      ? `
+    &::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      border: 1.5px solid var(--text-muted);
+      box-sizing: border-box;
+    }
+  `
+      : ''
+  }
+
+  ${({ $mode }) =>
+    $mode === 'active'
+      ? `
+    &::before {
+      content: '';
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid var(--chrome-border);
+      border-top-color: var(--primary-color);
+      box-sizing: border-box;
+      animation: ${spin} 800ms linear infinite;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      &::before {
+        animation: none;
+        border-color: var(--primary-color);
+        opacity: 0.55;
+      }
+    }
+  `
+      : ''
+  }
+
+  ${({ $mode }) =>
+    $mode === 'done'
+      ? `
+    &::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success-color);
+    }
+  `
+      : ''
+  }
+`
+
+/* 标签：任务态整串 mono + 语义色（进行中=primary、全完成=success）；
+   空态（就绪/编辑器入口）常规 sans 次级色。 */
+const Label = styled.span<{ $tone: 'idle' | 'active' | 'done' }>`
+  color: ${({ $tone }) =>
+    $tone === 'active'
+      ? 'var(--primary-color)'
+      : $tone === 'done'
+        ? 'var(--success-color)'
+        : 'inherit'};
+  font-family: ${({ $tone }) => ($tone === 'idle' ? 'inherit' : 'var(--font-mono)')};
+  font-size: ${({ $tone }) => ($tone === 'idle' ? 'inherit' : '11.5px')};
+  letter-spacing: ${({ $tone }) => ($tone === 'idle' ? 'inherit' : '0.3px')};
+  white-space: nowrap;
+`
+
+const Chevron = styled.span<{ $open: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-muted);
+  transform: rotate(${(props) => (props.$open ? '180deg' : '0deg')});
+  transition: transform 150ms ease-out;
 
   @media (prefers-reduced-motion: reduce) {
-    animation: none;
-    border-color: var(--primary-color);
-    opacity: 0.55;
+    transition: none;
   }
 `
 
@@ -95,6 +179,9 @@ export function Capsule(): React.JSX.Element {
   const agg = taskAggregate()
   // 常驻胶囊：空态显示「就绪」；有任务显聚合进度，无任务有文档显编辑器入口
   const hasDoc = doc.activePath != null || doc.content != null
+  // 状态环/标签语义：active 优先 → 全部完成 → 空闲（部分完成归 idle 静默点）
+  const mode: 'idle' | 'active' | 'done' =
+    agg.active > 0 ? 'active' : agg.total > 0 && agg.done === agg.total ? 'done' : 'idle'
 
   useEffect(() => {
     if (!open) return
@@ -120,14 +207,17 @@ export function Capsule(): React.JSX.Element {
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
       >
-        {agg.active > 0 && <Spinner aria-hidden="true" />}
-        <span>
+        <StatusRing $mode={mode} aria-hidden="true" />
+        <Label $tone={mode}>
           {agg.total > 0
             ? t('capsule.tasks', { done: agg.done, total: agg.total })
             : hasDoc
               ? t('capsule.editorSection')
               : t('capsule.ready')}
-        </span>
+        </Label>
+        <Chevron $open={open} aria-hidden="true">
+          <AppIcon icon={IconChevronDown} size="xs" decorative />
+        </Chevron>
       </CapsuleButton>
       {open && <CapsulePanel onClose={() => setOpen(false)} />}
     </Wrap>
