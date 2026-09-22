@@ -4,7 +4,7 @@
   "name": "20260922-feature-shell-capsule",
   "type": "feature",
   "scope": "renderer-ui",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20260922-feature-shell-capsule",
   "files": [
@@ -24,18 +24,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 47,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/47",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 49,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/49"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "d8445268153d5584b5fc1e0f852bbb80f36b47e9",
-    "verifiedAt": "2026-09-22T16:17:30.900Z"
+    "verifiedCommit": "f8e784a4226d61f64bfe5f33a6897f46bb7fc8e0",
+    "verifiedAt": "2026-09-22T16:26:06.801Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:47",
-    "planHash": "2000da8a8a662d38b9b8feb5be5978e1952de9be2605487ef2f1941277ede5c7",
+    "checkpoint": "merged-pr:49",
+    "planHash": "1763f035acb5a62a00f6f31993ded33e6222a97a315ff6fc140d91ecfd833857",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
