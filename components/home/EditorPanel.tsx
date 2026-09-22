@@ -16,6 +16,10 @@ import { useLocale } from '../../lib/i18n/context'
 const Panel = styled.section`
   display: flex;
   flex-direction: column;
+  /* 上内缩 10px（旧 ContextRow 呼应）+ overflow 裁剪：编辑区背景/圆角/阴影
+     不得溢出面板上缘遮挡上方卡片间距（20260922-fix-vditor-theme-bridge） */
+  padding: 10px 4px 0;
+  overflow: hidden;
   background: var(--chrome-panel);
   border: 1px solid var(--chrome-border);
   border-radius: var(--border-radius-lg, var(--border-radius-md));
