@@ -4,7 +4,7 @@
   "name": "20260922-fix-git-identity-guard",
   "type": "fix",
   "scope": "desktop",
-  "status": "branched",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "fix/20260922-fix-git-identity-guard",
   "files": [
@@ -14,18 +14,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 39,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/39",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 40,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/40"
   },
   "review": {
-    "conclusion": "pending",
-    "verifiedCommit": null,
-    "verifiedAt": null
+    "conclusion": "passed",
+    "verifiedCommit": "b4ab8634cfa8e58a90121172f7166eef382fab21",
+    "verifiedAt": "2026-09-22T07:52:19.059Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:39",
-    "planHash": "6abed2df4b8f0ac6532abafe14e823d334834a3f8533a2efe54f7061e2923590",
+    "checkpoint": "merged-pr:40",
+    "planHash": "12b1099612c4366b9b6d73040944787ca9471019167f5d6f400ca6e523cb3153",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -37,7 +37,8 @@
         "fix"
       ]
     }
-  }
+  },
+  "knowledge": null
 }
 ---
 
