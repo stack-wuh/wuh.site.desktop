@@ -4,7 +4,7 @@
   "name": "20260923-feature-capsule-prominence",
   "type": "feature",
   "scope": "renderer-ui",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20260923-feature-capsule-prominence",
   "files": [
@@ -16,18 +16,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 50,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/50",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 51,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/51"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "4cfb90c3e6a6549060095a618fee862536c66d7d",
-    "verifiedAt": "2026-09-22T16:56:57.873Z"
+    "verifiedCommit": "345edf755ff4baa7f2e2eaf14a0d4e9b8bf9898d",
+    "verifiedAt": "2026-09-22T23:50:45.645Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:50",
-    "planHash": "9609d1ecd6e3884008276a08eae5f936b89cabf101871ebb0f6bbafa141a8a2f",
+    "checkpoint": "merged-pr:51",
+    "planHash": "5742bfc3135367b3b2035895aa6510de2c7670d8b4a1352f4f7def2c1d09f5e3",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
