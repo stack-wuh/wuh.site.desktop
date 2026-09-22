@@ -17,7 +17,8 @@
 | 20260921-feature-startup-splash-loading | ✅ 完成 | shadow-docs/changes/archive/20260921-feature-startup-splash-loading/brief.md |
 | 20260921-fix-plugin-frame-scheme-cors | ✅ 完成 | shadow-docs/changes/archive/20260921-fix-plugin-frame-scheme-cors/brief.md |
 | 20260921-refactor-renderer-nextjs | published | shadow-docs/changes/20260921-refactor-renderer-nextjs/brief.md |
+| 20260922-feature-git-identity-default | ✅ 完成 | shadow-docs/changes/archive/20260922-feature-git-identity-default/brief.md |
 | 20260922-feature-home-editor-panel | ✅ 完成 | shadow-docs/changes/archive/20260922-feature-home-editor-panel/brief.md |
 | 20260922-feature-i18n-shell-locales | reviewed | shadow-docs/changes/20260922-feature-i18n-shell-locales/brief.md |
-| 20260922-feature-user-center-github-oauth | reviewed | shadow-docs/changes/20260922-feature-user-center-github-oauth/brief.md |
+| 20260922-feature-user-center-github-oauth | ✅ 完成 | shadow-docs/changes/archive/20260922-feature-user-center-github-oauth/brief.md |
 | 20260922-feature-user-identity-sync | ✅ 完成 | shadow-docs/changes/archive/20260922-feature-user-identity-sync/brief.md |

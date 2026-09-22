@@ -4,7 +4,7 @@
   "name": "20260922-feature-user-center-github-oauth",
   "type": "feature",
   "scope": "desktop",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20260922-feature-user-center-github-oauth",
   "files": [
@@ -25,18 +25,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 30,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/30",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 32,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/32"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "a795521fdfb71725d3de37c00111c6c3826f5911",
-    "verifiedAt": "2026-09-22T04:02:26.636Z"
+    "verifiedCommit": "b77fe968b9d62847575f589c7cf8f3d95c3eab69",
+    "verifiedAt": "2026-09-22T07:34:14.354Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "a795521fdfb71725d3de37c00111c6c3826f5911",
-    "planHash": "0d0eddc4be9eff0a2cc92aa623a814623c20d769dc4f0df128f6a0e9d93054ff",
+    "checkpoint": "merged-pr:32",
+    "planHash": "a6687355a8232869c7d82cafb0fbd02d8a47658e9fd3c542032e7b9491bc254e",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {

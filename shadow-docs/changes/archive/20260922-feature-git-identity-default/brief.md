@@ -4,7 +4,7 @@
   "name": "20260922-feature-git-identity-default",
   "type": "feature",
   "scope": "desktop",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20260922-feature-git-identity-default",
   "files": [
@@ -19,18 +19,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 34,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/34",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 36,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/36"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "e4ef780d0284c0332c754f40b621f4576fcff010",
-    "verifiedAt": "2026-09-22T07:12:09.135Z"
+    "verifiedCommit": "b77fe968b9d62847575f589c7cf8f3d95c3eab69",
+    "verifiedAt": "2026-09-22T07:32:45.527Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "e4ef780d0284c0332c754f40b621f4576fcff010",
-    "planHash": "18e077894ab9a778eb7e8d7159ca1907b2f3b992daf40899561d41cf941abcc8",
+    "checkpoint": "merged-pr:36",
+    "planHash": "715ceab46aa7f34bfabeeaba04de99f87c4362d4133614ec16560334c70ec617",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
