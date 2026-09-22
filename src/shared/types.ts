@@ -266,6 +266,12 @@ export interface SettingsStatus {
   settings: AppSettings
 }
 
+/** 本机 git 全局身份；null = 该字段未在全局配置 */
+export interface GitIdentityDefault {
+  name: string | null
+  email: string | null
+}
+
 // ---------- 通用 ----------
 export type IpcResult<T> = { ok: true; data: T } | { ok: false; error: string }
 
@@ -292,6 +298,8 @@ export interface DesktopApi {
   gitPull(): Promise<void>
   gitLog(opts: { path?: string; limit?: number }): Promise<CommitSummary[]>
   gitShow(commitHash: string, path?: string): Promise<string>
+  /** 本机 git 全局身份（git config --global），作为账户页 Git 提交身份的默认值展示 */
+  getGitIdentityDefault(): Promise<GitIdentityDefault>
   planRevert(input: RevertDecisionInput): Promise<RevertPlan>
   executeRevert(plan: RevertPlan): Promise<void>
   githubListIssues(): Promise<IssueSummary[]>

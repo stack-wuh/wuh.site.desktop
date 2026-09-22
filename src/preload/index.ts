@@ -41,6 +41,7 @@ const api: DesktopApi = {
   gitPull: () => invoke('gitPull'),
   gitLog: (opts) => invoke('gitLog', opts),
   gitShow: (hash, path) => invoke('gitShow', hash, path),
+  getGitIdentityDefault: () => invoke('getGitIdentityDefault'),
   planRevert: (input) => invoke('planRevert', input),
   executeRevert: (plan) => invoke('executeRevert', plan),
   githubListIssues: () => invoke('githubListIssues'),
