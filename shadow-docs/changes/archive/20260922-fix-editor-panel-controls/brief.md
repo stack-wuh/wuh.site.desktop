@@ -4,7 +4,7 @@
   "name": "20260922-fix-editor-panel-controls",
   "type": "fix",
   "scope": "desktop",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "fix/20260922-fix-editor-panel-controls",
   "files": [
@@ -17,18 +17,18 @@
     "repository": null,
     "issue": null,
     "issueUrl": null,
-    "pullRequest": null,
+    "pullRequest": 46,
     "pullRequestUrl": null
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "7331eef901496d3e81a07a1c162ed94e963513c2",
-    "verifiedAt": "2026-09-22T13:42:38.388Z"
+    "verifiedCommit": "52eb54b312b4ba70e28111520bb05f970cd854f2",
+    "verifiedAt": "2026-09-22T13:50:03.515Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": null,
-    "planHash": "50172ca2a1e3cffb8bff9afba819b9f50b7e905b7bfa97010ecc170fb818d4a2",
+    "checkpoint": "merged-pr:46",
+    "planHash": "0195faf3ada97992fd1b02058f646bfdedf1bebff11433985136605e59e1aa98",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
