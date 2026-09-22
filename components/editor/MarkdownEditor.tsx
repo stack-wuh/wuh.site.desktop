@@ -1,20 +1,24 @@
 'use client'
 
 /**
- * 主编辑器（Vditor IR 薄包装，2026-09-22 胶囊化演进）：
+ * 主编辑器（Vditor IR 薄包装，20260922 胶囊化演进）：
  * - IR 即时渲染（类 Typora），不渲染内置工具栏——功能入口全部收进壳层全局胶囊；
  * - content 双通道：input → workspaceStore.setContent 直写；store 侧外部注入
  *   （openDoc/startDraft/插件帧 doc.set）经 setValue 回写，pushedRef 区分自发
- *   输入与外部变更，编辑中不做全量重置（IR 的 setValue 会丢光标）；
+ *   输入与外部变更，编辑中不做全量重置（IR 的 setValue 会丢光标）；命令类突变
+ *   （insertValue/updateValue）不触发 input 回调，必须显式读回同步 store；
  * - 命令通道：订阅 editor-commands 消费格式化/插入/大纲跳转/聚焦——全部走
  *   Vditor 增量 API 与「打字等价」路径（行前缀 = 光标移行首后 insertValue，
  *   IR 渲染管线与手工输入一致）；文档操作类命令（save/saveAs/newDraft/closeDoc）
  *   在此不消费，由胶囊编辑器宿主认领。
- * - 样式只经主题 token：Vditor 自有 CSS 变量在 .md-editor 域整体映射到宿主
- *   token（createGlobalStyle 双选择器压过 .vditor--dark），字体只用三语义 token。
+ * - 主题桥接（20260922-fix-vditor-theme-bridge 重写）：Vditor 把 `vditor` 类加在
+ *   **挂载元素自身**（destroy 移除该类为证），后代选择器永不命中——token 变量与
+ *   子树样式必须写在挂载元素复合选择器上（&.vditor / &.vditor--dark / & .vditor-*），
+ *   (0,2,0) 压过 Vditor 变量块 (0,1,0)，不依赖样式注入顺序；颜色只经主题 token，
+ *   字体只用三语义 token，callout 语义彩保留 Vditor 原值（固定语义色豁免）。
  */
 import { useEffect, useRef, useState } from 'react'
-import styled, { createGlobalStyle } from 'styled-components'
+import styled from 'styled-components'
 import type Vditor from 'vditor'
 import 'vditor/dist/index.css'
 import { workspaceStore, useWorkspaceStore, type MarkdownInsertAction } from '../../lib/store'
@@ -46,9 +50,18 @@ const LINE_PREFIXES: Partial<Record<MarkdownInsertAction, string>> = {
   ol: '1. '
 }
 
-const EditorTokens = createGlobalStyle`
-  .md-editor .vditor,
-  .md-editor .vditor--dark {
+/* 挂载元素即 .vditor 本体：变量映射与子树样式都在这里（见文件头桥接说明） */
+const EditorMount = styled.div`
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  max-height: 45vh;
+  margin: 0 8px;
+  overflow-y: auto;
+  border-radius: var(--border-radius-base);
+
+  &.vditor,
+  &.vditor--dark {
     --border-color: var(--chrome-border);
     --second-color: color-mix(in oklab, var(--text-muted) 55%, transparent);
     --panel-background-color: transparent;
@@ -61,15 +74,23 @@ const EditorTokens = createGlobalStyle`
     --toolbar-background-color: transparent;
     --toolbar-icon-color: var(--text-muted);
     --toolbar-icon-hover-color: var(--primary-color);
+    --ir-heading-color: var(--text-primary);
+    --ir-link-color: var(--primary-color);
+    --ir-title-color: var(--text-primary);
+    --ir-bi-color: var(--text-primary);
+    --ir-bracket-color: var(--text-muted);
+    --ir-paren-color: var(--text-muted);
   }
 
-  .md-editor .vditor {
+  &.vditor {
     border: none;
     background: transparent;
     min-height: ${MIN_EDITOR_HEIGHT}px;
+    font-family: var(--font-sans);
   }
 
-  .md-editor .vditor-reset {
+  & .vditor-reset {
+    background: transparent;
     color: var(--text-primary);
     font-family: var(--font-sans);
     font-size: 14px;
@@ -77,28 +98,37 @@ const EditorTokens = createGlobalStyle`
     padding: 8px 2px 12px;
   }
 
-  .md-editor .vditor-reset a {
+  & .vditor-reset h1,
+  & .vditor-reset h2,
+  & .vditor-reset h3,
+  & .vditor-reset h4,
+  & .vditor-reset h5,
+  & .vditor-reset h6 {
+    color: var(--text-primary);
+  }
+
+  & .vditor-reset a {
     color: var(--primary-color);
   }
 
-  .md-editor .vditor-reset code,
-  .md-editor .vditor-reset pre {
+  & .vditor-reset code,
+  & .vditor-reset pre {
     font-family: var(--font-mono);
   }
 
-  .md-editor .vditor-ir .vditor-ir-placeholder,
-  .md-editor .vditor-sv .vditor-sv-placeholder {
+  & .vditor-reset code {
+    background: var(--chrome-raised);
+    color: var(--text-primary);
+  }
+
+  & .vditor-reset pre {
+    background: var(--chrome-raised);
+  }
+
+  & .vditor-ir .vditor-ir-placeholder,
+  & .vditor-sv .vditor-sv-placeholder {
     color: var(--text-muted);
   }
-`
-
-const Wrap = styled.div`
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  max-height: 45vh;
-  margin: 0 8px;
-  overflow-y: auto;
 `
 
 /** 光标回退 n 个字符（包裹类插入后落位到标记内侧；Electron/Chromium 支持） */
@@ -254,7 +284,7 @@ export function MarkdownEditor(): React.JSX.Element {
           v.focus()
           return true
         default:
-          // 文档操作类（save/saveAs/newDraft/closeDoc/insertClipboardImage）由胶囊宿主/后续任务认领
+          // 文档操作类（save/saveAs/newDraft/closeDoc）由胶囊宿主认领
           return false
       }
     }
@@ -293,11 +323,9 @@ export function MarkdownEditor(): React.JSX.Element {
 
     void (async () => {
       const VditorCtor = (await import('vditor')).default
-      if (disposed) return
+      if (disposed || !mountEl) return
       const initial = workspaceStore.get().content ?? ''
       pushedRef.current = initial
-      const mountEl = containerRef.current
-      if (!mountEl) return
       const instance = new VditorCtor(mountEl, {
         cdn: '/vditor',
         mode: 'ir',
@@ -355,10 +383,5 @@ export function MarkdownEditor(): React.JSX.Element {
     pushedRef.current = content
   }, [doc.content, ready])
 
-  return (
-    <>
-      <EditorTokens />
-      <Wrap ref={containerRef} className="md-editor" aria-label={t('editor.placeholder')} />
-    </>
-  )
+  return <EditorMount ref={containerRef} className="md-editor" aria-label={t('editor.placeholder')} />
 }
