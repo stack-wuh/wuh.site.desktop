@@ -319,6 +319,7 @@ export function AccountPage(): React.JSX.Element {
   const [repos, setRepos] = useState<RepoSummary[] | null>(null)
   const [reposError, setReposError] = useState<string | null>(null)
   const [repoQuery, setRepoQuery] = useState('')
+  const [repoReloadTick, setRepoReloadTick] = useState(0)
 
   // ---- Git 提交身份 ----
   const [savedField, setSavedField] = useState<GitFieldKey | null>(null)
@@ -463,10 +464,11 @@ export function AccountPage(): React.JSX.Element {
     })()
   }
 
-  // 仓库列表随有效身份拉取
+  // 仓库列表随有效身份拉取；换账号（login 变化）或手动重试时重拉
   const authed = identity !== null && !identity.stale
+  const authedLogin = authed ? identity.login : null
   useEffect(() => {
-    if (!authed) return
+    if (authedLogin === null) return
     let alive = true
     setRepos(null)
     setReposError(null)
@@ -481,7 +483,7 @@ export function AccountPage(): React.JSX.Element {
     return () => {
       alive = false
     }
-  }, [authed])
+  }, [authedLogin, repoReloadTick])
 
   const setDefaultRepo = (fullName: string | null): void => {
     void (async () => {
@@ -590,11 +592,7 @@ export function AccountPage(): React.JSX.Element {
                   <Button variant="primary" onClick={startAuth}>
                     {t('account.authStart')}
                   </Button>
-                  <HintText style={{ margin: 0 }}>
-                    {tokenKind === null
-                      ? t('account.accountDesc')
-                      : t('account.kindPat')}
-                  </HintText>
+                  <HintText style={{ margin: 0 }}>{t('account.accountDesc')}</HintText>
                 </IntroMeta>
               </Intro>
             )}
@@ -615,7 +613,7 @@ export function AccountPage(): React.JSX.Element {
                 <summary>{t('account.patToggle')}</summary>
                 <PatBody>
                   <HintText style={{ margin: 0 }}>{t('account.patDesc')}</HintText>
-                  <SettingRow htmlFor="account-pat" label={t('account.patSave')} description={undefined}>
+                  <SettingRow htmlFor="account-pat" label="GitHub Token">
                     <Input
                       id="account-pat"
                       type="password"
@@ -648,7 +646,11 @@ export function AccountPage(): React.JSX.Element {
                   {t('account.reposError')}：{reposError}
                 </ErrorText>
                 <div>
-                  <Button variant="default" size="sm" onClick={() => setDefaultRepo(defaultRepo)}>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => setRepoReloadTick((n) => n + 1)}
+                  >
                     {t('common.retry')}
                   </Button>
                 </div>

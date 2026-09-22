@@ -132,6 +132,11 @@ export async function beginDeviceFlow(deps: DeviceFlowDeps): Promise<DeviceFlowR
   void (async (): Promise<void> => {
     let wait = intervalMs
     while (true) {
+      // 取消可能落在 sleep 之外（如轮询请求进行中）：进入等待前先检查，breakSleep 此时已失效
+      if (cancelled) {
+        finish({ ok: false, reason: 'cancelled', message: '已取消' })
+        return
+      }
       await sleep(wait)
       if (cancelled) {
         finish({ ok: false, reason: 'cancelled', message: '已取消' })

@@ -136,6 +136,29 @@ describe('beginDeviceFlow', () => {
     expect(deps.tokens).toEqual([])
   })
 
+  it('cancel：取消落在轮询请求进行中，done 仍须 settle（不挂起）', async () => {
+    let releasePoll!: (r: Response) => void
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse(DEVICE_RESPONSE))
+      // 第二次轮询：返回一个由测试手动放行的挂起 Promise，模拟进行中的请求
+      .mockImplementationOnce(() => new Promise<Response>((resolve) => { releasePoll = resolve }))
+    const deps = makeDeps(fetchMock)
+
+    const run = await beginDeviceFlow(deps)
+    // 等到轮询请求已发出（mockImplementation 已被消费）再取消
+    await vi.waitFor(() => expect(releasePoll).toBeDefined())
+    run.cancel()
+    releasePoll(jsonResponse({ error: 'authorization_pending' }))
+
+    const outcome = await Promise.race([
+      run.done,
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error('done 未 settle')), 500))
+    ])
+    expect(outcome.ok).toBe(false)
+    if (!outcome.ok) expect(outcome.reason).toBe('cancelled')
+  })
+
   it('换取 device code 失败（未勾选 Device Flow 等）：抛出服务端 message', async () => {
     const fetchMock = vi
       .fn()
