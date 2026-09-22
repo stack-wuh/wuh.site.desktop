@@ -4,7 +4,7 @@
   "name": "20260922-fix-vditor-theme-bridge",
   "type": "fix",
   "scope": "desktop",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "fix/20260922-fix-vditor-theme-bridge",
   "files": [
@@ -15,18 +15,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 43,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/43",
-    "pullRequest": null,
+    "pullRequest": 44,
     "pullRequestUrl": null
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "c7b110f78dba43e540d2903243b05fa1385465b6",
-    "verifiedAt": "2026-09-22T13:02:10.846Z"
+    "verifiedCommit": "3319c617c929792895537a13092d5bee0afa8c72",
+    "verifiedAt": "2026-09-22T13:12:52.104Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:43",
-    "planHash": "7efef813b65cef731c673a342a850790a07d8714400e6f913e339371267af4c7",
+    "checkpoint": "merged-pr:44",
+    "planHash": "aa8641777314ff9ced7be8aa0790dfbf5e9817916ef838d36e07d75556d306de",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
