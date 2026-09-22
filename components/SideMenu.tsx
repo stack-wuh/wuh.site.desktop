@@ -377,20 +377,13 @@ const UserMeta = styled.span`
   }
 `
 
-/** GitHub 头像（已授权时替换品牌标占位；圆形裁切，尺寸随展开态） */
-const UserAvatar = styled.img<{ $expanded: boolean }>`
-  width: ${(props) => (props.$expanded ? 24 : 20)}px;
-  height: ${(props) => (props.$expanded ? 24 : 20)}px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-`
+/** GitHub 头像不再入壳层：远程图片（avatars.githubusercontent.com）网络不可靠时常破损，
+ * 图标恒为品牌标，头像显示待 Settings「用户设置」本地接管；此处仅保留用户名文本投影。 */
 
-/** 快捷面板头部的身份行：小头像 + 用户名（未授权时仅标题，无头像） */
+/** 快捷面板头部的身份行：仅用户名文本（未授权时回落「用户」标题） */
 const PopIdentity = styled.span`
   display: flex;
   align-items: center;
-  gap: 8px;
   min-width: 0;
 
   & > strong {
@@ -400,14 +393,6 @@ const PopIdentity = styled.span`
     overflow: hidden;
     text-overflow: ellipsis;
   }
-`
-
-const PopAvatar = styled.img`
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
 `
 
 const UserVersion = styled.span`
@@ -513,9 +498,8 @@ function UserQuickPanel(props: {
   onOpenUser: () => void
   onOpenSettings: () => void
   onClose: () => void
-  /** 已授权身份投影（null = 未授权，头部回落「用户」标题） */
+  /** 已授权身份的文本投影（null = 未授权，头部回落「用户」标题） */
   displayName: string | null
-  avatarUrl: string | null
 }): React.JSX.Element {
   const { t, locale, setLocale } = useLocale()
   const { family, scheme, setFamily, setScheme } = useTheme()
@@ -533,7 +517,6 @@ function UserQuickPanel(props: {
     <UserPop role="menu" aria-label={t('pop.user')} onClick={(e) => e.stopPropagation()}>
       <PopHead>
         <PopIdentity>
-          {props.avatarUrl && <PopAvatar src={props.avatarUrl} alt="" />}
           <strong>{props.displayName ?? t('pop.user')}</strong>
         </PopIdentity>
         <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
@@ -657,10 +640,9 @@ export function SideMenu(props: {
   const { expanded } = props
   const { t } = useLocale()
   const identity = useGithubIdentity()
-  // 已授权（含非 stale）才投影 GitHub 身份；未授权/失效/尚未拉取一律回落品牌标
+  // 文本投影（用户名/问候）无网络依赖；头像 img 已回退——远程图片网络不可靠（见 PopIdentity 注）
   const authed = identity != null && !identity.stale
   const displayName = authed && identity ? identity.name || identity.login : null
-  const avatarUrl = authed && identity && identity.avatarUrl ? identity.avatarUrl : null
   const [userOpen, setUserOpen] = useState(false)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -739,11 +721,7 @@ export function SideMenu(props: {
               aria-expanded={userOpen}
               onClick={props.onOpenUser}
             >
-              {avatarUrl ? (
-                <UserAvatar src={avatarUrl} $expanded={expanded} alt="" data-user-avatar />
-              ) : (
-                <IconLogo width={expanded ? 42 : 26} height={expanded ? 21 : 13} />
-              )}
+              <IconLogo width={expanded ? 42 : 26} height={expanded ? 21 : 13} />
               {expanded && (
                 <UserMeta>
                   <strong>{displayName ?? 'wuh-site'}</strong>
@@ -759,7 +737,6 @@ export function SideMenu(props: {
                 onOpenSettings={props.onOpenSettings}
                 onClose={() => setUserOpen(false)}
                 displayName={displayName}
-                avatarUrl={avatarUrl}
               />
             )}
           </UserAnchor>
