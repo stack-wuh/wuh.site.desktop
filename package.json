@@ -5,15 +5,16 @@
   "description": "通用 Markdown 桌面编辑器 — GitHub 深度集成",
   "main": "./out/main/index.js",
   "scripts": {
-    "dev": "concurrently -k -s first \"next dev -p 3000\" \"wait-on -t 60000 http://localhost:3000 && electron-vite dev\"",
-    "build": "next build && electron-vite build",
-    "build:next": "next build",
+    "prepare:vditor": "node scripts/copy-vditor.mjs",
+    "dev": "pnpm run prepare:vditor && concurrently -k -s first \"next dev -p 3000\" \"wait-on -t 60000 http://localhost:3000 && electron-vite dev\"",
+    "build": "pnpm run prepare:vditor && next build && electron-vite build",
+    "build:next": "pnpm run prepare:vditor && next build",
     "build:icon": "node scripts/build-icon.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.next.json",
     "test": "vitest run",
     "test:watch": "vitest",
-    "dist": "next build && electron-vite build && electron-builder --dir",
-    "dist:mac": "next build && electron-vite build && electron-builder --mac --dir"
+    "dist": "pnpm run prepare:vditor && next build && electron-vite build && electron-builder --dir",
+    "dist:mac": "pnpm run prepare:vditor && next build && electron-vite build && electron-builder --mac --dir"
   },
   "devDependencies": {
     "@octokit/rest": "^21.0.0",
@@ -28,6 +29,7 @@
     "electron-builder": "^26.15.3",
     "electron-vite": "^5.0.0",
     "js-yaml": "^4.1.0",
+    "lucide-react": "^1.16.0",
     "markdown-it": "^15.0.2",
     "next": "16.3.2",
     "react": "19.2.5",
@@ -35,9 +37,9 @@
     "simple-git": "^3.36.0",
     "styled-components": "^6.4.0",
     "typescript": "~5.7.2",
+    "vditor": "^4.0.0",
     "vite": "6.4.1",
     "vitest": "^5.0.0",
-    "lucide-react": "^1.16.0",
     "wait-on": "^8.0.3"
   }
 }

@@ -4,7 +4,6 @@ import {
   collectMarkdownFiles,
   documentEvents,
   filterMarkdownFiles,
-  parseEditorMode,
   workspaceStore
 } from '../lib/store'
 import type { FileNode } from '../src/shared/types'
@@ -127,15 +126,6 @@ describe('collectMarkdownFiles（工作区 .md 收集）', () => {
     expect(filterMarkdownFiles(paths, 'HELLO')).toEqual(['posts/hello-world.md'])
     expect(filterMarkdownFiles(paths, '')).toEqual(paths)
     expect(filterMarkdownFiles(paths, 'zzz')).toEqual([])
-  })
-})
-
-describe('parseEditorMode（模式偏好解析）', () => {
-  it("null/垃圾值回退 'simple'，'full' 显式生效", () => {
-    expect(parseEditorMode(null)).toBe('simple')
-    expect(parseEditorMode('fancy')).toBe('simple')
-    expect(parseEditorMode('full')).toBe('full')
-    expect(parseEditorMode('simple')).toBe('simple')
   })
 })
 

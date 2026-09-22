@@ -2,16 +2,21 @@
 
 /**
  * 任务胶囊（壳层 StatusBar 左区）：跨插件聚合任务贡献点（manifest tasks 声明 +
- * SDK tasks.upsert/remove 上报，注册表 lib/tasks.ts）。
+ * SDK tasks.upsert/remove 上报，注册表 lib/tasks.ts）。20260922 胶囊化演进：
+ * 兼任「任务 + 编辑器」复合入口——有活动文档（草稿或已打开文件）即显示，
+ * 点击弹出的 TaskPopover 内含编辑器分区；EditorCommandHost 常驻挂载，
+ * 承载文档操作类命令（保存/另存为/新建/关闭 + SaveAs 对话框）。
  *
- * 无可见任务不渲染；有任务时显示聚合进度 done/total（存在 in_progress 时
- * 附加环形动效，reduced-motion 降级为静态）。点击切换任务清单面板
- * （TaskPopover）；Esc 与面板外点击关闭——面板内点击不冒泡，面板关闭延迟无需
- * （点击型开合，非悬停型）。
+ * 无可见任务且无活动文档时不渲染；有任务时显示聚合进度 done/total（存在
+ * in_progress 时附加环形动效，reduced-motion 降级为静态）。Esc 与面板外
+ * 点击关闭——面板内点击不冒泡（点击型开合，非悬停型）。
  */
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import styled, { keyframes } from 'styled-components'
 import { taskAggregate, tasksStore } from '../../lib/tasks'
+import { useWorkspaceStore } from '../../lib/store'
+import { useLocale } from '../../lib/i18n/context'
+import { EditorCommandHost } from './EditorSection'
 import { TaskPopover } from './TaskPopover'
 
 const Wrap = styled.span`
@@ -75,8 +80,12 @@ const Spinner = styled.span`
 
 export function TaskCapsule(): React.JSX.Element | null {
   useSyncExternalStore(tasksStore.subscribe, tasksStore.get, tasksStore.get)
+  const doc = useWorkspaceStore()
+  const { t } = useLocale()
   const [open, setOpen] = useState(false)
   const agg = taskAggregate()
+  // 胶囊化：任务与活动文档任一存在即显示（编辑器功能入口常可达）
+  const hasDoc = doc.activePath != null || doc.content != null
 
   useEffect(() => {
     if (!open) return
@@ -92,24 +101,27 @@ export function TaskCapsule(): React.JSX.Element | null {
     }
   }, [open])
 
-  if (agg.total === 0) return null
+  if (agg.total === 0 && !hasDoc) return null
 
   return (
     <Wrap>
       <Capsule
         type="button"
         data-testid="task-capsule"
-        aria-label={`任务进度：已完成 ${agg.done}，共 ${agg.total}`}
+        aria-label={t('capsule.title')}
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
       >
         {agg.active > 0 && <Spinner aria-hidden="true" />}
         <span>
-          任务 {agg.done}/{agg.total}
+          {agg.total > 0
+            ? t('capsule.tasks', { done: agg.done, total: agg.total })
+            : t('capsule.editorSection')}
         </span>
       </Capsule>
       {open && <TaskPopover onClose={() => setOpen(false)} />}
+      <EditorCommandHost />
     </Wrap>
   )
 }

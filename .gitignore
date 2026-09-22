@@ -6,3 +6,4 @@ dist
 .next
 .walkthrough
 *.tsbuildinfo
+public/vditor
