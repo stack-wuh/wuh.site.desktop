@@ -1,8 +1,9 @@
 'use client'
 
 /**
- * 设置页：页头（返回+标题）+ 左侧粘性锚点导航 + 分区流（关于 / 服务 / Git 身份 / 插件）。
- * 保存反馈为行内 ✓（aria-live）与行内错误；自动保存语义不变（Token 显式保存除外）。
+ * 设置页：页头（返回+标题）+ 左侧粘性锚点导航 + 分区流（关于 / 服务 / 插件）。
+ * GitHub 授权与 Git 提交身份已归拢至用户中心 /account；本页仅应用级设置。
+ * 保存反馈为行内 ✓（aria-live）与行内错误；自动保存语义不变。
  * `Cmd/Ctrl+,` 切换与 mount 聚焦由壳层约定承载（renderer-shell-routing 卡）。
  */
 import { useEffect, useRef, useState } from 'react'
@@ -23,7 +24,7 @@ import { useLocale } from '../../lib/i18n/context'
 // 构建期内联应用版本（next.config.ts env），不走 preload/broker 通道
 const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? '0.0.0'
 
-type FieldKey = 'githubToken' | 'siteBaseUrl' | 'gitUserName' | 'gitUserEmail'
+type FieldKey = 'siteBaseUrl'
 
 const pageEnter = keyframes`
   from { opacity: 0; transform: translateY(6px); }
@@ -105,22 +106,6 @@ const AboutMeta = styled.div`
   }
 `
 
-const StatusLine = styled.span`
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--text-muted);
-`
-
-const StatusDot = styled.span<{ $on: boolean }>`
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  background: ${(props) => (props.$on ? 'var(--success-color)' : 'var(--chrome-border)')};
-`
-
 const RowStatus = styled.span`
   display: inline-flex;
   align-items: center;
@@ -165,18 +150,16 @@ export function SettingsPage(): React.JSX.Element {
   const navItems: SettingsNavItem[] = [
     { id: 'about', label: t('settings.navAbout') },
     { id: 'services', label: t('settings.navServices') },
-    { id: 'git-identity', label: t('settings.navGit') },
     { id: 'plugins', label: t('settings.navPlugins') }
   ]
-  const [hasToken, setHasToken] = useState(false)
-  const [tokenInput, setTokenInput] = useState('')
   const [settings, setSettings] = useState<AppSettings>({
     autoCommit: false,
     autoCommitDelayMs: 2000,
     uploadCommand: null,
     gitUserName: null,
     gitUserEmail: null,
-    siteBaseUrl: null
+    siteBaseUrl: null,
+    siteRepo: null
   })
   const [loadError, setLoadError] = useState<string | null>(null)
   const [savedField, setSavedField] = useState<FieldKey | null>(null)
@@ -196,7 +179,6 @@ export function SettingsPage(): React.JSX.Element {
     void window.api
       .getSettings()
       .then((s) => {
-        setHasToken(s.hasToken)
         setSettings(s.settings)
       })
       .catch((err: unknown) => setLoadError(errText(err)))
@@ -258,63 +240,6 @@ export function SettingsPage(): React.JSX.Element {
 
           <SettingSection id="services" title={t('settings.navServices')} description={t('settings.servicesDesc')}>
             <SettingRow
-              htmlFor="settings-github-token"
-              label="GitHub Token"
-              description={
-                <StatusLine>
-                  <StatusDot $on={hasToken} aria-hidden />
-                  {hasToken ? t('settings.tokenConfigured') : t('settings.tokenMissing')}
-                </StatusLine>
-              }
-            >
-              <Input
-                id="settings-github-token"
-                type="password"
-                placeholder={t('settings.tokenPlaceholder')}
-                value={tokenInput}
-                onChange={(e) => setTokenInput(e.target.value)}
-              />
-              <Button
-                variant="primary"
-                onClick={() =>
-                  void (async () => {
-                    if (!tokenInput.trim()) return
-                    try {
-                      await window.api.setGithubToken(tokenInput)
-                      setTokenInput('')
-                      setHasToken(true)
-                      markSaved('githubToken')
-                    } catch (err) {
-                      markError('githubToken', errText(err))
-                    }
-                  })()
-                }
-              >
-                {t('settings.saveToken')}
-              </Button>
-              {hasToken && (
-                <Button
-                  variant="danger"
-                  onClick={() =>
-                    void (async () => {
-                      try {
-                        await window.api.clearGithubToken()
-                        setHasToken(false)
-                        markSaved('githubToken')
-                      } catch (err) {
-                        markError('githubToken', errText(err))
-                      }
-                    })()
-                  }
-                >
-                  {t('settings.clearToken')}
-                </Button>
-              )}
-              <SavedFlash show={savedField === 'githubToken'} />
-              {fieldErrors.githubToken && <RowError role="alert">{fieldErrors.githubToken}</RowError>}
-            </SettingRow>
-
-            <SettingRow
               htmlFor="settings-site-base-url"
               label={t('settings.siteBaseUrl')}
               description={t('settings.siteBaseUrlDesc')}
@@ -336,31 +261,6 @@ export function SettingsPage(): React.JSX.Element {
               />
               <SavedFlash show={savedField === 'siteBaseUrl'} />
               {fieldErrors.siteBaseUrl && <RowError role="alert">{fieldErrors.siteBaseUrl}</RowError>}
-            </SettingRow>
-          </SettingSection>
-
-          <SettingSection id="git-identity" title={t('settings.navGit')} description={t('settings.gitDesc')}>
-            <SettingRow htmlFor="settings-git-user-name" label="user.name">
-              <Input
-                id="settings-git-user-name"
-                placeholder="user.name"
-                value={settings.gitUserName ?? ''}
-                onChange={(e) => setSettings((s) => ({ ...s, gitUserName: e.target.value }))}
-                onBlur={() => void save('gitUserName', { gitUserName: settings.gitUserName })}
-              />
-              <SavedFlash show={savedField === 'gitUserName'} />
-              {fieldErrors.gitUserName && <RowError role="alert">{fieldErrors.gitUserName}</RowError>}
-            </SettingRow>
-            <SettingRow htmlFor="settings-git-user-email" label="user.email">
-              <Input
-                id="settings-git-user-email"
-                placeholder="user.email"
-                value={settings.gitUserEmail ?? ''}
-                onChange={(e) => setSettings((s) => ({ ...s, gitUserEmail: e.target.value }))}
-                onBlur={() => void save('gitUserEmail', { gitUserEmail: settings.gitUserEmail })}
-              />
-              <SavedFlash show={savedField === 'gitUserEmail'} />
-              {fieldErrors.gitUserEmail && <RowError role="alert">{fieldErrors.gitUserEmail}</RowError>}
             </SettingRow>
           </SettingSection>
 

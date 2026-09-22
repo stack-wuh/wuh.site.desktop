@@ -206,6 +206,46 @@ export interface AboutActivityHeatmap {
   days: AboutActivityDay[]
 }
 
+// ---------- 用户中心（GitHub OAuth Device Flow） ----------
+export type TokenKind = 'oauth' | 'pat'
+
+/** 授权流阶段：渲染层 2s 轮询直到离开 polling */
+export type DeviceFlowPhase = 'idle' | 'polling' | 'success' | 'cancelled' | 'expired' | 'denied' | 'error'
+
+export interface DeviceFlowState {
+  phase: DeviceFlowPhase
+  /** 非 polling 的补充说明（错误原因等） */
+  message?: string
+}
+
+/** startGithubDeviceFlow 立即返回：展示 user_code，浏览器打开 verificationUri */
+export interface DeviceFlowStart {
+  userCode: string
+  verificationUri: string
+  /** 授权码有效期止点（epoch ms） */
+  expiresAt: number
+}
+
+export interface GithubIdentity {
+  login: string
+  name: string | null
+  avatarUrl: string
+  /** OAuth token 的授权范围（X-OAuth-Scopes 响应头）；PAT 无法读取，为空数组 */
+  scopes: string[]
+  kind: TokenKind
+  /** token 已失效（API 401），需重新授权或换 Token */
+  stale: boolean
+}
+
+export interface RepoSummary {
+  /** owner/repo */
+  fullName: string
+  private: boolean
+  description: string | null
+  defaultBranch: string
+  updatedAt: string
+}
+
 // ---------- Settings ----------
 export interface AppSettings {
   autoCommit: boolean
@@ -215,10 +255,14 @@ export interface AppSettings {
   gitUserEmail: string | null
   /** 站点服务地址（首页热力图数据源）；null = 默认主域名 https://wuh.site */
   siteBaseUrl: string | null
+  /** 默认站点仓库（owner/repo，用户中心选择）；null = 未选择 */
+  siteRepo: string | null
 }
 
 export interface SettingsStatus {
   hasToken: boolean
+  /** 当前凭证来源；null = 未配置 */
+  tokenKind: TokenKind | null
   settings: AppSettings
 }
 
@@ -266,4 +310,15 @@ export interface DesktopApi {
   setSettings(patch: Partial<AppSettings>): Promise<SettingsStatus>
   setGithubToken(token: string): Promise<void>
   clearGithubToken(): Promise<void>
+  /** 发起 Device Flow：换取 user_code 并自动打开系统浏览器授权页（重复调用取消前一流） */
+  startGithubDeviceFlow(): Promise<DeviceFlowStart>
+  /** 授权流当前阶段（渲染层 2s 轮询直到离开 polling） */
+  getGithubDeviceFlowStatus(): Promise<DeviceFlowState>
+  cancelGithubDeviceFlow(): Promise<void>
+  /** 当前 GitHub 身份；token 401 时返回 stale 身份而非抛错 */
+  getGithubIdentity(): Promise<GithubIdentity>
+  /** token 可操作的仓库（owner/collaborator 视角，按更新时间倒序） */
+  listUserRepos(): Promise<RepoSummary[]>
+  /** 系统浏览器打开外部 https 链接（仅允许 http(s)） */
+  openExternal(url: string): Promise<void>
 }

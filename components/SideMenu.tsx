@@ -475,6 +475,8 @@ function PopSubmenu(props: {
 function UserQuickPanel(props: {
   expanded: boolean
   onToggleExpanded: () => void
+  /** 面板头部/品牌区点击：进入用户中心 */
+  onOpenUser: () => void
   onOpenSettings: () => void
   onClose: () => void
 }): React.JSX.Element {
@@ -495,7 +497,7 @@ function UserQuickPanel(props: {
       <PopHead>
         <strong>{t('pop.user')}</strong>
         <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
-          v{APP_VERSION} · {t('pop.userPending')}
+          v{APP_VERSION} · {t('pop.userHint')}
         </span>
       </PopHead>
       <PopGroup role="group" aria-label={t('pop.theme')}>
@@ -605,9 +607,11 @@ export function SideMenu(props: {
   onToggle?: (id: string) => void
   active: string
   onChange: (id: string) => void
-  /** 用户入口点击去向（用户模块接入前为设置页） */
+  /** 用户入口点击去向（用户中心 /account） */
   onOpenUser: () => void
-  /** 当前处于用户入口对应页面（设置页，用户模块前的替身）时高亮 */
+  /** 快捷面板「设置」项去向（应用设置 /settings） */
+  onOpenSettings: () => void
+  /** 当前处于用户入口对应页面（用户中心）时高亮 */
   userActive?: boolean
 }): React.JSX.Element {
   const { expanded } = props
@@ -702,7 +706,8 @@ export function SideMenu(props: {
               <UserQuickPanel
                 expanded={expanded}
                 onToggleExpanded={props.onToggleExpanded}
-                onOpenSettings={props.onOpenUser}
+                onOpenUser={props.onOpenUser}
+                onOpenSettings={props.onOpenSettings}
                 onClose={() => setUserOpen(false)}
               />
             )}
