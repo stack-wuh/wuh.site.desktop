@@ -18,7 +18,7 @@ import { taskAggregate, tasksStore, visibleTasks, type TaskState, type TaskStatu
 import { capsuleStore, visibleCapsuleModules, type CapsuleModuleState } from '../../lib/capsule'
 import { useLocale } from '../../lib/i18n/context'
 import { EditorSection } from './sections/EditorSection'
-import { CenterSection, ModuleBig, ModuleCard, ModuleGrid, ModuleHead, ModuleIcon, ModuleSub, SectionHint, SectionLabel } from './modules'
+import { CenterSection, ModuleBig, ModuleCard, ModuleGrid, ModuleHead, ModuleIcon, ModulePanel, ModuleSub, SectionHint, SectionLabel } from './modules'
 
 const Pop = styled.div`
   position: absolute;
@@ -340,9 +340,9 @@ function CapsuleModuleTile(props: { mod: CapsuleModuleState; onNavigate: () => v
     )
   }
   return (
-    <ModuleCard $span2 as="div" className="plugin-tile" style={{ cursor: 'default' }}>
+    <ModulePanel $span2 className="plugin-tile" role="group" aria-label={mod.title}>
       {inner}
-    </ModuleCard>
+    </ModulePanel>
   )
 }
 

@@ -8,7 +8,7 @@
  * 整行模块 + 手风琴子面板（220ms unfold，reduced-motion 全静态降级）。
  */
 import type { ReactNode } from 'react'
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 
 export const ModuleGrid = styled.div`
   display: grid;
@@ -17,7 +17,11 @@ export const ModuleGrid = styled.div`
   padding: 0 4px 4px;
 `
 
-export const ModuleCard = styled.button<{ $span2?: boolean }>`
+/**
+ * 模块 surface 样式基：交互卡与内容卡共享（视觉与设计稿零偏离，仅交互态有别）。
+ * 二分原因见 ModulePanel —— button 不可嵌套 button。
+ */
+const moduleSurface = css<{ $span2?: boolean }>`
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -28,10 +32,15 @@ export const ModuleCard = styled.button<{ $span2?: boolean }>`
   background: var(--chrome-raised);
   border: 1px solid color-mix(in oklab, var(--chrome-border) 72%, transparent);
   border-radius: var(--border-radius-md);
-  cursor: pointer;
   text-align: left;
   color: var(--text-primary);
   font-family: var(--font-sans);
+`
+
+/** 交互型模块卡（整体可点：开关 tile、跳转 tile、命令 tile） */
+export const ModuleCard = styled.button<{ $span2?: boolean }>`
+  ${moduleSurface}
+  cursor: pointer;
   transition:
     background-color var(--motion-dur-quick, 150ms) var(--motion-ease-out-soft, ease-out),
     border-color var(--motion-dur-quick, 150ms) var(--motion-ease-out-soft, ease-out),
@@ -64,6 +73,15 @@ export const ModuleCard = styled.button<{ $span2?: boolean }>`
       transform: none;
     }
   }
+`
+
+/**
+ * 内容型模块容器（文档卡等）：div 语义，承载信息 + 卡内原生动作钮。
+ * 与 ModuleCard 的 surface 一致但不整体可点——`<button>` 不可作为 `<button>`
+ * 的祖先（非法 HTML + React hydration 报错），故内容卡必须是非交互容器。
+ */
+export const ModulePanel = styled.div<{ $span2?: boolean }>`
+  ${moduleSurface}
 `
 
 export const ModuleHead = styled.span`
