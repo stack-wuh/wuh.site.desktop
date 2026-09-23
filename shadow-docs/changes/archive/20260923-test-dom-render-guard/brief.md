@@ -4,7 +4,7 @@
   "name": "20260923-test-dom-render-guard",
   "type": "test",
   "scope": "tests",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "test/20260923-test-dom-render-guard",
   "files": [
@@ -17,18 +17,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 59,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/59",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 60,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/60"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "8e8b3272f9a147e39aa9ad9256582d3c59de7910",
-    "verifiedAt": "2026-09-23T13:04:19.226Z"
+    "verifiedCommit": "c69ff704e4bc413ff5ee7fd4cd0df857c90b2762",
+    "verifiedAt": "2026-09-23T13:08:08.054Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:59",
-    "planHash": "0e2b53ac31a4b59dd634e9d9c64e8a013cd65dc48ce341d4a2b55a6499ceee96",
+    "checkpoint": "merged-pr:60",
+    "planHash": "c829e0297f2b8d65b14a35f2cf57f66e093fe57e5b71b7e7d2e25b7eb6a57ebc",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {

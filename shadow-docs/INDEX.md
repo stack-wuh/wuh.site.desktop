@@ -33,3 +33,4 @@
 | 20260923-feature-capsule-prominence | ✅ 完成 | shadow-docs/changes/archive/20260923-feature-capsule-prominence/brief.md |
 | 20260923-feature-cm-live-preview | ✅ 完成 | shadow-docs/changes/archive/20260923-feature-cm-live-preview/brief.md |
 | 20260923-fix-capsule-doc-card-nesting | ✅ 完成 | shadow-docs/changes/archive/20260923-fix-capsule-doc-card-nesting/brief.md |
+| 20260923-test-dom-render-guard | ✅ 完成 | shadow-docs/changes/archive/20260923-test-dom-render-guard/brief.md |
