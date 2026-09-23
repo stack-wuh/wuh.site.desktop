@@ -4,7 +4,7 @@
   "name": "20260922-refactor-codemirror-editor",
   "type": "refactor",
   "scope": "desktop",
-  "status": "published",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "refactor/20260922-refactor-codemirror-editor",
   "files": [
@@ -28,13 +28,13 @@
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "d8445268153d5584b5fc1e0f852bbb80f36b47e9",
-    "verifiedAt": "2026-09-22T17:15:25.275Z"
+    "verifiedCommit": "3dc2ddeeb8d0737184990e1329cf743aaae205c6",
+    "verifiedAt": "2026-09-23T00:09:23.865Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "pr:52",
-    "planHash": "00779904f14bb5d4c81f31dc4a7d1a96821e031c5d275587a74de6640ed226a5",
+    "checkpoint": "merged-pr:52",
+    "planHash": "be55f36416a35c8348cfd42ab62ca4bbcb812bc38ef321d2279761eda4a1219b",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {

@@ -28,5 +28,5 @@
 | 20260922-fix-git-identity-guard | ✅ 完成 | shadow-docs/changes/archive/20260922-fix-git-identity-guard/brief.md |
 | 20260922-fix-shell-avatar-app-icon | ✅ 完成 | shadow-docs/changes/archive/20260922-fix-shell-avatar-app-icon/brief.md |
 | 20260922-fix-vditor-theme-bridge | ✅ 完成 | shadow-docs/changes/archive/20260922-fix-vditor-theme-bridge/brief.md |
-| 20260922-refactor-codemirror-editor | proposed | shadow-docs/changes/20260922-refactor-codemirror-editor/brief.md |
+| 20260922-refactor-codemirror-editor | ✅ 完成 | shadow-docs/changes/archive/20260922-refactor-codemirror-editor/brief.md |
 | 20260923-feature-capsule-prominence | ✅ 完成 | shadow-docs/changes/archive/20260923-feature-capsule-prominence/brief.md |
