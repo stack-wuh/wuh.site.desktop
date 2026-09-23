@@ -19,7 +19,7 @@
  * 100），面板贴 chip 向下弹出，Esc/点外关。
  */
 import { useEffect, useState, useSyncExternalStore } from 'react'
-import styled, { keyframes } from 'styled-components'
+import styled, { css, keyframes } from 'styled-components'
 import { taskAggregate, tasksStore } from '../../lib/tasks'
 import { useWorkspaceStore } from '../../lib/store'
 import { useLocale } from '../../lib/i18n/context'
@@ -91,57 +91,54 @@ const StatusRing = styled.span<{ $mode: 'idle' | 'active' | 'done' }>`
 
   ${({ $mode }) =>
     $mode === 'idle'
-      ? `
-    &::before {
-      content: '';
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      border: 1.5px solid var(--text-muted);
-      box-sizing: border-box;
-    }
-  `
-      : ''
-  }
+      ? css`
+          &::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            border: 1.5px solid var(--text-muted);
+            box-sizing: border-box;
+          }
+        `
+      : ''}
 
   ${({ $mode }) =>
     $mode === 'active'
-      ? `
-    &::before {
-      content: '';
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      border: 2px solid var(--chrome-border);
-      border-top-color: var(--primary-color);
-      box-sizing: border-box;
-      animation: ${spin} 800ms linear infinite;
-    }
+      ? css`
+          &::before {
+            content: '';
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid var(--chrome-border);
+            border-top-color: var(--primary-color);
+            box-sizing: border-box;
+            animation: ${spin} 800ms linear infinite;
+          }
 
-    @media (prefers-reduced-motion: reduce) {
-      &::before {
-        animation: none;
-        border-color: var(--primary-color);
-        opacity: 0.55;
-      }
-    }
-  `
-      : ''
-  }
+          @media (prefers-reduced-motion: reduce) {
+            &::before {
+              animation: none;
+              border-color: var(--primary-color);
+              opacity: 0.55;
+            }
+          }
+        `
+      : ''}
 
   ${({ $mode }) =>
     $mode === 'done'
-      ? `
-    &::before {
-      content: '';
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--success-color);
-    }
-  `
-      : ''
-  }
+      ? css`
+          &::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success-color);
+          }
+        `
+      : ''}
 `
 
 /* 标签：任务态整串 mono + 语义色（进行中=primary、全完成=success）；
