@@ -60,6 +60,7 @@ import {
   ModuleHead,
   ModuleIcon,
   ModuleMore,
+  ModulePanel,
   ModuleRow,
   ModuleSub,
   RowChevron,
@@ -246,7 +247,12 @@ export function EditorSection(): React.JSX.Element {
 
       {/* 文档卡：独占整行 */}
       <ModuleGrid>
-        <ModuleCard $span2 type="button" title={doc.activePath ?? t('editor.newDraft')} onClick={() => publishEditorCommand({ kind: 'focus' })}>
+        <ModulePanel
+          $span2
+          role="group"
+          aria-label={doc.activePath ?? t('editor.newDraft')}
+          title={doc.activePath ?? t('editor.newDraft')}
+        >
           <ModuleHead>
             <ModuleIcon>
               <AppIcon icon={IconFile} size="xs" decorative />
@@ -278,10 +284,10 @@ export function EditorSection(): React.JSX.Element {
             </ActionMini>
             <ActionMini onClick={() => publishEditorCommand({ kind: 'closeDoc' })}>
               <AppIcon icon={IconClose} size="xs" decorative />
-              {t('editor.closeDoc')}
+              {t('editor.close')}
             </ActionMini>
           </div>
-        </ModuleCard>
+        </ModulePanel>
 
         <SwitchCard
           icon={<AppIcon icon={IconSparkles} size="xs" decorative />}
@@ -519,6 +525,7 @@ const ActionMini = styled.button<{ $accent?: boolean }>`
   color: ${(props) => (props.$accent ? 'var(--primary-color)' : 'var(--text-secondary)')};
   font-size: 10.5px;
   font-family: var(--font-sans);
+  white-space: nowrap;
   cursor: pointer;
 
   &:hover {
