@@ -4,7 +4,7 @@
   "name": "20260922-refactor-codemirror-editor",
   "type": "refactor",
   "scope": "desktop",
-  "status": "reviewed",
+  "status": "published",
   "baseBranch": "main",
   "branch": "refactor/20260922-refactor-codemirror-editor",
   "files": [
@@ -23,8 +23,8 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 48,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/48",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 52,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/52"
   },
   "review": {
     "conclusion": "passed",
@@ -33,8 +33,8 @@
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:48",
-    "planHash": "2405c5af76cd0bb511e507d3e869bf88a953d0d229be2e1dde1994576f55a865",
+    "checkpoint": "pr:52",
+    "planHash": "00779904f14bb5d4c81f31dc4a7d1a96821e031c5d275587a74de6640ed226a5",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {

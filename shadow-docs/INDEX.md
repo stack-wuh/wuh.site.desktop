@@ -20,6 +20,7 @@
 | 20260922-feature-git-identity-default | ✅ 完成 | shadow-docs/changes/archive/20260922-feature-git-identity-default/brief.md |
 | 20260922-feature-home-editor-panel | ✅ 完成 | shadow-docs/changes/archive/20260922-feature-home-editor-panel/brief.md |
 | 20260922-feature-i18n-shell-locales | reviewed | shadow-docs/changes/20260922-feature-i18n-shell-locales/brief.md |
+| 20260922-feature-shell-capsule | ✅ 完成 | shadow-docs/changes/archive/20260922-feature-shell-capsule/brief.md |
 | 20260922-feature-user-center-github-oauth | ✅ 完成 | shadow-docs/changes/archive/20260922-feature-user-center-github-oauth/brief.md |
 | 20260922-feature-user-identity-sync | ✅ 完成 | shadow-docs/changes/archive/20260922-feature-user-identity-sync/brief.md |
 | 20260922-feature-vditor-md-editor | ✅ 完成 | shadow-docs/changes/archive/20260922-feature-vditor-md-editor/brief.md |
@@ -27,3 +28,5 @@
 | 20260922-fix-git-identity-guard | ✅ 完成 | shadow-docs/changes/archive/20260922-fix-git-identity-guard/brief.md |
 | 20260922-fix-shell-avatar-app-icon | ✅ 完成 | shadow-docs/changes/archive/20260922-fix-shell-avatar-app-icon/brief.md |
 | 20260922-fix-vditor-theme-bridge | ✅ 完成 | shadow-docs/changes/archive/20260922-fix-vditor-theme-bridge/brief.md |
+| 20260922-refactor-codemirror-editor | proposed | shadow-docs/changes/20260922-refactor-codemirror-editor/brief.md |
+| 20260923-feature-capsule-prominence | ✅ 完成 | shadow-docs/changes/archive/20260923-feature-capsule-prominence/brief.md |

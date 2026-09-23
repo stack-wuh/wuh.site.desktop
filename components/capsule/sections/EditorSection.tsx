@@ -2,19 +2,19 @@
 
 /**
  * 胶囊编辑器分区（20260922 胶囊化演进的核心件）：
- * - <EditorSection/>：TaskPopover 内的「编辑器」分区——文档状态行（路径/脏点/字数）、
+ * - <EditorSection/>：CapsulePanel 内的「编辑器」分区——文档状态行（路径/脏点/字数）、
  *   格式化命令组、插入组、文档操作组、大纲/工作区/文件可展开子面板。
  *   一切编辑指令经 editor-commands 发布，自身不触碰编辑器实例。
- * - <EditorCommandHost/>：常驻命令宿主（挂在 TaskCapsule，胶囊可见即在线），
+ * - <EditorCommandHost/>：常驻命令宿主（壳层 layout 单实例挂载，不随胶囊开关），
  *   认领文档操作类命令（save/saveAs/newDraft/closeDoc）——直接走 workspaceStore
  *   链路，SaveAs 对话框也由它承载；格式化/插入类命令不在此消费（编辑器认领）。
  */
 import { useEffect, useMemo, useState } from 'react'
 import styled from 'styled-components'
-import { AppIcon } from '../ui/AppIcon'
-import { Button } from '../ui/Button'
-import { Dialog, uiConfirm } from '../ui/Dialog'
-import { Input } from '../ui/Input'
+import { AppIcon } from '../../ui/AppIcon'
+import { Button } from '../../ui/Button'
+import { Dialog, uiConfirm } from '../../ui/Dialog'
+import { Input } from '../../ui/Input'
 import {
   IconBold,
   IconClose,
@@ -35,14 +35,14 @@ import {
   IconQuote,
   IconSave,
   IconTable
-} from '../icons'
-import type { IconComponent } from '../ui/AppIcon'
-import { workspaceStore, useWorkspaceStore, type MarkdownInsertAction } from '../../lib/store'
-import { publishEditorCommand, subscribeEditorCommands } from '../../lib/editor-commands'
-import { countWords, parseOutline } from '../../lib/editor-info'
-import { useLocale } from '../../lib/i18n/context'
-import { FilePanelContent } from '../workspace/FilePicker'
-import { WorkspacePanelContent } from '../workspace/WorkspacePicker'
+} from '../../icons'
+import type { IconComponent } from '../../ui/AppIcon'
+import { workspaceStore, useWorkspaceStore, type MarkdownInsertAction } from '../../../lib/store'
+import { publishEditorCommand, subscribeEditorCommands } from '../../../lib/editor-commands'
+import { countWords, parseOutline } from '../../../lib/editor-info'
+import { useLocale } from '../../../lib/i18n/context'
+import { FilePanelContent } from '../../workspace/FilePicker'
+import { WorkspacePanelContent } from '../../workspace/WorkspacePicker'
 
 const Section = styled.section`
   padding: 6px 0 4px;
