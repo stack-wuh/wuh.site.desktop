@@ -73,6 +73,22 @@ export interface PluginTaskContribution {
   viewId?: string
 }
 
+/** 胶囊控制中心模块模板：count=数值卡（主数值+副标）；status=状态卡（文本+语气色） */
+export type CapsuleTemplate = 'count' | 'status'
+
+/** 胶囊控制中心模块声明：声明制槽位，运行时经 SDK capsule.update/remove 更新内容或隐藏 */
+export interface PluginCapsuleContribution {
+  /** 插件内唯一，[a-z0-9][a-z0-9._-]* */
+  id: string
+  /** 模块标题（运行时不可变，保证控制中心模块清单稳定） */
+  title: string
+  icon: PluginIconName
+  /** 内容模板：宿主按模板白名单渲染，插件帧不触 DOM */
+  template: CapsuleTemplate
+  /** 可选跳转目标：须为本插件已声明的 area=main 视图 id */
+  viewId?: string
+}
+
 export interface PluginPublisherContribution {
   id: string
   label: string
@@ -90,6 +106,7 @@ export interface PluginManifest {
   publishers: PluginPublisherContribution[]
   statusItems?: PluginStatusItemContribution[]
   tasks?: PluginTaskContribution[]
+  capsule?: PluginCapsuleContribution[]
   permissions: PluginPermission[]
 }
 
@@ -161,12 +178,12 @@ export interface PluginHostApi {
 
 // ---------- 帧消息协议 ----------
 
-/** 插件帧 → host：service=cap 走主进程 broker；doc/render/ui/statusBar/tasks 由 host 直接服务。
+/** 插件帧 → host：service=cap 走主进程 broker；doc/render/ui/statusBar/tasks/capsule 由 host 直接服务。
  * id 由各帧自己的序号发生器产出（host 用数字、SDK 用 rN 字符串，回显原样匹配）。 */
 export interface FrameInvoke {
   kind: 'invoke'
   id: number | string
-  service: 'cap' | 'doc' | 'render' | 'ui' | 'statusBar' | 'tasks'
+  service: 'cap' | 'doc' | 'render' | 'ui' | 'statusBar' | 'tasks' | 'capsule'
   method: string
   args: unknown[]
 }
@@ -447,6 +464,61 @@ export function validateManifest(
     }
   }
 
+  // capsule：可选，声明制控制中心模块；运行时只能更新/隐藏已声明模块
+  const capsule: PluginCapsuleContribution[] = []
+  if (raw.capsule !== undefined) {
+    if (!Array.isArray(raw.capsule)) {
+      errors.push('capsule 必须是数组')
+    } else {
+      if (raw.capsule.length > 2) errors.push('capsule 最多声明 2 个模块')
+      const moduleIds = new Set<string>()
+      raw.capsule.forEach((c, i) => {
+        if (!isRecord(c)) {
+          errors.push(`capsule[${i}] 必须是对象`)
+          return
+        }
+        let valid = true
+        if (typeof c.id !== 'string' || !ID_RE.test(c.id)) {
+          errors.push(`capsule[${i}].id 非法（须匹配 ${ID_RE}）: ${String(c.id)}`)
+          valid = false
+        } else if (moduleIds.has(c.id)) {
+          errors.push(`capsule 模块 id 重复: ${c.id}`)
+          valid = false
+        } else {
+          moduleIds.add(c.id)
+        }
+        if (typeof c.title !== 'string' || !c.title.trim()) {
+          errors.push(`capsule[${i}].title 必填`)
+          valid = false
+        }
+        if (!(PLUGIN_ICONS as readonly string[]).includes(String(c.icon))) {
+          errors.push(`capsule[${i}].icon 不在白名单: ${String(c.icon)}`)
+          valid = false
+        }
+        if (c.template !== 'count' && c.template !== 'status') {
+          errors.push(`capsule[${i}].template 只能是 count/status: ${String(c.template)}`)
+          valid = false
+        }
+        if (c.viewId !== undefined) {
+          const target = views.find((v) => v.id === c.viewId)
+          if (!target || target.area !== 'main') {
+            errors.push(`capsule[${i}].viewId 须指向本插件已声明的 main 视图: ${String(c.viewId)}`)
+            valid = false
+          }
+        }
+        if (valid) {
+          capsule.push({
+            id: c.id as string,
+            title: c.title as string,
+            icon: c.icon as PluginIconName,
+            template: c.template as CapsuleTemplate,
+            ...(typeof c.viewId === 'string' ? { viewId: c.viewId } : {})
+          })
+        }
+      })
+    }
+  }
+
   if (errors.length > 0) return { ok: false, errors }
   return {
     ok: true,
@@ -460,6 +532,7 @@ export function validateManifest(
       publishers,
       ...(statusItems.length > 0 ? { statusItems } : {}),
       ...(tasks.length > 0 ? { tasks } : {}),
+      ...(capsule.length > 0 ? { capsule } : {}),
       permissions: perms
     }
   }

@@ -1,8 +1,8 @@
 {
   "id": "github-issues",
   "name": "GitHub Issues",
-  "version": "1.0.0",
-  "description": "把文档发布为 Issue（publisher 贡献）、标签管理与 Issue 评论回复",
+  "version": "1.1.0",
+  "description": "把文档发布为 Issue（publisher 贡献）、标签管理、Issue 评论回复，并经 capsule 贡献点在控制中心聚合 open issue 计数",
   "logic": "logic/publisher.js",
   "views": [
     {
@@ -16,5 +16,14 @@
   ],
   "publishers": [{ "id": "github-issues", "label": "GitHub Issues" }],
   "tasks": [{ "id": "publish", "title": "发布 Issue", "viewId": "github" }],
+  "capsule": [
+    {
+      "id": "issues",
+      "title": "GitHub Issues",
+      "icon": "github",
+      "template": "count",
+      "viewId": "github"
+    }
+  ],
   "permissions": ["net.github.api", "publish.register", "document.read.write"]
 }

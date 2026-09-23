@@ -29,6 +29,7 @@ import {
   List,
   ListOrdered,
   ListTree,
+  Maximize,
   MessageSquare,
   Minus,
   Palette,
@@ -77,6 +78,7 @@ export const IconLink = Link2
 export const IconList = List
 export const IconListOrdered = ListOrdered
 export const IconListTree = ListTree
+export const IconMaximize = Maximize
 export const IconMinus = Minus
 export const IconPalette = Palette
 export const IconPanelCollapse = PanelLeftClose

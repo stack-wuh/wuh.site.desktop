@@ -22,6 +22,8 @@ export type EditorCommand =
   /** 撤销/重做（编辑历史栈） */
   | { kind: 'undo' }
   | { kind: 'redo' }
+  /** 专注模式开合（壳层级：问候/散点图淡出、编辑区沉浸；宿主命令消费） */
+  | { kind: 'toggleFocus' }
   /** 文档操作（宿主命令消费，走 workspaceStore 链） */
   | { kind: 'save' }
   | { kind: 'saveAs' }

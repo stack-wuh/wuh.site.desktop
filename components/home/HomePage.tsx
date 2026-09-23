@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { Button } from '../ui/Button'
 import styled, { keyframes } from 'styled-components'
 import { Heatmap } from './Heatmap'
@@ -8,11 +9,14 @@ import { useAboutActivity } from './useAboutActivity'
 import { EditorPanel } from './EditorPanel'
 import { useLocale } from '../../lib/i18n/context'
 import { useGithubIdentity } from '../../lib/identity'
+import { publishEditorLiveState, useEditorLiveState } from '../../lib/editor-state'
 
 /**
  * 首页（两栏布局起为右栏默认页面；2026-09-22 升级为写作工作台）：
  * 问候语 → 综合活动热力图（节奏总览）→ 主编辑器面板（20260922 首页编辑器面板：
  * 项目/文件筛选收进面板上下文行，热力图由底部上移至问候语之下）。
+ * 专注模式（20260923-feature-capsule-control-center）：问候/热力图淡出至 5%
+ * 不卸载（会话态，经 editor-state 总线与胶囊开关同源），Esc 退出。
  * 无返回按钮/Esc/焦点归还语义，左栏 SideMenu 常驻可见，
  * 页面互斥切换由 App Router 路由段裁决。
  */
@@ -85,6 +89,17 @@ const Retry = styled.div`
   margin-top: 8px;
 `
 
+/** 专注模式淡出壳：布局占位保留（不卸载），仅视觉退场 */
+const Dimmable = styled.div<{ $dim: boolean }>`
+  opacity: ${(props) => (props.$dim ? 0.05 : 1)};
+  pointer-events: ${(props) => (props.$dim ? 'none' : 'auto')};
+  transition: opacity var(--motion-dur-reveal, 600ms) var(--motion-ease-out-soft, ease-out);
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+`
+
 function greetingKey(h: number): string {
   if (h < 5) return 'home.greetNight'
   if (h < 11) return 'home.greetMorning'
@@ -97,6 +112,18 @@ export function HomePage(): React.JSX.Element {
   const { data, loading, error, retry } = useAboutActivity()
   const { t } = useLocale()
   const identity = useGithubIdentity()
+  // 专注模式：与胶囊开关同源（editor-state 总线），Esc 退出
+  const live = useEditorLiveState()
+
+  useEffect(() => {
+    if (!live.focusMode) return
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') publishEditorLiveState({ focusMode: false })
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [live.focusMode])
+
   // 已授权时问候带名（昵称优先，login 兜底）；未授权/失效回落纯问候
   const authed = identity != null && !identity.stale
   const displayName = authed && identity ? identity.name || identity.login : null
@@ -106,7 +133,7 @@ export function HomePage(): React.JSX.Element {
   return (
     <Page className="home-page">
       <Body>
-        <header>
+        <Dimmable $dim={live.focusMode} as="header">
           <Title>
             {displayName
               ? t('home.greetNamed', { greeting: t(greetingKey(new Date().getHours())), name: displayName })
@@ -117,26 +144,28 @@ export function HomePage(): React.JSX.Element {
               ? t('home.activitySummary', { count: data.total })
               : t('home.activityFallback')}
           </Sub>
-        </header>
+        </Dimmable>
 
-        <Card aria-label={t('home.heatmapTitle')}>
-          <CardTitle>{t('home.heatmapTitle')}</CardTitle>
-          <Heatmap
-            data={view}
-            loading={loading}
-            error={error}
-            activityLabel={t('home.activityLabel')}
-            emptyLabel={t('home.activityEmpty')}
-            errorLabel={t('home.activityError')}
-          />
-          {error && (
-            <Retry>
-              <Button size="sm" onClick={retry}>
-                {t('common.retry')}
-              </Button>
-            </Retry>
-          )}
-        </Card>
+        <Dimmable $dim={live.focusMode}>
+          <Card aria-label={t('home.heatmapTitle')}>
+            <CardTitle>{t('home.heatmapTitle')}</CardTitle>
+            <Heatmap
+              data={view}
+              loading={loading}
+              error={error}
+              activityLabel={t('home.activityLabel')}
+              emptyLabel={t('home.activityEmpty')}
+              errorLabel={t('home.activityError')}
+            />
+            {error && (
+              <Retry>
+                <Button size="sm" onClick={retry}>
+                  {t('common.retry')}
+                </Button>
+              </Retry>
+            )}
+          </Card>
+        </Dimmable>
 
         <EditorPanel />
       </Body>
