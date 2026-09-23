@@ -9,7 +9,7 @@
  */
 import { useRouter } from 'next/navigation'
 import { useSyncExternalStore } from 'react'
-import styled, { keyframes } from 'styled-components'
+import styled, { css, keyframes } from 'styled-components'
 import { AppIcon } from '../ui/AppIcon'
 import { IconCheck } from '../icons'
 import { pluginIcon } from '../icons'
@@ -152,43 +152,41 @@ const StatusMark = styled.span<{ $status: TaskStatus }>`
 
   ${({ $status }) =>
     $status === 'pending'
-      ? `
-    &::before {
-      content: '';
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      border: 1.5px solid var(--text-muted);
-      box-sizing: border-box;
-    }
-  `
-      : ''
-  }
+      ? css`
+          &::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            border: 1.5px solid var(--text-muted);
+            box-sizing: border-box;
+          }
+        `
+      : ''}
 
   ${({ $status }) =>
     $status === 'in_progress'
-      ? `
-    &::before {
-      content: '';
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      border: 1.5px solid var(--chrome-border);
-      border-top-color: var(--primary-color);
-      box-sizing: border-box;
-      animation: ${spin} 800ms linear infinite;
-    }
+      ? css`
+          &::before {
+            content: '';
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 1.5px solid var(--chrome-border);
+            border-top-color: var(--primary-color);
+            box-sizing: border-box;
+            animation: ${spin} 800ms linear infinite;
+          }
 
-    @media (prefers-reduced-motion: reduce) {
-      &::before {
-        animation: none;
-        border-color: var(--primary-color);
-        opacity: 0.55;
-      }
-    }
-  `
-      : ''
-  }
+          @media (prefers-reduced-motion: reduce) {
+            &::before {
+              animation: none;
+              border-color: var(--primary-color);
+              opacity: 0.55;
+            }
+          }
+        `
+      : ''}
 `
 
 const Legend = styled.div`

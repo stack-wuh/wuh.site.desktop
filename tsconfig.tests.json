@@ -4,8 +4,11 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "lib": [
-      "ES2022"
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
     ],
+    "jsx": "react-jsx",
     "types": [
       "node"
     ],
@@ -13,22 +16,20 @@
     "noEmit": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
     "baseUrl": ".",
     "paths": {
       "@shared/*": [
         "./src/shared/*"
+      ],
+      "@/*": [
+        "./*"
       ]
     }
   },
   "include": [
-    "src/main/**/*",
-    "src/preload/**/*",
-    "src/plugin-sdk/**/*",
-    "src/shared/**/*",
-    "tests/**/*"
-  ],
-  "exclude": [
-    "tests/**/*.tsx",
-    "tests/helpers/**"
+    "tests/**/*",
+    "lib/globals.d.ts"
   ]
 }
