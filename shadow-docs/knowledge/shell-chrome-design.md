@@ -20,6 +20,7 @@ source:
   - changes/20260922-feature-shell-capsule/brief.md
   - changes/20260923-feature-capsule-prominence/brief.md
   - changes/20260922-refactor-codemirror-editor/brief.md
+  - changes/20260923-feature-build-time-visibility/brief.md
 verified: 2026-09-23
 ---
 
@@ -55,7 +56,7 @@ verified: 2026-09-23
 - 组件样式用 styled-components + 主题 token（`chrome-*`/`primary-*`/语义 token）；四主题 × 亮暗逐 token 校验；动效 150-300ms ease-out 并响应 `prefers-reduced-motion`；左栏展开收起必须瞬时（禁 width/布局位移过渡）。
 - 品牌标书写动效属**入场型展示动画**（非过渡）：单笔 400ms（token `--motion-dur-write`）+ stagger，总长 ≤900ms，mount 播放一次，`prefers-reduced-motion: reduce` 下必须直接渲染静态终态；仅 `animated` prop 显式开启。
 - 品牌/ Dock 图标几何改动必须同步 `components/icons/brand.tsx` 与 `build/icon.svg`（含亮/暗变体 token 表），并重跑 `build:icon` 重新提交产物（png/ico/icns）；`tests/icon-build.test.ts` 校验同源几何、产物尺寸、ico 容器结构与重跑可复现。
-- 应用版本号经 `next.config.ts` 的 `env.NEXT_PUBLIC_APP_VERSION` 构建期内联（消费方读 `process.env.NEXT_PUBLIC_APP_VERSION`），不得新增 preload/broker 通道消费版本。
+- 应用版本号与构建时间戳经 `next.config.ts` 的 `env.NEXT_PUBLIC_APP_VERSION` / `env.NEXT_PUBLIC_BUILD_TIME` 构建期内联（消费方读 `process.env`，格式化统一走 `lib/buildInfo` 的确定性 UTC 输出——禁 `toLocaleString`，避免 SSR/客户端 locale 差异 hydration mismatch），不得新增 preload/broker 通道消费版本。构建时间戳展示于设置页「关于」与快捷面板版本行（dev 下 = dev 服务器启动时刻，build 下 = 构建时刻；显示值与当前会话对不上 = 渲染层旧页面，即僵尸实例检测）。
 - 插件可见性 API 扩展遵循「声明制优先」：先加 manifest schema + `validateManifest` 校验 + `tests/plugin-manifest.test.ts` 用例，运行时 API 只能操作声明过的资源。
 - `statusItems.ts` 变更后必须 `commit()` 产出新 state 引用（快照订阅依赖引用变化）；`floats.ts`、`tasks.ts` 同构同理。
 - 胶囊动效（spinner/旋转环）属**持续状态指示**，不适用 150-300ms 过渡规则；`prefers-reduced-motion: reduce` 下必须静态降级。壳层不得反向修改任务状态（单一写方 = 插件 SDK）。壳层胶囊挂点契约（main 容器右上常驻、宿主无 z-index、pointer-events 穿透、面板向下弹出）见壳层胶囊段——移动挂点或调整层级必须整段同步。
