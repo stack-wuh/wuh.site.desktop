@@ -15,6 +15,13 @@ export type EditorCommand =
   | { kind: 'insertClipboardImage' }
   /** 大纲跳转：目标为 parseOutline 序列中的序号 */
   | { kind: 'scrollToHeading'; index: number }
+  /** 即时渲染 ↔ 纯源码切换（L3 渲染开关，编辑器侧持久化 wd.editorRenderMode） */
+  | { kind: 'toggleRender' }
+  /** 查找/替换：开合 CM6 内联搜索面板（Mod-F 同款） */
+  | { kind: 'findReplace' }
+  /** 撤销/重做（编辑历史栈） */
+  | { kind: 'undo' }
+  | { kind: 'redo' }
   /** 文档操作（宿主命令消费，走 workspaceStore 链） */
   | { kind: 'save' }
   | { kind: 'saveAs' }

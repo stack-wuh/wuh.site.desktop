@@ -63,3 +63,23 @@ export const INSERT_SNIPPETS: Record<'table' | 'codeBlock' | 'hr', string> = {
   codeBlock: '```\n\n```',
   hr: '\n\n---\n\n'
 }
+
+/**
+ * 大纲跟随：光标所在行归属的标题序号（parseOutline 序列中行号 ≤ 当前行且最近者）；
+ * 首个标题之前返回 -1。围栏内的 # 行不在 outline 里，天然不参与归属。
+ */
+export function activeOutlineIndex(content: string, line: number): number {
+  let active = -1
+  const outline = parseOutline(content)
+  for (let i = 0; i < outline.length; i++) {
+    if (outline[i].line > line) break
+    active = i
+  }
+  return active
+}
+
+/** 阅读时长（分钟）：每分钟约 400 字（CJK 字符 + 拉丁词混合口径），零字 0、不足 1 分钟按 1 */
+export function estimateReadingMinutes(words: number): number {
+  if (words <= 0) return 0
+  return Math.max(1, Math.round(words / 400))
+}

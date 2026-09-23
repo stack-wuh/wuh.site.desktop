@@ -42,6 +42,8 @@ import {
   Sparkles,
   Table,
   Tag,
+  Undo2,
+  Redo2,
   X
 } from 'lucide-react'
 import type { PluginIconName } from '@shared/plugin'
@@ -81,10 +83,13 @@ export const IconPanelCollapse = PanelLeftClose
 export const IconPanelExpand = PanelLeftOpen
 export const IconPlus = Plus
 export const IconQuote = Quote
+export const IconRedo = Redo2
 export const IconSave = Save
 export const IconSearch = Search
 export const IconSettings = Settings
+export const IconSparkles = Sparkles
 export const IconTable = Table
+export const IconUndo = Undo2
 
 // ---------- Status：状态 ----------
 
