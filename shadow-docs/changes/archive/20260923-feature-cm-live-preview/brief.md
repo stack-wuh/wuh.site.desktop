@@ -4,7 +4,7 @@
   "name": "20260923-feature-cm-live-preview",
   "type": "feature",
   "scope": "editor",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20260923-feature-cm-live-preview",
   "files": [
@@ -24,18 +24,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 53,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/53",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 55,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/55"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "86e0d9182fef8f16957cd36b5c3eaf97237c95ea",
-    "verifiedAt": "2026-09-23T04:44:37.882Z"
+    "verifiedCommit": "c1e1b4e45a4d1ffb86c54877c3c34299adcd38cf",
+    "verifiedAt": "2026-09-23T06:41:31.908Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:53",
-    "planHash": "8798cb07c351e664305cd6e1f58789215482df79c534b4fe380a62cf005568b5",
+    "checkpoint": "merged-pr:55",
+    "planHash": "cfcee068a3f75371061d6155a109ef1741c04e422aa49955fb28fcfbab2be7e3",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
