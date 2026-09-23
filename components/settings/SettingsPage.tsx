@@ -20,9 +20,12 @@ import { SettingsNav, type SettingsNavItem } from './SettingsNav'
 import { PluginManagerSection } from './PluginManagerSection'
 import { IconCheck, IconChevronLeft, IconLogo } from '../icons'
 import { useLocale } from '../../lib/i18n/context'
+import { BUILD_TIME, formatBuildTime } from '../../lib/buildInfo'
 
 // 构建期内联应用版本（next.config.ts env），不走 preload/broker 通道
 const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? '0.0.0'
+// 构建时间与版本同源内联；确定性 UTC 格式化（模块级一次求值，hydration 稳定）
+const BUILD_TIME_TEXT = formatBuildTime(BUILD_TIME)
 
 type FieldKey = 'siteBaseUrl'
 
@@ -234,6 +237,11 @@ export function SettingsPage(): React.JSX.Element {
               <AboutMeta>
                 <strong>wuh-site-desktop</strong>
                 <HintText style={{ margin: 0 }}>v{APP_VERSION}</HintText>
+                {BUILD_TIME_TEXT && (
+                  <HintText style={{ margin: 0 }}>
+                    {t('settings.buildTime')}：{BUILD_TIME_TEXT}
+                  </HintText>
+                )}
               </AboutMeta>
             </AboutBody>
           </SettingSection>

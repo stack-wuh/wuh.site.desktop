@@ -22,9 +22,12 @@ import type { ThemeFamily } from './theme/tokens'
 import { useLocale } from '../lib/i18n/context'
 import { localeLabels, localeOrder, type Locale } from '../lib/i18n/locales'
 import { useGithubIdentity } from '../lib/identity'
+import { BUILD_TIME, formatBuildTimeShort } from '../lib/buildInfo'
 
 // 构建期内联应用版本（next.config.ts env，NEXT_PUBLIC_ 前缀），不走 preload/broker 通道
 const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? '0.0.0'
+// 构建时间短格式与版本并排展示：显示值与当前会话对不上 = 渲染层是旧页面
+const BUILD_TIME_SHORT = formatBuildTimeShort(BUILD_TIME)
 
 /** 徽标：数字（>99 折叠为 99+）或无数圆点 */
 export interface SideMenuBadge {
@@ -520,7 +523,7 @@ function UserQuickPanel(props: {
           <strong>{props.displayName ?? t('pop.user')}</strong>
         </PopIdentity>
         <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
-          v{APP_VERSION} · {t('pop.userHint')}
+          {`v${APP_VERSION}${BUILD_TIME_SHORT ? ` · ${BUILD_TIME_SHORT}` : ''} · ${t('pop.userHint')}`}
         </span>
       </PopHead>
       <PopGroup role="group" aria-label={t('pop.theme')}>

@@ -29,7 +29,10 @@ const nextConfig: NextConfig = {
   turbopack: { root: turbopackRoot },
   env: {
     // 构建期内联应用版本（设置页「关于」区块消费），不走 preload/broker 通道
-    NEXT_PUBLIC_APP_VERSION: pkg.version
+    NEXT_PUBLIC_APP_VERSION: pkg.version,
+    // 构建期内联构建时间戳（dev 下 = dev 服务器启动时刻，build 下 = 构建时刻）：
+    // 页面展示值与当前会话对不上 = 渲染层是旧页面（僵尸实例检测），lib/buildInfo 消费
+    NEXT_PUBLIC_BUILD_TIME: new Date().toISOString()
   }
 }
 
