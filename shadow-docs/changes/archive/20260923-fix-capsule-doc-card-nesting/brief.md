@@ -4,7 +4,7 @@
   "name": "20260923-fix-capsule-doc-card-nesting",
   "type": "fix",
   "scope": "capsule",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "fix/20260923-fix-capsule-doc-card-nesting",
   "files": [
@@ -16,18 +16,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 57,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/57",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 58,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/58"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "daca6eeb4d751c7bd3350fa2003ffabe9ea10921",
-    "verifiedAt": "2026-09-23T09:38:23.330Z"
+    "verifiedCommit": "7598f847f670d92bdc47530697713690ae2df8ee",
+    "verifiedAt": "2026-09-23T12:44:22.914Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:57",
-    "planHash": "b5de7e1b135800a8650e56e734cb8dd6d244d4182abf8ee804d06a068d91cdb1",
+    "checkpoint": "merged-pr:58",
+    "planHash": "05c18b76126e3e0b16b90530d5cc66e03973b45797d91208724d2c084e79787c",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
