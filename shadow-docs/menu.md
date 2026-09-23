@@ -10,6 +10,7 @@
 | 壳层 chrome / 图标 | 图标 图标注册表 AppIcon Icon 品牌标 IconLogo Dock 图标 icon.svg 应用图标 ico 任务栏 SideMenu StatusBar 状态栏 徽标 tooltip 描边 主题 token styled-components CSP 用户面板 语言切换 | knowledge/shell-chrome-design.md |
 | 用户中心 / GitHub 授权 | 用户中心 account 授权 OAuth Device Flow GitHub 登录 token 凭证 身份 头像 identity 仓库列表 默认站点仓库 PAT scopes 失效 | knowledge/renderer-shell-routing.md, knowledge/shell-chrome-design.md |
 | 构建/工具链 | Next next.config 静态导出 app 协议 electron-vite 双进程 dev workspace pnpm 打包 electron-builder tsconfig vitest README | knowledge/renderer-shell-routing.md, knowledge/shell-chrome-design.md |
+| 主编辑器 / 预览 | 编辑器 MarkdownEditor CodeMirror CM6 源码编辑 预览 PreviewPane 分栏 命令通道 editor-commands 双通道 防回环 图片粘贴 粘贴截图 大纲 字数 高亮 HighlightStyle | knowledge/editor.md |
 | 插件状态项 | statusItems statusBar 状态项 贡献点 徽标位 声明制 | knowledge/shell-chrome-design.md |
 | 壳层胶囊 | 胶囊 壳层胶囊 任务 待办 任务列表 任务胶囊 进度 TaskCapsule TaskPopover Capsule CapsulePanel tasks statusItems 之外的状态聚合 | knowledge/shell-chrome-design.md |
 | 插件浮窗视图 | float 浮窗 预览 preview 视图区域 FloatLayer floats | knowledge/shell-chrome-design.md, knowledge/renderer-shell-routing.md |
