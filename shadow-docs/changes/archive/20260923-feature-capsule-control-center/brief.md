@@ -4,7 +4,7 @@
   "name": "20260923-feature-capsule-control-center",
   "type": "feature",
   "scope": "capsule",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20260923-feature-capsule-control-center",
   "files": [
@@ -26,18 +26,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 54,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/54",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 56,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/56"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "f1c5f644494de1a9884944ff23b20a152cb49e5d",
-    "verifiedAt": "2026-09-23T08:38:20.841Z"
+    "verifiedCommit": "6a97b890c281a3f545b4f66ac86b42b4b84ece15",
+    "verifiedAt": "2026-09-23T09:01:53.994Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:54",
-    "planHash": "cac0d5f9f98192e0e2d6f442f488cde17287861467be67baf609f0cf779f34f3",
+    "checkpoint": "merged-pr:56",
+    "planHash": "f29c6c0011b89f33c45ae6ebaa8bbc5cf09639366aef1a2c50e145b7b7cd38e9",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
