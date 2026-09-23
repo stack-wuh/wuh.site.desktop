@@ -31,7 +31,12 @@ import { workspaceStore, useWorkspaceStore } from '../../lib/store'
 import { publishEditorCommand, subscribeEditorCommands, type EditorCommand } from '../../lib/editor-commands'
 import { cmApplyFormat, cmExternalContent, cmHeadingCursor, cmInsertSnippet } from '../../lib/editor-cm'
 import { livePreviewField } from './decorations'
-import { getEditorLiveState, publishEditorLiveState } from '../../lib/editor-state'
+import {
+  loadPersistedEditorState,
+  publishEditorLiveState,
+  useEditorLiveState,
+  type EditorTypography
+} from '../../lib/editor-state'
 import { useLocale } from '../../lib/i18n/context'
 import 'katex/dist/katex.min.css'
 
@@ -77,7 +82,7 @@ const editorTheme = EditorView.theme({
     color: 'var(--text-primary)',
     backgroundColor: 'transparent',
     fontFamily: 'var(--font-sans)',
-    fontSize: '14px'
+    fontSize: 'var(--editor-font-size, 14px)'
   },
   '.cm-scroller': {
     overflow: 'auto',
@@ -85,8 +90,10 @@ const editorTheme = EditorView.theme({
   },
   '.cm-content': {
     caretColor: 'var(--primary-color)',
-    lineHeight: 1.7,
-    padding: '8px 2px 12px 0'
+    lineHeight: 'var(--editor-line-height, 1.7)',
+    padding: '8px 2px 12px 0',
+    maxWidth: 'var(--editor-measure, none)',
+    margin: '0 auto'
   },
   '.cm-cursor, .cm-dropCursor': {
     borderLeftColor: 'var(--primary-color)'
@@ -408,6 +415,8 @@ export function MarkdownEditor(): React.JSX.Element {
     renderModeRef.current = readRenderPref()
     const renderComp = new Compartment()
     renderCompRef.current = renderComp
+    // 排版偏好等持久化态入总线（专注/大纲跟随为会话态默认值）
+    loadPersistedEditorState()
 
     const extensions = [
       EditorView.lineWrapping,
@@ -429,6 +438,13 @@ export function MarkdownEditor(): React.JSX.Element {
           key: 'Mod-/',
           run: () => {
             publishEditorCommand({ kind: 'toggleRender' })
+            return true
+          }
+        },
+        {
+          key: 'Mod-Shift-f',
+          run: () => {
+            publishEditorCommand({ kind: 'toggleFocus' })
             return true
           }
         },
@@ -582,8 +598,16 @@ export function MarkdownEditor(): React.JSX.Element {
     pushedRef.current = content
   }, [doc.content, ready])
 
+  // 排版偏好 → surface CSS 变量（字号/行距/行宽；预览分栏不受影响）
+  const { typography } = useEditorLiveState()
+  const mountStyle = {
+    '--editor-font-size': `${typography.fontSize}px`,
+    '--editor-line-height': String(typography.lineHeight),
+    '--editor-measure': typography.measure === 'full' ? 'none' : `${typography.measure}px`
+  } as React.CSSProperties
+
   return (
-    <EditorMount ref={containerRef} aria-label={t('editor.placeholder')} data-testid="markdown-editor">
+    <EditorMount ref={containerRef} style={mountStyle} aria-label={t('editor.placeholder')} data-testid="markdown-editor">
       {notice && <Notice role="status">{notice}</Notice>}
     </EditorMount>
   )

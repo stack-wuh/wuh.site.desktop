@@ -151,6 +151,10 @@ export const PLUGIN_SDK_JS = `(function () {
       upsert: function (id, patch) { return call('tasks', 'upsert', [id, patch || {}]); },
       remove: function (id) { return call('tasks', 'remove', [id]); }
     },
+    capsule: {
+      update: function (id, data) { return call('capsule', 'update', [id, data || {}]); },
+      remove: function (id) { return call('capsule', 'remove', [id]); }
+    },
     publisher: {
       register: function (id, handler) { publishers[id] = handler; }
     }
@@ -221,6 +225,24 @@ export interface WuhApi {
       }
     ): Promise<void>
     /** 隐藏 manifest 声明的任务 */
+    remove(id: string): Promise<void>
+  }
+  capsule: {
+    /**
+     * 更新 manifest 声明的胶囊模块内容（未声明的 id / 模板不符的数据会被宿主拒绝）：
+     * count 模板传 { value, label?, detail? }；status 模板传 { text, tone?, detail? }
+     */
+    update(
+      id: string,
+      data?: {
+        value?: number
+        label?: string
+        text?: string
+        tone?: 'default' | 'primary' | 'success' | 'warning'
+        detail?: string
+      }
+    ): Promise<void>
+    /** 隐藏 manifest 声明的胶囊模块 */
     remove(id: string): Promise<void>
   }
   publisher: {

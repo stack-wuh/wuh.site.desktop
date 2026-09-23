@@ -1,15 +1,16 @@
 'use client'
 
 /**
- * 胶囊编辑器分区（20260922 胶囊化演进的核心件）：
- * - <EditorSection/>：CapsulePanel 内的「编辑器」分区——文档状态行（路径/脏点/字数）、
- *   格式化命令组、插入组、文档操作组、大纲/工作区/文件可展开子面板。
- *   一切编辑指令经 editor-commands 发布，自身不触碰编辑器实例。
- * - <EditorCommandHost/>：常驻命令宿主（壳层 layout 单实例挂载，不随胶囊开关），
- *   认领文档操作类命令（save/saveAs/newDraft/closeDoc）——直接走 workspaceStore
- *   链路，SaveAs 对话框也由它承载；格式化/插入类命令不在此消费（编辑器认领）。
+ * 控制中心「编辑器模块区」（20260923-feature-capsule-control-center 重构）：
+ * 原平铺按钮列升级为模块卡布局（设计稿 PART 2）——文档卡（路径/脏点/字数/
+ * 阅读时长 + 保存组）、开关 tile（即时渲染/专注模式/大纲跟随，iOS 式开关，
+ * 状态经 editor-state 总线单状态源）、查找替换 tile、格式+插入图标网格、
+ * 排版设置/快捷键速查整行手风琴、导出双卡。一切编辑指令经 editor-commands
+ * 发布，自身不触碰编辑器实例；排版偏好持久化 wd.editorTypography。
+ * <EditorCommandHost/> 保持壳层 layout 单实例（不随胶囊开关），认领文档操作
+ * 与专注模式命令。
  */
-import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import styled from 'styled-components'
 import { AppIcon } from '../../ui/AppIcon'
 import { Button } from '../../ui/Button'
@@ -19,6 +20,8 @@ import {
   IconBold,
   IconClose,
   IconCode,
+  IconCopy,
+  IconExternalLink,
   IconFile,
   IconFilePlus,
   IconFolderOpen,
@@ -30,6 +33,7 @@ import {
   IconList,
   IconListOrdered,
   IconListTree,
+  IconMaximize,
   IconMinus,
   IconPlus,
   IconQuote,
@@ -43,46 +47,37 @@ import {
 import type { IconComponent } from '../../ui/AppIcon'
 import { workspaceStore, useWorkspaceStore, type MarkdownInsertAction } from '../../../lib/store'
 import { publishEditorCommand, subscribeEditorCommands } from '../../../lib/editor-commands'
-import { getEditorLiveState, subscribeEditorLiveState } from '../../../lib/editor-state'
-import { countWords, parseOutline } from '../../../lib/editor-info'
+import { getEditorLiveState, publishEditorLiveState, useEditorLiveState, type EditorTypography } from '../../../lib/editor-state'
+import { countWords, estimateReadingMinutes, parseOutline } from '../../../lib/editor-info'
+import { copyAsHtml, exportHtmlFile } from '../../../lib/editor-export'
 import { useLocale } from '../../../lib/i18n/context'
 import { FilePanelContent } from '../../workspace/FilePicker'
 import { WorkspacePanelContent } from '../../workspace/WorkspacePicker'
-
-const Section = styled.section`
-  padding: 6px 0 4px;
-
-  & + & {
-    border-top: 1px solid var(--chrome-border);
-  }
-`
-
-const SectionHead = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 2px 10px 6px;
-`
-
-const SectionTitle = styled.span`
-  font-size: 11px;
-  color: var(--text-muted);
-  letter-spacing: 1px;
-`
-
-const DocRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 10px 6px;
-`
+import {
+  KbdTable,
+  ModuleCard,
+  ModuleGrid,
+  ModuleHead,
+  ModuleIcon,
+  ModuleMore,
+  ModuleRow,
+  ModuleSub,
+  RowChevron,
+  SectionHint,
+  SectionLabel,
+  CenterSection,
+  Stepper,
+  StepperLine,
+  SubPanel,
+  SwitchCard
+} from '../modules'
 
 const DocChip = styled.span`
   display: inline-flex;
   align-items: center;
   gap: 6px;
   min-width: 0;
-  max-width: 55%;
+  max-width: 100%;
   padding: 2px 8px;
   border-radius: 999px;
   background: var(--chrome-raised);
@@ -106,19 +101,11 @@ const DirtyDot = styled.span`
   background: var(--warning-color);
 `
 
-const WordStat = styled.span`
-  margin-left: auto;
-  flex: none;
-  font-size: 11px;
-  font-family: var(--font-mono);
-  color: var(--text-muted);
-`
-
 const IconRow = styled.div`
   display: flex;
   align-items: center;
   gap: 2px;
-  padding: 0 8px 4px;
+  padding: 4px 8px;
   flex-wrap: wrap;
 `
 
@@ -152,7 +139,7 @@ const IconBtn = styled.button`
 
 const OutlineList = styled.ul`
   list-style: none;
-  margin: 0 10px 6px;
+  margin: 2px 10px 6px;
   padding: 0;
   max-height: 132px;
   overflow: auto;
@@ -182,16 +169,6 @@ const OutlineEmpty = styled.li`
   color: var(--text-muted);
 `
 
-const SubPanel = styled.div`
-  margin: 2px 10px 6px;
-  padding: 8px;
-  max-height: 240px;
-  overflow: auto;
-  background: var(--chrome-raised);
-  border: 1px solid var(--chrome-border);
-  border-radius: var(--border-radius-base);
-`
-
 const DialogError = styled.p`
   margin: 8px 0 0;
   font-size: 12px;
@@ -199,7 +176,7 @@ const DialogError = styled.p`
   word-break: break-all;
 `
 
-type SubPanelKind = 'none' | 'outline' | 'workspace' | 'file'
+type SubPanelKind = 'none' | 'outline' | 'workspace' | 'file' | 'typeset' | 'kbd'
 
 const FORMAT_ITEMS: { action: MarkdownInsertAction; icon: IconComponent; labelKey: string }[] = [
   { action: 'h1', icon: IconHeading1, labelKey: 'editor.fmtH1' },
@@ -213,16 +190,32 @@ const FORMAT_ITEMS: { action: MarkdownInsertAction; icon: IconComponent; labelKe
   { action: 'link', icon: IconLink, labelKey: 'editor.fmtLink' }
 ]
 
+/** 排版步进定义：字号 ±1（12-18）、行距 ±0.1（1.5-2.2）、行宽循环（满幅→宽→中→窄） */
+const MEASURE_STEPS: ('full' | 960 | 820 | 700)[] = ['full', 960, 820, 700]
+
+function stepTypography(cur: EditorTypography, field: 'fontSize' | 'lineHeight' | 'measure', dir: 1 | -1): EditorTypography {
+  if (field === 'fontSize') {
+    return { ...cur, fontSize: Math.min(18, Math.max(12, cur.fontSize + dir)) }
+  }
+  if (field === 'lineHeight') {
+    return { ...cur, lineHeight: Math.min(2.2, Math.max(1.5, Math.round((cur.lineHeight + dir * 0.1) * 10) / 10)) }
+  }
+  const idx = MEASURE_STEPS.indexOf(cur.measure as (typeof MEASURE_STEPS)[number])
+  const next = Math.min(MEASURE_STEPS.length - 1, Math.max(0, (idx < 0 ? 0 : idx) + dir))
+  return { ...cur, measure: MEASURE_STEPS[next] }
+}
+
 export function EditorSection(): React.JSX.Element {
   const { t } = useLocale()
   const doc = useWorkspaceStore()
+  const live = useEditorLiveState()
   const [panel, setPanel] = useState<SubPanelKind>('none')
-  // 渲染模式 + 大纲跟随：编辑器状态总线（未挂载编辑器时为默认值）
-  const live = useSyncExternalStore(subscribeEditorLiveState, getEditorLiveState, getEditorLiveState)
+  const [exportMsg, setExportMsg] = useState<string | null>(null)
 
   const content = doc.content ?? ''
   const outline = useMemo(() => parseOutline(content), [content])
   const words = useMemo(() => countWords(content), [content])
+  const minutes = estimateReadingMinutes(words.words)
 
   const togglePanel = (kind: SubPanelKind): void => {
     setPanel((cur) => (cur === kind ? 'none' : kind))
@@ -230,21 +223,97 @@ export function EditorSection(): React.JSX.Element {
 
   const activeDoc = doc.activePath != null || doc.content != null
 
-  return (
-    <Section aria-label={t('capsule.editorSection')}>
-      <SectionHead>
-        <SectionTitle>{t('capsule.editorSection')}</SectionTitle>
-      </SectionHead>
+  const runExport = (kind: 'copy' | 'file'): void => {
+    setExportMsg(null)
+    const done = kind === 'copy' ? t('editor.exportCopyDone') : t('editor.exportFileDone')
+    void (kind === 'copy' ? copyAsHtml() : exportHtmlFile())
+      .then((rel) => {
+        setExportMsg(kind === 'file' && typeof rel === 'string' ? `${t('editor.exportFileDone')} ${rel}` : done)
+        setTimeout(() => setExportMsg(null), 2600)
+      })
+      .catch((err: unknown) => {
+        setExportMsg(err instanceof Error ? err.message : String(err))
+        setTimeout(() => setExportMsg(null), 3200)
+      })
+  }
 
-      <DocRow>
-        <DocChip title={doc.activePath ?? undefined}>
-          <DocPath>{doc.activePath ?? t('editor.newDraft')}</DocPath>
-          {doc.dirty && <DirtyDot title={t('editor.dirtyTitle')} />}
-        </DocChip>
-        {activeDoc && (
-          <WordStat>{t('editor.wordStat', { words: words.words, chars: words.chars })}</WordStat>
-        )}
-      </DocRow>
+  return (
+    <CenterSection aria-label={t('capsule.editorSection')}>
+      <SectionLabel>
+        {t('capsule.editorSection')}
+        <SectionHint>EDITOR</SectionHint>
+      </SectionLabel>
+
+      {/* 文档卡：独占整行 */}
+      <ModuleGrid>
+        <ModuleCard $span2 type="button" title={doc.activePath ?? t('editor.newDraft')} onClick={() => publishEditorCommand({ kind: 'focus' })}>
+          <ModuleHead>
+            <ModuleIcon>
+              <AppIcon icon={IconFile} size="xs" decorative />
+            </ModuleIcon>
+            <span className="truncate" style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
+              {doc.activePath ?? t('editor.newDraft')}
+            </span>
+            {doc.dirty && (
+              <span title={t('editor.dirtyTitle')} style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--warning-color)', flex: 'none' }} />
+            )}
+          </ModuleHead>
+          <ModuleSub>
+            {activeDoc
+              ? `${t('editor.wordStat', { words: words.words, chars: words.chars })} · ${t('editor.readingTime', { minutes })}`
+              : t('editor.newDraftHint')}
+          </ModuleSub>
+          <div style={{ display: 'flex', gap: 4, marginTop: 6 }}>
+            <ActionMini $accent onClick={() => publishEditorCommand({ kind: 'save' })}>
+              <AppIcon icon={IconSave} size="xs" decorative />
+              {t('editor.save')}
+            </ActionMini>
+            <ActionMini onClick={() => publishEditorCommand({ kind: 'saveAs' })}>
+              <AppIcon icon={IconFilePlus} size="xs" decorative />
+              {t('editor.saveAs')}
+            </ActionMini>
+            <ActionMini onClick={() => publishEditorCommand({ kind: 'newDraft' })}>
+              <AppIcon icon={IconPlus} size="xs" decorative />
+              {t('editor.newBtn')}
+            </ActionMini>
+            <ActionMini onClick={() => publishEditorCommand({ kind: 'closeDoc' })}>
+              <AppIcon icon={IconClose} size="xs" decorative />
+              {t('editor.closeDoc')}
+            </ActionMini>
+          </div>
+        </ModuleCard>
+
+        <SwitchCard
+          icon={<AppIcon icon={IconSparkles} size="xs" decorative />}
+          label={t('editor.renderLive')}
+          hint="⌘/ 切换纯源码"
+          on={live.renderMode === 'render'}
+          onToggle={() => publishEditorCommand({ kind: 'toggleRender' })}
+        />
+        <SwitchCard
+          icon={<AppIcon icon={IconMaximize} size="xs" decorative />}
+          label={t('editor.focus')}
+          hint={t('editor.focusHint')}
+          on={live.focusMode}
+          onToggle={() => publishEditorCommand({ kind: 'toggleFocus' })}
+        />
+        <ModuleCard type="button" title={t('editor.findReplace')} onClick={() => publishEditorCommand({ kind: 'findReplace' })}>
+          <ModuleHead>
+            <ModuleIcon>
+              <AppIcon icon={IconSearch} size="xs" decorative />
+            </ModuleIcon>
+            {t('editor.findReplace')}
+            <ModuleMore>⌘F</ModuleMore>
+          </ModuleHead>
+        </ModuleCard>
+        <SwitchCard
+          icon={<AppIcon icon={IconListTree} size="xs" decorative />}
+          label={t('editor.follow')}
+          hint={t('editor.followHint')}
+          on={live.outlineFollow}
+          onToggle={() => publishEditorLiveState({ outlineFollow: !live.outlineFollow })}
+        />
+      </ModuleGrid>
 
       <IconRow role="group" aria-label={t('editor.fmtAria')}>
         {FORMAT_ITEMS.map(({ action, icon, labelKey }) => (
@@ -258,9 +327,7 @@ export function EditorSection(): React.JSX.Element {
             <AppIcon icon={icon} size="xs" decorative />
           </IconBtn>
         ))}
-      </IconRow>
-
-      <IconRow role="group" aria-label={t('editor.insertGroup')}>
+        <span style={{ width: 1, height: 16, background: 'var(--chrome-border)', margin: '0 3px' }} />
         <IconBtn
           type="button"
           title={t('editor.fmtImage')}
@@ -293,74 +360,14 @@ export function EditorSection(): React.JSX.Element {
         >
           <AppIcon icon={IconMinus} size="xs" decorative />
         </IconBtn>
-      </IconRow>
-
-      <IconRow>
-        <IconBtn
-          type="button"
-          title={t('editor.toggleRender')}
-          aria-label={t('editor.toggleRender')}
-          aria-pressed={live.renderMode === 'render'}
-          onClick={() => publishEditorCommand({ kind: 'toggleRender' })}
-        >
-          <AppIcon icon={IconSparkles} size="xs" decorative />
-        </IconBtn>
-        <IconBtn
-          type="button"
-          title={t('editor.findReplace')}
-          aria-label={t('editor.findReplace')}
-          onClick={() => publishEditorCommand({ kind: 'findReplace' })}
-        >
-          <AppIcon icon={IconSearch} size="xs" decorative />
-        </IconBtn>
-        <IconBtn
-          type="button"
-          title={t('editor.undo')}
-          aria-label={t('editor.undo')}
-          onClick={() => publishEditorCommand({ kind: 'undo' })}
-        >
+        <span style={{ width: 1, height: 16, background: 'var(--chrome-border)', margin: '0 3px' }} />
+        <IconBtn title={t('editor.undo')} aria-label={t('editor.undo')} onClick={() => publishEditorCommand({ kind: 'undo' })}>
           <AppIcon icon={IconUndo} size="xs" decorative />
         </IconBtn>
-        <IconBtn
-          type="button"
-          title={t('editor.redo')}
-          aria-label={t('editor.redo')}
-          onClick={() => publishEditorCommand({ kind: 'redo' })}
-        >
+        <IconBtn title={t('editor.redo')} aria-label={t('editor.redo')} onClick={() => publishEditorCommand({ kind: 'redo' })}>
           <AppIcon icon={IconRedo} size="xs" decorative />
         </IconBtn>
-        <IconBtn
-          type="button"
-          title={t('editor.save')}
-          aria-label={t('editor.saveAria')}
-          onClick={() => publishEditorCommand({ kind: 'save' })}
-        >
-          <AppIcon icon={IconSave} size="xs" decorative />
-        </IconBtn>
-        <IconBtn
-          type="button"
-          title={t('editor.saveAs')}
-          aria-label={t('editor.saveAs')}
-          onClick={() => publishEditorCommand({ kind: 'saveAs' })}
-        >
-          <AppIcon icon={IconFilePlus} size="xs" decorative />
-        </IconBtn>
-        <IconBtn
-          type="button"
-          title={t('editor.newBtn')}
-          aria-label={t('editor.newBtn')}
-          onClick={() => publishEditorCommand({ kind: 'newDraft' })}
-        >
-          <AppIcon icon={IconPlus} size="xs" decorative />
-        </IconBtn>
-        <IconBtn
-          type="button"
-          title={t('editor.closeDoc')}
-          aria-label={t('editor.closeDoc')}
-          onClick={() => publishEditorCommand({ kind: 'closeDoc' })}
-        >
-          <AppIcon icon={IconClose} size="xs" decorative />
-        </IconBtn>
+        <span style={{ width: 1, height: 16, background: 'var(--chrome-border)', margin: '0 3px' }} />
         <IconBtn
           type="button"
           title={t('editor.outline')}
@@ -390,6 +397,79 @@ export function EditorSection(): React.JSX.Element {
         </IconBtn>
       </IconRow>
 
+      <div style={{ height: 4 }} />
+
+      <ModuleRow $open={panel === 'typeset'} onClick={() => togglePanel('typeset')} aria-expanded={panel === 'typeset'}>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--primary-color)' }}>Aa</span>
+        {t('editor.typeset')}
+        <RowChevron $open={panel === 'typeset'}>›</RowChevron>
+      </ModuleRow>
+      <SubPanel $open={panel === 'typeset'}>
+        <StepperLine>
+          <span className="name">{t('editor.typesetFontSize')}</span>
+          <Stepper>
+            <button type="button" onClick={() => publishEditorLiveState({ typography: stepTypography(live.typography, 'fontSize', -1) })}>−</button>
+            <span className="val">{live.typography.fontSize} px</span>
+            <button type="button" onClick={() => publishEditorLiveState({ typography: stepTypography(live.typography, 'fontSize', 1) })}>＋</button>
+          </Stepper>
+        </StepperLine>
+        <StepperLine>
+          <span className="name">{t('editor.typesetLineHeight')}</span>
+          <Stepper>
+            <button type="button" onClick={() => publishEditorLiveState({ typography: stepTypography(live.typography, 'lineHeight', -1) })}>−</button>
+            <span className="val">{live.typography.lineHeight.toFixed(1)}</span>
+            <button type="button" onClick={() => publishEditorLiveState({ typography: stepTypography(live.typography, 'lineHeight', 1) })}>＋</button>
+          </Stepper>
+        </StepperLine>
+        <StepperLine>
+          <span className="name">{t('editor.typesetMeasure')}</span>
+          <Stepper>
+            <button type="button" onClick={() => publishEditorLiveState({ typography: stepTypography(live.typography, 'measure', -1) })}>−</button>
+            <span className="val">{live.typography.measure === 'full' ? t('editor.measureFull') : `${live.typography.measure}px`}</span>
+            <button type="button" onClick={() => publishEditorLiveState({ typography: stepTypography(live.typography, 'measure', 1) })}>＋</button>
+          </Stepper>
+        </StepperLine>
+      </SubPanel>
+
+      <ModuleRow $open={panel === 'kbd'} onClick={() => togglePanel('kbd')} aria-expanded={panel === 'kbd'}>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--primary-color)' }}>⌘</span>
+        {t('editor.kbd')}
+        <RowChevron $open={panel === 'kbd'}>›</RowChevron>
+      </ModuleRow>
+      <SubPanel $open={panel === 'kbd'}>
+        <KbdTable>
+          <kbd>⌘B</kbd><span>{t('editor.fmtBold')}</span>
+          <kbd>⌘I</kbd><span>{t('editor.fmtItalic')}</span>
+          <kbd>⌘F</kbd><span>{t('editor.findReplace')}</span>
+          <kbd>⌘/</kbd><span>{t('editor.toggleRender')}</span>
+          <kbd>⌘S</kbd><span>{t('editor.save')}</span>
+          <kbd>⌘Z</kbd><span>{t('editor.undo')}</span>
+          <kbd>⌘⇧F</kbd><span>{t('editor.focus')}</span>
+          <kbd>Esc</kbd><span>{t('editor.escExit')}</span>
+        </KbdTable>
+      </SubPanel>
+
+      <ModuleGrid>
+        <ModuleCard type="button" title={t('editor.exportCopy')} onClick={() => runExport('copy')}>
+          <ModuleHead>
+            <ModuleIcon>
+              <AppIcon icon={IconCopy} size="xs" decorative />
+            </ModuleIcon>
+            {t('editor.exportCopy')}
+          </ModuleHead>
+          <ModuleSub>{exportMsg ?? t('editor.exportCopyHint')}</ModuleSub>
+        </ModuleCard>
+        <ModuleCard type="button" title={t('editor.exportFile')} onClick={() => runExport('file')}>
+          <ModuleHead>
+            <ModuleIcon>
+              <AppIcon icon={IconExternalLink} size="xs" decorative />
+            </ModuleIcon>
+            {t('editor.exportFile')}
+          </ModuleHead>
+          <ModuleSub>.html</ModuleSub>
+        </ModuleCard>
+      </ModuleGrid>
+
       {panel === 'outline' && (
         <OutlineList aria-label={t('editor.outline')}>
           {outline.length === 0 ? (
@@ -399,7 +479,7 @@ export function EditorSection(): React.JSX.Element {
               <OutlineItem
                 key={`${item.line}-${item.text}`}
                 $level={item.level}
-                $active={live.activeHeading === index}
+                $active={live.outlineFollow && live.activeHeading === index}
                 title={item.text}
                 onClick={() => publishEditorCommand({ kind: 'scrollToHeading', index })}
               >
@@ -411,19 +491,41 @@ export function EditorSection(): React.JSX.Element {
       )}
 
       {panel === 'workspace' && (
-        <SubPanel>
+        <SubPanel $open>
           <WorkspacePanelContent />
         </SubPanel>
       )}
 
       {panel === 'file' && (
-        <SubPanel>
+        <SubPanel $open>
           <FilePanelContent />
         </SubPanel>
       )}
-    </Section>
+    </CenterSection>
   )
 }
+
+/** 文档卡内迷你动作钮 */
+const ActionMini = styled.button<{ $accent?: boolean }>`
+  flex: 1;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: color-mix(in oklab, var(--background-color) 45%, var(--chrome-raised));
+  border: 1px solid color-mix(in oklab, var(--chrome-border) 70%, transparent);
+  border-radius: 7px;
+  color: ${(props) => (props.$accent ? 'var(--primary-color)' : 'var(--text-secondary)')};
+  font-size: 10.5px;
+  font-family: var(--font-sans);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--chrome-hover);
+    color: var(--text-primary);
+  }
+`
 
 export function EditorCommandHost(): React.JSX.Element {
   const { t } = useLocale()
@@ -438,7 +540,7 @@ export function EditorCommandHost(): React.JSX.Element {
     setSaveAsOpen(true)
   }
 
-  // 常驻订阅：文档操作类命令只认领自己的一类，其余放行给编辑器实例
+  // 常驻订阅：文档操作与专注模式命令只认领自己的一类，其余放行给编辑器实例
   useEffect(() => {
     return subscribeEditorCommands((cmd) => {
       const cur = workspaceStore.get()
@@ -486,6 +588,10 @@ export function EditorCommandHost(): React.JSX.Element {
           } else {
             close()
           }
+          return true
+        }
+        case 'toggleFocus': {
+          publishEditorLiveState({ focusMode: !getEditorLiveState().focusMode })
           return true
         }
         default:
