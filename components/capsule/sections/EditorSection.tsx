@@ -9,7 +9,7 @@
  *   认领文档操作类命令（save/saveAs/newDraft/closeDoc）——直接走 workspaceStore
  *   链路，SaveAs 对话框也由它承载；格式化/插入类命令不在此消费（编辑器认领）。
  */
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import styled from 'styled-components'
 import { AppIcon } from '../../ui/AppIcon'
 import { Button } from '../../ui/Button'
@@ -33,12 +33,17 @@ import {
   IconMinus,
   IconPlus,
   IconQuote,
+  IconRedo,
   IconSave,
-  IconTable
+  IconSearch,
+  IconSparkles,
+  IconTable,
+  IconUndo
 } from '../../icons'
 import type { IconComponent } from '../../ui/AppIcon'
 import { workspaceStore, useWorkspaceStore, type MarkdownInsertAction } from '../../../lib/store'
 import { publishEditorCommand, subscribeEditorCommands } from '../../../lib/editor-commands'
+import { getEditorLiveState, subscribeEditorLiveState } from '../../../lib/editor-state'
 import { countWords, parseOutline } from '../../../lib/editor-info'
 import { useLocale } from '../../../lib/i18n/context'
 import { FilePanelContent } from '../../workspace/FilePicker'
@@ -154,11 +159,12 @@ const OutlineList = styled.ul`
   border-top: 1px solid var(--chrome-border);
 `
 
-const OutlineItem = styled.li<{ $level: number }>`
+const OutlineItem = styled.li<{ $level: number; $active?: boolean }>`
   padding: 4px 6px;
   padding-left: ${(props) => 6 + (props.$level - 1) * 12}px;
   font-size: 12px;
-  color: var(--text-secondary);
+  color: ${(props) => (props.$active ? 'var(--primary-color)' : 'var(--text-secondary)')};
+  font-weight: ${(props) => (props.$active ? '700' : '400')};
   cursor: pointer;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -211,6 +217,8 @@ export function EditorSection(): React.JSX.Element {
   const { t } = useLocale()
   const doc = useWorkspaceStore()
   const [panel, setPanel] = useState<SubPanelKind>('none')
+  // 渲染模式 + 大纲跟随：编辑器状态总线（未挂载编辑器时为默认值）
+  const live = useSyncExternalStore(subscribeEditorLiveState, getEditorLiveState, getEditorLiveState)
 
   const content = doc.content ?? ''
   const outline = useMemo(() => parseOutline(content), [content])
@@ -290,6 +298,39 @@ export function EditorSection(): React.JSX.Element {
       <IconRow>
         <IconBtn
           type="button"
+          title={t('editor.toggleRender')}
+          aria-label={t('editor.toggleRender')}
+          aria-pressed={live.renderMode === 'render'}
+          onClick={() => publishEditorCommand({ kind: 'toggleRender' })}
+        >
+          <AppIcon icon={IconSparkles} size="xs" decorative />
+        </IconBtn>
+        <IconBtn
+          type="button"
+          title={t('editor.findReplace')}
+          aria-label={t('editor.findReplace')}
+          onClick={() => publishEditorCommand({ kind: 'findReplace' })}
+        >
+          <AppIcon icon={IconSearch} size="xs" decorative />
+        </IconBtn>
+        <IconBtn
+          type="button"
+          title={t('editor.undo')}
+          aria-label={t('editor.undo')}
+          onClick={() => publishEditorCommand({ kind: 'undo' })}
+        >
+          <AppIcon icon={IconUndo} size="xs" decorative />
+        </IconBtn>
+        <IconBtn
+          type="button"
+          title={t('editor.redo')}
+          aria-label={t('editor.redo')}
+          onClick={() => publishEditorCommand({ kind: 'redo' })}
+        >
+          <AppIcon icon={IconRedo} size="xs" decorative />
+        </IconBtn>
+        <IconBtn
+          type="button"
           title={t('editor.save')}
           aria-label={t('editor.saveAria')}
           onClick={() => publishEditorCommand({ kind: 'save' })}
@@ -358,6 +399,7 @@ export function EditorSection(): React.JSX.Element {
               <OutlineItem
                 key={`${item.line}-${item.text}`}
                 $level={item.level}
+                $active={live.activeHeading === index}
                 title={item.text}
                 onClick={() => publishEditorCommand({ kind: 'scrollToHeading', index })}
               >

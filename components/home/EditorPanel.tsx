@@ -9,14 +9,24 @@
  * 文件相关交互全部收在上下两行；新建/保存/预览经命令通道或本地状态，与胶囊
  * 全局入口同源——命令宿主常驻壳层 layout（单实例）。首页布局：问候 → 散点图 → 本面板。
  */
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 import styled from 'styled-components'
 import type { WorkspaceInfo } from '@shared/types'
 import { useWorkspaceStore } from '../../lib/store'
 import { publishEditorCommand } from '../../lib/editor-commands'
+import { getEditorLiveState, subscribeEditorLiveState } from '../../lib/editor-state'
 import { Button } from '../ui/Button'
 import { AppIcon } from '../ui/AppIcon'
-import { IconChevronDown, IconEye, IconFile, IconFolderOpen, IconSave } from '../icons'
+import {
+  IconChevronDown,
+  IconEye,
+  IconFile,
+  IconFolderOpen,
+  IconRedo,
+  IconSave,
+  IconSearch,
+  IconUndo
+} from '../icons'
 import {
   PickerButton,
   PickerName,
@@ -127,6 +137,49 @@ const DirtyDot = styled.span`
   background: var(--warning-color);
 `
 
+/* 渲染模式分段控件（即时渲染 ↔ 纯源码；状态源 = editor-state 总线） */
+const ModeSeg = styled.span`
+  display: inline-flex;
+  background: var(--chrome-raised);
+  border: 1px solid var(--chrome-border);
+  border-radius: 8px;
+  padding: 2px;
+
+  & > button {
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: var(--font-sans);
+    font-size: 11px;
+    padding: 3px 11px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition:
+      background-color var(--motion-dur-quick, 150ms) var(--motion-ease-out-soft, ease-out),
+      color var(--motion-dur-quick, 150ms) var(--motion-ease-out-soft, ease-out);
+  }
+
+  & > button.on {
+    background: var(--primary-color);
+    color: #fff;
+  }
+
+  & > button:hover:not(.on) {
+    color: var(--text-primary);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    & > button {
+      transition: none;
+    }
+  }
+`
+
+/** 预览降级态（ghosted）：仅导出/严格排版对照场景使用 */
+const GhostButton = styled(Button)`
+  opacity: 0.45;
+`
+
 /** 项目菜单触发按钮：popover 内嵌 WorkspacePanelContent */
 function WorkspacePicker(): React.JSX.Element {
   const { t } = useLocale()
@@ -194,6 +247,8 @@ export function EditorPanel(): React.JSX.Element {
   const doc = useWorkspaceStore()
   const { t } = useLocale()
   const [previewOn, setPreviewOn] = useState(false)
+  // 渲染模式：编辑器侧回推（未挂载时用总线默认值 render）
+  const live = useSyncExternalStore(subscribeEditorLiveState, getEditorLiveState, getEditorLiveState)
 
   // 预览开关记忆：挂载后读取（防 SSR 预渲染 hydration 不匹配）
   useEffect(() => {
@@ -238,16 +293,65 @@ export function EditorPanel(): React.JSX.Element {
           {doc.dirty && <DirtyDot title={t('editor.dirtyTitle')} />}
         </DocChip>
         <Spacer />
+        <ModeSeg role="group" aria-label={t('editor.toggleRender')}>
+          <button
+            type="button"
+            className={live.renderMode === 'render' ? 'on' : ''}
+            aria-pressed={live.renderMode === 'render'}
+            onClick={() => {
+              if (live.renderMode !== 'render') publishEditorCommand({ kind: 'toggleRender' })
+            }}
+          >
+            {t('editor.renderLive')}
+          </button>
+          <button
+            type="button"
+            className={live.renderMode === 'source' ? 'on' : ''}
+            aria-pressed={live.renderMode === 'source'}
+            onClick={() => {
+              if (live.renderMode !== 'source') publishEditorCommand({ kind: 'toggleRender' })
+            }}
+          >
+            {t('editor.renderSource')}
+          </button>
+        </ModeSeg>
         <Button
+          size="sm"
+          variant="ghost"
+          aria-label={t('editor.undo')}
+          title={t('editor.undo')}
+          onClick={() => publishEditorCommand({ kind: 'undo' })}
+        >
+          <AppIcon icon={IconUndo} size="xs" decorative />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          aria-label={t('editor.redo')}
+          title={t('editor.redo')}
+          onClick={() => publishEditorCommand({ kind: 'redo' })}
+        >
+          <AppIcon icon={IconRedo} size="xs" decorative />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          aria-label={t('editor.findReplace')}
+          title={t('editor.findReplace')}
+          onClick={() => publishEditorCommand({ kind: 'findReplace' })}
+        >
+          <AppIcon icon={IconSearch} size="xs" decorative />
+        </Button>
+        <GhostButton
           size="sm"
           variant="ghost"
           aria-label={t('editor.preview')}
           aria-pressed={previewOn}
-          title={t('editor.preview')}
+          title={t('editor.previewGhost')}
           onClick={togglePreview}
         >
           <AppIcon icon={IconEye} size="xs" decorative />
-        </Button>
+        </GhostButton>
         <Button
           size="sm"
           variant="ghost"

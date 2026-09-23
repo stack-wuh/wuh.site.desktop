@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme-family="wine" data-color-scheme="dark" data-no-transition>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>设计稿 · 胶囊控制中心 + CM6 Live Preview — 20260923</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+/* ================================================================
+   设计稿页面自身的样式。约定：
+   - 颜色/圆角/动效一律取应用 token，设计稿不发明新色
+   - 组件形态复刻 apps/desktop styled-components 产物
+   ================================================================ */
+@font-face { font-family: 'Noto Sans SC'; font-weight: 400; font-display: swap;
+  src: url('../../app/fonts/NotoSansSC-400.woff2') format('woff2'); }
+@font-face { font-family: 'Noto Sans SC'; font-weight: 700; font-display: swap;
+  src: url('../../app/fonts/NotoSansSC-700.woff2') format('woff2'); }
+@font-face { font-family: 'JetBrains Mono'; font-weight: 400; font-display: swap;
+  src: url('../../app/fonts/JetBrainsMono-400.woff2') format('woff2'); }
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; color-scheme: dark; }
+html[data-color-scheme="light"] { color-scheme: light; }
+/* 应用同款滚动条（globals.css 快照）：8px 主题色胶囊 */
+* { scrollbar-width: thin; scrollbar-color: var(--primary-color) transparent; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: linear-gradient(180deg, var(--primary-color), color-mix(in oklab, var(--primary-color) 78%, var(--accent-color))); border-radius: 8px; }
+*::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, color-mix(in oklab, var(--primary-color) 88%, #fff), var(--primary-color)); }
+*::-webkit-scrollbar-corner { background: transparent; }
+body {
+  margin: 0; background: var(--background-color); color: var(--text-primary);
+  font-family: var(--font-sans); font-size: 14px; line-height: 1.6;
+  transition: background-color .3s ease, color .3s ease;
+}
+body { transition: background-color .3s ease, color .3s ease; }
+[data-no-transition] *, [data-no-transition] *::before, [data-no-transition] *::after { transition: none !important; animation: none !important; }
+::selection { background: color-mix(in oklab, var(--primary-color) 24%, transparent); }
+
+/* ---- 版面骨架 ---- */
+.page { max-width: 1180px; margin: 0 auto; padding: 40px 32px 120px; }
+.spec-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 20px; margin-bottom: 8px; }
+.spec-head h1 { font-size: 26px; margin: 0; letter-spacing: .5px; }
+.spec-head h1 em { font-style: normal; color: var(--primary-color); }
+.spec-meta { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); letter-spacing: .4px; }
+.spec-lede { max-width: 720px; color: var(--text-secondary); margin: 10px 0 28px; }
+
+.theme-bar { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+.theme-bar .lbl { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 1px; }
+.seg { display: inline-flex; background: var(--chrome-raised); border: 1px solid var(--chrome-border); border-radius: 8px; padding: 2px; }
+.seg button {
+  border: none; background: transparent; color: var(--text-secondary); font-family: var(--font-sans);
+  font-size: 11px; padding: 3px 10px; border-radius: 6px; cursor: pointer; transition: background-color var(--motion-dur-quick) var(--motion-ease-out-soft), color var(--motion-dur-quick) var(--motion-ease-out-soft);
+}
+.seg button.on { background: var(--primary-color); color: #fff; }
+.seg button:hover:not(.on) { color: var(--text-primary); background: var(--chrome-hover); }
+
+.part { margin-top: 72px; }
+.part-eyebrow { font-family: var(--font-mono); font-size: 11px; color: var(--primary-color); letter-spacing: 2px; }
+.part h2 { font-size: 20px; margin: 6px 0 4px; }
+.part-lede { color: var(--text-secondary); max-width: 680px; margin: 0 0 22px; }
+
+.two-col { display: grid; grid-template-columns: minmax(0, 1fr) 264px; gap: 28px; align-items: start; }
+@media (max-width: 1020px) { .two-col { grid-template-columns: 1fr; } }
+
+/* ---- app frame（应用窗口 mock） ---- */
+.frame { border: 1px solid var(--chrome-border); border-radius: var(--border-radius-lg); overflow: hidden; background: var(--background-color); box-shadow: var(--elevation-card); }
+.titlebar { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--chrome-panel); border-bottom: 1px solid var(--chrome-border); }
+.tb-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--chrome-border); }
+.tb-title { font-size: 11px; color: var(--text-muted); margin-left: 6px; font-family: var(--font-mono); }
+
+/* mini home：问候 + 散点图 + 面板（演示专注模式淡出） */
+.mini-home { display: flex; flex-direction: column; gap: 14px; padding: 16px 18px 18px; min-height: 560px; }
+.greet { transition: opacity var(--motion-dur-reveal) var(--motion-ease-out-soft); }
+.greet .hi { font-size: 17px; font-weight: 700; }
+.greet .sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.scatter { height: 120px; border-radius: var(--border-radius-md); background: var(--chrome-panel); border: 1px solid var(--chrome-border); position: relative; overflow: hidden; transition: opacity var(--motion-dur-reveal) var(--motion-ease-out-soft), flex var(--motion-dur-reveal) var(--motion-ease-out-soft); flex: none; }
+.scatter svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.scatter .cap { position: absolute; left: 10px; top: 8px; font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); }
+.frame.focus-mode .greet, .frame.focus-mode .scatter { opacity: .05; pointer-events: none; }
+.frame.focus-mode .scatter { flex: 0 0 0; height: 0; border-color: transparent; }
+
+/* ---- 首页编辑面板（L3 编辑器所在） ---- */
+.panel { display: flex; flex-direction: column; background: var(--chrome-panel); border: 1px solid var(--chrome-border); border-radius: var(--border-radius-lg); transition: border-color .3s ease; flex: 1; min-height: 0; }
+.frame.focus-mode .panel { border-color: color-mix(in oklab, var(--primary-color) 40%, var(--chrome-border)); }
+.ctx-row { display: flex; align-items: center; gap: 8px; padding: 10px 10px 8px; }
+.picker-btn { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; background: var(--chrome-raised); border: 1px solid var(--chrome-border); border-radius: 7px; color: var(--text-secondary); font-size: 12px; cursor: pointer; }
+.picker-btn:hover { background: var(--chrome-hover); color: var(--text-primary); }
+.picker-btn .ic { font-size: 10px; color: var(--text-muted); }
+
+/* 编辑区：渲染层 / 源码层叠放 */
+.editor-wrap { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 6px 6px 0; }
+.editor-surface { position: relative; flex: 1; min-height: 300px; background: color-mix(in oklab, var(--background-color) 55%, var(--chrome-panel)); border: 1px solid var(--chrome-border); border-radius: var(--border-radius-md); overflow: hidden; }
+
+.layer { position: absolute; inset: 0; overflow-y: auto; padding: 18px 26px 26px; transition: opacity 240ms var(--motion-ease-out-soft); }
+.layer-src { opacity: 0; visibility: hidden; font-family: var(--font-mono); font-size: 13px; line-height: 1.8; white-space: pre-wrap; color: var(--text-secondary); }
+.editor-wrap.mode-source .layer-render { opacity: 0; visibility: hidden; }
+.editor-wrap.mode-source .layer-src { opacity: 1; visibility: visible; }
+
+/* ===== L3 渲染语言（核心规范区） ===== */
+.lr { font-size: 14px; line-height: 1.8; color: var(--text-primary); }
+.lr > * + * { margin-top: 2px; }
+.lr h1 { font-size: 22px; font-weight: 700; line-height: var(--line-height-heading); margin: 14px 0 6px; }
+.lr h2 { font-size: 17px; font-weight: 700; margin: 14px 0 4px; padding-bottom: 4px; border-bottom: 1px solid color-mix(in oklab, var(--chrome-border) 70%, transparent); }
+.lr h3 { font-size: 15px; font-weight: 700; margin: 10px 0 2px; }
+.lr p { margin: 4px 0; }
+.lr strong { font-weight: 700; }
+.lr em { font-style: italic; }
+.lr del { color: var(--text-muted); text-decoration: line-through; }
+.lr a { color: var(--primary-color); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: color-mix(in oklab, var(--primary-color) 45%, transparent); }
+.lr code { font-family: var(--font-mono); font-size: 12.5px; background: var(--chrome-raised); border: 1px solid color-mix(in oklab, var(--chrome-border) 60%, transparent); padding: 1px 5px; border-radius: 4px; }
+.lr blockquote { margin: 8px 0; padding: 4px 14px; border-left: 3px solid color-mix(in oklab, var(--primary-color) 55%, transparent); background: color-mix(in oklab, var(--primary-color) 6%, transparent); border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0; color: var(--text-secondary); }
+.lr blockquote p { margin: 2px 0; }
+.lr ul, .lr ol { margin: 4px 0; padding-left: 24px; }
+.lr ul { list-style: none; padding-left: 6px; }
+.lr ul li { position: relative; padding-left: 18px; margin: 2px 0; }
+.lr ul li::before { content: ''; position: absolute; left: 4px; top: .72em; width: 5px; height: 5px; border-radius: 50%; background: color-mix(in oklab, var(--primary-color) 65%, transparent); }
+.lr ul.ul-l2 li::before { background: transparent; border: 1.5px solid color-mix(in oklab, var(--primary-color) 45%, transparent); width: 4px; height: 4px; }
+.lr ol { padding-left: 8px; }
+.lr ol li { margin: 2px 0; padding-left: 6px; }
+.lr ol li::marker { font-family: var(--font-mono); font-size: 12px; color: color-mix(in oklab, var(--primary-color) 75%, var(--text-primary)); }
+.lr hr { border: none; height: 1px; background: linear-gradient(90deg, transparent, var(--chrome-border) 18%, var(--chrome-border) 82%, transparent); margin: 16px 0; }
+.lr table { border-collapse: collapse; font-size: 13px; margin: 8px 0; }
+.lr th, .lr td { border: 1px solid var(--chrome-border); padding: 4px 12px; }
+.lr th { background: var(--chrome-raised); font-weight: 700; }
+
+/* 代码块：底色 + 语言标头 */
+.lr .codeblock { margin: 10px 0; border-radius: var(--border-radius-base); overflow: hidden; border: 1px solid color-mix(in oklab, var(--chrome-border) 70%, transparent); }
+.lr .codeblock .cb-head { display: flex; align-items: center; justify-content: space-between; padding: 4px 12px; background: var(--chrome-raised); border-bottom: 1px solid color-mix(in oklab, var(--chrome-border) 55%, transparent); }
+.lr .codeblock .cb-lang { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-muted); letter-spacing: 1px; }
+.lr .codeblock .cb-copy { font-size: 10.5px; color: var(--text-muted); border: none; background: transparent; cursor: pointer; padding: 2px 6px; border-radius: 4px; }
+.lr .codeblock .cb-copy:hover { color: var(--text-primary); background: var(--chrome-hover); }
+.lr .codeblock pre { margin: 0; padding: 10px 14px; background: color-mix(in oklab, var(--chrome-raised) 72%, transparent); font-family: var(--font-mono); font-size: 12.5px; line-height: 1.7; overflow-x: auto; }
+.tok-kw { color: var(--primary-color); }
+.tok-str { color: var(--success-color); }
+.tok-com { color: var(--text-muted); font-style: italic; }
+
+/* 图片内联 */
+.lr figure.inline-img { margin: 10px 0; }
+.lr figure.inline-img .img-shell { position: relative; display: inline-block; border-radius: var(--border-radius-base); overflow: hidden; border: 1px solid var(--chrome-border); box-shadow: var(--elevation-soft); transition: box-shadow var(--motion-dur-quick) var(--motion-ease-out-soft), border-color var(--motion-dur-quick) var(--motion-ease-out-soft); }
+.lr figure.inline-img .img-shell:hover { box-shadow: var(--elevation-card); border-color: color-mix(in oklab, var(--primary-color) 40%, var(--chrome-border)); }
+.lr figure.inline-img img { display: block; max-width: min(360px, 100%); }
+.lr figure.inline-img .img-badge { position: absolute; right: 6px; bottom: 6px; font-family: var(--font-mono); font-size: 9.5px; padding: 2px 7px; border-radius: 999px; background: color-mix(in oklab, var(--background-color) 78%, #000); color: var(--text-secondary); opacity: 0; transition: opacity var(--motion-dur-quick) var(--motion-ease-out-soft); }
+.lr figure.inline-img .img-shell:hover .img-badge { opacity: 1; }
+.lr figcaption { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+/* 公式渲染态（CSS 模拟 KaTeX 观感） */
+.lr .math-block { position: relative; margin: 10px 0; padding: 12px 16px; text-align: center; border-radius: var(--border-radius-base); border: 1px dashed transparent; cursor: pointer; transition: border-color var(--motion-dur-quick) var(--motion-ease-out-soft), background-color var(--motion-dur-quick) var(--motion-ease-out-soft); }
+.lr .math-block:hover { border-color: color-mix(in oklab, var(--primary-color) 35%, transparent); background: color-mix(in oklab, var(--primary-color) 4%, transparent); }
+.math-block .m-render { font-family: Georgia, 'Times New Roman', serif; font-size: 18px; font-style: italic; color: var(--text-primary); }
+.math-block .m-render sup { font-size: .68em; vertical-align: super; }
+.math-block .m-render .frac { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; font-size: .82em; line-height: 1.25; margin: 0 2px; }
+.math-block .m-render .frac .bar { border-top: 1px solid currentColor; }
+.math-block .m-src { display: none; font-family: var(--font-mono); font-size: 12.5px; color: var(--text-secondary); }
+.math-block.show-src .m-render { display: none; }
+.math-block.show-src .m-src { display: block; }
+.math-hint { position: absolute; right: 10px; top: 8px; font-family: var(--font-mono); font-size: 9.5px; color: var(--text-muted); opacity: 0; transition: opacity var(--motion-dur-quick) var(--motion-ease-out-soft); }
+.math-block:hover .math-hint { opacity: .8; }
+
+/* mermaid 渲染态（CSS 流程图模拟） */
+.lr .mermaid-block { position: relative; margin: 10px 0; padding: 14px 16px 12px; border-radius: var(--border-radius-base); background: color-mix(in oklab, var(--chrome-raised) 55%, transparent); border: 1px solid color-mix(in oklab, var(--chrome-border) 70%, transparent); }
+.lr .mermaid-block .mm-lang { position: absolute; left: 12px; top: 8px; font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 1px; }
+.flow { display: flex; align-items: center; justify-content: center; gap: 0; margin-top: 14px; }
+.flow .node { padding: 7px 14px; border-radius: 8px; font-size: 12px; border: 1.5px solid color-mix(in oklab, var(--primary-color) 60%, transparent); background: color-mix(in oklab, var(--primary-color) 8%, transparent); color: var(--text-primary); white-space: nowrap; }
+.flow .node.round { border-radius: 999px; }
+.flow .arrow { width: 34px; height: 1.5px; background: var(--text-muted); position: relative; margin: 0 4px; }
+.flow .arrow::after { content: ''; position: absolute; right: 0; top: -3.2px; border: 4px solid transparent; border-left-color: var(--text-muted); }
+
+/* 光标行：L2 符号浮现演示 */
+.cursor-row { position: relative; border-radius: var(--border-radius-sm); outline: 1.5px solid color-mix(in oklab, var(--primary-color) 30%, transparent); outline-offset: 3px; }
+.cursor-row .r { display: none; }
+.cursor-row .s { display: block; font-family: var(--font-mono); font-size: 13px; color: var(--text-secondary); background: color-mix(in oklab, var(--primary-color) 5%, transparent); }
+.cursor-row .s .mk { color: color-mix(in oklab, var(--primary-color) 55%, var(--text-muted)); }
+.caret { display: inline-block; width: 1.5px; height: 1.05em; background: var(--primary-color); vertical-align: text-bottom; margin-left: 1px; animation: blink 1.1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+/* 查找替换条 */
+.find-bar { display: none; align-items: center; gap: 6px; padding: 6px 8px; background: var(--chrome-raised); border: 1px solid var(--chrome-border); border-bottom: none; border-radius: var(--border-radius-sm) var(--border-radius-sm) 0 0; }
+.find-bar.show { display: flex; }
+.find-bar input { flex: 0 0 170px; height: 24px; background: var(--background-color); border: 1px solid var(--chrome-border); border-radius: 6px; color: var(--text-primary); font-family: var(--font-mono); font-size: 12px; padding: 0 8px; outline: none; }
+.find-bar input:focus { border-color: var(--primary-color); }
+.find-bar .count { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+.find-bar .fb-btn { height: 24px; padding: 0 8px; background: transparent; border: 1px solid var(--chrome-border); border-radius: 6px; color: var(--text-secondary); font-size: 11px; cursor: pointer; }
+.find-bar .fb-btn:hover { background: var(--chrome-hover); color: var(--text-primary); }
+.find-bar .close { margin-left: auto; }
+mark.hit { background: color-mix(in oklab, var(--warning-color) 38%, transparent); color: inherit; border-radius: 2px; padding: 0 1px; }
+
+/* 动作行 */
+.action-row { display: flex; align-items: center; gap: 6px; padding: 8px 10px 10px; flex-wrap: wrap; }
+.st-chip { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px; border-radius: 999px; background: var(--chrome-raised); border: 1px solid var(--chrome-border); font-family: var(--font-mono); font-size: 10.5px; color: var(--text-muted); }
+.dirty-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--warning-color); }
+.a-btn { display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 9px; background: transparent; border: 1px solid var(--chrome-border); border-radius: 7px; color: var(--text-secondary); font-size: 11.5px; cursor: pointer; transition: background-color var(--motion-dur-quick) var(--motion-ease-out-soft), border-color var(--motion-dur-quick) var(--motion-ease-out-soft), color var(--motion-dur-quick) var(--motion-ease-out-soft); }
+.a-btn:hover { background: var(--chrome-hover); color: var(--text-primary); }
+.a-btn.primary { background: var(--primary-color); border-color: var(--primary-color); color: #fff; }
+.a-btn.primary:hover { filter: brightness(1.08); }
+.a-btn.ghosted { opacity: .45; }
+.a-sep { width: 1px; height: 16px; background: var(--chrome-border); margin: 0 2px; }
+.spacer { flex: 1; }
+
+/* 渲染开关（分段控件） */
+.mode-seg { display: inline-flex; background: var(--chrome-raised); border: 1px solid var(--chrome-border); border-radius: 8px; padding: 2px; }
+.mode-seg button { border: none; background: transparent; color: var(--text-muted); font-size: 11px; font-family: var(--font-sans); padding: 3px 11px; border-radius: 6px; cursor: pointer; }
+.mode-seg button.on { background: var(--primary-color); color: #fff; }
+.mode-seg button:hover:not(.on) { color: var(--text-primary); }
+
+/* ---- 注记列 ---- */
+.notes { position: sticky; top: 24px; display: flex; flex-direction: column; gap: 10px; }
+.note { padding: 10px 12px; background: var(--chrome-panel); border: 1px solid var(--chrome-border); border-radius: var(--border-radius-base); }
+.note .n-tag { display: inline-flex; align-items: center; justify-content: center; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 999px; background: color-mix(in oklab, var(--primary-color) 16%, transparent); color: var(--primary-color); font-family: var(--font-mono); font-size: 10px; margin-right: 6px; }
+.note .n-title { font-size: 12px; font-weight: 700; }
+.note p { margin: 5px 0 0; font-size: 11.5px; color: var(--text-secondary); line-height: 1.65; }
+.note p code { font-family: var(--font-mono); font-size: 10.5px; background: var(--chrome-raised); padding: 0 4px; border-radius: 3px; }
+
+/* demo 控制排 */
+.demo-ctl { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 14px; padding: 10px 14px; background: var(--chrome-panel); border: 1px solid var(--chrome-border); border-radius: var(--border-radius-md); }
+.demo-ctl .dc-lbl { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 1.5px; }
+
+/* ===== 控制中心 ===== */
+.cc-stage { display: flex; gap: 40px; flex-wrap: wrap; align-items: flex-start; }
+.cc-col { display: flex; flex-direction: column; gap: 14px; }
+.cc-col .col-cap { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-muted); letter-spacing: 1.5px; }
+
+/* 胶囊 chip（26px，状态环+标签+chevron） */
+.chip-row { display: flex; justify-content: flex-end; padding: 6px 14px; background: var(--background-color); border: 1px dashed var(--chrome-border); border-radius: var(--border-radius-md); }
+.capsule { display: inline-flex; align-items: center; gap: 8px; height: 26px; padding: 0 12px; background: var(--chrome-raised); border: 1px solid var(--chrome-border); border-radius: 13px; color: var(--text-secondary); font-size: 12px; cursor: pointer; box-shadow: var(--elevation-soft); }
+.capsule:hover { background: var(--chrome-hover); border-color: var(--primary-color); box-shadow: var(--elevation-card); }
+.ring { width: 14px; height: 14px; display: inline-flex; align-items: center; justify-content: center; }
+.ring::before { content: ''; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--chrome-border); border-top-color: var(--primary-color); }
+.capsule .lbl { white-space: nowrap; }
+.capsule .lbl b { color: var(--primary-color); font-family: var(--font-mono); font-size: 11.5px; font-weight: 400; letter-spacing: .3px; }
+.capsule .chev { color: var(--text-muted); font-size: 9px; }
+
+/* 控制中心面板（380px 实体宽） */
+.cc-panel { width: 380px; max-width: 100%; background: var(--chrome-panel); border: 1px solid var(--chrome-border); border-radius: var(--border-radius-md); box-shadow: var(--elevation-card); padding: 6px; }
+.cc-head { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px 8px; border-bottom: 1px solid var(--chrome-border); }
+.cc-head strong { font-size: 13px; }
+.cc-head .cnt { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+.cc-sec { padding: 6px 0 4px; }
+.cc-sec + .cc-sec { border-top: 1px solid var(--chrome-border); }
+.cc-sec-label { font-size: 11px; color: var(--text-muted); letter-spacing: 1px; padding: 2px 10px 6px; display: flex; align-items: center; gap: 6px; }
+.cc-sec-label .hint { margin-left: auto; font-family: var(--font-mono); font-size: 9px; letter-spacing: .3px; opacity: .7; }
+
+/* 任务区（保持行式） */
+.task-row { display: flex; align-items: center; gap: 8px; padding: 5px 10px; border-radius: var(--border-radius-sm); }
+.task-row:hover { background: var(--chrome-hover); }
+.t-mark { width: 14px; height: 14px; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.t-mark::before { content: ''; width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--chrome-border); border-top-color: var(--primary-color); }
+.t-mark.done::before { width: 8px; height: 8px; border: none; background: var(--success-color); }
+.t-body { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 1px; }
+.t-title { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.t-detail { font-size: 11px; color: var(--text-muted); }
+.t-prog { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); flex: none; }
+
+/* 模块卡（iOS 控制中心语言 × 应用 token） */
+.mod-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 0 4px 4px; }
+.mod { background: var(--chrome-raised); border: 1px solid color-mix(in oklab, var(--chrome-border) 72%, transparent); border-radius: var(--border-radius-md); padding: 9px 10px; cursor: pointer; transition: background-color var(--motion-dur-quick) var(--motion-ease-out-soft), border-color var(--motion-dur-quick) var(--motion-ease-out-soft), transform var(--motion-dur-quick) var(--motion-ease-out-soft); }
+.mod:hover { background: var(--chrome-hover); border-color: color-mix(in oklab, var(--primary-color) 42%, var(--chrome-border)); }
+.mod:active { transform: scale(.98); }
+.mod.span2 { grid-column: span 2; }
+.mod .m-head { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--text-secondary); }
+.mod .m-head .mi { width: 22px; height: 22px; border-radius: 7px; background: color-mix(in oklab, var(--primary-color) 13%, transparent); color: var(--primary-color); display: inline-flex; align-items: center; justify-content: center; font-size: 11px; flex: none; }
+.mod .m-head .m-more { margin-left: auto; color: var(--text-muted); font-size: 10px; }
+.mod .m-big { margin-top: 7px; font-size: 13px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 6px; }
+.mod .m-sub { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-muted); margin-top: 2px; }
+
+/* 开关（iOS 风格 → token 化） */
+.switch { width: 32px; height: 19px; border-radius: 999px; background: var(--chrome-border); position: relative; transition: background-color 200ms var(--motion-ease-out-soft); flex: none; margin-left: auto; }
+.switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 15px; height: 15px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform 200ms var(--motion-ease-out-soft); }
+.mod.on .switch, .switch.on { background: var(--success-color); }
+.mod.on .switch::after, .switch.on::after { transform: translateX(13px); }
+
+/* 文档卡（span2 大模块） */
+.doc-card .m-big .fname { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.doc-card .m-sub { display: flex; gap: 10px; }
+.doc-actions { display: flex; gap: 4px; margin-top: 8px; }
+.doc-actions .da { flex: 1; height: 24px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; background: color-mix(in oklab, var(--background-color) 45%, var(--chrome-raised)); border: 1px solid color-mix(in oklab, var(--chrome-border) 70%, transparent); border-radius: 7px; color: var(--text-secondary); font-size: 10.5px; cursor: pointer; }
+.doc-actions .da:hover { background: var(--chrome-hover); color: var(--text-primary); }
+.doc-actions .da.accent { color: var(--primary-color); border-color: color-mix(in oklab, var(--primary-color) 40%, var(--chrome-border)); }
+
+/* 格式/插入 icon 网格 */
+.icon-grid { display: flex; flex-wrap: wrap; gap: 2px; padding: 6px 4px 2px; }
+.ig-btn { width: 27px; height: 25px; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: var(--border-radius-sm); background: transparent; color: var(--text-secondary); font-family: var(--font-mono); font-size: 12px; cursor: pointer; }
+.ig-btn:hover { background: var(--chrome-hover); color: var(--text-primary); }
+.ig-btn.divider { width: 1px; background: var(--chrome-border); margin: 4px 3px; padding: 0; }
+
+/* 可展开整行模块（排版/快捷键） */
+.mod-row { display: flex; align-items: center; gap: 8px; width: calc(100% - 8px); margin: 0 4px; padding: 8px 10px; background: var(--chrome-raised); border: 1px solid color-mix(in oklab, var(--chrome-border) 72%, transparent); border-radius: var(--border-radius-md); cursor: pointer; font-size: 11.5px; color: var(--text-secondary); transition: background-color var(--motion-dur-quick) var(--motion-ease-out-soft); }
+.mod-row:hover { background: var(--chrome-hover); }
+.mod-row .mi { width: 22px; height: 22px; border-radius: 7px; background: color-mix(in oklab, var(--primary-color) 13%, transparent); color: var(--primary-color); display: inline-flex; align-items: center; justify-content: center; font-size: 11px; flex: none; }
+.mod-row .more { margin-left: auto; color: var(--text-muted); font-size: 10px; transition: transform 200ms var(--motion-ease-out-soft); }
+.mod-row.open .more { transform: rotate(90deg); }
+.sub-panel { display: none; margin: 6px 4px 2px; padding: 10px 12px; background: var(--chrome-raised); border: 1px solid color-mix(in oklab, var(--chrome-border) 72%, transparent); border-radius: var(--border-radius-md); }
+.sub-panel.show { display: block; animation: unfold 220ms var(--motion-ease-out-soft); }
+@keyframes unfold { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.ctl-line { display: flex; align-items: center; gap: 10px; padding: 5px 0; font-size: 11.5px; color: var(--text-secondary); }
+.ctl-line .cl-name { flex: 0 0 44px; }
+.ctl-line .stepper { display: inline-flex; align-items: center; gap: 0; border: 1px solid var(--chrome-border); border-radius: 7px; overflow: hidden; }
+.ctl-line .stepper button { width: 24px; height: 22px; border: none; background: var(--chrome-raised); color: var(--text-secondary); cursor: pointer; font-family: var(--font-mono); }
+.ctl-line .stepper button:hover { background: var(--chrome-hover); color: var(--text-primary); }
+.ctl-line .stepper .val { min-width: 52px; text-align: center; font-family: var(--font-mono); font-size: 11px; color: var(--text-primary); background: var(--background-color); align-self: stretch; display: inline-flex; align-items: center; justify-content: center; }
+.kbd-table { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; font-size: 11.5px; }
+.kbd-table kbd { font-family: var(--font-mono); font-size: 10px; background: var(--background-color); border: 1px solid var(--chrome-border); border-bottom-width: 2px; border-radius: 5px; padding: 1px 6px; color: var(--text-secondary); white-space: nowrap; }
+.kbd-table span { color: var(--text-secondary); align-self: center; }
+
+/* 插件模块区（贡献点 tiles） */
+.plugin-tile .m-head .mi { background: color-mix(in oklab, var(--accent-color) 16%, transparent); color: var(--accent-color); }
+.plugin-tile .m-big { font-size: 12.5px; }
+.plugin-note { font-size: 10px; color: var(--text-muted); padding: 4px 10px 2px; font-family: var(--font-mono); }
+
+/* 状态环图例 */
+.legend { display: flex; gap: 14px; padding: 8px 10px 2px; flex-wrap: wrap; }
+.legend .lg { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); }
+.lg .dot { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--text-muted); }
+.lg .dot.active { width: 10px; height: 10px; border: 2px solid var(--chrome-border); border-top-color: var(--primary-color); }
+.lg .dot.done { border: none; background: var(--success-color); }
+
+/* ---- Part 3 规则表 ---- */
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin-top: 18px; }
+.rule-card { background: var(--chrome-panel); border: 1px solid var(--chrome-border); border-radius: var(--border-radius-md); padding: 14px 16px; }
+.rule-card h3 { font-size: 13px; margin: 0 0 8px; color: var(--primary-color); }
+.rule-card ul { margin: 0; padding-left: 16px; color: var(--text-secondary); font-size: 12px; line-height: 1.9; }
+.rule-card code, .rule-card kbd { font-family: var(--font-mono); font-size: 10.5px; background: var(--chrome-raised); border: 1px solid var(--chrome-border); border-radius: 4px; padding: 0 5px; }
+
+.foot { margin-top: 80px; padding-top: 18px; border-top: 1px solid var(--chrome-border); font-family: var(--font-mono); font-size: 10.5px; color: var(--text-muted); display: flex; gap: 18px; flex-wrap: wrap; }
+
+/* 入场动效（一次） */
+.reveal { opacity: 0; transform: translateY(10px); animation: rise var(--motion-dur-reveal) var(--motion-ease-out-soft) forwards; }
+.reveal.d1 { animation-delay: 60ms; } .reveal.d2 { animation-delay: 140ms; } .reveal.d3 { animation-delay: 220ms; }
+@keyframes rise { to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .reveal { animation: none; opacity: 1; transform: none; }
+  * { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+  .caret { animation: none; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ===== 规格头 ===== -->
+  <header class="spec-head">
+    <div>
+      <div class="spec-meta">SHADOW-DEV · DESIGN SPEC · 20260923</div>
+      <h1>胶囊<em>控制中心</em> + CM6 <em>Live Preview</em></h1>
+    </div>
+    <div class="theme-bar">
+      <span class="lbl">FAMILY</span>
+      <div class="seg" id="segFamily"><button data-v="wine" class="on">酒红</button><button data-v="plain">素雅</button></div>
+      <span class="lbl">SCHEME</span>
+      <div class="seg" id="segScheme"><button data-v="dark" class="on">暗</button><button data-v="light">明</button></div>
+    </div>
+  </header>
+  <p class="spec-lede">两个变更共用这份视觉语言：Change 1 落编辑器 L3 渲染体系，Change 2 落胶囊控制中心化。所有取值来自应用 token（tokens.ts 快照），组件尺寸复刻现有 styled-components 产物——本文即实施规范。</p>
+
+  <!-- ================= PART 1 编辑器 ================= -->
+  <section class="part">
+    <div class="part-eyebrow">PART 01 · CHANGE 1 — feature-cm-live-preview</div>
+    <h2>编辑器 · L3 即时渲染</h2>
+    <p class="part-lede">同一段 markdown 的两种真实形态。渲染态下语法符号在光标离开的行隐藏；光标所在行整体回到源码态（①）。图片（②）、公式（③）、mermaid（④）在编辑区内直接呈现。</p>
+
+    <div class="two-col">
+      <div>
+        <div class="frame reveal" id="frame">
+          <div class="titlebar"><span class="tb-dot"></span><span class="tb-dot"></span><span class="tb-dot"></span><span class="tb-title">wuh.site — 首页</span></div>
+          <div class="mini-home">
+            <div class="greet"><div class="hi">下午好，吴红</div><div class="sub">今天写了 1,284 字 · 3 个任务进行中</div></div>
+            <div class="scatter"><span class="cap">发文频率 · 近 90 天</span>
+              <svg viewBox="0 0 100 36" preserveAspectRatio="none">
+                <line x1="6" y1="30" x2="96" y2="8" stroke="var(--chrome-border)" stroke-width=".5" stroke-dasharray="2 2"/>
+                <g fill="var(--primary-color)">
+                  <circle cx="8" cy="29" r="1.1" opacity=".8"/><circle cx="15" cy="26" r="1.4" opacity=".9"/><circle cx="22" cy="31" r=".9" opacity=".6"/><circle cx="29" cy="22" r="1.6"/><circle cx="36" cy="25" r="1.1" opacity=".7"/><circle cx="43" cy="18" r="1.8"/><circle cx="50" cy="21" r="1.2" opacity=".8"/><circle cx="57" cy="14" r="2"/><circle cx="64" cy="17" r="1.3" opacity=".85"/><circle cx="71" cy="11" r="1.7"/><circle cx="78" cy="13" r="1.2" opacity=".8"/><circle cx="85" cy="7" r="2.2"/><circle cx="92" cy="9" r="1.5" opacity=".9"/>
+                </g>
+              </svg>
+            </div>
+            <div class="panel">
+              <div class="ctx-row">
+                <button class="picker-btn">📂 <span>wuh.site</span> <span class="ic">▾</span></button>
+                <button class="picker-btn">📄 <span>胶囊控制中心设计手记.md</span> <span class="ic">▾</span></button>
+              </div>
+              <div class="editor-wrap mode-render" id="editorWrap">
+                <div class="find-bar" id="findBar">
+                  <input placeholder="查找" value="胶囊"><span class="count">1/4</span>
+                  <button class="fb-btn">Aa</button><button class="fb-btn">替换</button>
+                  <button class="fb-btn">‹</button><button class="fb-btn">›</button>
+                  <button class="fb-btn close" data-act="find-close">✕</button>
+                </div>
+                <div class="editor-surface">
+                  <!-- 渲染层 -->
+                  <div class="layer layer-render lr">
+                    <h1 id="rowA"><span class="r">胶囊控制中心 · 设计手记</span><span class="caret"></span></h1>
+                    <p>控制中心是壳层的唯一全局入口：任务、编辑器与全部插件在此聚合，交互语言对齐 iOS 控制中心——<strong>模块化、可展开、就地生效</strong>。渲染层由 <em>CodeMirror 6 decorations</em> 驱动，底层始终是纯 markdown 文本。</p>
+                    <blockquote><p>设计原则：醒目度来自语义色而非加重底色；一切编辑指令经命令通道下发。</p></blockquote>
+                    <h2>排版语言</h2>
+                    <ul>
+                      <li id="rowB"><span class="r">标题族使用 <code>line-height-heading</code>，正文 14px / 1.8</span></li>
+                      <li>引用块左侧竖线取主题色 55%，底色 6% —— 比旧预览更醒目</li>
+                    </ul>
+                    <p>删除线示例：<del>已废弃的 Vditor 主题桥</del>，与 <a href="#">渲染开关</a> 的联动见第三节。</p>
+                    <div class="codeblock">
+                      <div class="cb-head"><span class="cb-lang">TS</span><button class="cb-copy">复制</button></div>
+                      <pre><span class="tok-kw">const</span> capsule = <span class="tok-kw">new</span> <span class="tok-kw">CapsuleSection</span>(<span class="tok-str">'editor'</span>) <span class="tok-com">// 模块注册</span></pre>
+                    </div>
+                    <figure class="inline-img">
+                      <span class="img-shell"><img alt="控制中心模块分区示意" src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='150'%3E%3Crect width='360' height='150' fill='%231d2a3a'/%3E%3Crect x='18' y='18' width='150' height='50' rx='8' fill='%232c4a6e'/%3E%3Crect x='18' y='80' width='150' height='50' rx='8' fill='%23243a55'/%3E%3Crect x='182' y='18' width='160' height='112' rx='8' fill='%23305078'/%3E%3Ccircle cx='40' cy='43' r='9' fill='%2360a5fa'/%3E%3Ccircle cx='204' cy='40' r='9' fill='%2393c5fd'/%3E%3Crect x='58' y='38' width='92' height='9' rx='4.5' fill='%235b82b4'/%3E%3Crect x='222' y='34' width='100' height='9' rx='4.5' fill='%237ca6d4'/%3E%3Crect x='222' y='52' width='70' height='9' rx='4.5' fill='%23527aa8'/%3E%3C/svg%3E"><span class="img-badge">360×150 · 点击编辑</span></span>
+                      <figcaption>图 1 · 控制中心模块分区示意（assets/control-center.svg）</figcaption>
+                    </figure>
+                    <p>质能方程的渲染态——hover 出现虚线框，<strong>点击进入源码</strong>（③）：</p>
+                    <div class="math-block" id="mathBlock" title="点击切换 源码/渲染">
+                      <span class="math-hint">点击编辑</span>
+                      <span class="m-render">E = mc<sup>2</sup>&nbsp;&nbsp;·&nbsp;&nbsp;ζ(s) = <span class="frac"><span>1</span><span class="bar"></span><span>Γ(s)</span></span> ∫<sub style="font-size:.6em">0</sub><sup style="font-size:.6em">∞</sup></span>
+                      <span class="m-src">$$E = mc^2 \qquad \zeta(s) = \frac{1}{\Gamma(s)} \int_0^\infty$$</span>
+                    </div>
+                    <p>流程图同理，```mermaid 代码块直接渲染为图（④）：</p>
+                    <div class="mermaid-block">
+                      <span class="mm-lang">MERMAID</span>
+                      <div class="flow">
+                        <span class="node round">开始</span><span class="arrow"></span>
+                        <span class="node">解析 AST</span><span class="arrow"></span>
+                        <span class="node">逐块装饰</span><span class="arrow"></span>
+                        <span class="node round">呈现</span>
+                      </div>
+                    </div>
+                    <hr>
+                    <p>有序步骤：<ol><li>命令通道下发</li><li>事务落位</li><li>updateListener 回同步 store</li></ol></p>
+                  </div>
+                  <!-- 源码层 -->
+                  <div class="layer layer-src" id="layerSrc"></div>
+                </div>
+                <div class="action-row">
+                  <span class="st-chip"><span class="dirty-dot"></span>已编辑</span>
+                  <span class="st-chip">1,284 字 · 约 6 分钟</span>
+                  <span class="a-sep"></span>
+                  <button class="a-btn" data-act="undo" title="撤销">↩</button>
+                  <button class="a-btn" data-act="redo" title="重做">↪</button>
+                  <span class="a-sep"></span>
+                  <div class="mode-seg" id="modeSeg"><button data-m="render" class="on">即时渲染</button><button data-m="source">纯源码</button></div>
+                  <span class="a-sep"></span>
+                  <button class="a-btn ghosted" title="预览（降级：仅导出对照场景）">👁 预览</button>
+                  <span class="spacer"></span>
+                  <button class="a-btn" data-act="find">查找 <kbd style="font-family:var(--font-mono);font-size:9.5px;border:1px solid var(--chrome-border);border-radius:3px;padding:0 4px;">⌘F</kbd></button>
+                  <button class="a-btn">＋ 新建</button>
+                  <button class="a-btn primary">保存</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-ctl reveal d1">
+          <span class="dc-lbl">DEMO</span>
+          <button class="a-btn" data-act="cursor">光标行位置 ⟳</button>
+          <button class="a-btn" data-act="math">公式 源码/渲染</button>
+          <button class="a-btn" data-act="find">查找条</button>
+          <button class="a-btn" data-act="focus" id="btnFocus">进入专注模式</button>
+          <span style="font-size:11px;color:var(--text-muted)">上面画框的行即「光标行」：整行回落源码态，符号浮现（①）</span>
+        </div>
+      </div>
+
+      <aside class="notes reveal d2">
+        <div class="note"><span class="n-tag">①</span><span class="n-title">符号隐藏与浮现</span><p>光标行整体回到源码态（mono 13px），markdown 标记以 <code>primary 55%</code> 着色；离开该行 150ms 内淡出为纯视觉样式。渲染↔源码由 CM6 decorations 按行计算，无全量重建。</p></div>
+        <div class="note"><span class="n-tag">②</span><span class="n-title">图片内联</span><p><code>![]()</code> 渲染为圆角缩略图 + elevation-soft；hover 抬升并显示尺寸角标，点击回源码编辑路径。落盘仍走 savePastedImage 链路。</p></div>
+        <div class="note"><span class="n-tag">③</span><span class="n-title">公式渲染态</span><p><code>$$..$$</code> 块渲染为排版公式（KaTeX 本地化离线加载）；块级点击切换源码态，hover 虚线框提示可编辑。</p></div>
+        <div class="note"><span class="n-tag">④</span><span class="n-title">mermaid 渲染态</span><p>语言标为 mermaid 的代码块渲染为 SVG 图（mermaid 本地化）；保留左上语言角标，渲染失败回退源码并提示。</p></div>
+        <div class="note"><span class="n-tag">⑤</span><span class="n-title">渲染开关</span><p>「即时渲染 / 纯源码」分段控件在动作行与胶囊视图模块各一处，状态持久化（<code>wd.editorRenderMode</code>），快捷键 <code>⌘/</code>。</p></div>
+        <div class="note"><span class="n-tag">⑥</span><span class="n-title">预览降级</span><p>分栏预览保留但弱化（ghosted 态），仅导出/严格排版对照场景使用；胶囊控制中心不放预览入口。</p></div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ================= PART 2 控制中心 ================= -->
+  <section class="part">
+    <div class="part-eyebrow">PART 02 · CHANGE 2 — feature-capsule-control-center</div>
+    <h2>胶囊 · 控制中心</h2>
+    <p class="part-lede">胶囊面板升级为三区控制中心：任务区（现状保留）→ 编辑器模块区（9 项功能全部模块化收编）→ 插件模块区（新贡献点 <code style="font-family:var(--font-mono);font-size:11px">capsule</code> 的聚合位）。模块卡语言对齐 iOS 控制中心：就地生效、点击展开二级。</p>
+
+    <div class="two-col">
+      <div>
+        <div class="cc-stage reveal">
+          <div class="cc-col" style="flex:1; min-width: 320px;">
+            <div class="col-cap">挂点 · MainArea 右上（真身 26px 高）</div>
+            <div class="chip-row">
+              <button class="capsule"><span class="ring"></span><span class="lbl">任务 <b>2/5</b> · 编辑器</span><span class="chev">▼</span></button>
+            </div>
+            <div class="col-cap" style="margin-top:6px;">展开后 · 面板 380px</div>
+            <div class="cc-panel">
+              <div class="cc-head"><strong>控制中心</strong><span class="cnt">2/5 任务</span></div>
+
+              <!-- 任务区 -->
+              <div class="cc-sec">
+                <div class="cc-sec-label">任务</div>
+                <div class="task-row"><span class="t-mark"></span><span class="t-body"><span class="t-title">同步 issue 状态到看板</span><span class="t-detail">github-issues</span></span><span class="t-prog">3/5</span></div>
+                <div class="task-row"><span class="t-mark done"></span><span class="t-body"><span class="t-title">生成发布周报</span><span class="t-detail">git-history</span></span><span class="t-prog">✓</span></div>
+                <div class="legend"><span class="lg"><span class="dot"></span>空闲</span><span class="lg"><span class="dot active"></span>进行中</span><span class="lg"><span class="dot done"></span>全完成</span></div>
+              </div>
+
+              <!-- 编辑器模块区 -->
+              <div class="cc-sec">
+                <div class="cc-sec-label">编辑器 <span class="hint">EDITOR</span></div>
+                <div class="mod-grid">
+                  <div class="mod doc-card span2">
+                    <div class="m-head"><span class="mi">📄</span><span class="m-big" style="margin:0"><span class="fname">胶囊控制中心设计手记.md</span><span style="width:5px;height:5px;border-radius:50%;background:var(--warning-color);flex:none;"></span></span></div>
+                    <div class="m-sub"><span>1,284 字</span><span>约 6 分钟</span><span>已编辑</span></div>
+                    <div class="doc-actions">
+                      <button class="da accent">💾 保存</button>
+                      <button class="da">另存为</button>
+                      <button class="da">＋ 新建</button>
+                      <button class="da">关闭</button>
+                    </div>
+                  </div>
+                  <div class="mod on" id="modRender"><div class="m-head"><span class="mi">✦</span>即时渲染<span class="switch on"></span></div><div class="m-sub">⌘/ 切换纯源码</div></div>
+                  <div class="mod" id="modFocus"><div class="m-head"><span class="mi">◐</span>专注模式<span class="switch"></span></div><div class="m-sub">淡出问候与散点图</div></div>
+                  <div class="mod"><div class="m-head"><span class="mi">⌕</span>查找替换<span class="m-more">⌘F</span></div><div class="m-sub">全文 1/4 处命中</div></div>
+                  <div class="mod on" id="modFollow"><div class="m-head"><span class="mi">☰</span>大纲跟随<span class="switch on"></span></div><div class="m-sub">「排版语言」· 二级展开</div></div>
+                </div>
+                <div class="icon-grid" aria-label="格式化与插入">
+                  <button class="ig-btn" title="一级标题">H₁</button><button class="ig-btn" title="二级标题">H₂</button>
+                  <button class="ig-btn" title="加粗"><b>B</b></button><button class="ig-btn" title="斜体"><i>I</i></button>
+                  <button class="ig-btn" title="删除线"><s>S</s></button>
+                  <button class="ig-btn divider"></button>
+                  <button class="ig-btn" title="无序列表">•≡</button><button class="ig-btn" title="有序列表">1≡</button>
+                  <button class="ig-btn" title="引用">❝</button><button class="ig-btn" title="行内代码">&lt;/&gt;</button>
+                  <button class="ig-btn" title="链接">🔗</button>
+                  <button class="ig-btn divider"></button>
+                  <button class="ig-btn" title="粘贴图片">🖼</button><button class="ig-btn" title="表格">▦</button>
+                  <button class="ig-btn" title="代码块">{}</button><button class="ig-btn" title="分割线">—</button>
+                  <button class="ig-btn divider"></button>
+                  <button class="ig-btn" title="撤销">↩</button><button class="ig-btn" title="重做">↪</button>
+                </div>
+                <div style="height:6px"></div>
+                <button class="mod-row" id="rowTypeset"><span class="mi">Aa</span>排版设置<span class="more">›</span></button>
+                <div class="sub-panel" id="panelTypeset">
+                  <div class="ctl-line"><span class="cl-name">字号</span><span class="stepper"><button>−</button><span class="val">14 px</span><button>＋</button></span></div>
+                  <div class="ctl-line"><span class="cl-name">行距</span><span class="stepper"><button>−</button><span class="val">1.8</span><button>＋</button></span></div>
+                  <div class="ctl-line"><span class="cl-name">行宽</span><span class="stepper"><button>−</button><span class="val">满幅</span><button>＋</button></span></div>
+                </div>
+                <button class="mod-row" id="rowKbd"><span class="mi">⌘</span>快捷键速查<span class="more">›</span></button>
+                <div class="sub-panel" id="panelKbd">
+                  <div class="kbd-table">
+                    <kbd>⌘B</kbd><span>加粗</span><kbd>⌘I</kbd><span>斜体</span>
+                    <kbd>⌘F</kbd><span>查找 / 替换</span><kbd>⌘/</kbd><span>渲染开关</span>
+                    <kbd>⌘S</kbd><span>保存</span><kbd>⌘Z</kbd><span>撤销</span>
+                    <kbd>⌘⇧F</kbd><span>专注模式</span><kbd>Esc</kbd><span>逐层退出</span>
+                  </div>
+                </div>
+                <div class="mod-grid" style="padding-top:6px;">
+                  <div class="mod"><div class="m-head"><span class="mi">⇪</span>复制为 HTML</div><div class="m-sub">渲染态复制到剪贴板</div></div>
+                  <div class="mod"><div class="m-head"><span class="mi">↧</span>导出文件</div><div class="m-sub">.html / .md 副本</div></div>
+                </div>
+              </div>
+
+              <!-- 插件模块区 -->
+              <div class="cc-sec">
+                <div class="cc-sec-label">插件 <span class="hint">CAPSULE 贡献点</span></div>
+                <div class="mod-grid">
+                  <div class="mod plugin-tile span2">
+                    <div class="m-head"><span class="mi">◉</span>github-issues<span class="m-more">›</span></div>
+                    <div class="m-big">12 个 open · 3 个指派给我</div>
+                    <div class="m-sub">2 分钟前同步 · 点击进入插件视图</div>
+                  </div>
+                  <div class="mod plugin-tile">
+                    <div class="m-head"><span class="mi">⑂</span>git-history</div>
+                    <div class="m-big" style="font-size:12px;">main · 3 天前</div>
+                    <div class="m-sub">最近提交 86e0d91</div>
+                  </div>
+                  <div class="mod plugin-tile">
+                    <div class="m-head"><span class="mi">◫</span>preview-markdown</div>
+                    <div class="m-big" style="font-size:12px;">浮窗已就绪</div>
+                    <div class="m-sub">点击唤起浮窗</div>
+                  </div>
+                </div>
+                <div class="plugin-note">// manifest 声明 capsule 模块 → 逻辑帧单向上报数据 → 宿主白名单模板渲染</div>
+              </div>
+            </div>
+          </div>
+
+          <aside class="notes reveal d2" style="flex:1; min-width: 250px;">
+            <div class="note"><span class="n-tag">⑦</span><span class="n-title">三区信息架构</span><p>任务 → 编辑器 → 插件，频率与情境递减。分区标签沿用现有 <code>PopLabel</code> 语言（11px / muted / 字距 1px）。</p></div>
+            <div class="note"><span class="n-tag">⑧</span><span class="n-title">模块卡</span><p>双列 tile 为基本单位，文档卡独占整行；<code>chrome-raised</code> 底 + 12px 圆角，hover 描边 primary 42%，active 缩放 0.98（iOS 按压感）。</p></div>
+            <div class="note"><span class="n-tag">⑨</span><span class="n-title">开关语言</span><p>布尔型模块（渲染/跟随/专注）用 iOS 式开关，on 态取 <code>--success-color</code>；状态与编辑器命令通道双向同步。</p></div>
+            <div class="note"><span class="n-tag">⑩</span><span class="n-title">二级展开</span><p>排版/快捷键为「整行模块 + 手风琴子面板」（220ms unfold）；大纲/文件/项目沿用现有子面板形态。</p></div>
+            <div class="note"><span class="n-tag">⑪</span><span class="n-title">插件贡献点</span><p>manifest 新增 <code>capsule</code> 声明；数据单向上报（与 tasks 同族安全模型），宿主按白名单模板渲染，插件帧不触 DOM。先行参考：github-issues。</p></div>
+            <div class="note"><span class="n-tag">⑫</span><span class="n-title">专注模式</span><p>开关式进入（⌘⇧F）：问候/散点图淡出至 5% 不卸载，面板描边染 primary；Esc 或再点退出。点上方 DEMO 按钮可在编辑器 frame 预览。</p></div>
+          </aside>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PART 3 规则 ================= -->
+  <section class="part">
+    <div class="part-eyebrow">PART 03 · 交互规则</div>
+    <h2>跨特性约束</h2>
+    <div class="rules">
+      <div class="rule-card"><h3>层级与退出</h3><ul>
+        <li>Esc 逐层退出：子面板 → 查找条 → 面板 → 专注模式</li>
+        <li>面板点外关（胶囊侧统一监听，面板内点击不冒泡）—— 现状保持</li>
+        <li>查找条为编辑区内联条，不遮正文；关闭后焦点回编辑器</li>
+      </ul></div>
+      <div class="rule-card"><h3>动效</h3><ul>
+        <li>符号浮现/隐藏 150ms；面板二级展开 220ms；渲染↔源码切换 240ms</li>
+        <li>模块入场 stagger 一次（60/140/220ms），仅首次打开面板</li>
+        <li><code>prefers-reduced-motion</code> 下全部静态降级（现有 Capsule 先例）</li>
+      </ul></div>
+      <div class="rule-card"><h3>命令通道映射</h3><ul>
+        <li>模块按钮一律 <code>publishEditorCommand</code>，新增 <code>toggleRender / findReplace / toggleFocus / toggleOutlineFollow</code> 命令</li>
+        <li>开关态由编辑器侧回推事件，胶囊与动作行双挂点单状态源</li>
+        <li>命令宿主保持壳层 layout 单实例，禁止双消费</li>
+      </ul></div>
+      <div class="rule-card"><h3>持久化</h3><ul>
+        <li><code>wd.editorRenderMode</code> 渲染开关、<code>wd.editorTypography</code> 排版设置</li>
+        <li>专注模式 / 大纲跟随为会话态，不持久化</li>
+        <li>排版设置作用于编辑器 surface CSS 变量，预览分栏不受影响</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <div class="foot">
+    <span>SHADOW-DEV PROPOSE · design-mockups/20260923-capsule-control-center</span>
+    <span>tokens: apps/desktop/components/theme/tokens.ts（源码直出）</span>
+    <span>验证：vitest · 双侧 tsc · electron-vite build</span>
+  </div>
+</div>
+
+<script>
+/* 主题切换（四主题全验证） */
+const seg = (id, attr) => {
+  const box = document.getElementById(id)
+  box.addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return
+    box.querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b))
+    document.documentElement.setAttribute(attr, b.dataset.v)
+  })
+}
+seg('segFamily', 'data-theme-family')
+seg('segScheme', 'data-color-scheme')
+document.documentElement.removeAttribute('data-no-transition')
+
+/* 源码层内容（渲染层同一文档的原始形态） */
+document.getElementById('layerSrc').textContent = `# 胶囊控制中心 · 设计手记
+
+控制中心是壳层的唯一全局入口：任务、编辑器与全部插
+件在此聚合，交互语言对齐 iOS 控制中心——**模块化、
+可展开、就地生效**。渲染层由 *CodeMirror 6
+decorations* 驱动，底层始终是纯 markdown 文本。
+
+> 设计原则：醒目度来自语义色而非加重底色；
+> 一切编辑指令经命令通道下发。
+
+## 排版语言
+
+- 标题族使用 \`line-height-heading\`，正文 14px / 1.8
+- 引用块左侧竖线取主题色 55%，底色 6%
+
+删除线示例：~~已废弃的 Vditor 主题桥~~，与 [渲染开关](#) 的联动见第三节。
+
+\`\`\`ts
+const capsule = new CapsuleSection('editor') // 模块注册
+\`\`\`
+
+![控制中心模块分区示意](assets/control-center.svg)
+
+质能方程的渲染态——hover 出现虚线框，**点击进入源码**：
+
+$$E = mc^2 \\qquad \\zeta(s) = \\frac{1}{\\Gamma(s)} \\int_0^\\infty$$
+
+流程图同理，\`\`\`mermaid 代码块直接渲染为图：
+
+\`\`\`mermaid
+graph LR; A[开始] --> B[解析 AST] --> C[逐块装饰] --> D[呈现]
+\`\`\`
+
+---
+
+1. 命令通道下发
+2. 事务落位
+3. updateListener 回同步 store
+`
+
+/* 渲染/源码切换 */
+const wrap = document.getElementById('editorWrap')
+document.getElementById('modeSeg').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return
+  document.querySelectorAll('#modeSeg button').forEach((x) => x.classList.toggle('on', x === b))
+  wrap.classList.toggle('mode-source', b.dataset.m === 'source')
+  wrap.classList.toggle('mode-render', b.dataset.m !== 'source')
+})
+
+/* 光标行演示：两档循环（标题行 → 列表行）；渲染版隐藏交给 CSS（.cursor-row .r） */
+const cursorTargets = ['rowA', 'rowB']
+let cursorIdx = 0
+function applyCursor() {
+  document.querySelectorAll('.cursor-row').forEach((el) => {
+    el.classList.remove('cursor-row')
+    const s = el.querySelector('.s'); if (s) s.remove()
+  })
+  const target = document.getElementById(cursorTargets[cursorIdx % cursorTargets.length])
+  if (!target) return
+  target.classList.add('cursor-row')
+  const shell = document.createElement('span'); shell.className = 's'
+  if (target.tagName === 'H1') {
+    shell.innerHTML = '<span class="mk">#</span> 胶囊控制中心 · 设计手记<span class="caret"></span>'
+  } else {
+    shell.innerHTML = '<span class="mk">-</span> 标题族使用 <span class="mk">`</span>line-height-heading<span class="mk">`</span>，正文 14px / 1.8<span class="caret"></span>'
+  }
+  target.prepend(shell)
+}
+document.querySelector('[data-act="cursor"]').addEventListener('click', () => { cursorIdx += 1; applyCursor() })
+applyCursor()
+
+/* 公式块点击切换 */
+document.getElementById('mathBlock').addEventListener('click', () => document.getElementById('mathBlock').classList.toggle('show-src'))
+document.querySelector('[data-act="math"]').addEventListener('click', () => document.getElementById('mathBlock').classList.toggle('show-src'))
+
+/* 查找条 + 命中高亮演示 */
+const findBar = document.getElementById('findBar')
+function toggleFind(force) { findBar.classList.toggle('show', force) }
+document.querySelectorAll('[data-act="find"]').forEach((b) => b.addEventListener('click', () => toggleFind()))
+document.querySelector('[data-act="find-close"]').addEventListener('click', () => toggleFind(false))
+
+/* 专注模式 */
+const frame = document.getElementById('frame')
+const btnFocus = document.getElementById('btnFocus')
+function toggleFocus() {
+  const on = frame.classList.toggle('focus-mode')
+  btnFocus.textContent = on ? '退出专注模式' : '进入专注模式'
+  document.getElementById('modFocus').classList.toggle('on', on)
+  document.getElementById('modFocus').querySelector('.switch').classList.toggle('on', on)
+}
+btnFocus.addEventListener('click', toggleFocus)
+document.getElementById('modFocus').addEventListener('click', toggleFocus)
+
+/* 控制中心开关/展开 demo */
+function bindSwitch(id) {
+  const el = document.getElementById(id)
+  el.addEventListener('click', () => {
+    el.classList.toggle('on')
+    const sw = el.querySelector('.switch'); if (sw) sw.classList.toggle('on')
+  })
+}
+bindSwitch('modRender'); bindSwitch('modFollow')
+function bindRow(rowId, panelId) {
+  const row = document.getElementById(rowId), panel = document.getElementById(panelId)
+  row.addEventListener('click', () => { row.classList.toggle('open'); panel.classList.toggle('show') })
+}
+bindRow('rowTypeset', 'panelTypeset'); bindRow('rowKbd', 'panelKbd')
+
+/* Esc 逐层退出演示 */
+window.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return
+  if (findBar.classList.contains('show')) return toggleFind(false)
+  if (document.querySelector('.sub-panel.show')) return document.querySelectorAll('.sub-panel.show').forEach((p) => p.classList.remove('show'))
+  if (frame.classList.contains('focus-mode')) return toggleFocus()
+})
+</script>
+</body>
+</html>
