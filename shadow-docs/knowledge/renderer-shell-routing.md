@@ -1,7 +1,7 @@
 ---
 title: Renderer 壳层两栏布局与 App Router 路由约定
 domain: renderer-ui
-keywords: [首页, 设置页, 路由, App Router, 路由段, SideMenu, 菜单, 两栏布局, main 容器, 浮窗, FloatLayer, 面板切换, 插件视图, 静态导出]
+keywords: [首页, 设置页, 项目页, 编辑页, 路由, App Router, 路由段, SideMenu, 菜单, 项目树, 两栏布局, main 容器, 浮窗, FloatLayer, 面板切换, 插件视图, 静态导出]
 scope: [app, components, lib]
 status: active
 source:
@@ -17,7 +17,8 @@ source:
   - changes/20260922-feature-user-identity-sync/brief.md
   - changes/20260922-fix-shell-avatar-app-icon/brief.md
   - changes/20260922-refactor-codemirror-editor/brief.md
-verified: 2026-09-23
+  - changes/20260924-feature-projects-editor-page/brief.md
+verified: 2026-09-24
 ---
 
 # Renderer 壳层两栏布局与 App Router 路由约定
@@ -29,15 +30,19 @@ verified: 2026-09-23
 - `/` → HomePage（默认入口 = **「新建博客」项目入口**，2026-09-21 起：项目区块承载打开本地目录 / clone 公开 https 仓库 / 最近项目列表；活动散点图与主编辑器面板卡片依次其下）
 - `/settings` → SettingsPage（仅应用级设置；GitHub 凭证与 Git 提交身份已归拢至 `/account`）
 - `/account` → AccountPage（用户中心，2026-09-22 起：GitHub OAuth Device Flow 授权 + 身份/仓库/默认站点仓库 + Git 提交身份）
+- `/projects` → ProjectsPage（项目页，2026-09-24 起：当前工作区组置顶 + 最近项目组，组内列各自 `.md` 清单；组行点击经共享 `openProjectFile` 直达 `/editor`，失效目录组呈「无法访问」态）
+- `/editor` → EditorPage（统一编辑页「Typora 式沉浸」，2026-09-24 起：项目页/左栏树点文件与草稿箱「继续编辑」都进此页；**菜单外路由 key**，同 `/account` 不高亮菜单项，见 [主编辑器卡片](editor.md)）
 - `/plugin/<pluginId>/<viewId>` → PluginMainView（`views.area: 'main'` 的插件视图；`generateStaticParams` 从内置 `plugins/*/plugin.json` 构建期枚举）
 
 **静态导出约束**（`output: 'export'`，next.config.ts）：产物在 `dist/next/`，由主进程 `app://` 协议离线加载（`src/main/index.ts` 的 `resolveRendererFile`，含目录穿越校验）。动态路由**必须构建期枚举**——运行时安装的新插件视图不会预生成路由页（当前内置插件无影响；未来支持运行时安装时改 query/client state 兜底）。
 
 **启动加载路径（2026-09-22 起）**：主窗 `show: false` 后台加载，启动即现 **splash 窗**（`src/main/splash.html` 经 `?raw` 内嵌 + `data:` URL 加载的自包含静态页：品牌标 + 主题同值底色，亮暗随 `prefers-color-scheme`）；壳层 layout 挂载后经 `components/ShellReady.tsx`（双 rAF）发 `rendererReady` IPC（契约三处同步），主进程撤下 splash（淡出 240ms，`prefers-reduced-motion` 页内降级）并 show 主窗；prod 兜底 4s / dev 65s。**主题首帧地基**（根治无样式闪屏）：`app/layout.tsx` 服务端内联 `buildThemeCss()`（`<style id="wd-theme-vars">`）+ `<html>` 预置 wine/dark 默认属性 + pre-paint 内联脚本按 localStorage `wd.theme` 纠偏（含 `system` 档 matchMedia 解析分支），配合 `experimental.inlineCss` 使首帧即终态样式；`ThemeProvider` 的注入退化为缺失兜底（DOM 存在性守卫）。
 
-**壳层 i18n（2026-09-22 起）**：`lib/i18n/locales.ts` 三语字典（zh/en/ja flat key，`{name}` 占位符）+ `lib/i18n/context.tsx` 的 `LocaleProvider`/`useT()`，持久化键 `wd.locale`（与 `wd.theme` 同模式）。**两段式渲染**：首帧固定 zh 与导出 HTML 一致（防 hydration mismatch），mount 后切存储 locale——启动切换的中文闪帧由 splash 窗覆盖，运行时切换即时。字典 key 集合一致性由 `tests/i18n.test.ts` 锁定。范围边界：仅壳层 chrome 文案；插件 manifest 标题与插件帧内容不在此机制内。
+**壳层 i18n（2026-09-22 起）**：`lib/i18n/locales.ts` 三语字典（zh/en/ja flat key，`{name}` 占位符）+ `lib/i18n/context.tsx` 的 `LocaleProvider`/`useT()`，持久化键 `wd.locale`（与 `wd.theme` 同模式）。**两段式渲染**：首帧固定 zh 与导出 HTML 一致（防 hydration mismatch），mount 后切存储 locale——启动切换的中文闪帧由 splash 窗覆盖，运行时切换即时。字典 key 集合一致性由 `tests/i18n.test.ts` 锁定；**缺键会静默回落为 key 本身（UI 直接显示裸 key，如 `menu.projects`）**，故同文件另有「源码引用键 ⊆ 字典」覆盖扫描（字面量 `t()` 直调 + 按命名空间识别的字面量扫描，覆盖三元/映射表等间接传键）——新增文案键必须三语齐配，否则测试红。范围边界：仅壳层 chrome 文案；插件 manifest 标题与插件帧内容不在此机制内。
 
 `menuExpanded`（SideMenu 展开/收起）是 layout 内的客户端状态；菜单项 id 与路由段一一对应（`lib/routes.ts` 的 `pluginPanelKey` / `routeKeyFromPathname` 负责互转，`account` 为独立路由 key）。**左栏底部用户入口点击直达 `/account` 用户中心**（2026-09-22 起，替身期「进设置页」已退役）；快捷面板「设置」项独立指向 `/settings`，菜单项 id 不含 `settings`。`FloatLayer` 常驻 main 容器叠加其上（浮窗与右栏页面**共存**，切换页面不卸载）。
+
+**左栏【项目】条目自带项目树**（2026-09-24 起；SideMenu 条目子树槽位 `tree/treeOpen/onToggleTree` 的通用设计见 shell-chrome-design 卡）：一级 = 项目节点（当前工作区置顶带「当前」徽标，其余最近项目），二级起 = 文件夹/`.md` 递归树（`pruneMarkdownTree` 只留含 .md 分支）；项目节点懒加载（首次展开才 `readTree(root)`），失效项目呈「无法访问」且再次点击重试；**点文件与 `/projects` 页共用 `openProjectFile`**（脏确认 → 非当前项目先 `openWorkspaceByPath` 切工作区 → `readFile` → `openDoc`），随后 `router.push('/editor')`——打开流单点收口，两处 UI 不得各写一份。清单数据走 `window.api.readTree(root?)`：**显式 root 校验目录存在后按该根构树、不切换当前工作区**；缺省 = `requireRoot()` 现行为（契约见 `src/shared/types.ts`，主进程实现与测试见 workspace 域）。
 
 **全局身份 store（2026-09-22 起）**：`lib/identity.ts`（useSyncExternalStore 快照注册表，与 tasks/statusItems/floats 同构）是 GitHub 身份（头像/昵称/login/scopes/kind/stale）的壳层唯一数据源——壳层 layout 挂载 `refreshIdentity()` 拉取一次（未配 token / `getGithubIdentity` 抛错一律落 null），用户中心 `AccountPage.reloadIdentity` 成功分支 `syncIdentity()` 写穿（授权成功 / PAT 保存 / 断开三时机全覆盖，页面本地 loading/error/stale 三态 UI 不动）；消费方 `useGithubIdentity()`：SideMenu 用户入口/快捷面板头部与 HomePage 问候语，**均仅文本投影**（`name‖login`；同日回退了侧栏头像 img 投影——远程图片网络不可靠，**壳层禁止渲染远程头像图片**，头像待 Settings「用户设置」本地接管，见 shell-chrome-design 卡）。**回退语义：undefined（尚未拉取）/ null（无身份）/ stale 一律回落品牌标 + wuh-site + 纯问候**；问候带名走 `home.greetNamed` 三语占位（昵称 name 优先、login 兜底），store 单测 `tests/identity-store.test.ts`。
 
@@ -63,8 +68,8 @@ verified: 2026-09-23
 ## 验证方式
 
 - 读 `app/(shell)/layout.tsx` 与 `lib/routes.ts`：路由段 ↔ 菜单项映射、Cmd+, 切换、FloatLayer 常驻。
-- `pnpm typecheck`（node 侧 + tsconfig.next.json）+ `pnpm test` 回归（tsc + vitest）。
-- `pnpm dev` 手动路径：启动默认 Home（左栏可见）→ 左栏切设置/插件 main 视图 → `Ctrl+,` 切换设置 ↔ 首页 → 浮窗 toggle 开合、切页后浮窗仍在、Esc 关浮窗；左栏展开/收起瞬时切换。
+- `pnpm typecheck`（node 侧 + tsconfig.next.json）+ `pnpm test` 回归（tsc + vitest）；项目/编辑面专项：`tests/projects.test.ts`（分组/树剪枝纯逻辑）、`tests/projects-render.test.tsx`、`tests/projects-tree.test.tsx`（懒加载/失效重试/点击流转）、`tests/editor-page.test.tsx`（happy-dom，零 React 告警）、`tests/i18n.test.ts`（三语 parity + 源码键覆盖）。
+- `pnpm dev` 手动路径：启动默认 Home（左栏可见）→ 左栏切设置/插件 main 视图 → `Ctrl+,` 切换设置 ↔ 首页 → 浮窗 toggle 开合、切页后浮窗仍在、Esc 关浮窗；左栏展开/收起瞬时切换；展开【项目】旋钮 → 点树内 `.md` 直达 `/editor`、跨项目打开自动切工作区、失效项目「无法访问」可重试。
 - 生产加载路径：`app://shell/index.html` 仅在**打包产物**（`pnpm dist`）中生效；未打包 `electron .` 恒走 dev 路径（wait-on next dev）。splash 人工走查：启动即现品牌标 splash → 主窗带样式切换无白屏/乱序；`tests/splash.test.ts` 锁定 splash 静态契约。
 
 ## 关联知识

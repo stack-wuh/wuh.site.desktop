@@ -1,22 +1,25 @@
 ---
 title: 主编辑器（CodeMirror 6）、即时渲染与分栏预览
 domain: renderer-ui
-keywords: [主编辑器, MarkdownEditor, CodeMirror, CM6, 预览, PreviewPane, renderPipeline, 命令通道, editor-commands, 双通道, 防回环, 图片粘贴, 大纲, 字数, 主题桥接, HighlightStyle, 即时渲染, livePreview, 装饰层, reconfigure]
-scope: [components/editor, components/home/EditorPanel, lib/editor-cm, lib/editor-commands, lib/editor-info]
+keywords: [主编辑器, MarkdownEditor, CodeMirror, CM6, 预览, PreviewPane, renderPipeline, 命令通道, editor-commands, 双通道, 防回环, 图片粘贴, 大纲, 字数, 主题桥接, HighlightStyle, 即时渲染, livePreview, 装饰层, reconfigure, 沉浸编辑页, /editor]
+scope: [components/editor, components/home/EditorPanel, app/(shell)/editor, lib/editor-cm, lib/editor-commands, lib/editor-info]
 status: active
 source:
   - changes/20260922-refactor-codemirror-editor/brief.md
   - changes/archive/20260922-feature-vditor-md-editor/brief.md
   - changes/archive/20260923-feature-cm-live-preview/brief.md
   - changes/20260924-fix-live-preview-toggle-rebuild/brief.md
+  - changes/20260924-feature-projects-editor-page/brief.md
 verified: 2026-09-24
 ---
 
-# 主编辑器（CodeMirror 6）与分栏预览
+# 主编辑器（CodeMirror 6）、即时渲染与分栏预览
 
 ## 当前结论
 
 主编辑器是首页编辑器面板内的 **CodeMirror 6 源码编辑器**（`components/editor/MarkdownEditor.tsx` 薄包装，20260922-refactor-codemirror-editor 起替换 Vditor IR；曾由 20260922-feature-vditor-md-editor 短暂引入 Vditor，因 11MB 资产与 IR 形态不合用整体退场）。面板中央为编辑/预览区，动作行承载文档状态 · 预览 toggle · 新建 · 保存。
+
+**第二个挂载点 `/editor`（统一编辑页，2026-09-24 起）**：窄栏沉浸布局（~760px 居中列）+ 极简顶栏（返回 · 面包屑（项目名/文件名或「草稿」）· 脏点 · 新建 · 保存）；与首页面板**共用同一 `workspaceStore` 与同一命令通道**——保存/新建经 `publishEditorCommand` 发布、由常驻壳层的 EditorCommandHost 认领，页内不直呼主进程；冷启动（无文档无草稿会话，`content == null`）自动 `startDraft()` 延续「先写后存」；页内不提供分栏预览（首页面板的预览 toggle 语义保留在首页）。两挂载点由**路由互斥**保证任一时刻仅一处挂载 CM6 实例（首页 EditorPanel 行为不变）。
 
 **content 双通道与防回环**：编辑器自发输入与命令事务经 `EditorView.updateListener` 的 docChanged → `workspaceStore.setContent`（CM6 无 Vditor「命令突变不触发回调」问题，命令事务自动回同步）；store 侧外部注入（openDoc/startDraft/插件帧 doc.set）经 `lib/editor-cm.ts` 的 `cmExternalContent` 全量回写（原光标 head 越界钳制），组件侧 `pushedRef` 与 `store.content` 比对防回环，编辑中不做全量重置。
 
@@ -33,6 +36,7 @@ verified: 2026-09-24
 ## 执行约束
 
 - 内核与命令语义变更必须保持：双通道防回环（pushedRef 比对）、命令通道消费契约（EditorSection/TaskCapsule 只经 editor-commands 与编辑器交互）、面板紧凑形态（min 140px / max 45vh）。
+- 编辑面挂载点收敛：新增编辑面必须复用 `MarkdownEditor` + `publishEditorCommand` 命令通道 + 同一 `workspaceStore`，并保持路由互斥（同一时刻仅一处挂载 CM6）；不得为某页另建状态源或直连主进程写盘。
 - 新编辑器命令先入 `EditorCommand` 词表（或 `MarkdownInsertAction` 词表）再消费；位置计算进 `applyMarkdownInsert` 纯函数并配测试，不绕过。
 - 预览渲染必须走 `renderPipeline`（禁自行 new MarkdownIt 绕过插件规则与相对图片重写）；预览 HTML 的安全边界等同插件预览（markdown-it html:false）。
 - 编辑器与预览 UI 颜色只经主题语义 token；`HighlightStyle` 从 `@codemirror/language` 导入（`@lezer/highlight` 只有 `tags`）。
@@ -41,13 +45,13 @@ verified: 2026-09-24
 
 ## 适用边界
 
-适用于宿主首页编辑器面板与其分栏预览、胶囊/面板到编辑器的命令链路。不适用于插件沙箱帧内部编辑器（插件自 vendor 依赖）；`workspaceStore` 作为插件 doc 服务状态源的帧协议语义见 renderer-shell-routing 卡。
+适用于宿主首页编辑器面板与 `/editor` 统一编辑页、其分栏预览（仅首页）、胶囊/面板到编辑器的命令链路。不适用于插件沙箱帧内部编辑器（插件自 vendor 依赖）；`workspaceStore` 作为插件 doc 服务状态源的帧协议语义见 renderer-shell-routing 卡。
 
 ## 验证方式
 
-- `vitest run tests/editor-codemirror.test.ts tests/home-editor-panel.test.ts tests/editor-live-preview-toggle.test.ts`（CM6 适配/双通道语义/命令契约/大纲/字数/即时渲染开关时序纯逻辑）。
+- `vitest run tests/editor-codemirror.test.ts tests/home-editor-panel.test.ts tests/editor-live-preview-toggle.test.ts tests/editor-page.test.tsx`（CM6 适配/双通道语义/命令契约/大纲/字数/即时渲染开关时序纯逻辑 + `/editor` 顶栏与冷启动草稿会话）。
 - `grep -rn "vditor" --include="*.ts" --include="*.tsx" --include="*.mjs" .`（排除 node_modules/out/dist/shadow-docs）应为空。
-- `pnpm dev` 手动路径：首页面板打字（明暗四主题）、胶囊格式化/插入命令、图片粘贴落盘 `.assets/`、预览 toggle 分栏与窄容器纵堆、Cmd/Ctrl+S 保存、outline 跳转。
+- `pnpm dev` 手动路径：首页面板打字（明暗四主题）、胶囊格式化/插入命令、图片粘贴落盘 `.assets/`、预览 toggle 分栏与窄容器纵堆、Cmd/Ctrl+S 保存、outline 跳转；`/editor`：左栏项目树或项目页点文件进入、脏点与保存、新建、返回、Esc 退专注、冷启动自动草稿。
 
 ## 关联知识
 

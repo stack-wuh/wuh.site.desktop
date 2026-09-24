@@ -5,6 +5,7 @@
  * 分组：UI（操作）· Status（状态）· Plugin（manifest 图标白名单映射）· Brand（自绘，见 brand.tsx）。
  */
 import {
+  ArrowLeft,
   Bold,
   BookOpen,
   Check,
@@ -59,6 +60,7 @@ export { IconDiamond, IconLogo } from './brand'
 
 export const IconBold = Bold
 export const IconCheck = Check
+export const IconArrowLeft = ArrowLeft
 export const IconChevronDown = ChevronDown
 export const IconChevronLeft = ChevronLeft
 export const IconChevronRight = ChevronRight
