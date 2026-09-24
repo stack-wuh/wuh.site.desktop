@@ -22,6 +22,8 @@ export interface WorkspaceState {
   /** 最近一次保存/加载的内容，dirty 依据 */
   saved: string | null
   dirty: boolean
+  /** 当前会话归属的草稿箱草稿 id（null=不归属；打开文档/新建/关闭/切工作区均清除） */
+  activeDraftId: string | null
 }
 
 // ---------- 文档生命周期事件（插件 documentHooks 的事件源） ----------
@@ -63,7 +65,8 @@ let state: WorkspaceState = {
   activePath: null,
   content: null,
   saved: null,
-  dirty: false
+  dirty: false,
+  activeDraftId: null
 }
 
 const listeners = new Set<() => void>()
@@ -102,26 +105,36 @@ export const workspaceStore = {
   },
   /** 宿主编辑器打开工作区文档：activePath/content/saved 赋值 + doc.opened 广播 */
   openDoc(path: string, content: string): void {
-    setState({ activePath: path, content, saved: content, dirty: false })
+    setState({ activePath: path, content, saved: content, dirty: false, activeDraftId: null })
     documentEvents.emit('doc.opened', { path })
     documentEvents.emit('doc.changed', { path, dirty: false })
   },
+  /** 宿主编辑器载入草稿箱草稿：无路径会话、clean、归属该草稿（草稿箱页「继续编辑」入口） */
+  openDraft(content: string, draftId: string | null): void {
+    setState({ activePath: null, content, saved: content, dirty: false, activeDraftId: draftId })
+    documentEvents.emit('doc.changed', { path: null, dirty: false })
+  },
+  /** 草稿落盘后回填/清除会话归属（静默，不广播；同值幂等） */
+  adoptDraft(draftId: string | null): void {
+    if (state.activeDraftId === draftId) return
+    setState({ activeDraftId: draftId })
+  },
   /** 宿主编辑器回到新草稿态：无 activePath、空内容、clean */
   startDraft(): void {
-    setState({ activePath: null, content: '', saved: '', dirty: false })
+    setState({ activePath: null, content: '', saved: '', dirty: false, activeDraftId: null })
     documentEvents.emit('doc.changed', { path: null, dirty: false })
   },
   /** 关闭当前文档（回到无文档态）；空态下 no-op 不广播 */
   closeDoc(): void {
     if (!state.activePath && state.content == null) return
     const path = state.activePath
-    setState({ activePath: null, content: null, saved: null, dirty: false })
+    setState({ activePath: null, content: null, saved: null, dirty: false, activeDraftId: null })
     if (path) documentEvents.emit('doc.closed', { path })
     documentEvents.emit('doc.changed', { path: null, dirty: false })
   },
   /** 工作区切换：doc 状态归属旧工作区，整体失效并广播 doc.changed（root 供 doc 服务解析新根） */
   switchWorkspace(root: string | null): void {
-    setState({ root, activePath: null, content: null, saved: null, dirty: false })
+    setState({ root, activePath: null, content: null, saved: null, dirty: false, activeDraftId: null })
     documentEvents.emit('doc.changed', { path: null, dirty: false })
   }
 }

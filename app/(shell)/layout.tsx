@@ -18,7 +18,7 @@ import { Capsule } from '../../components/capsule/Capsule'
 import { SideMenu, type SideMenuItem } from '../../components/SideMenu'
 import { EditorCommandHost } from '../../components/capsule/sections/EditorSection'
 import ShellReady from '../../components/ShellReady'
-import { IconHome, pluginIcon } from '../../components/icons'
+import { IconHome, IconInbox, pluginIcon } from '../../components/icons'
 import {
   bootstrapPluginsHost,
   broadcastTheme,
@@ -29,6 +29,7 @@ import {
   usePluginsReady
 } from '../../components/plugins/PluginFrameHost'
 import { floatsStore, toggleFloat } from '../../lib/floats'
+import { installDraftAutosave, useDrafts } from '../../lib/drafts'
 import { refreshIdentity } from '../../lib/identity'
 import { pluginPanelKey, routeKeyFromPathname } from '../../lib/routes'
 import { useTheme } from '../../components/theme/ThemeProvider'
@@ -83,6 +84,8 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
     void bootstrapPluginsHost().catch((err: unknown) => console.error('插件引导失败', err))
     // 全局身份一次拉取：侧栏用户入口/快捷面板、首页问候与用户中心共享同一份
     void refreshIdentity().catch((err: unknown) => console.error('身份拉取失败', err))
+    // 草稿自动暂存联动（幂等）：新草稿会话的输入防抖落草稿箱
+    return installDraftAutosave()
   }, [])
 
   // 主题切换同步进全部插件帧（token 快照经 CSS 注入，设计同源）
@@ -116,10 +119,16 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
   // （注册表 key 无前缀，toggle 项 id 带 plugin: 前缀，此处映射）
   const floatsSnapshot = useSyncExternalStore(floatsStore.subscribe, floatsStore.get, floatsStore.get)
   const openKeys = new Set(floatsSnapshot.floats.map((f) => pluginPanelKey(f.pluginId, f.viewId)))
+  // 草稿箱快照：侧栏徽标 = 暂存草稿数
+  const drafts = useDrafts()
 
   const items: SideMenuItem[] = [
     // 首页 = 「新建博客」项目入口（路由 key 仍为 home / 路径 /，仅显示名升级）
     { id: 'home', icon: IconHome, title: t('menu.home') },
+    // 草稿箱（徽标 = 暂存草稿数；首拉完成前不显示数字）
+    ...(drafts.loaded && drafts.drafts.length > 0
+      ? [{ id: 'drafts', icon: IconInbox, title: t('menu.drafts'), badge: { count: drafts.drafts.length } }]
+      : [{ id: 'drafts', icon: IconInbox, title: t('menu.drafts') }]),
     ...mainViews.map(({ pluginId, view }) => ({
       id: pluginPanelKey(pluginId, view.id),
       icon: pluginIcon(view.icon),
@@ -163,6 +172,7 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
           active={active}
           onChange={(id) => {
             if (id === 'home') router.push('/')
+            else if (id === 'drafts') router.push('/drafts')
             else if (id === 'settings') router.push('/settings')
             else {
               const [prefix, pluginId, viewId] = id.split(':')

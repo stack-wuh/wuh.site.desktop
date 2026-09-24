@@ -46,6 +46,7 @@ import {
 } from '../../icons'
 import type { IconComponent } from '../../ui/AppIcon'
 import { workspaceStore, useWorkspaceStore, type MarkdownInsertAction } from '../../../lib/store'
+import { consumeDraft } from '../../../lib/drafts'
 import { publishEditorCommand, subscribeEditorCommands } from '../../../lib/editor-commands'
 import { getEditorLiveState, publishEditorLiveState, useEditorLiveState, type EditorTypography } from '../../../lib/editor-state'
 import { countWords, estimateReadingMinutes, parseOutline } from '../../../lib/editor-info'
@@ -615,8 +616,11 @@ export function EditorCommandHost(): React.JSX.Element {
     setSaveError(null)
     try {
       const content = workspaceStore.get().content ?? ''
+      const draftId = workspaceStore.get().activeDraftId
       const result = await window.api.writeFile(rel, content)
       workspaceStore.openDoc(result.path, content)
+      // 草稿已落为工作区文件：消费草稿箱对应条目（失败不阻断保存结果）
+      if (draftId) void consumeDraft(draftId).catch(() => undefined)
       setSaveAsOpen(false)
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : String(err))

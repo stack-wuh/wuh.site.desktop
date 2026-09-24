@@ -24,6 +24,7 @@ import {
   Heading2,
   House,
   Image,
+  Inbox,
   Italic,
   Link2,
   List,
@@ -43,6 +44,7 @@ import {
   Sparkles,
   Table,
   Tag,
+  Trash2,
   Undo2,
   Redo2,
   X
@@ -73,6 +75,7 @@ export const IconHeading1 = Heading1
 export const IconHeading2 = Heading2
 export const IconHome = House
 export const IconImage = Image
+export const IconInbox = Inbox
 export const IconItalic = Italic
 export const IconLink = Link2
 export const IconList = List
@@ -91,6 +94,7 @@ export const IconSearch = Search
 export const IconSettings = Settings
 export const IconSparkles = Sparkles
 export const IconTable = Table
+export const IconTrash = Trash2
 export const IconUndo = Undo2
 
 // ---------- Status：状态 ----------
