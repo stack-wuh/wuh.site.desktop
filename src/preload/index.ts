@@ -38,6 +38,7 @@ const api: DesktopApi = {
   readTree: (root) => invoke('readTree', root),
   readFile: (p) => invoke('readFile', p),
   writeFile: (p, c) => invoke('writeFile', p, c),
+  pickSaveLocation: (opts) => invoke('pickSaveLocation', opts),
   savePastedImage: (d, n, b) => invoke('savePastedImage', d, n, b),
   gitStatus: () => invoke('gitStatus'),
   gitStage: (paths) => invoke('gitStage', paths),

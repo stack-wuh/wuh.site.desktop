@@ -10,6 +10,7 @@ source:
   - changes/archive/20260923-feature-cm-live-preview/brief.md
   - changes/20260924-fix-live-preview-toggle-rebuild/brief.md
   - changes/20260924-feature-projects-editor-page/brief.md
+  - changes/20260924-feature-native-save-dialog/brief.md
 verified: 2026-09-24
 ---
 
@@ -22,6 +23,8 @@ verified: 2026-09-24
 **第二个挂载点 `/editor`（统一编辑页，2026-09-24 起）**：窄栏沉浸布局（~760px 居中列）+ 极简顶栏（返回 · 面包屑（项目名/文件名或「草稿」）· 脏点 · 新建 · 保存）；与首页面板**共用同一 `workspaceStore` 与同一命令通道**——保存/新建经 `publishEditorCommand` 发布、由常驻壳层的 EditorCommandHost 认领，页内不直呼主进程；冷启动（无文档无草稿会话，`content == null`）自动 `startDraft()` 延续「先写后存」；页内不提供分栏预览（首页面板的预览 toggle 语义保留在首页）。两挂载点由**路由互斥**保证任一时刻仅一处挂载 CM6 实例（首页 EditorPanel 行为不变）。
 
 **content 双通道与防回环**：编辑器自发输入与命令事务经 `EditorView.updateListener` 的 docChanged → `workspaceStore.setContent`（CM6 无 Vditor「命令突变不触发回调」问题，命令事务自动回同步）；store 侧外部注入（openDoc/startDraft/插件帧 doc.set）经 `lib/editor-cm.ts` 的 `cmExternalContent` 全量回写（原光标 head 越界钳制），组件侧 `pushedRef` 与 `store.content` 比对防回环，编辑中不做全量重置。
+
+**saveAs 原生保存面板（20260924-feature-native-save-dialog）**：EditorCommandHost 的 save（无路径有内容）/saveAs 走 `window.api.pickSaveLocation`（主进程 `dialog.showSaveDialog`，`src/main/saveDialog.ts`）——目录+文件名一次选定，上次保存目录持久化 `userData/save-dialog.json` 作缺省（defaultPath 显式传入优先），建议文件名取正文首个标题（主进程 `suggestFileStem` 清洗非法字符、截断 80、兜底「未命名」后补 `.md`）。无工作区时先 `openWorkspace()` 原生目录选择引导（取消=整个保存终止）；**`applyWorkspaceSwitch` 会清空文档状态——内容与草稿归属必须先捕获再切**。确认路径经 shared 纯函数 `workspaceRelativePath` 定边界：工作区外 feedback Message 拒绝、会话保留（v1 不自动切工作区）；工作区内走既有 `writeFile → openDoc → consumeDraft` 转正链。自绘保存 Dialog 与相对路径输入已退役（`editor.fileNameLabel/Placeholder` 键删除）。与「打开项目」的原生 `showOpenDialog` 统一为**凡选文件系统位置一律系统原生弹窗**。
 
 **命令通道**：`lib/editor-commands.ts` 的 `EditorCommand` 契约是壳层胶囊（EditorSection）与面板动作行和编辑器解耦的唯一桥梁——format/insert/scrollToHeading/insertClipboardImage/focus 由 MarkdownEditor 消费，`lib/editor-cm.ts` 做 CM6 TransactionSpec 纯逻辑适配（格式化位置计算唯一事实源是 `lib/store.ts` 的 `applyMarkdownInsert`）；save/saveAs/newDraft/closeDoc 归宿主（壳层命令宿主 + 面板动作行）认领。大纲跳转按 `parseOutline` 序号定位标题行行首并 scrollIntoView；字数/大纲数据从 store.content 派生（editor-info），不接触编辑器实例。
 
@@ -36,6 +39,7 @@ verified: 2026-09-24
 ## 执行约束
 
 - 内核与命令语义变更必须保持：双通道防回环（pushedRef 比对）、命令通道消费契约（EditorSection/TaskCapsule 只经 editor-commands 与编辑器交互）、面板紧凑形态（min 140px / max 45vh）。
+- saveAs 一律走原生保存面板（`pickSaveLocation`），渲染层不得再造位置选择 UI；新增「选文件系统位置」场景统一原生弹窗心智（`workspaceRelativePath` 定工作区边界，主进程 `safeJoin` 兜底）。
 - 编辑面挂载点收敛：新增编辑面必须复用 `MarkdownEditor` + `publishEditorCommand` 命令通道 + 同一 `workspaceStore`，并保持路由互斥（同一时刻仅一处挂载 CM6）；不得为某页另建状态源或直连主进程写盘。
 - 新编辑器命令先入 `EditorCommand` 词表（或 `MarkdownInsertAction` 词表）再消费；位置计算进 `applyMarkdownInsert` 纯函数并配测试，不绕过。
 - 预览渲染必须走 `renderPipeline`（禁自行 new MarkdownIt 绕过插件规则与相对图片重写）；预览 HTML 的安全边界等同插件预览（markdown-it html:false）。
@@ -49,7 +53,7 @@ verified: 2026-09-24
 
 ## 验证方式
 
-- `vitest run tests/editor-codemirror.test.ts tests/home-editor-panel.test.ts tests/editor-live-preview-toggle.test.ts tests/editor-page.test.tsx`（CM6 适配/双通道语义/命令契约/大纲/字数/即时渲染开关时序纯逻辑 + `/editor` 顶栏与冷启动草稿会话）。
+- `vitest run tests/editor-codemirror.test.ts tests/home-editor-panel.test.ts tests/editor-live-preview-toggle.test.ts tests/editor-page.test.tsx`（CM6 适配/双通道语义/命令契约/大纲/字数/即时渲染开关时序纯逻辑 + `/editor` 顶栏与冷启动草稿会话）；`vitest run tests/save-dialog.test.ts tests/saveas-flow.test.tsx`（原生保存面板：文件名清洗/目录记忆/saveAs 四分支流转）。
 - `grep -rn "vditor" --include="*.ts" --include="*.tsx" --include="*.mjs" .`（排除 node_modules/out/dist/shadow-docs）应为空。
 - `pnpm dev` 手动路径：首页面板打字（明暗四主题）、胶囊格式化/插入命令、图片粘贴落盘 `.assets/`、预览 toggle 分栏与窄容器纵堆、Cmd/Ctrl+S 保存、outline 跳转；`/editor`：左栏项目树或项目页点文件进入、脏点与保存、新建、返回、Esc 退专注、冷启动自动草稿。
 
