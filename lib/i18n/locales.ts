@@ -29,6 +29,7 @@ const zh: Record<string, string> = {
   'menu.userAria': '用户',
   'menu.home': '新建博客',
   'menu.drafts': '草稿箱',
+  'menu.projects': '项目',
   // 草稿箱页
   'drafts.title': '草稿箱',
   'drafts.count': '{n} 篇草稿',
@@ -193,6 +194,7 @@ const zh: Record<string, string> = {
   'account.copied': '已复制',
   'account.reopenPage': '重新打开授权页',
   'account.cancelAuth': '取消授权',
+  'account.authFailed': '授权失败，请重试',
   'account.kindOauth': 'OAuth 授权',
   'account.kindPat': '手动 Token',
   'account.scopesLabel': '授权范围',
@@ -268,6 +270,7 @@ const en: Record<string, string> = {
   'menu.userAria': 'User',
   'menu.home': 'New blog post',
   'menu.drafts': 'Drafts',
+  'menu.projects': 'Projects',
   // Drafts page
   'drafts.title': 'Drafts',
   'drafts.count': '{n} drafts',
@@ -341,6 +344,7 @@ const en: Record<string, string> = {
   'account.copied': 'Copied',
   'account.reopenPage': 'Reopen authorization page',
   'account.cancelAuth': 'Cancel',
+  'account.authFailed': 'Authorization failed. Please try again.',
   'account.kindOauth': 'OAuth',
   'account.kindPat': 'Manual token',
   'account.scopesLabel': 'Scopes',
@@ -503,6 +507,7 @@ const ja: Record<string, string> = {
   'menu.userAria': 'ユーザー',
   'menu.home': 'ブログを書く',
   'menu.drafts': '下書き',
+  'menu.projects': 'プロジェクト',
   // 下書きページ
   'drafts.title': '下書き',
   'drafts.count': '{n} 件の下書き',
@@ -664,6 +669,7 @@ const ja: Record<string, string> = {
   'account.copied': 'コピーしました',
   'account.reopenPage': '認証ページを開き直す',
   'account.cancelAuth': 'キャンセル',
+  'account.authFailed': '認証に失敗しました。もう一度お試しください。',
   'account.kindOauth': 'OAuth 認証',
   'account.kindPat': '手動トークン',
   'account.scopesLabel': 'スコープ',

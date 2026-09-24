@@ -137,7 +137,8 @@
 - [x] 菜单项目树：项目节点（当前徽标/懒加载/失效重试/空项目引导）→ 文件夹+.md 递归树，点文件直达 `/editor`；layout 接线【项目】条目 — `components/menu/ProjectsTree.tsx` `app/(shell)/layout.tsx` — 新增/修改
 - [x] i18n 三语：树交互新键（`projects.treeToggle`/`projects.loading`） — `lib/i18n/locales.ts` — 修改
 - [x] 测试：树纯逻辑 + ProjectsTree DOM 渲染（懒展开/失效/点击流转/空态，零 React 告警）+ 既有 projects 渲染回归 — `tests/projects.test.ts` `tests/projects-tree.test.tsx` — 新增/修改
-- [ ] `pnpm typecheck` + `pnpm test` 全量回归 + 提交 — 无文件 — 验证
+- [x] `pnpm typecheck` + `pnpm test` 全量回归 + 提交 — 无文件 — 验证
+- [x] 缺键修复（走查反馈）：补 `menu.projects`（左栏曾显示裸 key「menu.projects」，三语）+ 既有遗漏 `account.authFailed`；新增「源码引用键 ⊆ 字典」回归测试（字面量 t() 直调 + 命名空间守卫扫描间接传键） — `lib/i18n/locales.ts` `tests/i18n.test.ts` — 修改
 
 ## 结果
 
