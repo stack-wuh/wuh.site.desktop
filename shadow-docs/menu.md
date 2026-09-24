@@ -12,7 +12,7 @@
 | 构建/工具链 | Next next.config 静态导出 app 协议 electron-vite 双进程 dev workspace pnpm 打包 electron-builder tsconfig vitest README | knowledge/renderer-shell-routing.md, knowledge/shell-chrome-design.md |
 | 主编辑器 / 预览 | 编辑器 MarkdownEditor CodeMirror CM6 源码编辑 预览 PreviewPane 分栏 命令通道 editor-commands 双通道 防回环 图片粘贴 粘贴截图 大纲 字数 高亮 HighlightStyle | knowledge/editor.md |
 | 插件状态项 | statusItems statusBar 状态项 贡献点 徽标位 声明制 | knowledge/shell-chrome-design.md |
-| 壳层胶囊 | 胶囊 壳层胶囊 任务 待办 任务列表 任务胶囊 进度 TaskCapsule TaskPopover Capsule CapsulePanel tasks statusItems 之外的状态聚合 | knowledge/shell-chrome-design.md |
+| 壳层胶囊 / 任务中心 | 胶囊 壳层胶囊 任务中心 事件总线 events wuh.events 发布订阅 任务 待办 任务列表 任务胶囊 进度 时间线 TaskCapsule TaskPopover Capsule CapsulePanel tasks statusItems 之外的状态聚合 | knowledge/shell-chrome-design.md |
 | 插件浮窗视图 | float 浮窗 预览 preview 视图区域 FloatLayer floats | knowledge/shell-chrome-design.md, knowledge/renderer-shell-routing.md |
 | 反馈提示 | 提示 反馈 Toast Message Alert 通知 弹窗 横幅 模态 系统通知 失焦 feedback notifySystem 插件提示 确认 | knowledge/ui-feedback.md |
 | 插件系统 | 插件 manifest loader 启用 停用 批准 approvals resolveApproval reload 重载 revealDir plugin-state broker 沙箱 帧 握手 ready 协议注册 corsEnabled problems | knowledge/plugin-architecture.md |
