@@ -21,7 +21,8 @@ source:
   - changes/20260923-feature-capsule-prominence/brief.md
   - changes/20260922-refactor-codemirror-editor/brief.md
   - changes/20260923-feature-build-time-visibility/brief.md
-verified: 2026-09-23
+  - changes/20260924-fix-capsule-self-close/brief.md
+verified: 2026-09-24
 ---
 
 # 壳层 chrome 设计与插件扩展点
@@ -62,6 +63,7 @@ verified: 2026-09-23
 - 胶囊动效（spinner/旋转环）属**持续状态指示**，不适用 150-300ms 过渡规则；`prefers-reduced-motion: reduce` 下必须静态降级。壳层不得反向修改任务状态（单一写方 = 插件 SDK）。壳层胶囊挂点契约（main 容器右上常驻、宿主无 z-index、pointer-events 穿透、面板向下弹出）见壳层胶囊段——移动挂点或调整层级必须整段同步。
 - 主区禁止硬编码插件视图容器；新增视图区域一律走 manifest `views.area` 声明（`main` | `float`）。
 - 任何 `useSyncExternalStore` 必须传第三参 `getServerSnapshot`（Next 静态导出预渲染硬要求）；插件帧的 `PluginView` 与浮窗层均在客户端组件内（'use client'）。
+- 浮层「点外关」一律用 **target 归属守卫**（根元素 ref + `contains(e.target)` 豁免自身），禁止依赖 effect 注册与事件冒泡的时序关系——React 18 对离散事件（真实点击）会同步刷新 passive effects，打开浮层的那次点击仍会冒泡到 window 并被自己刚挂上的监听器关掉（20260924-fix-capsule-self-close；胶囊 chip 即此伤，快速点击类回归用例在 happy-dom 的 act 语义下不可复现，须真机验证）。
 
 ## 适用边界
 

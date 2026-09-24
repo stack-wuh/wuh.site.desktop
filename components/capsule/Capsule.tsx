@@ -18,7 +18,7 @@
  * ——chip 靠 DOM 顺序压页面内容、低于浮窗 z2，面板 z70 浮于浮窗、低于 Dialog
  * 100），面板贴 chip 向下弹出，Esc/点外关。
  */
-import { useEffect, useState, useSyncExternalStore } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import styled, { css, keyframes } from 'styled-components'
 import { taskAggregate, tasksStore } from '../../lib/tasks'
 import { useWorkspaceStore } from '../../lib/store'
@@ -173,6 +173,8 @@ export function Capsule(): React.JSX.Element {
   const doc = useWorkspaceStore()
   const { t } = useLocale()
   const [open, setOpen] = useState(false)
+  /** 胶囊根（chip + 面板）引用：点外关时豁免胶囊内部点击 */
+  const wrapRef = useRef<HTMLSpanElement | null>(null)
   const agg = taskAggregate()
   // 常驻胶囊：空态显示「就绪」；有任务显聚合进度，无任务有文档显编辑器入口
   const hasDoc = doc.activePath != null || doc.content != null
@@ -185,7 +187,14 @@ export function Capsule(): React.JSX.Element {
     const onKey = (e: KeyboardEvent): void => {
       if (e.key === 'Escape') setOpen(false)
     }
-    const onClick = (): void => setOpen(false)
+    // 点外关：target 在胶囊内（chip 或面板）一律忽略——不能用传播时序判断，
+    // React 18 离散事件会同步刷 passive effects，打开面板的那次点击仍会
+    // 冒泡到 window（20260924-fix-capsule-self-close）
+    const onClick = (e: MouseEvent): void => {
+      const el = wrapRef.current
+      if (el && e.target instanceof Node && el.contains(e.target)) return
+      setOpen(false)
+    }
     window.addEventListener('keydown', onKey)
     window.addEventListener('click', onClick)
     return () => {
@@ -195,7 +204,7 @@ export function Capsule(): React.JSX.Element {
   }, [open])
 
   return (
-    <Wrap>
+    <Wrap ref={wrapRef}>
       <CapsuleButton
         type="button"
         data-testid="capsule"
