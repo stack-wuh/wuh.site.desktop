@@ -5,7 +5,7 @@ keywords: [提示, 反馈, Toast, Message, Alert, 通知, 弹窗, 横幅, 模态
 scope: [lib/feedback.ts, components/ui/FeedbackHost.tsx, components/plugins/PluginFrameHost.tsx, src/shared/plugin.ts, src/main/systemNotify.ts, src/plugin-sdk]
 status: active
 source:
-  - changes/20260924-feature-ui-feedback-system/brief.md
+  - changes/archive/20260924-feature-ui-feedback-system/brief.md
 verified: 2026-09-24
 ---
 

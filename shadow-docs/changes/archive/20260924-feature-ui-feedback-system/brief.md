@@ -4,7 +4,7 @@
   "name": "20260924-feature-ui-feedback-system",
   "type": "feature",
   "scope": "apps/desktop",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20260924-feature-ui-feedback-system",
   "files": [
@@ -32,18 +32,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 78,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/78",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 81,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/81"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "d4922cf9497745e49a91f7bb6d9209062644d931",
-    "verifiedAt": "2026-09-24T08:59:02.865Z"
+    "verifiedCommit": "db4e7307e337b85e0ca5444b4905885b72fcc932",
+    "verifiedAt": "2026-09-24T09:07:30.188Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:78",
-    "planHash": "946b5376f55d9238cb462f926b3fcbf992f291b13e1d6c2e029cb07f71360c01",
+    "checkpoint": "merged-pr:81",
+    "planHash": "04601143e1ca6d60be83d5afb4f53aecb78cababf6efca4efec74b2dc87dd1e2",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
