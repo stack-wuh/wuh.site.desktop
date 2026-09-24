@@ -1,8 +1,10 @@
 // @vitest-environment happy-dom
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act } from 'react'
 import type { ReactElement } from 'react'
 import { CapsulePanel } from '../components/capsule/CapsulePanel'
+import { Capsule } from '../components/capsule/Capsule'
 import { EditorSection } from '../components/capsule/sections/EditorSection'
 import { registerManifestCapsule, updateCapsule } from '../lib/capsule'
 import { registerManifestTasks, upsertTask } from '../lib/tasks'
@@ -120,3 +122,70 @@ describe('编辑器模块区渲染冒烟', () => {
   })
 })
 
+
+describe('胶囊 chip 开合与点外关语义（20260924-fix-capsule-self-close）', () => {
+  function openCapsule(): {
+    chip: HTMLButtonElement
+    container: HTMLElement
+    cleanup: () => void
+  } {
+    workspaceStore.startDraft()
+    const rendered = renderWithLocale(<Capsule />)
+    const chip = rendered.container.querySelector<HTMLButtonElement>('[data-testid="capsule"]')
+    if (!chip) throw new Error('chip 未渲染')
+    act(() => {
+      fireEvent.click(chip)
+    })
+    return { chip, container: rendered.container, cleanup: rendered.unmount }
+  }
+
+  it('点 chip 打开面板；点面板内不关闭（点外关不得误伤胶囊内部）', () => {
+    const { chip, cleanup: unmount } = openCapsule()
+    expect(document.querySelector('[data-testid="capsule-panel"]')).not.toBeNull()
+
+    const panel = document.querySelector('[data-testid="capsule-panel"]')!
+    act(() => {
+      fireEvent.click(panel)
+    })
+    expect(chip.getAttribute('aria-expanded')).toBe('true')
+    expect(document.querySelector('[data-testid="capsule-panel"]')).not.toBeNull()
+    unmount()
+    cleanup()
+  })
+
+  it('点胶囊外区域关闭面板', () => {
+    const { cleanup: unmount } = openCapsule()
+    expect(document.querySelector('[data-testid="capsule-panel"]')).not.toBeNull()
+
+    act(() => {
+      fireEvent.click(document.body)
+    })
+    expect(document.querySelector('[data-testid="capsule-panel"]')).toBeNull()
+    unmount()
+    cleanup()
+  })
+
+  it('面板打开时再点 chip：toggle 关闭且不因外关监听器重入', () => {
+    const { chip, cleanup: unmount } = openCapsule()
+    act(() => {
+      fireEvent.click(chip)
+    })
+    expect(document.querySelector('[data-testid="capsule-panel"]')).toBeNull()
+    expect(chip.getAttribute('aria-expanded')).toBe('false')
+    unmount()
+    cleanup()
+  })
+
+  it('Esc 关闭面板', () => {
+    const { chip, cleanup: unmount } = openCapsule()
+    expect(document.querySelector('[data-testid="capsule-panel"]')).not.toBeNull()
+
+    act(() => {
+      fireEvent.keyDown(window, { key: 'Escape' })
+    })
+    expect(document.querySelector('[data-testid="capsule-panel"]')).toBeNull()
+    expect(chip.getAttribute('aria-expanded')).toBe('false')
+    unmount()
+    cleanup()
+  })
+})
