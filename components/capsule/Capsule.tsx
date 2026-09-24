@@ -2,22 +2,19 @@
 
 /**
  * 壳层胶囊（固定命名 Capsule）：壳层一等聚合入口，面板为任务中心（多插件并发
- * 任务集散地，20260924-feature-task-center-event-bus）。chip 保持 20260923
- * 「状态信号舱」解剖不变：
- * [状态环] + [标签·语义色计数] + [chevron 开合指示]，高度 26px 对齐
- * 编辑器胶囊命中区标准。
- * - 状态环（左缘，编码任务聚合态）：空闲/部分完成=静默空心点；有 in_progress=
- *   primary 旋转环（**持续状态指示非过渡动效**，800ms/圈，reduced-motion 静态
- *   降级）；全部完成=success 实心点。
- * - 标签：任务态整串 mono + 语义色（进行中=primary、全完成=success）；空态
- *   「就绪」/编辑器入口常规 sans 次级色——醒目度来自语义色而非加重底色。
- * - chevron：IconChevronDown 开合旋转 180°（150ms，reduced-motion 关闭）。
- * - hover 抬升：elevation-card 阴影 + border primary。
+ * 任务集散地）。挂点：TitleBar（44px header）右侧 flex 子项，垂直居中——
+ * 20260924-fix-capsule-header-chrome 起 自 main 容器右上迁入 header，左区保留
+ * 通知预留位；层叠等价换算：TitleBar 不建层叠上下文，面板 z70 仍在根上下文
+ * （>浮窗 z2、<Dialog 100），Esc/点外关（window 级监听 + target 归属守卫）不变。
  *
- * 挂点契约不变（20260922-feature-shell-capsule）：MainArea 右上常驻，宿主
- * `pointer-events: none` + chip/面板 `auto`；宿主不设 z-index（不建层叠上下文
- * ——chip 靠 DOM 顺序压页面内容、低于浮窗 z2，面板 z70 浮于浮窗、低于 Dialog
- * 100），面板贴 chip 向下弹出，Esc/点外关。
+ * 外观（20260924 微进度环重设计，替代 20260923 状态环药丸）：
+ * - 微进度环（SVG 14px）：环即聚合进度——空闲=空心轨道环；有任务=primary 进度
+ *   弧（弧长=done/total）；有 in_progress 叠加旋转亮弧（**持续状态指示非过渡
+ *   动效**，800ms/圈，reduced-motion 静态降级）；全完成=success 满环。
+ * - ghost 态：header 上默认透明底无边框（安静的信令），hover/面板展开浮起
+ *   药丸（chrome-raised 底 + border + elevation-card 阴影）。
+ * - 标签：任务态整串 mono + 语义色（进行中=primary、全完成=success）；空态
+ *   「就绪」/编辑器入口常规 sans 次级色；chevron 开合旋转 180°。
  */
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import styled, { css, keyframes } from 'styled-components'
@@ -28,38 +25,44 @@ import { AppIcon } from '../ui/AppIcon'
 import { IconChevronDown } from '../icons'
 import { CapsulePanel } from './CapsulePanel'
 
+/** TitleBar 右侧挂点：flex 子项推右缘，相对定位锚定面板向下弹出 */
 const Wrap = styled.span`
-  /* MainArea 右上挂点：绝对定位 + pointer-events 穿透；不设 z-index（保持
-     层叠上下文开放，让面板 z-index 70 直接参与 MainArea 层叠，见头注释） */
-  position: absolute;
-  top: 10px;
-  right: 12px;
+  position: relative;
   display: inline-flex;
-  pointer-events: none;
+  margin-left: auto;
 `
 
-const CapsuleButton = styled.button`
+const CapsuleButton = styled.button<{ $open: boolean }>`
   display: inline-flex;
   align-items: center;
   gap: 8px;
   height: 26px;
   padding: 0 12px;
-  background: var(--chrome-raised);
-  border: 1px solid var(--chrome-border);
+  background: transparent;
+  border: 1px solid transparent;
   border-radius: 13px;
   color: var(--text-secondary);
   font-size: 12px;
   font-family: var(--font-sans);
   cursor: pointer;
-  pointer-events: auto;
   transition:
     background-color 150ms ease-out,
     border-color 150ms ease-out,
     box-shadow 150ms ease-out;
 
+  /* ghost 态：hover/展开浮起药丸 */
+  ${({ $open }) =>
+    $open
+      ? css`
+          background: var(--chrome-raised);
+          border-color: var(--chrome-border);
+          box-shadow: var(--elevation-card);
+        `
+      : ''}
+
   &:hover {
-    background: var(--chrome-hover);
-    border-color: var(--primary-color);
+    background: var(--chrome-raised);
+    border-color: var(--chrome-border);
     box-shadow: var(--elevation-card);
   }
 
@@ -79,68 +82,78 @@ const spin = keyframes`
   }
 `
 
-/* 状态环（左缘）：编码任务聚合态。
-   idle（空闲/部分完成）= 静默空心点；active（有 in_progress）= primary 旋转环；
-   done（全部完成）= success 实心点。 */
-const StatusRing = styled.span<{ $mode: 'idle' | 'active' | 'done' }>`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 14px;
-  height: 14px;
-  flex-shrink: 0;
+/* 旋转亮弧组：仅在 in_progress 存在时叠加于进度弧之上（持续状态指示） */
+const RotatingArc = styled.g<{ $spin: boolean }>`
+  transform-origin: 12px 12px;
 
-  ${({ $mode }) =>
-    $mode === 'idle'
+  ${({ $spin }) =>
+    $spin
       ? css`
-          &::before {
-            content: '';
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            border: 1.5px solid var(--text-muted);
-            box-sizing: border-box;
-          }
+          animation: ${spin} 800ms linear infinite;
         `
       : ''}
 
-  ${({ $mode }) =>
-    $mode === 'active'
-      ? css`
-          &::before {
-            content: '';
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            border: 2px solid var(--chrome-border);
-            border-top-color: var(--primary-color);
-            box-sizing: border-box;
-            animation: ${spin} 800ms linear infinite;
-          }
-
-          @media (prefers-reduced-motion: reduce) {
-            &::before {
-              animation: none;
-              border-color: var(--primary-color);
-              opacity: 0.55;
-            }
-          }
-        `
-      : ''}
-
-  ${({ $mode }) =>
-    $mode === 'done'
-      ? css`
-          &::before {
-            content: '';
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--success-color);
-          }
-        `
-      : ''}
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    opacity: 0.55;
+  }
 `
+
+type RingMode = 'idle' | 'progressing' | 'active' | 'done'
+
+const RING_RADIUS = 10
+const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS
+
+/**
+ * 微进度环：环即聚合进度（空闲空心轨道 / 进度弧 / 旋转亮弧 / success 满环）。
+ * idle 无进度弧；progressing（仅 pending）静态弧；active 叠加旋转亮弧；
+ * done 满环 success。
+ */
+function ProgressRing(props: { mode: RingMode; ratio: number }): React.JSX.Element {
+  const { mode, ratio } = props
+  const dash = mode === 'done' ? RING_CIRCUMFERENCE : RING_CIRCUMFERENCE * ratio
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
+      <circle
+        cx="12"
+        cy="12"
+        r={RING_RADIUS}
+        fill="none"
+        stroke="var(--chrome-border)"
+        strokeWidth="2.5"
+        opacity={mode === 'idle' ? 1 : 0.5}
+      />
+      {mode !== 'idle' && (
+        <circle
+          cx="12"
+          cy="12"
+          r={RING_RADIUS}
+          fill="none"
+          stroke={mode === 'done' ? 'var(--success-color)' : 'var(--primary-color)'}
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeDasharray={`${dash} ${RING_CIRCUMFERENCE - dash}`}
+          transform="rotate(-90 12 12)"
+        />
+      )}
+      {mode === 'active' && (
+        <RotatingArc $spin>
+          <circle
+            cx="12"
+            cy="12"
+            r={RING_RADIUS}
+            fill="none"
+            stroke="var(--primary-color)"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            opacity="0.9"
+            strokeDasharray={`${RING_CIRCUMFERENCE * 0.16} ${RING_CIRCUMFERENCE * 0.84}`}
+          />
+        </RotatingArc>
+      )}
+    </svg>
+  )
+}
 
 /* 标签：任务态整串 mono + 语义色（进行中=primary、全完成=success）；
    空态（就绪/编辑器入口）常规 sans 次级色。 */
@@ -179,8 +192,17 @@ export function Capsule(): React.JSX.Element {
   const agg = taskAggregate()
   // 常驻胶囊：空态显示「就绪」；有任务显聚合进度，无任务有文档显编辑器入口
   const hasDoc = doc.activePath != null || doc.content != null
-  // 状态环/标签语义：active 优先 → 全部完成 → 空闲（部分完成归 idle 静默点）
-  const mode: 'idle' | 'active' | 'done' =
+  // 微进度环语义：active（有 in_progress，旋转亮弧）→ done（全完成满环）
+  // → progressing（仅 pending，静态弧）→ idle（空轨道环）
+  const mode: RingMode =
+    agg.total === 0
+      ? 'idle'
+      : agg.done === agg.total
+        ? 'done'
+        : agg.active > 0
+          ? 'active'
+          : 'progressing'
+  const labelTone: 'idle' | 'active' | 'done' =
     agg.active > 0 ? 'active' : agg.total > 0 && agg.done === agg.total ? 'done' : 'idle'
 
   useEffect(() => {
@@ -212,10 +234,11 @@ export function Capsule(): React.JSX.Element {
         aria-label={t('capsule.title')}
         aria-haspopup="dialog"
         aria-expanded={open}
+        $open={open}
         onClick={() => setOpen((v) => !v)}
       >
-        <StatusRing $mode={mode} aria-hidden="true" />
-        <Label $tone={mode}>
+        <ProgressRing mode={mode} ratio={agg.total > 0 ? agg.done / agg.total : 0} />
+        <Label $tone={labelTone}>
           {agg.total > 0
             ? t('capsule.tasks', { done: agg.done, total: agg.total })
             : hasDoc

@@ -34,8 +34,10 @@ type TaskTab = 'tasks' | 'modules'
 type StatusFilter = 'all' | 'active' | 'done'
 
 const Pop = styled.div`
+  /* 贴 chip（TitleBar 右侧，垂直居中）下缘向下弹出：panel 顶约落在 TitleBar
+     底缘；挂点契约见 components/capsule/Capsule.tsx 头注释 */
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + 10px);
   right: 0;
   z-index: 70;
   pointer-events: auto;
