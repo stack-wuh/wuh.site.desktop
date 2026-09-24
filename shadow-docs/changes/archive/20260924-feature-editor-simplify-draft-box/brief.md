@@ -4,7 +4,7 @@
   "name": "20260924-feature-editor-simplify-draft-box",
   "type": "feature",
   "scope": "apps/desktop",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20260924-feature-editor-simplify-draft-box",
   "files": [
@@ -31,18 +31,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 66,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/66",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 67,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/67"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "70426b6e38cd37338e664d778d655315594533fb",
-    "verifiedAt": "2026-09-24T03:06:24.481Z"
+    "verifiedCommit": "a781351b7872f9ef48bf36629a52c81375eea7d9",
+    "verifiedAt": "2026-09-24T03:23:04.746Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:66",
-    "planHash": "dd2ff0b16a5dcf11a5802d56907db560f11dae24c898811bdf5ce60536f8a4e5",
+    "checkpoint": "merged-pr:67",
+    "planHash": "1d97d91abc4913101eef6454ff19a28f55ae72775caf068c5c885ca28020ead7",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
