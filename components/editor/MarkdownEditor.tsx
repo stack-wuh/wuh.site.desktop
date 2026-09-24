@@ -23,7 +23,7 @@ import styled from 'styled-components'
 import { Compartment, EditorSelection, EditorState } from '@codemirror/state'
 import { EditorView, drawSelection, keymap, placeholder } from '@codemirror/view'
 import { defaultKeymap, history, historyKeymap, redo, undo } from '@codemirror/commands'
-import { closeSearchPanel, highlightSelectionMatches, openSearchPanel, search, searchKeymap } from '@codemirror/search'
+import { closeSearchPanel, openSearchPanel, search, searchKeymap } from '@codemirror/search'
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language'
 import { markdown, markdownKeymap } from '@codemirror/lang-markdown'
 import { tags } from '@lezer/highlight'
@@ -428,7 +428,6 @@ export function MarkdownEditor(): React.JSX.Element {
       search({
         top: true
       }),
-      highlightSelectionMatches(),
       keymap.of([
         {
           key: 'Mod-s',
