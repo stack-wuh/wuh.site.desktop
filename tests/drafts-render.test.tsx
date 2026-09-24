@@ -34,6 +34,13 @@ const DRAFTS: DraftMeta[] = [
 function installApi(patch: Record<string, unknown>): void {
   ;(window as unknown as { api: unknown }).api = {
     listDrafts: vi.fn(async () => DRAFTS),
+    saveDraft: vi.fn(async (input: { id?: string | null; content: string }) => ({
+      id: input.id ?? 'new-1',
+      title: 't',
+      excerpt: '',
+      updatedAt: Date.now(),
+      chars: input.content.length
+    })),
     readDraft: vi.fn(async (id: string) => (id === 'd1' ? '# 未存稿的灵感\n正文' : null)),
     removeDraft: vi.fn(async () => undefined),
     getWorkspace: vi.fn(async () => null),

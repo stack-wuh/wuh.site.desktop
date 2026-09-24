@@ -11,6 +11,7 @@
     "components/capsule/sections/EditorSection.tsx",
     "lib/drafts.ts",
     "tests/drafts-editor-dom.test.tsx",
+    "tests/drafts-render.test.tsx",
     "tests/drafts.test.ts"
   ],
   "github": {
