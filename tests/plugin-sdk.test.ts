@@ -26,4 +26,10 @@ describe('PLUGIN_SDK_JS', () => {
     expect(PLUGIN_SDK_JS).toContain("call('tasks', 'upsert'")
     expect(PLUGIN_SDK_JS).toContain("call('tasks', 'remove'")
   })
+
+  it('暴露反馈提示三方法（toast/message/alert 经 ui 帧服务）', () => {
+    expect(PLUGIN_SDK_JS).toContain("call('ui', 'toast'")
+    expect(PLUGIN_SDK_JS).toContain("call('ui', 'message'")
+    expect(PLUGIN_SDK_JS).toContain("call('ui', 'alert'")
+  })
 })

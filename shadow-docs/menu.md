@@ -14,6 +14,7 @@
 | 插件状态项 | statusItems statusBar 状态项 贡献点 徽标位 声明制 | knowledge/shell-chrome-design.md |
 | 壳层胶囊 | 胶囊 壳层胶囊 任务 待办 任务列表 任务胶囊 进度 TaskCapsule TaskPopover Capsule CapsulePanel tasks statusItems 之外的状态聚合 | knowledge/shell-chrome-design.md |
 | 插件浮窗视图 | float 浮窗 预览 preview 视图区域 FloatLayer floats | knowledge/shell-chrome-design.md, knowledge/renderer-shell-routing.md |
+| 反馈提示 | 提示 反馈 Toast Message Alert 通知 弹窗 横幅 模态 系统通知 失焦 feedback notifySystem 插件提示 确认 | knowledge/ui-feedback.md |
 | 插件系统 | 插件 manifest loader 启用 停用 批准 approvals resolveApproval reload 重载 revealDir plugin-state broker 沙箱 帧 握手 ready 协议注册 corsEnabled problems | knowledge/plugin-architecture.md |
 
 ## 查阅流程

@@ -12,6 +12,8 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  CircleAlert,
+  CircleCheck,
   Code,
   Copy,
   ExternalLink,
@@ -26,6 +28,7 @@ import {
   House,
   Image,
   Inbox,
+  Info,
   Italic,
   Link2,
   List,
@@ -46,6 +49,7 @@ import {
   Table,
   Tag,
   Trash2,
+  TriangleAlert,
   Undo2,
   Redo2,
   X
@@ -64,6 +68,8 @@ export const IconArrowLeft = ArrowLeft
 export const IconChevronDown = ChevronDown
 export const IconChevronLeft = ChevronLeft
 export const IconChevronRight = ChevronRight
+export const IconCircleAlert = CircleAlert
+export const IconCircleCheck = CircleCheck
 export const IconClose = X
 export const IconCode = Code
 export const IconCopy = Copy
@@ -78,6 +84,7 @@ export const IconHeading2 = Heading2
 export const IconHome = House
 export const IconImage = Image
 export const IconInbox = Inbox
+export const IconInfo = Info
 export const IconItalic = Italic
 export const IconLink = Link2
 export const IconList = List
@@ -97,6 +104,7 @@ export const IconSettings = Settings
 export const IconSparkles = Sparkles
 export const IconTable = Table
 export const IconTrash = Trash2
+export const IconTriangleAlert = TriangleAlert
 export const IconUndo = Undo2
 
 // ---------- Status：状态 ----------

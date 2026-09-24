@@ -296,6 +296,11 @@ export interface DesktopApi {
   readDraft(id: string): Promise<string | null>
   /** 删除草稿；不存在时 no-op */
   removeDraft(id: string): Promise<void>
+  /**
+   * 系统通知降级（Alert 失焦时）：主进程按窗口状态裁决——聚焦且未最小化时 no-op，
+   * 失焦/最小化才发 OS 通知（点击聚焦主窗）；fire-and-forget，不阻塞渲染层。
+   */
+  notifySystem(payload: { title?: string; text: string }): Promise<void>
   getWorkspace(): Promise<WorkspaceInfo | null>
   /** 列目录树：root 缺省=当前工作区；显式 root 校验目录存在后按根构树（不切换当前工作区） */
   readTree(root?: string): Promise<FileNode[]>

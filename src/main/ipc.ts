@@ -20,6 +20,8 @@ const handlers: {
   saveDraft: () => { throw new Error('not implemented') },
   readDraft: () => { throw new Error('not implemented') },
   removeDraft: () => { throw new Error('not implemented') },
+  // 默认即成功：真实裁决与 OS 通知由 src/main/systemNotify.ts 经 implement() 接管
+  notifySystem: () => Promise.resolve(),
   getWorkspace: () => { throw new Error('not implemented') },
   readTree: () => { throw new Error('not implemented') },
   readFile: () => { throw new Error('not implemented') },

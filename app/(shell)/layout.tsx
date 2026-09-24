@@ -13,6 +13,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import styled from 'styled-components'
 import { HomePage } from '../../components/home/HomePage'
 import { ConfirmHost } from '../../components/ui/Dialog'
+import { FeedbackHost, MessageBannerStack } from '../../components/ui/FeedbackHost'
 import { StatusBar } from '../../components/StatusBar'
 import { FloatLayer } from '../../components/FloatLayer'
 import { Capsule } from '../../components/capsule/Capsule'
@@ -70,6 +71,16 @@ const MainArea = styled.main`
   min-width: 0;
   background: var(--background-color);
   transition: background-color 0.3s ease;
+`
+
+/* 右栏纵向列：Message 横幅（文档流顶部）与页面内容上下排布；
+   FloatLayer 仍是 MainArea 直接子级（定位不变） */
+const MainColumn = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
 `
 
 export default function ShellLayout({ children }: { children: React.ReactNode }): React.JSX.Element {
@@ -202,13 +213,19 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
           userActive={active === 'account'}
         />
         <MainArea ref={mainAreaRef}>
-          {children}
+          <MainColumn>
+            {/* Message 提示（影响用户操作的提示）：内容区顶部横幅，TitleBar 之下 */}
+            <MessageBannerStack />
+            {children}
+          </MainColumn>
           {/* 插件浮窗视图（views.area=float）经注册表按需唤起，与右栏页面共存 */}
           <FloatLayer containerRef={mainAreaRef} />
         </MainArea>
       </Body>
       <StatusBar />
       <ConfirmHost />
+      {/* 反馈提示宿主（Toast 右下浮出自动消退 / Alert 模态必须响应） */}
+      <FeedbackHost />
       {/* 编辑器文档操作命令宿主（单实例常驻）：首页面板操作行与胶囊共用，
           冷启动态（无文档无任务）保存/另存为/新建/关闭依旧可达 */}
       <EditorCommandHost />
