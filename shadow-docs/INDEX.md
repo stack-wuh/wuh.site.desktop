@@ -37,7 +37,7 @@
 | 20260923-test-dom-render-guard | ✅ 完成 | shadow-docs/changes/archive/20260923-test-dom-render-guard/brief.md |
 | 20260924-feature-breadcrumb-doc-ops | proposed | shadow-docs/changes/20260924-feature-breadcrumb-doc-ops/brief.md |
 | 20260924-feature-editor-simplify-draft-box | ✅ 完成 | shadow-docs/changes/archive/20260924-feature-editor-simplify-draft-box/brief.md |
-| 20260924-feature-editor-toolbar | proposed | shadow-docs/changes/20260924-feature-editor-toolbar/brief.md |
+| 20260924-feature-editor-toolbar | ✅ 完成 | shadow-docs/changes/archive/20260924-feature-editor-toolbar/brief.md |
 | 20260924-feature-git-history-capsule | branched | shadow-docs/changes/20260924-feature-git-history-capsule/brief.md |
 | 20260924-feature-native-save-dialog | proposed | shadow-docs/changes/20260924-feature-native-save-dialog/brief.md |
 | 20260924-feature-projects-editor-page | ✅ 完成 | shadow-docs/changes/archive/20260924-feature-projects-editor-page/brief.md |

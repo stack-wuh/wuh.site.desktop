@@ -4,7 +4,7 @@
   "name": "20260924-feature-editor-toolbar",
   "type": "feature",
   "scope": "apps/desktop",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20260924-feature-editor-toolbar",
   "files": [
@@ -19,18 +19,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 84,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/84",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 90,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/90"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "669591c67a56bbfb09d69fe946abd7b627c534b1",
-    "verifiedAt": "2026-09-24T14:11:16.714Z"
+    "verifiedCommit": "610e9e411c3534276abc47bbf6240e2d83a5175e",
+    "verifiedAt": "2026-09-24T14:16:09.089Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:84",
-    "planHash": "28370afa46ab383c05c37f0018becbb6084fcacedf459a923c0c11b710bed26d",
+    "checkpoint": "merged-pr:90",
+    "planHash": "e859ccd56a70a143242cae9395f3664b8f85e93e01af9876bd4a75aca3c31f76",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
