@@ -280,3 +280,42 @@ describe('installDraftAutosave（doc.changed 事件联动）', () => {
     u2()
   })
 })
+
+describe('版本错位防御（window.api 缺 drafts 方法时可见化降级）', () => {
+  it('api 缺方法：暂存定时器不抛错、warn 一次性且含重启指引', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    ;(globalThis as unknown as { window: unknown }).window = { api: {} }
+    workspaceStore.setContent('hello')
+    expect(() => scheduleDraftPersist()).not.toThrow()
+    await vi.advanceTimersByTimeAsync(850)
+    const msgs = warn.mock.calls.map((c) => c.map((a) => String(a)).join(' '))
+    expect(msgs.some((m) => m.includes('drafts'))).toBe(true)
+    expect(msgs.find((m) => m.includes('重启'))).toBeTruthy()
+    warn.mockRestore()
+  })
+
+  it('api 完全缺失：refreshDrafts 降级为 loaded 空列表且不抛', async () => {
+    ;(globalThis as unknown as { window: unknown }).window = {}
+    await expect(refreshDrafts()).resolves.toBeUndefined()
+    expect(draftsStore.get().loaded).toBe(true)
+    expect(draftsStore.get().drafts).toEqual([])
+  })
+
+  it('listDrafts 拒绝：warn 且保留旧快照（降级语义不变）', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    installApiMock({
+      listDrafts: vi.fn(async () => [{ id: 'keep', title: 'T', excerpt: '', updatedAt: 1, chars: 1 }]),
+      removeDraft: vi.fn(async () => undefined),
+      readDraft: vi.fn(async () => null)
+    })
+    await refreshDrafts()
+    expect(draftsStore.get().drafts).toHaveLength(1)
+    // 换成拒绝的 api 再拉：保留旧快照
+    installApiMock({ listDrafts: vi.fn(async () => Promise.reject(new Error('boom'))) })
+    await refreshDrafts()
+    expect(draftsStore.get().drafts).toHaveLength(1)
+    expect(draftsStore.get().loaded).toBe(true)
+    expect(warn.mock.calls.some((c) => String(c[0]).includes('草稿列表'))).toBe(true)
+    warn.mockRestore()
+  })
+})

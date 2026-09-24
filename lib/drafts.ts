@@ -17,6 +17,28 @@ function api(): DesktopApi {
   return (globalThis as unknown as { window: { api: DesktopApi } }).window.api
 }
 
+let apiWarned = false
+
+/**
+ * 防御取用：window.api 缺少 drafts.* 方法时返回 null 并一次性告警。
+ * 场景：electron-vite dev 的 main/preload 只在启动时构建、渲染层热更新——
+ * 跨进程新增 IPC 后未重启 dev 的实例会调用旧 preload 上不存在的方法，
+ * 同步 TypeError 逃逸在 promise 链之外且无任何可见错误（20260924 实测）。
+ */
+function draftsApi(): DesktopApi | null {
+  const apiObj = api() as Partial<DesktopApi> | undefined
+  if (!apiObj || typeof apiObj.listDrafts !== 'function' || typeof apiObj.saveDraft !== 'function') {
+    if (!apiWarned) {
+      apiWarned = true
+      console.warn(
+        '草稿箱不可用：window.api 缺少 drafts.* 方法——main/preload 落后于渲染层（electron-vite dev 只在启动时构建），请重启 dev'
+      )
+    }
+    return null
+  }
+  return apiObj as DesktopApi
+}
+
 // ---------- 列表快照（草稿箱页/侧栏徽标共用） ----------
 
 interface DraftsSnapshot {
@@ -47,12 +69,19 @@ export function useDrafts(): DraftsSnapshot {
   return useSyncExternalStore(draftsStore.subscribe, draftsStore.get, draftsStore.get)
 }
 
-/** 拉取草稿列表（失败保留旧快照并标记已加载，不阻塞 UI） */
+/** 拉取草稿列表（失败保留旧快照并标记已加载，不阻塞 UI；失败有 warn 可见） */
 export async function refreshDrafts(): Promise<void> {
+  const apiObj = draftsApi()
+  if (!apiObj) {
+    snapshot = { loaded: true, drafts: snapshot.drafts }
+    emit()
+    return
+  }
   try {
-    const drafts = await api().listDrafts()
+    const drafts = await apiObj.listDrafts()
     snapshot = { loaded: true, drafts }
-  } catch {
+  } catch (err) {
+    console.warn('拉取草稿列表失败，保留旧快照', err)
     snapshot = { loaded: true, drafts: snapshot.drafts }
   }
   emit()
@@ -72,8 +101,10 @@ export function scheduleDraftPersist(): void {
     saveTimer = null
     const cur = workspaceStore.get()
     if (cur.activePath != null || (cur.content ?? '').trim() === '') return
+    const apiObj = draftsApi()
+    if (!apiObj) return
     const sessionDraftId = cur.activeDraftId
-    void api()
+    void apiObj
       .saveDraft({ id: sessionDraftId, content: cur.content ?? '' })
       .then((meta) => {
         // 会话仍在原草稿会话（未被打开文档/新建打断）时回填归属
@@ -83,15 +114,17 @@ export function scheduleDraftPersist(): void {
         }
         return refreshDrafts()
       })
-      .catch((err: unknown) => console.error('草稿暂存失败', err))
+      .catch((err: unknown) => console.warn('草稿暂存失败', err))
   }, AUTOSAVE_DELAY)
 }
 
 // ---------- 生命周期联动 ----------
 
-/** 另存为成功后消费草稿：删除、清匹配归属、刷新列表（removeDraft 失败向上抛） */
+/** 另存为成功后消费草稿：删除、清匹配归属、刷新列表（失败向上抛，调用方兜底 warn） */
 export async function consumeDraft(id: string): Promise<void> {
-  await api().removeDraft(id)
+  const apiObj = draftsApi()
+  if (!apiObj) throw new Error('草稿箱不可用：window.api 缺少 drafts.* 方法')
+  await apiObj.removeDraft(id)
   if (workspaceStore.get().activeDraftId === id) workspaceStore.adoptDraft(null)
   await refreshDrafts()
 }
@@ -121,4 +154,5 @@ export function resetDraftsForTests(): void {
   snapshot = { loaded: false, drafts: [] }
   subscribers.clear()
   installed = false
+  apiWarned = false
 }

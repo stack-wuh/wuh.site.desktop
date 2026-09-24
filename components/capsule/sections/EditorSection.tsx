@@ -619,8 +619,8 @@ export function EditorCommandHost(): React.JSX.Element {
       const draftId = workspaceStore.get().activeDraftId
       const result = await window.api.writeFile(rel, content)
       workspaceStore.openDoc(result.path, content)
-      // 草稿已落为工作区文件：消费草稿箱对应条目（失败不阻断保存结果）
-      if (draftId) void consumeDraft(draftId).catch(() => undefined)
+      // 草稿已落为工作区文件：消费草稿箱对应条目（失败可见但不阻断保存结果）
+      if (draftId) void consumeDraft(draftId).catch((err: unknown) => console.warn('草稿消费失败', err))
       setSaveAsOpen(false)
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : String(err))
