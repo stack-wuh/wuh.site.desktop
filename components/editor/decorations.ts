@@ -255,9 +255,9 @@ class BulletWidget extends WidgetType {
   }
 }
 
-/** 装饰重建条件：doc 或 selection 变化的事务 */
+/** 装饰重建条件：doc/selection 变化的事务，或 Compartment 重配（开关切入渲染态时装饰集须立即重建） */
 function rebuildNeeded(tr: Transaction): boolean {
-  return tr.docChanged || tr.selection != null
+  return tr.docChanged || tr.selection != null || tr.reconfigured
 }
 
 /**
