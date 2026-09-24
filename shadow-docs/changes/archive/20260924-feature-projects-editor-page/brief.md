@@ -4,7 +4,7 @@
   "name": "20260924-feature-projects-editor-page",
   "type": "feature",
   "scope": "apps/desktop",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20260924-feature-projects-editor-page",
   "files": [
@@ -36,18 +36,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 73,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/73",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 77,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/77"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "dc1fcc31edd75700fca0617c3c37d2ef509d601c",
-    "verifiedAt": "2026-09-24T08:26:27.450Z"
+    "verifiedCommit": "35a315b99262a57386cf7509677704082b16110d",
+    "verifiedAt": "2026-09-24T08:52:58.971Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:73",
-    "planHash": "30eb348edc7dd123fa55ae61ae18c273c8696df7eef91e4ceb50e06da86b7ef4",
+    "checkpoint": "merged-pr:77",
+    "planHash": "967f479caac4f579ada316fce1574a5fbde9ebc4a3238735f38931d63c224dbc",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -62,8 +62,8 @@
   },
   "knowledge": {
     "action": "更新",
-    "target": "shadow-docs/knowledge/renderer-shell-routing.md；shadow-docs/knowledge/editor.md；shadow-docs/knowledge/shell-chrome-design.md",
-    "reason": "四类长期事实：①renderer-shell-routing——/projects、/editor 两个新路由段（'/editor' 菜单外 key 同 '/account'）+ readTree(root?) 契约（不切工作区）+ i18n 缺键静默回落为裸 key、新增源码键覆盖测试锁定；②editor——/editor 为首页面板外第二编辑面挂载点（互斥挂载、同 store 单状态源、无预览分栏）；③shell-chrome-design——SideMenu items 新增条目子树槽位（tree/treeOpen/onToggleTree，仅展开态挂载、rail 收起态回落纯导航）+ 左栏项目树（懒加载/失效重试/点文件直达 /editor）。查重：三卡各覆盖对应域、无重复卡片可合并；注意 shell-chrome-design.md 与并行变更 20260924-feature-sidemenu-bottom-toggle 同卡，归档时需合并两处改动。"
+    "target": "shadow-docs/knowledge/renderer-shell-routing.md；shadow-docs/knowledge/editor.md；shadow-docs/knowledge/shell-chrome-design.md（协调项）",
+    "reason": "随 PR 合入定稿：①renderer-shell-routing——/projects、/editor 路由段、左栏项目树与共享 openProjectFile、readTree(root?) 契约、i18n 缺键回落与源码键覆盖测试；②editor——/editor 第二编辑面挂载点与「新编辑面复用 MarkdownEditor + 命令通道」约束（已与 main 侧即时渲染事实合并落卡）；③shell-chrome-design——SideMenu 条目子树槽位待与原 change 同卡合并补齐。merge 后补丁：main 侧 typecheck 红由 tests/editor-live-preview-toggle 改名 .tsx 修复（173fb73）、编辑页 flake 断言改 findByText（38d84a7）。"
   }
 }
 ---

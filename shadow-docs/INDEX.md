@@ -36,6 +36,7 @@
 | 20260923-fix-capsule-doc-card-nesting | ✅ 完成 | shadow-docs/changes/archive/20260923-fix-capsule-doc-card-nesting/brief.md |
 | 20260923-test-dom-render-guard | ✅ 完成 | shadow-docs/changes/archive/20260923-test-dom-render-guard/brief.md |
 | 20260924-feature-editor-simplify-draft-box | ✅ 完成 | shadow-docs/changes/archive/20260924-feature-editor-simplify-draft-box/brief.md |
+| 20260924-feature-projects-editor-page | ✅ 完成 | shadow-docs/changes/archive/20260924-feature-projects-editor-page/brief.md |
 | 20260924-feature-task-center-event-bus | ✅ 完成 | shadow-docs/changes/archive/20260924-feature-task-center-event-bus/brief.md |
 | 20260924-fix-capsule-header-chrome | ✅ 完成 | shadow-docs/changes/archive/20260924-fix-capsule-header-chrome/brief.md |
 | 20260924-fix-capsule-self-close | ✅ 完成 | shadow-docs/changes/archive/20260924-fix-capsule-self-close/brief.md |
