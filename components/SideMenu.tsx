@@ -4,9 +4,10 @@
  * 左栏菜单栏（两栏布局）：48px 图标 rail ↔ ~220px 图标+文字展开态，瞬时切换（禁 width 过渡）。
  * 纯导航不承载内容：菜单项选中态切换右栏页面（路由段），toggle 项开/关浮窗（aria-pressed）。
  * 底部固定：用户入口（已授权投影 GitHub 头像/用户名，未授权回落品牌标 + 应用名，数据来自全局身份 store）。
- * 能力沿袭：徽标（数字 99+ / dot）、data-tip 自绘 tooltip（仅收起态）、左缘激活指示条。
+ * 能力沿袭：徽标（数字 99+ / dot）、data-tip 自绘 tooltip（仅收起态）、左缘激活指示条、
+ * 条目子树（20260924 走查反馈修订：行尾旋钮展开子树，如左栏项目树，旋钮不冒泡导航）。
  */
-import { useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import styled, { keyframes } from 'styled-components'
 import { AppIcon, type IconComponent } from './ui/AppIcon'
 import {
@@ -40,6 +41,12 @@ export interface SideMenuItem {
   icon: IconComponent
   title: string
   badge?: SideMenuBadge
+  /** 展开态下条目下方附加渲染的子树（如左栏项目树）；rail 收起态不渲染，条目回落纯导航 */
+  tree?: React.ReactNode
+  /** 子树展开态（受控，状态在调用方持有） */
+  treeOpen?: boolean
+  /** 行尾旋钮点击：只切换子树显隐，不触发 onChange 导航 */
+  onToggleTree?: () => void
 }
 
 const Nav = styled.nav<{ $expanded: boolean }>`
@@ -183,6 +190,47 @@ const Item = styled.button<{ $expanded: boolean; $active: boolean }>`
 const labelIn = keyframes`
   from { opacity: 0; }
   to { opacity: 1; }
+`
+
+/** 条目子树容器：仅展开态渲染在条目行下方；高度封顶自滚动，避免撑破 nav（nav 不设 overflow） */
+const TreeWrap = styled.div`
+  margin: 0 2px 4px;
+  max-height: min(52vh, 560px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+`
+
+/** 子树展开旋钮：span 仿按钮（Item 本体是 button，避免 button 嵌套），点击不冒泡到条目导航 */
+const TreeKnob = styled.span<{ $open: boolean }>`
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-left: auto;
+  border-radius: var(--border-radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    transform var(--motion-dur-quick, 150ms) var(--motion-ease-out-soft, ease-out),
+    background var(--transition-fast) ease,
+    color var(--transition-fast) ease;
+  transform: rotate(${(props) => (props.$open ? 90 : 0)}deg);
+
+  &:hover {
+    color: var(--text-primary);
+    background: var(--chrome-hover);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: -2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
 `
 
 const Label = styled.span`
@@ -602,6 +650,19 @@ function MenuButton(props: {
   const badge = item.badge
   const showCount = typeof badge?.count === 'number' && badge.count > 0
   const showDot = badge?.dot === true && !showCount
+  const hasTree = expanded && item.tree != null
+  const { t } = useLocale()
+  /** 旋钮点击不冒泡到条目（避免既切子树又导航）；键盘 Enter/Space 等价点击 */
+  const onKnobToggle = (e: React.SyntheticEvent): void => {
+    e.stopPropagation()
+    item.onToggleTree?.()
+  }
+  const onKnobKey = (e: React.KeyboardEvent): void => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      onKnobToggle(e)
+    }
+  }
   return (
     <Item
       type="button"
@@ -614,6 +675,19 @@ function MenuButton(props: {
     >
       <AppIcon icon={item.icon} size="md" />
       {expanded && <Label>{item.title}</Label>}
+      {hasTree && (
+        <TreeKnob
+          $open={item.treeOpen === true}
+          role="button"
+          tabIndex={0}
+          aria-label={t('projects.treeToggle')}
+          aria-expanded={item.treeOpen === true}
+          onClick={onKnobToggle}
+          onKeyDown={onKnobKey}
+        >
+          <AppIcon icon={IconChevronRight} size="xs" decorative />
+        </TreeKnob>
+      )}
       {(showCount || showDot) && (
         <Badge $dot={showDot} $expanded={expanded} aria-hidden="true">
           {showCount ? (badge && badge.count !== undefined && badge.count > 99 ? '99+' : badge?.count) : ''}
@@ -680,7 +754,11 @@ export function SideMenu(props: {
   )
 
   const render = (item: SideMenuItem): React.JSX.Element => (
-    <MenuButton key={item.id} item={item} active={item.id === props.active} expanded={expanded} onChange={props.onChange} />
+    <Fragment key={item.id}>
+      <MenuButton item={item} active={item.id === props.active} expanded={expanded} onChange={props.onChange} />
+      {/* 子树仅展开态挂载（关闭即卸载，重开时懒加载刷新）；rail 收起态不渲染 */}
+      {expanded && item.tree != null && item.treeOpen === true && <TreeWrap>{item.tree}</TreeWrap>}
+    </Fragment>
   )
   const renderToggle = (item: SideMenuItem): React.JSX.Element => {
     const open = props.openToggleKeys?.has(item.id) ?? false
@@ -706,7 +784,10 @@ export function SideMenu(props: {
       {props.toggleItems && props.toggleItems.length > 0 && (
         <Group $expanded={expanded}>{props.toggleItems.map(renderToggle)}</Group>
       )}
-      {/* 底部系统区：仅用户入口（展开/收起控件已并入其快捷面板，快捷键 Cmd/Ctrl+B 常驻） */}
+      {/* 底部系统区两行制（20260924-feature-sidemenu-bottom-toggle）：用户入口在上
+          （行为不变：hover 快捷面板 / 点击 /account）；收起态下方渲染专属展开钮
+          ——一击直达展开菜单（复用导航项样式基命中区 + tooltip 复合快捷键提示）；
+          展开态不渲染该钮，收起仍走快捷面板行与 ⌘/Ctrl+B */}
       <Group $expanded={expanded} $tail>
         <UserWrap $expanded={expanded}>
           <UserAnchor
@@ -744,6 +825,18 @@ export function SideMenu(props: {
             )}
           </UserAnchor>
         </UserWrap>
+        {!expanded && (
+          <Item
+            type="button"
+            $expanded={expanded}
+            $active={false}
+            data-tip={`${t('pop.expandMenu')} ⌘/Ctrl+B`}
+            aria-label={t('pop.expandMenu')}
+            onClick={props.onToggleExpanded}
+          >
+            <AppIcon icon={IconPanelExpand} size="md" />
+          </Item>
+        )}
       </Group>
     </Nav>
   )

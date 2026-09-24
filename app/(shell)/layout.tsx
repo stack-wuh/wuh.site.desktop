@@ -17,6 +17,7 @@ import { StatusBar } from '../../components/StatusBar'
 import { FloatLayer } from '../../components/FloatLayer'
 import { Capsule } from '../../components/capsule/Capsule'
 import { SideMenu, type SideMenuItem } from '../../components/SideMenu'
+import { ProjectsTree } from '../../components/menu/ProjectsTree'
 import { EditorCommandHost } from '../../components/capsule/sections/EditorSection'
 import ShellReady from '../../components/ShellReady'
 import { IconFolderOpen, IconHome, IconInbox, pluginIcon } from '../../components/icons'
@@ -73,6 +74,8 @@ const MainArea = styled.main`
 
 export default function ShellLayout({ children }: { children: React.ReactNode }): React.JSX.Element {
   const [menuExpanded, setMenuExpanded] = useState(false)
+  // 左栏项目树展开态（走查反馈修订）：状态在壳层，旋钮只切子树显隐，条目行本体仍导航 /projects
+  const [projectsTreeOpen, setProjectsTreeOpen] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
   const pluginsReady = usePluginsReady()
@@ -126,8 +129,16 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
   const items: SideMenuItem[] = [
     // 首页 = 「新建博客」项目入口（路由 key 仍为 home / 路径 /，仅显示名升级）
     { id: 'home', icon: IconHome, title: t('menu.home') },
-    // 项目页（20260924-feature-projects-editor-page）：项目维度分组 + 文件列表快速进入
-    { id: 'projects', icon: IconFolderOpen, title: t('menu.projects') },
+    // 项目（20260924-feature-projects-editor-page）：行本体进 /projects 总览；子树 = 左栏项目树，
+    // 一级项目节点二级文件，点文件直达 /editor（菜单树修订，见 brief 边界决策）
+    {
+      id: 'projects',
+      icon: IconFolderOpen,
+      title: t('menu.projects'),
+      tree: <ProjectsTree />,
+      treeOpen: projectsTreeOpen,
+      onToggleTree: () => setProjectsTreeOpen((v) => !v)
+    },
     // 草稿箱（徽标 = 暂存草稿数；首拉完成前不显示数字）
     ...(drafts.loaded && drafts.drafts.length > 0
       ? [{ id: 'drafts', icon: IconInbox, title: t('menu.drafts'), badge: { count: drafts.drafts.length } }]

@@ -19,8 +19,8 @@ import {
   toggleExpandedGroup,
   type ProjectGroup
 } from '../../../lib/projects'
-import { collectMarkdownFiles, filterMarkdownFiles, workspaceStore } from '../../../lib/store'
-import { uiConfirm } from '../../../components/ui/Dialog'
+import { collectMarkdownFiles, filterMarkdownFiles } from '../../../lib/store'
+import { openProjectFile } from '../../../lib/projectOpen'
 import { AppIcon } from '../../../components/ui/AppIcon'
 import { Button } from '../../../components/ui/Button'
 import { Input } from '../../../components/ui/Input'
@@ -304,31 +304,10 @@ export function ProjectsPage(): React.JSX.Element {
   const openFile = async (group: ProjectGroup, relPath: string): Promise<void> => {
     if (busy) return
     setError(null)
-    const proceed = async (): Promise<void> => {
-      setBusy(true)
-      try {
-        if (!group.current) await window.api.openWorkspaceByPath(group.root)
-        const fc = await window.api.readFile(relPath)
-        workspaceStore.openDoc(fc.path, fc.content)
-        router.push('/editor')
-      } catch (err) {
-        setError(errText(err))
-      } finally {
-        setBusy(false)
-      }
-    }
-    // 脏文档先确认丢弃，避免打开新文件静默覆盖未保存更改（与 FilePicker 同语义）
-    const cur = workspaceStore.get()
-    if (cur.dirty && cur.content) {
-      const ok = await uiConfirm({
-        title: t('editor.closeConfirmTitle'),
-        message: t('editor.openConfirm'),
-        okText: t('editor.closeConfirmTitle'),
-        cancelText: t('common.cancel')
-      })
-      if (!ok) return
-    }
-    void proceed()
+    // 脏确认/切工作区/读取/openDoc 收口在共享 openProjectFile（菜单树同流），此处只管错误展示与跳转
+    const res = await openProjectFile(group, relPath, t)
+    if (res.outcome === 'opened') router.push('/editor')
+    else if (res.outcome === 'error') setError(errText(res.error))
   }
 
   const hasGroups = groups != null && groups.length > 0

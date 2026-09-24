@@ -98,6 +98,7 @@
   - `/editor` 为非菜单路由 key（不高亮菜单项，与 `/account` 的菜单外路由处理同构）；菜单项顺序：首页 → 项目 → 草稿箱 → 插件视图。
   - 图标走 lucide：菜单「项目」用既有 IconFolderOpen；顶栏返回新增 IconArrowLeft 导出。
   - i18n 三语（zh/en/ja）：`menu.projects`、`projects.*` 族、编辑页顶栏 `editor.*` 新键；key 集合一致性由 `tests/i18n.test.ts` 锁定。
+  - **（走查反馈修订 2026-09-24）菜单树**：左栏【项目】条目升级为树根——行尾旋钮展开/收起子树（行本体点击仍进 `/projects` 总览），子树一级为项目节点（当前工作区置顶带「当前」徽标，其余为最近项目），二级起为项目内文件夹 + `.md` 文件递归树（`pruneMarkdownTree` 只留含 .md 的分支）；项目/目录节点懒加载（首次展开才 `readTree(root)`，失败呈「无法访问」行可重试）；点文件 = 共享 `openProjectFile`（脏确认 → 按需切工作区 → readFile → openDoc）直达 `/editor`；rail 收起态不渲染子树（条目回落纯导航）；无任何项目时子树给「打开目录」入口。树内容用「打开文件流抽共享」防两处实现漂移。
 
 ## 任务
 
@@ -128,6 +129,15 @@
 ### Phase 5 全量验证
 - [x] `pnpm typecheck`（node/next 双侧）+ `pnpm test` 全量回归 — 无文件 — 验证
 - [ ] 手动走查：四主题（wine/plain × light/dark）项目页与编辑页、跨组打开切工作区、草稿续写合流、reduced-motion — 无文件 — 验证
+
+### Phase 6 菜单树（走查反馈修订：项目入口长在左栏）
+- [x] lib/projects 扩展：pruneMarkdownTree（只留含 .md 分支）+ 树节点展开态 key helpers — `lib/projects.ts` — 修改
+- [x] 打开文件流抽共享 openProjectFile（脏确认 → 按需切工作区 → readFile → openDoc，跳转留给调用方），项目页改用 — `lib/projectOpen.ts` `app/(shell)/projects/page.tsx` — 新增/修改
+- [x] SideMenu 支持条目子树（tree/treeOpen/onToggleTree，行尾旋钮不冒泡导航；rail 收起态不渲染子树） — `components/SideMenu.tsx` — 修改
+- [x] 菜单项目树：项目节点（当前徽标/懒加载/失效重试/空项目引导）→ 文件夹+.md 递归树，点文件直达 `/editor`；layout 接线【项目】条目 — `components/menu/ProjectsTree.tsx` `app/(shell)/layout.tsx` — 新增/修改
+- [x] i18n 三语：树交互新键（`projects.treeToggle`/`projects.loading`） — `lib/i18n/locales.ts` — 修改
+- [x] 测试：树纯逻辑 + ProjectsTree DOM 渲染（懒展开/失效/点击流转/空态，零 React 告警）+ 既有 projects 渲染回归 — `tests/projects.test.ts` `tests/projects-tree.test.tsx` — 新增/修改
+- [ ] `pnpm typecheck` + `pnpm test` 全量回归 + 提交 — 无文件 — 验证
 
 ## 结果
 
