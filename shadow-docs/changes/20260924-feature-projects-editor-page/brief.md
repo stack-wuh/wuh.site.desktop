@@ -4,7 +4,7 @@
   "name": "20260924-feature-projects-editor-page",
   "type": "feature",
   "scope": "apps/desktop",
-  "status": "branched",
+  "status": "reviewed",
   "baseBranch": "main",
   "branch": "feature/20260924-feature-projects-editor-page",
   "files": [
@@ -12,16 +12,23 @@
     "app/(shell)/editor/page.tsx",
     "app/(shell)/layout.tsx",
     "app/(shell)/projects/page.tsx",
+    "components/SideMenu.tsx",
     "components/icons/index.tsx",
+    "components/menu/ProjectsTree.tsx",
     "lib/i18n/locales.ts",
+    "lib/projectOpen.ts",
     "lib/projects.ts",
     "lib/routes.ts",
+    "shadow-docs/knowledge/editor.md",
+    "shadow-docs/knowledge/renderer-shell-routing.md",
     "src/main/workspace.ts",
     "src/preload/index.ts",
     "src/shared/types.ts",
     "tests/drafts-render.test.tsx",
     "tests/editor-page.test.tsx",
+    "tests/i18n.test.ts",
     "tests/projects-render.test.tsx",
+    "tests/projects-tree.test.tsx",
     "tests/projects.test.ts",
     "tests/workspace-tree.test.ts"
   ],
@@ -33,14 +40,14 @@
     "pullRequestUrl": null
   },
   "review": {
-    "conclusion": "pending",
-    "verifiedCommit": null,
-    "verifiedAt": null
+    "conclusion": "passed",
+    "verifiedCommit": "dc1fcc31edd75700fca0617c3c37d2ef509d601c",
+    "verifiedAt": "2026-09-24T08:26:27.450Z"
   },
   "workflow": {
     "operation": null,
     "checkpoint": "issue:73",
-    "planHash": "1b0c579287190a0f8182e2f6ee0dbfd121072d0945ad1428c6eb55c752948595",
+    "planHash": "30eb348edc7dd123fa55ae61ae18c273c8696df7eef91e4ceb50e06da86b7ef4",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -52,6 +59,11 @@
         "feature"
       ]
     }
+  },
+  "knowledge": {
+    "action": "更新",
+    "target": "shadow-docs/knowledge/renderer-shell-routing.md；shadow-docs/knowledge/editor.md；shadow-docs/knowledge/shell-chrome-design.md",
+    "reason": "四类长期事实：①renderer-shell-routing——/projects、/editor 两个新路由段（'/editor' 菜单外 key 同 '/account'）+ readTree(root?) 契约（不切工作区）+ i18n 缺键静默回落为裸 key、新增源码键覆盖测试锁定；②editor——/editor 为首页面板外第二编辑面挂载点（互斥挂载、同 store 单状态源、无预览分栏）；③shell-chrome-design——SideMenu items 新增条目子树槽位（tree/treeOpen/onToggleTree，仅展开态挂载、rail 收起态回落纯导航）+ 左栏项目树（懒加载/失效重试/点文件直达 /editor）。查重：三卡各覆盖对应域、无重复卡片可合并；注意 shell-chrome-design.md 与并行变更 20260924-feature-sidemenu-bottom-toggle 同卡，归档时需合并两处改动。"
   }
 }
 ---
@@ -128,7 +140,7 @@
 
 ### Phase 5 全量验证
 - [x] `pnpm typecheck`（node/next 双侧）+ `pnpm test` 全量回归 — 无文件 — 验证
-- [ ] 手动走查：四主题（wine/plain × light/dark）项目页与编辑页、跨组打开切工作区、草稿续写合流、reduced-motion — 无文件 — 验证
+- [x] 手动走查：四主题（wine/plain × light/dark）项目页与编辑页、跨组打开切工作区、草稿续写合流、reduced-motion — 无文件 — 验证
 
 ### Phase 6 菜单树（走查反馈修订：项目入口长在左栏）
 - [x] lib/projects 扩展：pruneMarkdownTree（只留含 .md 分支）+ 树节点展开态 key helpers — `lib/projects.ts` — 修改
@@ -142,11 +154,11 @@
 
 ## 结果
 
-- 实际耗时: —
-- 验证: —
+- 实际耗时: 约 3 小时（跨两轮会话：首轮项目页/编辑页实现 + 走查反馈修订「左栏项目树 + i18n 缺键修复」）
+- 验证: tsc 三套（node/next/tests）全过；vitest 362/362（43 文件；本轮走查修订新增 13 用例：项目树渲染 7 + 树纯逻辑 4 + i18n 键覆盖 2）；`pnpm build`（next 静态导出 + electron-vite）通过；用户手动走查——四主题、跨项目切工作区、草稿续写合流、菜单树点文件直达 `/editor`、缺键修复后左栏文案，全部确认
 
 ## 知识评估
 
-- **预期影响:** 更新
-- **候选卡片:** shadow-docs/knowledge/renderer-shell-routing.md；shadow-docs/knowledge/editor.md
-- **理由:** renderer-shell-routing 卡需追加 `/projects` `/editor` 两个路由段与 `readTree(root?)` 契约事实（菜单项=路由段约定延续，'/editor' 为菜单外路由同 '/account'）；editor.md 卡需追加「首页面板之外的第二个编辑面挂载点 `/editor`（互斥挂载、同 store 单状态源、无预览分栏）」。查重：两卡 scope 覆盖本次变更，无重复卡片可合并。
+- **最终结果:** 更新
+- **目标卡片:** shadow-docs/knowledge/renderer-shell-routing.md；shadow-docs/knowledge/editor.md；shadow-docs/knowledge/shell-chrome-design.md（协调项，见理由③）
+- **理由:** ① renderer-shell-routing——追加 `/projects`、`/editor` 两个路由段（后者菜单外 key，同 `/account`）、左栏项目树与共享 `openProjectFile` 打开流、`readTree(root?)` 契约（显式 root 不切工作区）、i18n 缺键静默回落为裸 key + 源码键覆盖扫描；② editor——追加 `/editor` 第二编辑面挂载点（路由互斥、同 store 单状态源与命令通道、无预览分栏）与「新编辑面必须复用 MarkdownEditor + 命令通道」约束；③ shell-chrome-design——SideMenu 条目子树槽位与左栏项目树，该卡另有并行变更 20260924-feature-sidemenu-bottom-toggle 的**未提交编辑**（其文本已含「导航子树 TreeWrap」一笔），本次不混入对方 WIP，待其落地后于归档时补齐 props 细节。查重：三卡各覆盖对应域（路由 / 编辑器 / 壳层 chrome），无重复卡片可合并。
