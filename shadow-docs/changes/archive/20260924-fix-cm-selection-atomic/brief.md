@@ -4,7 +4,7 @@
   "name": "20260924-fix-cm-selection-atomic",
   "type": "fix",
   "scope": "apps/desktop",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "fix/20260924-fix-cm-selection-atomic",
   "files": [
@@ -17,18 +17,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 83,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/83",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 89,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/89"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "9d23c3c278617471706a6fcb0dfe9b879cc547ff",
-    "verifiedAt": "2026-09-24T13:50:32.833Z"
+    "verifiedCommit": "cca040dbf0e325b129f2cd9496fcbc04510085da",
+    "verifiedAt": "2026-09-24T13:56:35.181Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:83",
-    "planHash": "3a646e7342b456f448e1b09371ad124a8743bab8cffb8aefc11c64f0e9694351",
+    "checkpoint": "merged-pr:89",
+    "planHash": "de95c67fcaf4ff36284ca2caf1290231b762e173497c6b15a6d13848492e8e44",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
