@@ -4,7 +4,7 @@
   "name": "20260924-fix-capsule-self-close",
   "type": "fix",
   "scope": "desktop",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "fix/20260924-fix-capsule-self-close",
   "files": [
@@ -15,18 +15,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 63,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/63",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 64,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/64"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "4d70b6100af7027af89d47d5c00180a7416dc587",
-    "verifiedAt": "2026-09-23T23:59:16.685Z"
+    "verifiedCommit": "50cf83d77795ca8dcdfc32d8fa178f0906d0fa13",
+    "verifiedAt": "2026-09-24T00:12:39.873Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:63",
-    "planHash": "933f639751cec673deabce8938cedae88ec4c668206de1f818edae978eb0d383",
+    "checkpoint": "merged-pr:64",
+    "planHash": "1e922069a9b9b1d7e472c119068efd38878fef7a156ef56585eb4a4f5241773e",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
