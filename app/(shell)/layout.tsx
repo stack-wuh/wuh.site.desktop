@@ -211,6 +211,7 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
           onOpenUser={() => router.push('/account')}
           onOpenSettings={() => router.push('/settings')}
           userActive={active === 'account'}
+          settingsActive={active === 'settings'}
         />
         <MainArea ref={mainAreaRef}>
           <MainColumn>
