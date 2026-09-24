@@ -11,6 +11,7 @@ source:
   - changes/20260924-fix-live-preview-toggle-rebuild/brief.md
   - changes/20260924-feature-projects-editor-page/brief.md
   - changes/20260924-fix-cm-selection-atomic/brief.md
+  - changes/20260924-feature-editor-toolbar/brief.md
 verified: 2026-09-24
 ---
 
@@ -24,7 +25,7 @@ verified: 2026-09-24
 
 **content 双通道与防回环**：编辑器自发输入与命令事务经 `EditorView.updateListener` 的 docChanged → `workspaceStore.setContent`（CM6 无 Vditor「命令突变不触发回调」问题，命令事务自动回同步）；store 侧外部注入（openDoc/startDraft/插件帧 doc.set）经 `lib/editor-cm.ts` 的 `cmExternalContent` 全量回写（原光标 head 越界钳制），组件侧 `pushedRef` 与 `store.content` 比对防回环，编辑中不做全量重置。
 
-**命令通道**：`lib/editor-commands.ts` 的 `EditorCommand` 契约是壳层胶囊（EditorSection）与面板动作行和编辑器解耦的唯一桥梁——format/insert/scrollToHeading/insertClipboardImage/focus 由 MarkdownEditor 消费，`lib/editor-cm.ts` 做 CM6 TransactionSpec 纯逻辑适配（格式化位置计算唯一事实源是 `lib/store.ts` 的 `applyMarkdownInsert`）；save/saveAs/newDraft/closeDoc 归宿主（壳层命令宿主 + 面板动作行）认领。大纲跳转按 `parseOutline` 序号定位标题行行首并 scrollIntoView；字数/大纲数据从 store.content 派生（editor-info），不接触编辑器实例。
+**命令通道**：`lib/editor-commands.ts` 的 `EditorCommand` 契约是壳层胶囊（EditorSection）、首页面板动作行与编辑区工具条（`components/editor/Toolbar.tsx`——format×9/insert×3/insertClipboardImage 零新增词表，动作-图标-文案与 EditorSection 同构，挂首页面板上下文行下与 `/editor` 页顶栏下，20260924-feature-editor-toolbar）和编辑器解耦的唯一桥梁——format/insert/scrollToHeading/insertClipboardImage/focus 由 MarkdownEditor 消费，`lib/editor-cm.ts` 做 CM6 TransactionSpec 纯逻辑适配（格式化位置计算唯一事实源是 `lib/store.ts` 的 `applyMarkdownInsert`）；save/saveAs/newDraft/closeDoc 归宿主（壳层命令宿主 + 面板动作行）认领。大纲跳转按 `parseOutline` 序号定位标题行行首并 scrollIntoView；字数/大纲数据从 store.content 派生（editor-info），不接触编辑器实例。扩展自持边界：`highlightSelectionMatches` 已移除；CM 内联搜索面板保留至自建查找替换 UI 立项（后续候选 change），键盘行为层（defaultKeymap/history）不自持。
 
 **分栏预览**：`components/editor/PreviewPane.tsx` 防抖 300ms 调 `lib/renderPipeline.ts` 的 `renderService.execute`（markdown-it `html:false` + frontmatter 剥离 + 插件 preprocess/postRender 规则 + 相对图片重写 local-resource://），与插件浮窗预览**同源**；未保存草稿（activePath null）也可预览，空 ctx 跳过图片重写。预览 toggle 在面板动作行（IconEye，`wd.editorPreview` localStorage 记忆），开启后面板容器内分栏，`@container (max-width: 700px)` 纵向堆叠。
 
@@ -51,7 +52,7 @@ verified: 2026-09-24
 
 ## 验证方式
 
-- `vitest run tests/editor-codemirror.test.ts tests/home-editor-panel.test.ts tests/editor-live-preview-toggle.test.tsx tests/editor-live-preview-atomic.test.tsx tests/editor-page.test.tsx`（CM6 适配/双通道语义/命令契约/大纲/字数/即时渲染开关时序/原子区契约纯逻辑 + `/editor` 顶栏与冷启动草稿会话）。
+- `vitest run tests/editor-codemirror.test.ts tests/home-editor-panel.test.ts tests/editor-live-preview-toggle.test.tsx tests/editor-live-preview-atomic.test.tsx tests/editor-toolbar.test.tsx tests/editor-page.test.tsx`（CM6 适配/双通道语义/命令契约/大纲/字数/即时渲染开关时序/原子区契约/工具条命令发布 + `/editor` 顶栏与冷启动草稿会话）。
 - `grep -rn "vditor" --include="*.ts" --include="*.tsx" --include="*.mjs" .`（排除 node_modules/out/dist/shadow-docs）应为空。
 - `pnpm dev` 手动路径：首页面板打字（明暗四主题）、胶囊格式化/插入命令、图片粘贴落盘 `.assets/`、预览 toggle 分栏与窄容器纵堆、Cmd/Ctrl+S 保存、outline 跳转；`/editor`：左栏项目树或项目页点文件进入、脏点与保存、新建、返回、Esc 退专注、冷启动自动草稿。
 

@@ -38,6 +38,7 @@ import {
 import { FilePanelContent } from '../workspace/FilePicker'
 import { WorkspacePanelContent } from '../workspace/WorkspacePicker'
 import { MarkdownEditor } from '../editor/MarkdownEditor'
+import { EditorToolbar } from '../editor/Toolbar'
 import { PreviewPane } from '../editor/PreviewPane'
 import { useLocale } from '../../lib/i18n/context'
 
@@ -240,6 +241,8 @@ export function EditorPanel(): React.JSX.Element {
         <WorkspacePicker />
         <FilePicker />
       </ContextRow>
+
+      <EditorToolbar />
 
       <EditorBody>
         <Split>
