@@ -4,7 +4,7 @@
   "name": "20260924-feature-sidemenu-bottom-toggle",
   "type": "feature",
   "scope": "desktop",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20260924-feature-sidemenu-bottom-toggle",
   "files": [
@@ -15,18 +15,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 75,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/75",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 79,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/79"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "8b1289b96b76144112aef0be4d76919608a2ef47",
-    "verifiedAt": "2026-09-24T08:43:14.861Z"
+    "verifiedCommit": "ed98add8af4b4453ec13bc39bcb7ce9ae705c3d0",
+    "verifiedAt": "2026-09-24T09:09:46.440Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:75",
-    "planHash": "44beda2f5c9717ae3c6631a60fa787b1661546037a01c17232740d5d36bb0452",
+    "checkpoint": "merged-pr:79",
+    "planHash": "91d28cffa1d91a249875ac992d880923e885136932455eb4d39d225addaf417e",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {

@@ -37,6 +37,7 @@
 | 20260923-test-dom-render-guard | ✅ 完成 | shadow-docs/changes/archive/20260923-test-dom-render-guard/brief.md |
 | 20260924-feature-editor-simplify-draft-box | ✅ 完成 | shadow-docs/changes/archive/20260924-feature-editor-simplify-draft-box/brief.md |
 | 20260924-feature-projects-editor-page | ✅ 完成 | shadow-docs/changes/archive/20260924-feature-projects-editor-page/brief.md |
+| 20260924-feature-sidemenu-bottom-toggle | ✅ 完成 | shadow-docs/changes/archive/20260924-feature-sidemenu-bottom-toggle/brief.md |
 | 20260924-feature-task-center-event-bus | ✅ 完成 | shadow-docs/changes/archive/20260924-feature-task-center-event-bus/brief.md |
 | 20260924-feature-ui-feedback-system | ✅ 完成 | shadow-docs/changes/archive/20260924-feature-ui-feedback-system/brief.md |
 | 20260924-fix-capsule-header-chrome | ✅ 完成 | shadow-docs/changes/archive/20260924-fix-capsule-header-chrome/brief.md |
