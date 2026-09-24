@@ -10,6 +10,8 @@ source:
   - changes/archive/20260923-feature-cm-live-preview/brief.md
   - changes/20260924-fix-live-preview-toggle-rebuild/brief.md
   - changes/20260924-feature-projects-editor-page/brief.md
+  - changes/20260924-fix-cm-selection-atomic/brief.md
+  - changes/20260924-feature-editor-toolbar/brief.md
   - changes/20260924-feature-native-save-dialog/brief.md
 verified: 2026-09-24
 ---
@@ -26,11 +28,11 @@ verified: 2026-09-24
 
 **saveAs 原生保存面板（20260924-feature-native-save-dialog）**：EditorCommandHost 的 save（无路径有内容）/saveAs 走 `window.api.pickSaveLocation`（主进程 `dialog.showSaveDialog`，`src/main/saveDialog.ts`）——目录+文件名一次选定，上次保存目录持久化 `userData/save-dialog.json` 作缺省（defaultPath 显式传入优先），建议文件名取正文首个标题（主进程 `suggestFileStem` 清洗非法字符、截断 80、兜底「未命名」后补 `.md`）。无工作区时先 `openWorkspace()` 原生目录选择引导（取消=整个保存终止）；**`applyWorkspaceSwitch` 会清空文档状态——内容与草稿归属必须先捕获再切**。确认路径经 shared 纯函数 `workspaceRelativePath` 定边界：工作区外 feedback Message 拒绝、会话保留（v1 不自动切工作区）；工作区内走既有 `writeFile → openDoc → consumeDraft` 转正链。自绘保存 Dialog 与相对路径输入已退役（`editor.fileNameLabel/Placeholder` 键删除）。与「打开项目」的原生 `showOpenDialog` 统一为**凡选文件系统位置一律系统原生弹窗**。
 
-**命令通道**：`lib/editor-commands.ts` 的 `EditorCommand` 契约是壳层胶囊（EditorSection）与面板动作行和编辑器解耦的唯一桥梁——format/insert/scrollToHeading/insertClipboardImage/focus 由 MarkdownEditor 消费，`lib/editor-cm.ts` 做 CM6 TransactionSpec 纯逻辑适配（格式化位置计算唯一事实源是 `lib/store.ts` 的 `applyMarkdownInsert`）；save/saveAs/newDraft/closeDoc 归宿主（壳层命令宿主 + 面板动作行）认领。大纲跳转按 `parseOutline` 序号定位标题行行首并 scrollIntoView；字数/大纲数据从 store.content 派生（editor-info），不接触编辑器实例。
+**命令通道**：`lib/editor-commands.ts` 的 `EditorCommand` 契约是壳层胶囊（EditorSection）、首页面板动作行与编辑区工具条（`components/editor/Toolbar.tsx`——format×9/insert×3/insertClipboardImage 零新增词表，动作-图标-文案与 EditorSection 同构，挂首页面板上下文行下与 `/editor` 页顶栏下，20260924-feature-editor-toolbar）和编辑器解耦的唯一桥梁——format/insert/scrollToHeading/insertClipboardImage/focus 由 MarkdownEditor 消费，`lib/editor-cm.ts` 做 CM6 TransactionSpec 纯逻辑适配（格式化位置计算唯一事实源是 `lib/store.ts` 的 `applyMarkdownInsert`）；save/saveAs/newDraft/closeDoc 归宿主（壳层命令宿主 + 面板动作行）认领。大纲跳转按 `parseOutline` 序号定位标题行行首并 scrollIntoView；字数/大纲数据从 store.content 派生（editor-info），不接触编辑器实例。扩展自持边界：`highlightSelectionMatches` 已移除；CM 内联搜索面板保留至自建查找替换 UI 立项（后续候选 change），键盘行为层（defaultKeymap/history）不自持。
 
 **分栏预览**：`components/editor/PreviewPane.tsx` 防抖 300ms 调 `lib/renderPipeline.ts` 的 `renderService.execute`（markdown-it `html:false` + frontmatter 剥离 + 插件 preprocess/postRender 规则 + 相对图片重写 local-resource://），与插件浮窗预览**同源**；未保存草稿（activePath null）也可预览，空 ctx 跳过图片重写。预览 toggle 在面板动作行（IconEye，`wd.editorPreview` localStorage 记忆），开启后面板容器内分栏，`@container (max-width: 700px)` 纵向堆叠。
 
-**即时渲染（L3 装饰管线，20260923-feature-cm-live-preview）**：`livePreviewField`（StateField 直供 `EditorView.decorations` + `atomicRanges`——CM6 禁止插件函数式跨行 replace 装饰，块级 widget 替换只有直供合法）把纯逻辑装饰规则落成 DecorationSet：块结构 `parseBlocks` / 光标行集合 `selectionLineSet` / 行内标记 `scanInlineMarks` 在 `lib/editor-cm.ts`，装饰与 widget 在 `components/editor/decorations.ts` / `widgets.ts`。渲染模式偏好持久化 `wd.editorRenderMode`（默认 render），胶囊「即时渲染」开关与 ⌘/ 经 `toggleRender` 命令 + Compartment 热切换。**契约：装饰重建条件必须覆盖 `tr.reconfigured`**——reconfigure 事务无 docChanged 亦无 selection，缺了它切入渲染态后装饰集保持 `create()` 初值空集，画面直到下一次输入才变化（20260924-fix-live-preview-toggle-rebuild 修复的用户实测 bug）。光标触及的行一律保持源码态（符号浮现）是设计语义，不是渲染失效。
+**即时渲染（L3 装饰管线，20260923-feature-cm-live-preview）**：`livePreviewField`（StateField 直供 `EditorView.decorations` + `atomicRanges`——CM6 禁止插件函数式跨行 replace 装饰，块级 widget 替换只有直供合法；atomicRanges 经 `atomicSubset` **仅供 widget replace 子集**，整集供给会把 mark/hidden/line 装饰一并原子化，光标被挡在样式文本之外、点击吸附 span 边缘，20260924-fix-cm-selection-atomic）把纯逻辑装饰规则落成 DecorationSet：块结构 `parseBlocks` / 光标行集合 `selectionLineSet` / 行内标记 `scanInlineMarks` 在 `lib/editor-cm.ts`，装饰与 widget 在 `components/editor/decorations.ts` / `widgets.ts`。渲染模式偏好持久化 `wd.editorRenderMode`（默认 render），胶囊「即时渲染」开关与 ⌘/ 经 `toggleRender` 命令 + Compartment 热切换。**契约：装饰重建条件必须覆盖 `tr.reconfigured`**——reconfigure 事务无 docChanged 亦无 selection，缺了它切入渲染态后装饰集保持 `create()` 初值空集，画面直到下一次输入才变化（20260924-fix-live-preview-toggle-rebuild 修复的用户实测 bug）。光标触及的行一律保持源码态（符号浮现）是设计语义，不是渲染失效。
 
 **图片粘贴**：CM6 `domEventHandlers` capture 拦截 image 文件 + 胶囊图片入口统一走 `savePastedImage` 落文档同名 `.assets/`（主进程 `src/main/images.ts`），插入相对引用；用户提示用面板内 notice 条（CM6 无 tip API），2.6s 自动消退。
 
@@ -45,6 +47,7 @@ verified: 2026-09-24
 - 预览渲染必须走 `renderPipeline`（禁自行 new MarkdownIt 绕过插件规则与相对图片重写）；预览 HTML 的安全边界等同插件预览（markdown-it html:false）。
 - 编辑器与预览 UI 颜色只经主题语义 token；`HighlightStyle` 从 `@codemirror/language` 导入（`@lezer/highlight` 只有 `tags`）。
 - 即时渲染装饰层的重建条件必须包含 `tr.reconfigured`；任何经 Compartment 重配切换渲染态的路径都依赖它即时生效，不得改回「仅 doc/selection」。
+- `atomicRanges` 只供 widget replace 装饰子集（`components/editor/decorations.ts` 的 `atomicSubset`），禁止整集供给；扩展列表必带 `drawSelection()`——缺省时选区走浏览器原生渲染，主题 `.cm-selectionBackground` 不生效，且与 `display:none` 隐藏标记互相打架（选区高亮跳块）。
 - 依赖只经 package.json 声明消费；禁止重新引入本地化大体积静态资产管线（如 copy-vditor 式 prepare 脚本）。
 
 ## 适用边界
@@ -53,7 +56,7 @@ verified: 2026-09-24
 
 ## 验证方式
 
-- `vitest run tests/editor-codemirror.test.ts tests/home-editor-panel.test.ts tests/editor-live-preview-toggle.test.ts tests/editor-page.test.tsx`（CM6 适配/双通道语义/命令契约/大纲/字数/即时渲染开关时序纯逻辑 + `/editor` 顶栏与冷启动草稿会话）；`vitest run tests/save-dialog.test.ts tests/saveas-flow.test.tsx`（原生保存面板：文件名清洗/目录记忆/saveAs 四分支流转）。
+- `vitest run tests/editor-codemirror.test.ts tests/home-editor-panel.test.ts tests/editor-live-preview-toggle.test.tsx tests/editor-live-preview-atomic.test.tsx tests/editor-toolbar.test.tsx tests/editor-page.test.tsx`（CM6 适配/双通道语义/命令契约/大纲/字数/即时渲染开关时序/原子区契约/工具条命令发布 + `/editor` 顶栏与冷启动草稿会话）；`vitest run tests/save-dialog.test.ts tests/saveas-flow.test.tsx`（原生保存面板：文件名清洗/目录记忆/saveAs 四分支流转）。
 - `grep -rn "vditor" --include="*.ts" --include="*.tsx" --include="*.mjs" .`（排除 node_modules/out/dist/shadow-docs）应为空。
 - `pnpm dev` 手动路径：首页面板打字（明暗四主题）、胶囊格式化/插入命令、图片粘贴落盘 `.assets/`、预览 toggle 分栏与窄容器纵堆、Cmd/Ctrl+S 保存、outline 跳转；`/editor`：左栏项目树或项目页点文件进入、脏点与保存、新建、返回、Esc 退专注、冷启动自动草稿。
 
