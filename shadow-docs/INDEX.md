@@ -40,3 +40,4 @@
 | 20260924-fix-capsule-header-chrome | ✅ 完成 | shadow-docs/changes/archive/20260924-fix-capsule-header-chrome/brief.md |
 | 20260924-fix-capsule-self-close | ✅ 完成 | shadow-docs/changes/archive/20260924-fix-capsule-self-close/brief.md |
 | 20260924-fix-drafts-error-visibility | ✅ 完成 | shadow-docs/changes/archive/20260924-fix-drafts-error-visibility/brief.md |
+| 20260924-fix-live-preview-toggle-rebuild | ✅ 完成 | shadow-docs/changes/archive/20260924-fix-live-preview-toggle-rebuild/brief.md |

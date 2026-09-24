@@ -1,17 +1,19 @@
 ---
-title: 主编辑器（CodeMirror 6）与分栏预览
+title: 主编辑器（CodeMirror 6）、即时渲染与分栏预览
 domain: renderer-ui
-keywords: [主编辑器, MarkdownEditor, CodeMirror, CM6, 预览, PreviewPane, renderPipeline, 命令通道, editor-commands, 双通道, 防回环, 图片粘贴, 大纲, 字数, 主题桥接, HighlightStyle, 沉浸编辑页, /editor]
+keywords: [主编辑器, MarkdownEditor, CodeMirror, CM6, 预览, PreviewPane, renderPipeline, 命令通道, editor-commands, 双通道, 防回环, 图片粘贴, 大纲, 字数, 主题桥接, HighlightStyle, 即时渲染, livePreview, 装饰层, reconfigure, 沉浸编辑页, /editor]
 scope: [components/editor, components/home/EditorPanel, app/(shell)/editor, lib/editor-cm, lib/editor-commands, lib/editor-info]
 status: active
 source:
   - changes/20260922-refactor-codemirror-editor/brief.md
   - changes/archive/20260922-feature-vditor-md-editor/brief.md
+  - changes/archive/20260923-feature-cm-live-preview/brief.md
+  - changes/20260924-fix-live-preview-toggle-rebuild/brief.md
   - changes/20260924-feature-projects-editor-page/brief.md
 verified: 2026-09-24
 ---
 
-# 主编辑器（CodeMirror 6）与分栏预览
+# 主编辑器（CodeMirror 6）、即时渲染与分栏预览
 
 ## 当前结论
 
@@ -25,6 +27,8 @@ verified: 2026-09-24
 
 **分栏预览**：`components/editor/PreviewPane.tsx` 防抖 300ms 调 `lib/renderPipeline.ts` 的 `renderService.execute`（markdown-it `html:false` + frontmatter 剥离 + 插件 preprocess/postRender 规则 + 相对图片重写 local-resource://），与插件浮窗预览**同源**；未保存草稿（activePath null）也可预览，空 ctx 跳过图片重写。预览 toggle 在面板动作行（IconEye，`wd.editorPreview` localStorage 记忆），开启后面板容器内分栏，`@container (max-width: 700px)` 纵向堆叠。
 
+**即时渲染（L3 装饰管线，20260923-feature-cm-live-preview）**：`livePreviewField`（StateField 直供 `EditorView.decorations` + `atomicRanges`——CM6 禁止插件函数式跨行 replace 装饰，块级 widget 替换只有直供合法）把纯逻辑装饰规则落成 DecorationSet：块结构 `parseBlocks` / 光标行集合 `selectionLineSet` / 行内标记 `scanInlineMarks` 在 `lib/editor-cm.ts`，装饰与 widget 在 `components/editor/decorations.ts` / `widgets.ts`。渲染模式偏好持久化 `wd.editorRenderMode`（默认 render），胶囊「即时渲染」开关与 ⌘/ 经 `toggleRender` 命令 + Compartment 热切换。**契约：装饰重建条件必须覆盖 `tr.reconfigured`**——reconfigure 事务无 docChanged 亦无 selection，缺了它切入渲染态后装饰集保持 `create()` 初值空集，画面直到下一次输入才变化（20260924-fix-live-preview-toggle-rebuild 修复的用户实测 bug）。光标触及的行一律保持源码态（符号浮现）是设计语义，不是渲染失效。
+
 **图片粘贴**：CM6 `domEventHandlers` capture 拦截 image 文件 + 胶囊图片入口统一走 `savePastedImage` 落文档同名 `.assets/`（主进程 `src/main/images.ts`），插入相对引用；用户提示用面板内 notice 条（CM6 无 tip API），2.6s 自动消退。
 
 **主题桥接**：`EditorView.theme` + `HighlightStyle` 只写 `var(--token)`（含 color-mix），明暗随 data 属性路由自动生效——无 Vditor 式 setTheme 重建步骤；语法配色只用语义 token（标题/强调/链接/标记符等）。
@@ -36,6 +40,7 @@ verified: 2026-09-24
 - 新编辑器命令先入 `EditorCommand` 词表（或 `MarkdownInsertAction` 词表）再消费；位置计算进 `applyMarkdownInsert` 纯函数并配测试，不绕过。
 - 预览渲染必须走 `renderPipeline`（禁自行 new MarkdownIt 绕过插件规则与相对图片重写）；预览 HTML 的安全边界等同插件预览（markdown-it html:false）。
 - 编辑器与预览 UI 颜色只经主题语义 token；`HighlightStyle` 从 `@codemirror/language` 导入（`@lezer/highlight` 只有 `tags`）。
+- 即时渲染装饰层的重建条件必须包含 `tr.reconfigured`；任何经 Compartment 重配切换渲染态的路径都依赖它即时生效，不得改回「仅 doc/selection」。
 - 依赖只经 package.json 声明消费；禁止重新引入本地化大体积静态资产管线（如 copy-vditor 式 prepare 脚本）。
 
 ## 适用边界
@@ -44,7 +49,7 @@ verified: 2026-09-24
 
 ## 验证方式
 
-- `vitest run tests/editor-codemirror.test.ts tests/home-editor-panel.test.ts tests/editor-page.test.tsx`（CM6 适配/双通道语义/命令契约/大纲/字数纯逻辑 + `/editor` 顶栏与冷启动草稿会话）。
+- `vitest run tests/editor-codemirror.test.ts tests/home-editor-panel.test.ts tests/editor-live-preview-toggle.test.ts tests/editor-page.test.tsx`（CM6 适配/双通道语义/命令契约/大纲/字数/即时渲染开关时序纯逻辑 + `/editor` 顶栏与冷启动草稿会话）。
 - `grep -rn "vditor" --include="*.ts" --include="*.tsx" --include="*.mjs" .`（排除 node_modules/out/dist/shadow-docs）应为空。
 - `pnpm dev` 手动路径：首页面板打字（明暗四主题）、胶囊格式化/插入命令、图片粘贴落盘 `.assets/`、预览 toggle 分栏与窄容器纵堆、Cmd/Ctrl+S 保存、outline 跳转；`/editor`：左栏项目树或项目页点文件进入、脏点与保存、新建、返回、Esc 退专注、冷启动自动草稿。
 
