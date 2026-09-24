@@ -22,6 +22,7 @@ source:
   - changes/20260922-refactor-codemirror-editor/brief.md
   - changes/20260923-feature-build-time-visibility/brief.md
   - changes/20260924-fix-capsule-self-close/brief.md
+  - changes/20260924-feature-task-center-event-bus/brief.md
 verified: 2026-09-24
 ---
 

@@ -4,7 +4,7 @@
   "name": "20260924-feature-task-center-event-bus",
   "type": "feature",
   "scope": "desktop",
-  "status": "branched",
+  "status": "reviewed",
   "baseBranch": "main",
   "branch": "feature/20260924-feature-task-center-event-bus",
   "files": [
@@ -28,14 +28,14 @@
     "pullRequestUrl": null
   },
   "review": {
-    "conclusion": "pending",
-    "verifiedCommit": null,
-    "verifiedAt": null
+    "conclusion": "passed",
+    "verifiedCommit": "4799156e0263784e9e496696ba527e566b5f2b24",
+    "verifiedAt": "2026-09-24T03:15:23.287Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:65",
-    "planHash": "91a6ba944a77c07b14a2bdb87e9b127d97d85d70a56c426ec67aa3d33a040b51",
+    "checkpoint": "4799156e0263784e9e496696ba527e566b5f2b24",
+    "planHash": "2e2bbfa97e2f486587cb2aa924a2d9b3c4846e3bae6d68d6d055c3f30e6f5e0a",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -47,7 +47,8 @@
         "feature"
       ]
     }
-  }
+  },
+  "knowledge": null
 }
 ---
 
