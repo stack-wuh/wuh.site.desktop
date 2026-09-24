@@ -106,8 +106,12 @@ const DirtyDot = styled.span`
 const IconRow = styled.div`
   display: flex;
   align-items: center;
-  gap: 2px;
-  padding: 4px 8px;
+  /* 横密纵疏：图标间 2px，换行两排之间 6px（20260924-fix-capsule-header-chrome
+     ——gap 横纵共用以致换行工具条贴死） */
+  column-gap: 2px;
+  row-gap: 6px;
+  padding: 6px 8px;
+  margin-bottom: 8px;
   flex-wrap: wrap;
 `
 
@@ -403,8 +407,6 @@ export function EditorSection(): React.JSX.Element {
           <AppIcon icon={IconFile} size="xs" decorative />
         </IconBtn>
       </IconRow>
-
-      <div style={{ height: 4 }} />
 
       <ModuleRow $open={panel === 'typeset'} onClick={() => togglePanel('typeset')} aria-expanded={panel === 'typeset'}>
         <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--primary-color)' }}>Aa</span>
