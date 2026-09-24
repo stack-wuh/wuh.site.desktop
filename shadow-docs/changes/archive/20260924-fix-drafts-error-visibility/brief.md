@@ -4,7 +4,7 @@
   "name": "20260924-fix-drafts-error-visibility",
   "type": "fix",
   "scope": "apps/desktop",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "fix/20260924-fix-drafts-error-visibility",
   "files": [
@@ -17,18 +17,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 71,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/71",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 72,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/72"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "2c60b8993210a36762ee2b8a7d9a35a1cceb2c6b",
-    "verifiedAt": "2026-09-24T04:00:02.616Z"
+    "verifiedCommit": "6bf8daa70a6bc2db10312cc10ab624f3dc565f2d",
+    "verifiedAt": "2026-09-24T04:05:17.722Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:71",
-    "planHash": "8459d27e67321db16cbf8de74d84c7085b473aa84c68941d8912ce14f0a5fb19",
+    "checkpoint": "merged-pr:72",
+    "planHash": "1d3483a6a4be14c35ac75b6605ef2a08d185532c017237dcc058dfa3d82b5f89",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
