@@ -4,7 +4,7 @@
   "name": "20260924-fix-capsule-header-chrome",
   "type": "fix",
   "scope": "desktop",
-  "status": "branched",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "fix/20260924-fix-capsule-header-chrome",
   "files": [
@@ -18,18 +18,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 69,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/69",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 70,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/70"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "2c60b8993210a36762ee2b8a7d9a35a1cceb2c6b",
-    "verifiedAt": "2026-09-24T03:49:58.751Z"
+    "verifiedCommit": "d9a1b9b6df930abd33fa808ef12ef91b36fef5d9",
+    "verifiedAt": "2026-09-24T03:56:25.913Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:69",
-    "planHash": "de5fa73680c1958e9bed692bb057027ba505f7313a05a87a09525406ced70cd3",
+    "checkpoint": "merged-pr:70",
+    "planHash": "864f243674284a649ae5aa78181512d100c43152cb61fd0e24395237a0fa93ae",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
