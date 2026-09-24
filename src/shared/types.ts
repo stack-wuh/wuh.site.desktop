@@ -44,6 +44,30 @@ export interface SaveResult {
   savedAt: number
 }
 
+// ---------- 保存对话框（saveAs 原生化，20260924-feature-native-save-dialog） ----------
+export interface SaveDialogOptions {
+  /** 原生面板标题 */
+  title?: string
+  /** 默认目录（绝对路径）；缺省 = 上次保存目录 → 系统文稿目录 */
+  defaultPath?: string
+  /** 建议文件名主干（主进程清洗非法字符后补 .md） */
+  fileName?: string
+}
+
+export type SaveDialogResult = { canceled: true; path?: undefined } | { canceled: false; path: string }
+
+/**
+ * 纯函数：绝对路径归一为相对 root 的 POSIX 相对路径；不在 root 内（含恰为 root
+ * 与前缀相似目录）返回 null——saveAs 边界校验渲染层共用，主进程 writeFile 仍有 safeJoin 兜底。
+ */
+export function workspaceRelativePath(root: string, absPath: string): string | null {
+  const norm = (p: string): string => p.replace(/\\/g, '/').replace(/\/+$/, '')
+  const r = norm(root)
+  const a = norm(absPath)
+  if (!r || !a || a === r || !a.startsWith(`${r}/`)) return null
+  return a.slice(r.length + 1)
+}
+
 // ---------- Images ----------
 export interface SavedImage {
   /** 图片相对工作区根的路径 */
@@ -306,6 +330,11 @@ export interface DesktopApi {
   readTree(root?: string): Promise<FileNode[]>
   readFile(relPath: string): Promise<FileContent>
   writeFile(relPath: string, content: string): Promise<SaveResult>
+  /**
+   * 原生保存面板（dialog.showSaveDialog）：目录+文件名一次选定，主进程记忆上次
+   * 保存目录作后续缺省；用户取消返回 { canceled: true }。
+   */
+  pickSaveLocation(opts?: SaveDialogOptions): Promise<SaveDialogResult>
   savePastedImage(docRelPath: string, originalName: string, base64: string): Promise<SavedImage>
   gitStatus(): Promise<GitStatusSummary>
   gitStage(paths: string[]): Promise<void>

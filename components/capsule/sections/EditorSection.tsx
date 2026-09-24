@@ -10,12 +10,10 @@
  * <EditorCommandHost/> 保持壳层 layout 单实例（不随胶囊开关），认领文档操作
  * 与专注模式命令。
  */
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import styled from 'styled-components'
 import { AppIcon } from '../../ui/AppIcon'
-import { Button } from '../../ui/Button'
-import { Dialog, uiConfirm } from '../../ui/Dialog'
-import { Input } from '../../ui/Input'
+import { uiConfirm } from '../../ui/Dialog'
 import {
   IconBold,
   IconClose,
@@ -47,7 +45,10 @@ import {
 import type { IconComponent } from '../../ui/AppIcon'
 import { workspaceStore, useWorkspaceStore, type MarkdownInsertAction } from '../../../lib/store'
 import { consumeDraft } from '../../../lib/drafts'
+import { message } from '../../../lib/feedback'
 import { publishEditorCommand, subscribeEditorCommands } from '../../../lib/editor-commands'
+import { applyWorkspaceSwitch } from '../../plugins/PluginFrameHost'
+import { workspaceRelativePath } from '../../../src/shared/types'
 import { getEditorLiveState, publishEditorLiveState, useEditorLiveState, type EditorTypography } from '../../../lib/editor-state'
 import { countWords, estimateReadingMinutes, parseOutline } from '../../../lib/editor-info'
 import { copyAsHtml, exportHtmlFile } from '../../../lib/editor-export'
@@ -175,14 +176,17 @@ const OutlineEmpty = styled.li`
   color: var(--text-muted);
 `
 
-const DialogError = styled.p`
-  margin: 8px 0 0;
-  font-size: 12px;
-  color: var(--danger-color);
-  word-break: break-all;
-`
-
 type SubPanelKind = 'none' | 'outline' | 'workspace' | 'file' | 'typeset' | 'kbd'
+
+/** 纯函数：正文首个标题行 → 建议文件名主干（无标题返回 null，由 i18n 兜底） */
+function suggestTitleFromContent(content: string): string | null {
+  const line = content
+    .split('\n')
+    .map((l) => l.trim())
+    .find((l) => l.startsWith('#'))
+  if (!line) return null
+  return line.replace(/^#+\s*/, '').trim() || null
+}
 
 const FORMAT_ITEMS: { action: MarkdownInsertAction; icon: IconComponent; labelKey: string }[] = [
   { action: 'h1', icon: IconHeading1, labelKey: 'editor.fmtH1' },
@@ -537,18 +541,61 @@ const ActionMini = styled.button<{ $accent?: boolean }>`
   }
 `
 
-export function EditorCommandHost(): React.JSX.Element {
+export function EditorCommandHost(): React.JSX.Element | null {
   const { t } = useLocale()
-  const [saveAsOpen, setSaveAsOpen] = useState(false)
-  const [savePath, setSavePath] = useState('')
-  const [saving, setSaving] = useState(false)
-  const [saveError, setSaveError] = useState<string | null>(null)
+  const busyRef = useRef(false)
+  const runSaveAsRef = useRef<() => Promise<void>>(async () => {})
 
-  const openSaveAs = (): void => {
-    setSaveError(null)
-    setSavePath('')
-    setSaveAsOpen(true)
+  /**
+   * saveAs 原生化（20260924-feature-native-save-dialog）：与打开项目统一为
+   * 「选文件系统位置一律系统原生弹窗」。无工作区先 openWorkspace 引导（取消=终止），
+   * switchWorkspace 会清空文档状态——内容与草稿归属先捕获再切；确认路径经
+   * workspaceRelativePath 定边界（工作区外 feedback Message 拒绝、会话保留），
+   * 工作区内走既有 writeFile + openDoc + consumeDraft 转正链路。
+   */
+  const runSaveAs = async (): Promise<void> => {
+    if (busyRef.current) return
+    const cur = workspaceStore.get()
+    if (cur.content == null) return
+    busyRef.current = true
+    try {
+      const captured = { content: cur.content, draftId: cur.activeDraftId }
+      let root = cur.root
+      if (!root) {
+        const info = await window.api.openWorkspace()
+        if (!info) return
+        applyWorkspaceSwitch(info)
+        root = info.root
+      }
+      const res = await window.api.pickSaveLocation({
+        title: t('editor.saveAsTitle'),
+        defaultPath: root,
+        fileName: suggestTitleFromContent(captured.content) ?? t('editor.untitledFile')
+      })
+      if (res.canceled) return
+      const rel = workspaceRelativePath(root, res.path)
+      if (!rel) {
+        void message({ title: t('editor.saveAsTitle'), text: t('editor.saveOutsideRoot'), kind: 'warning' })
+        return
+      }
+      const target = rel.toLowerCase().endsWith('.md') ? rel : `${rel}.md`
+      const result = await window.api.writeFile(target, captured.content)
+      workspaceStore.openDoc(result.path, captured.content)
+      // 草稿已落为工作区文件：消费草稿箱对应条目（失败可见但不阻断保存结果）
+      if (captured.draftId) {
+        void consumeDraft(captured.draftId).catch((err: unknown) => console.warn('草稿消费失败', err))
+      }
+    } catch (err) {
+      void message({
+        title: t('editor.saveAsTitle'),
+        text: err instanceof Error ? err.message : String(err),
+        kind: 'error'
+      })
+    } finally {
+      busyRef.current = false
+    }
   }
+  runSaveAsRef.current = runSaveAs
 
   // 常驻订阅：文档操作与专注模式命令只认领自己的一类，其余放行给编辑器实例
   useEffect(() => {
@@ -559,12 +606,12 @@ export function EditorCommandHost(): React.JSX.Element {
           if (cur.activePath) {
             if (cur.dirty) void workspaceStore.saveActive()
           } else if (cur.content) {
-            openSaveAs()
+            void runSaveAsRef.current()
           }
           return true
         }
         case 'saveAs': {
-          if (cur.content != null) openSaveAs()
+          if (cur.content != null) void runSaveAsRef.current()
           return true
         }
         case 'newDraft': {
@@ -610,63 +657,6 @@ export function EditorCommandHost(): React.JSX.Element {
     })
   }, [t])
 
-  const confirmSaveAs = async (): Promise<void> => {
-    let rel = savePath.trim().replace(/^\/+/, '').replace(/^\.\//, '')
-    if (!rel) return
-    if (!rel.toLowerCase().endsWith('.md')) rel += '.md'
-    setSaving(true)
-    setSaveError(null)
-    try {
-      const content = workspaceStore.get().content ?? ''
-      const draftId = workspaceStore.get().activeDraftId
-      const result = await window.api.writeFile(rel, content)
-      workspaceStore.openDoc(result.path, content)
-      // 草稿已落为工作区文件：消费草稿箱对应条目（失败可见但不阻断保存结果）
-      if (draftId) void consumeDraft(draftId).catch((err: unknown) => console.warn('草稿消费失败', err))
-      setSaveAsOpen(false)
-    } catch (err) {
-      setSaveError(err instanceof Error ? err.message : String(err))
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  return (
-    <Dialog
-      open={saveAsOpen}
-      title={t('editor.saveAsTitle')}
-      onClose={() => setSaveAsOpen(false)}
-      footer={
-        <>
-          <Button size="sm" variant="ghost" onClick={() => setSaveAsOpen(false)}>
-            {t('common.cancel')}
-          </Button>
-          <Button
-            size="sm"
-            onClick={() => void confirmSaveAs()}
-            disabled={saving || savePath.trim().length === 0}
-          >
-            {t('editor.save')}
-          </Button>
-        </>
-      }
-    >
-      <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-          {t('editor.fileNameLabel')}
-        </span>
-        <Input
-          type="text"
-          placeholder={t('editor.fileNamePlaceholder')}
-          value={savePath}
-          onChange={(e) => setSavePath(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && savePath.trim()) void confirmSaveAs()
-          }}
-          autoFocus
-        />
-      </label>
-      {saveError && <DialogError role="alert">{saveError}</DialogError>}
-    </Dialog>
-  )
+  // 命令宿主无自绘 UI：保存走系统原生面板（EditorSection 才承载模块卡视图）
+  return null
 }

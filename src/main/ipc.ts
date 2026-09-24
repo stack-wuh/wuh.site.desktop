@@ -26,6 +26,7 @@ const handlers: {
   readTree: () => { throw new Error('not implemented') },
   readFile: () => { throw new Error('not implemented') },
   writeFile: () => { throw new Error('not implemented') },
+  pickSaveLocation: () => { throw new Error('not implemented') },
   savePastedImage: () => { throw new Error('not implemented') },
   gitStatus: () => { throw new Error('not implemented') },
   gitStage: () => { throw new Error('not implemented') },
