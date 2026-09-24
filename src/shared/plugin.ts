@@ -178,12 +178,12 @@ export interface PluginHostApi {
 
 // ---------- 帧消息协议 ----------
 
-/** 插件帧 → host：service=cap 走主进程 broker；doc/render/ui/statusBar/tasks/capsule 由 host 直接服务。
+/** 插件帧 → host：service=cap 走主进程 broker；doc/render/ui/statusBar/tasks/capsule/events 由 host 直接服务。
  * id 由各帧自己的序号发生器产出（host 用数字、SDK 用 rN 字符串，回显原样匹配）。 */
 export interface FrameInvoke {
   kind: 'invoke'
   id: number | string
-  service: 'cap' | 'doc' | 'render' | 'ui' | 'statusBar' | 'tasks' | 'capsule'
+  service: 'cap' | 'doc' | 'render' | 'ui' | 'statusBar' | 'tasks' | 'capsule' | 'events'
   method: string
   args: unknown[]
 }

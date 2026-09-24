@@ -157,6 +157,11 @@ export const PLUGIN_SDK_JS = `(function () {
     },
     publisher: {
       register: function (id, handler) { publishers[id] = handler; }
+    },
+    events: {
+      publish: function (name, payload) { return call('events', 'publish', [name, payload === undefined ? null : payload]); },
+      subscribe: function (patterns) { return call('events', 'subscribe', [Array.isArray(patterns) ? patterns : [patterns]]); },
+      unsubscribe: function (patterns) { return call('events', 'unsubscribe', [Array.isArray(patterns) ? patterns : [patterns]]); }
     }
   };
   window.wuh = api;
@@ -244,6 +249,19 @@ export interface WuhApi {
     ): Promise<void>
     /** 隐藏 manifest 声明的胶囊模块 */
     remove(id: string): Promise<void>
+  }
+  events: {
+    /**
+     * 发布事件：事件名强制 `<pluginId>:<name>` 命名空间，归属由宿主按帧身份盖章；
+     * payload 须可 JSON 序列化且 ≤4KB
+     */
+    publish(name: string, payload?: unknown): Promise<void>
+    /**
+     * 订阅事件（模式：精确类型 / `<ns>:*` 前缀通配 / `*` 全通配，每插件 ≤16 个模式）；
+     * 信封 `{ id, type, pluginId, payload, ts }` 经 `wuh.on('event', cb)` 投递
+     */
+    subscribe(patterns: string[] | string): Promise<void>
+    unsubscribe(patterns: string[] | string): Promise<void>
   }
   publisher: {
     register(id: string, handler: (req: unknown) => Promise<IpcResult<unknown>>): void

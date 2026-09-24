@@ -1,15 +1,20 @@
 /**
  * 任务注册表（host 侧纯逻辑，可独立测试）——与 statusItems/floats 同构的快照注册表。
  *
- * 模型：manifest 声明制任务占位（bootstrap/启用插件时注册，默认 pending），
- * 运行时插件帧（视图帧或逻辑帧）经 tasks.upsert / tasks.remove 只能更新
- * 「自己声明过」的任务状态或隐藏——跨插件、未声明一律拒绝。标题/跳转目标
- * 固定在 manifest 层运行时不可变，保证胶囊清单稳定与注入面最小。
+ * 模型（20260924 起任务事件溯源，声明制退役为可选预置）：manifest 声明仍是合法
+ * 来源（bootstrap/启用插件时注册，默认 pending，可带 viewId 跳转），但不再是唯一
+ * 来源——运行时插件帧对「未声明 id」首报带 title 的 patch 即动态创建任务（集散地
+ * 事件机制入口）。运行时插件帧（视图帧或逻辑帧）经 tasks.upsert / tasks.remove
+ * 只能操作「自己的」任务——跨插件一律拒绝。声明任务的 title/viewId 仍不可变；
+ * 动态任务 title 仅创建首报时生效。
  */
 
 import type { PluginManifest } from '@shared/plugin'
 
 export type TaskStatus = 'pending' | 'in_progress' | 'done'
+
+/** 每插件并发可见任务上限（承接原 manifest ≤8 声明上限的注入面收敛职责） */
+export const MAX_VISIBLE_TASKS_PER_PLUGIN = 8
 
 export interface TaskProgress {
   current: number
@@ -22,13 +27,19 @@ export interface TaskState {
   pluginId: string
   id: string
   title: string
-  /** 跳转目标视图（声明期确定，main 区域） */
+  /** 跳转目标视图（仅 manifest 声明期确定，main 区域；动态任务无跳转） */
   viewId?: string
   status: TaskStatus
   progress: TaskProgress | null
   detail?: string
-  /** 运行时 remove 后隐藏（声明仍在，再次 upsert 恢复） */
+  /** 运行时 remove 后隐藏（声明/创建仍在，再次 upsert 恢复） */
   hidden: boolean
+  /** 来源：manifest 预置 = true；运行时动态创建 = false */
+  declared: boolean
+  createdAt: number
+  updatedAt: number
+  /** 最近一次进入 done 的时间（离开 done 清空）；任务中心「最近完成」排序用 */
+  doneAt: number | null
 }
 
 export interface TaskAggregate {
@@ -79,6 +90,7 @@ export function taskKey(pluginId: string, taskId: string): string {
 /** bootstrap/启用插件时注册 manifest 声明；重复注册幂等且不覆盖运行时状态 */
 export function registerManifestTasks(manifest: PluginManifest): void {
   let changed = false
+  const now = Date.now()
   for (const task of manifest.tasks ?? []) {
     const key = taskKey(manifest.id, task.id)
     if (state.tasks.some((t) => t.key === key)) continue
@@ -90,7 +102,11 @@ export function registerManifestTasks(manifest: PluginManifest): void {
       ...(task.viewId !== undefined ? { viewId: task.viewId } : {}),
       status: 'pending',
       progress: null,
-      hidden: false
+      hidden: false,
+      declared: true,
+      createdAt: now,
+      updatedAt: now,
+      doneAt: null
     })
     changed = true
   }
@@ -105,6 +121,8 @@ export function clearPluginTasks(pluginId: string): void {
 }
 
 export interface TaskPatch {
+  /** 仅动态创建首报时生效；已存在任务携带 title 拒绝 */
+  title?: string
   status?: TaskStatus
   progress?: TaskProgress
   detail?: string
@@ -141,12 +159,48 @@ function applyPatch(task: TaskState, patch: TaskPatch): void {
   }
 }
 
-/** 运行时更新状态（未声明任务报错；upsert 同时恢复 remove 的隐藏） */
+/**
+ * 运行时更新状态；未声明任务且 patch 带 1-80 字符 title 时动态创建（缺 title 报错）。
+ * upsert 同时恢复 remove 的隐藏；每插件可见任务数超限拒绝创建。
+ */
 export function upsertTask(pluginId: string, taskId: string, patch: TaskPatch): void {
+  const p = patch ?? {}
   const task = state.tasks.find((t) => t.key === taskKey(pluginId, taskId))
-  if (!task) throw new Error(`任务未声明: ${pluginId}/${taskId}`)
-  applyPatch(task, patch ?? {})
+  if (!task) {
+    const title = p.title
+    if (typeof title !== 'string' || title.length === 0 || title.length > 80) {
+      throw new Error(`任务未声明且缺少 title（动态创建须首报 1-80 字符 title）: ${pluginId}/${taskId}`)
+    }
+    const visibleCount = state.tasks.filter((t) => t.pluginId === pluginId && !t.hidden).length
+    if (visibleCount >= MAX_VISIBLE_TASKS_PER_PLUGIN) {
+      throw new Error(`并发任务超限（每插件可见任务 ≤${MAX_VISIBLE_TASKS_PER_PLUGIN}）: ${pluginId}`)
+    }
+    // 先在局部对象上完成校验（applyPatch 可能抛错），全部通过才入册
+    const now = Date.now()
+    const created: TaskState = {
+      key: taskKey(pluginId, taskId),
+      pluginId,
+      id: taskId,
+      title,
+      status: 'pending',
+      progress: null,
+      hidden: false,
+      declared: false,
+      createdAt: now,
+      updatedAt: now,
+      doneAt: null
+    }
+    applyPatch(created, p)
+    state.tasks.push(created)
+    commit()
+    return
+  }
+  if (p.title !== undefined) throw new Error('已存在任务不接受 title（title 仅动态创建首报时生效）')
+  applyPatch(task, p)
   task.hidden = false
+  task.updatedAt = Date.now()
+  if (p.status === 'done') task.doneAt = Date.now()
+  else if (p.status !== undefined) task.doneAt = null
   commit()
 }
 

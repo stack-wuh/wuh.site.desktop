@@ -47,8 +47,8 @@ function docCardOf(container: HTMLElement): HTMLElement | null {
   return groups.find((g) => g.querySelector('button') != null) ?? null
 }
 
-describe('控制中心渲染冒烟', () => {
-  it('空态渲染零 React 告警，三区齐备且无 button 嵌套', () => {
+describe('任务中心渲染冒烟', () => {
+  it('空态：默认任务 tab 显示等待空态与筛选 chips，零 React 告警且无 button 嵌套', () => {
     const console_ = captureRenderConsole()
     const { container } = renderWithLocale(<CapsulePanel onClose={() => undefined} />)
 
@@ -56,18 +56,17 @@ describe('控制中心渲染冒烟', () => {
     expect(console_.warnings).toEqual([])
     console_.restore()
 
-    const labels = Array.from(container.querySelectorAll('section')).map((s) => s.getAttribute('aria-label'))
-    expect(labels).toEqual(['任务', '编辑器', '插件'])
+    // 默认任务 tab：空态可见，时间线与模块 tab 内容未渲染
+    expect(screen.getByText('等待插件任务')).toBeTruthy()
+    expect(container.querySelector('[data-testid="capsule-timeline"]')).toBeNull()
+    expect(screen.queryByText('保存')).toBeNull()
+    // 筛选 chips：默认「全部」按下
+    expect(screen.getByRole('button', { name: '全部' }).getAttribute('aria-pressed')).toBe('true')
+    expect(screen.getByRole('button', { name: '未完成' }).getAttribute('aria-pressed')).toBe('false')
     expect(container.querySelectorAll('button button').length).toBe(0)
-
-    // 文档卡为内容型容器（div[role=group]）且承载 4 个原生动作钮
-    const docCard = docCardOf(container)
-    expect(docCard).not.toBeNull()
-    expect(docCard?.tagName).toBe('DIV')
-    expect(docCard?.querySelectorAll('button').length).toBe(4)
   })
 
-  it('有任务与插件模块时渲染（覆盖跳转行与插件 tile）零告警', () => {
+  it('有任务与插件模块时：任务 tab 渲染时间线行，切模块 tab 渲染插件 tile，零告警', () => {
     registerManifestTasks(MANIFEST)
     upsertTask('acme', 'publish', { status: 'in_progress', progress: { current: 1, total: 3 } })
     registerManifestCapsule(MANIFEST)
@@ -79,9 +78,38 @@ describe('控制中心渲染冒烟', () => {
     expect(console_.errors).toEqual([])
     console_.restore()
 
+    // 任务 tab：时间线（标题 + 来源徽标 + 进度计数），单插件不出现插件 pill
+    expect(container.querySelector('[data-testid="capsule-timeline"]')).not.toBeNull()
     expect(screen.getByText('发布 Issue')).toBeTruthy()
+    expect(screen.getByText('acme')).toBeTruthy()
+    expect(screen.getByText('1/3')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'acme' })).toBeNull()
+
+    // 切到模块 tab：插件 tile 渲染（宿主白名单模板）
+    act(() => {
+      fireEvent.click(screen.getByRole('tab', { name: '模块' }))
+    })
     expect(screen.getByText('12')).toBeTruthy()
     expect(screen.getByText('个 open')).toBeTruthy()
+    expect(container.querySelectorAll('button button').length).toBe(0)
+  })
+
+  it('已完成任务归入「最近完成」段并可一键清空，零告警', () => {
+    registerManifestTasks(MANIFEST)
+    upsertTask('acme', 'publish', { status: 'done' })
+
+    const console_ = captureRenderConsole()
+    const { container } = renderWithLocale(<CapsulePanel onClose={() => undefined} />)
+
+    expect(console_.errors).toEqual([])
+    console_.restore()
+
+    expect(screen.getByText('最近完成 · 1')).toBeTruthy()
+    act(() => {
+      fireEvent.click(screen.getByTestId('capsule-clear-done'))
+    })
+    // 清空后任务隐藏，回到等待空态
+    expect(screen.getByText('等待插件任务')).toBeTruthy()
     expect(container.querySelectorAll('button button').length).toBe(0)
   })
 })

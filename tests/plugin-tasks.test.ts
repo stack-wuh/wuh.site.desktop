@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import type { PluginManifest } from '@shared/plugin'
 import {
+  MAX_VISIBLE_TASKS_PER_PLUGIN,
   clearPluginTasks,
   registerManifestTasks,
   removeTask,
@@ -72,10 +73,66 @@ describe('tasks 注册表', () => {
     expect(visibleTasks()[0]?.status).toBe('done')
   })
 
-  it('未声明的任务 upsert/remove 报错', () => {
+  it('未声明任务：无 title 报错；remove 报错', () => {
     registerManifestTasks(manifest('p', [task('a', 'x')]))
     expect(() => upsertTask('p', 'ghost', { status: 'done' })).toThrow(/未声明/)
     expect(() => removeTask('p', 'ghost')).toThrow(/未声明/)
+  })
+
+  it('动态创建：未声明 id 首报 title 即创建（声明制退役为可选预置）', () => {
+    const now = Date.now()
+    upsertTask('crawler', 'fetch-repo', { title: '抓取仓库', status: 'in_progress', progress: { current: 1, total: 5 } })
+    const created = visibleTasks()[0]
+    expect(created).toMatchObject({
+      key: 'crawler:fetch-repo',
+      pluginId: 'crawler',
+      id: 'fetch-repo',
+      title: '抓取仓库',
+      status: 'in_progress',
+      progress: { current: 1, total: 5 },
+      hidden: false,
+      declared: false,
+      doneAt: null
+    })
+    expect(created?.createdAt).toBeGreaterThanOrEqual(now)
+    expect(created?.viewId).toBeUndefined()
+  })
+
+  it('title 仅动态创建首报时生效；已存在任务携带 title 拒绝', () => {
+    upsertTask('p', 'dynamic', { title: 'v1' })
+    expect(() => upsertTask('p', 'dynamic', { title: 'v2' })).toThrow(/title/)
+    registerManifestTasks(manifest('p', [task('declared', 'x')]))
+    expect(() => upsertTask('p', 'declared', { title: 'y' })).toThrow(/title/)
+    // title 长度护栏：空串/超长拒绝
+    expect(() => upsertTask('p', 'bad', { title: '' })).toThrow(/title/)
+    expect(() => upsertTask('p', 'bad', { title: 'x'.repeat(81) })).toThrow(/title/)
+  })
+
+  it(`并发护栏：每插件可见任务 ≤${8}，隐藏腾位后可再创建`, () => {
+    const declared = Array.from({ length: MAX_VISIBLE_TASKS_PER_PLUGIN }, (_, i) => task(`t${i}`, `任务${i}`))
+    registerManifestTasks(manifest('p', declared))
+    expect(() => upsertTask('p', 'extra', { title: '超额' })).toThrow(/超限/)
+    // remove 隐藏腾出一个可见位后可创建
+    removeTask('p', 't0')
+    expect(() => upsertTask('p', 'extra', { title: '补位' })).not.toThrow()
+    expect(visibleTasks().filter((t) => t.pluginId === 'p')).toHaveLength(MAX_VISIBLE_TASKS_PER_PLUGIN)
+  })
+
+  it('doneAt 时间戳：进入 done 打点，离开 done 清空', () => {
+    upsertTask('p', 'a', { title: 'x' })
+    const find = () => visibleTasks()[0]
+    expect(find()?.doneAt).toBeNull()
+    upsertTask('p', 'a', { status: 'done' })
+    expect(find()?.doneAt).not.toBeNull()
+    upsertTask('p', 'a', { status: 'in_progress' })
+    expect(find()?.doneAt).toBeNull()
+  })
+
+  it('clearPluginTasks 同样移除动态创建的任务', () => {
+    upsertTask('p1', 'dynamic', { title: '动态' })
+    registerManifestTasks(manifest('p2', [task('b', 'y')]))
+    clearPluginTasks('p1')
+    expect(visibleTasks().map((t) => t.key)).toEqual(['p2:b'])
   })
 
   it('插件只能操作自己的任务：跨插件同 id 互不干扰', () => {
