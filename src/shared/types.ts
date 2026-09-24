@@ -1,5 +1,7 @@
 // 跨主进程/渲染进程共享的 IPC 契约。仅类型与纯函数，禁止引入 node/electron API。
 
+import type { DraftMeta } from './drafts'
+
 // ---------- Workspace ----------
 export interface GithubRemote {
   owner: string
@@ -286,6 +288,14 @@ export interface DesktopApi {
   /** 从最近项目列表按路径打开（目录不存在时抛错） */
   openWorkspaceByPath(path: string): Promise<WorkspaceInfo>
   listRecentWorkspaces(): Promise<RecentWorkspace[]>
+  /** 草稿箱：全部草稿元数据（updatedAt 降序；索引缺失/损坏返回空） */
+  listDrafts(): Promise<DraftMeta[]>
+  /** 新建或更新草稿（id 缺省新建），返回落盘后的元数据 */
+  saveDraft(input: { id?: string | null; content: string }): Promise<DraftMeta>
+  /** 读取草稿全文；不存在返回 null */
+  readDraft(id: string): Promise<string | null>
+  /** 删除草稿；不存在时 no-op */
+  removeDraft(id: string): Promise<void>
   getWorkspace(): Promise<WorkspaceInfo | null>
   readTree(): Promise<FileNode[]>
   readFile(relPath: string): Promise<FileContent>

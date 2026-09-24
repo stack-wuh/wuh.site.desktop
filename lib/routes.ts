@@ -6,11 +6,12 @@ export const PLUGIN_ROUTE_PREFIX = '/plugin'
 export const pluginPanelKey = (pluginId: string, viewId: string): string =>
   `plugin:${pluginId}:${viewId}`
 
-/** pathname → 菜单项路由 key（'/' | 'account' | 'settings' | 'plugin:<pid>:<vid>'） */
+/** pathname → 菜单项路由 key（'/' | 'account' | 'settings' | 'drafts' | 'plugin:<pid>:<vid>'） */
 export function routeKeyFromPathname(pathname: string): string {
   if (pathname === '/' || pathname === '') return 'home'
   if (pathname === '/account') return 'account'
   if (pathname === '/settings') return 'settings'
+  if (pathname === '/drafts') return 'drafts'
   if (pathname.startsWith(`${PLUGIN_ROUTE_PREFIX}/`)) {
     const [, , pluginId, viewId] = pathname.split('/')
     if (pluginId && viewId) return pluginPanelKey(pluginId, viewId)

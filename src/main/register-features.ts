@@ -4,6 +4,7 @@ import { bootstrapPlugins } from './plugins/loader'
 
 // ---- 特性模块（各自在模块加载时向 ipc 表注册实现） ----
 import './workspace'
+import './drafts'
 import './cloneWorkspace'
 import './images'
 import './git'
