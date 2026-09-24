@@ -43,6 +43,15 @@ import {
   removeCapsule,
   updateCapsule
 } from '../../lib/capsule'
+import {
+  clearPluginEvents,
+  onAnyEvent,
+  publishEvent,
+  publishPluginEvent,
+  subscribePlugin,
+  subscribersFor,
+  unsubscribePlugin
+} from '../../lib/events'
 import { renderService } from '../../lib/renderPipeline'
 import styled from 'styled-components'
 
@@ -124,7 +133,7 @@ function currentDocState(): { path: string | null; content: string | null; saved
 
 async function handleFrameInvoke(
   pluginId: string,
-  service: 'cap' | 'doc' | 'render' | 'ui' | 'statusBar' | 'tasks' | 'capsule',
+  service: 'cap' | 'doc' | 'render' | 'ui' | 'statusBar' | 'tasks' | 'capsule' | 'events',
   method: string,
   args: unknown[]
 ): Promise<unknown> {
@@ -196,14 +205,20 @@ async function handleFrameInvoke(
       throw new Error(`未知状态栏方法: ${method}`)
     }
     case 'tasks': {
-      // 任务为 manifest 声明制：运行时仅允许更新状态/隐藏自己声明的任务（视图帧与逻辑帧同链路），无额外权限
+      // 任务状态单一写方 = 插件 SDK（视图帧与逻辑帧同链路），无额外权限。
+      // 声明制退役为可选预置：未声明 id 首报 title 即动态创建（≤8/插件护栏在注册表）。
+      // 写穿后内转 tasks:* 事件供订阅者观察（信封归属 = 任务所属插件）。
       if (method === 'upsert') {
         const [taskId, patch] = args as [string, TaskPatch]
-        upsertTask(pluginId, String(taskId), patch ?? {})
+        const id = String(taskId)
+        upsertTask(pluginId, id, patch ?? {})
+        publishEvent('tasks:upsert', pluginId, { taskId: id, patch: patch ?? {} })
         return null
       }
       if (method === 'remove') {
-        removeTask(pluginId, String(args[0] ?? ''))
+        const id = String(args[0] ?? '')
+        removeTask(pluginId, id)
+        publishEvent('tasks:remove', pluginId, { taskId: id })
         return null
       }
       throw new Error(`未知任务方法: ${method}`)
@@ -220,6 +235,24 @@ async function handleFrameInvoke(
         return null
       }
       throw new Error(`未知胶囊模块方法: ${method}`)
+    }
+    case 'events': {
+      // 事件总线：归属由宿主按帧身份盖章（调用方不可冒名），事件名强制 <pluginId>:<name>；
+      // 订阅只登记路由，实际投递经 onAnyEvent 钩子（wireHostOnce 接线）
+      if (method === 'publish') {
+        const [name, payload] = args as [string, unknown]
+        publishPluginEvent(pluginId, String(name), payload)
+        return null
+      }
+      if (method === 'subscribe') {
+        subscribePlugin(pluginId, args[0])
+        return null
+      }
+      if (method === 'unsubscribe') {
+        unsubscribePlugin(pluginId, args[0])
+        return null
+      }
+      throw new Error(`未知事件方法: ${method}`)
     }
     default:
       throw new Error(`未知服务: ${String(service)}`)
@@ -383,7 +416,7 @@ export async function bootstrapPluginsHost(): Promise<PluginListResult> {
   return bootPromise
 }
 
-/** 一次性接线：文档事件广播与 publisher 派发（动态查 frames，重载无需重挂） */
+/** 一次性接线：文档事件广播、事件总线投递与 publisher 派发（动态查 frames，重载无需重挂） */
 let hostWired = false
 function wireHostOnce(): void {
   if (hostWired) return
@@ -400,6 +433,16 @@ function wireHostOnce(): void {
         })
       }
     )
+  })
+  // 事件总线投递：信封按订阅路由推送订阅插件的全部帧（SDK wuh.on('event', cb) 接收）
+  onAnyEvent((env) => {
+    const targets = subscribersFor(env.type)
+    if (targets.length === 0) return
+    frames.forEach((frame) => {
+      if (!frame.closed && targets.includes(frame.pluginId)) {
+        frame.port.postMessage({ kind: 'event', name: 'event', payload: env })
+      }
+    })
   })
   documentEvents.subscribe((name, payload) => broadcast(name, payload))
 }
@@ -563,6 +606,7 @@ export async function togglePlugin(
     clearPluginStatusItems(pluginId)
     clearPluginTasks(pluginId)
     clearPluginCapsule(pluginId)
+    clearPluginEvents(pluginId)
   }
   hostGeneration.bump()
 }
