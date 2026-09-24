@@ -77,9 +77,9 @@ describe('统一编辑页渲染冒烟', () => {
     const console_ = captureRenderConsole()
     renderPage()
     await screen.findByText('hello.md')
+    // 项目名来自挂载后异步 getWorkspace：必须 findByText 等待渲染提交（getByText 在整包负载下 flake）
+    await screen.findByText('proj-a')
     console_.restore()
-
-    expect(screen.getByText('proj-a')).toBeTruthy()
     // 干净文档不可保存（与首页面板 canSave 语义一致）
     expect(screen.queryByTitle('有未保存更改')).toBeNull()
     expect(screen.getByRole('button', { name: '保存当前文档' })).toHaveProperty('disabled', true)
@@ -95,9 +95,9 @@ describe('统一编辑页渲染冒烟', () => {
     const console_ = captureRenderConsole()
     renderPage()
     await screen.findByText('新草稿')
+    await screen.findByText('proj-a')
     console_.restore()
 
-    expect(screen.getByText('proj-a')).toBeTruthy()
     expect(screen.getByRole('button', { name: '保存当前文档' })).toHaveProperty('disabled', false)
   })
 
