@@ -4,7 +4,7 @@
   "name": "20260924-fix-live-preview-toggle-rebuild",
   "type": "fix",
   "scope": "apps/desktop",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "fix/20260924-fix-live-preview-toggle-rebuild",
   "files": [
@@ -15,18 +15,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 74,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/74",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 76,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/76"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "a09ec68e6d2bda3f6299e47a678bdbb032446d36",
-    "verifiedAt": "2026-09-24T07:43:22.249Z"
+    "verifiedCommit": "9d00cd20c87fa32a9a5139382359cf218686773a",
+    "verifiedAt": "2026-09-24T08:08:50.324Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:74",
-    "planHash": "a0b4a4b55e12bccee95f25d764f10c18ae499b9f4b7d3857fa3b1d581994a892",
+    "checkpoint": "merged-pr:76",
+    "planHash": "8edd0e384010de0731b7de6aecd75edc2ae13fa21d03ad5c4fc1f851983b6102",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
