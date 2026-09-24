@@ -297,7 +297,8 @@ export interface DesktopApi {
   /** 删除草稿；不存在时 no-op */
   removeDraft(id: string): Promise<void>
   getWorkspace(): Promise<WorkspaceInfo | null>
-  readTree(): Promise<FileNode[]>
+  /** 列目录树：root 缺省=当前工作区；显式 root 校验目录存在后按根构树（不切换当前工作区） */
+  readTree(root?: string): Promise<FileNode[]>
   readFile(relPath: string): Promise<FileContent>
   writeFile(relPath: string, content: string): Promise<SaveResult>
   savePastedImage(docRelPath: string, originalName: string, base64: string): Promise<SavedImage>

@@ -11,7 +11,8 @@ import type { DraftMeta } from '@shared/drafts'
 /**
  * 草稿箱页渲染冒烟（20260924-feature-editor-simplify-draft-box）：
  * 真实 DOM 环境断言渲染期零 React 告警 + 列表/空态/编辑中高亮结构 +
- * 「继续编辑」经 readDraft → openDraft 的联动（router 走 mock）。
+ * 「继续编辑」经 readDraft → openDraft → 跳统一编辑页 /editor 的联动（router 走 mock，
+ * 20260924-feature-projects-editor-page 起不再回首页）。
  */
 
 const { pushMock } = vi.hoisted(() => ({ pushMock: vi.fn() }))
@@ -90,7 +91,7 @@ describe('草稿箱页渲染冒烟', () => {
     console_.restore()
   })
 
-  it('点击行经 readDraft 载入草稿并跳首页（openDraft 归属会话）', async () => {
+  it('点击行经 readDraft 载入草稿并跳统一编辑页（openDraft 归属会话）', async () => {
     const console_ = captureRenderConsole()
     const { container } = renderPage()
     const row = await screen.findByText('未存稿的灵感')
@@ -105,6 +106,6 @@ describe('草稿箱页渲染冒烟', () => {
     expect(workspaceStore.get().activePath).toBeNull()
     expect(workspaceStore.get().content).toBe('# 未存稿的灵感\n正文')
     expect(workspaceStore.get().dirty).toBe(false)
-    expect(pushMock).toHaveBeenCalledWith('/')
+    expect(pushMock).toHaveBeenCalledWith('/editor')
   })
 })

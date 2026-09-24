@@ -230,7 +230,7 @@ export function DraftsPage(): React.JSX.Element {
         return
       }
       workspaceStore.openDraft(content, meta.id)
-      router.push('/')
+      router.push('/editor')
     } catch {
       setError(t('drafts.readFailed'))
     }

@@ -151,6 +151,23 @@ async function buildTree(
   return nodes
 }
 
+/**
+ * 列目录树：root 缺省按当前工作区（requireRoot）；显式 root 校验目录存在后按根构树，
+ * 不切换当前工作区——项目页跨项目列清单的基础（20260924-feature-projects-editor-page）。
+ */
+export async function readTreeByRoot(root: string | null): Promise<FileNode[]> {
+  const base =
+    root == null
+      ? requireRoot()
+      : await (async (): Promise<string> => {
+          const target = path.resolve(root)
+          const st = await fsp.stat(target).catch(() => null)
+          if (!st?.isDirectory()) throw new Error('项目目录不存在或不可访问')
+          return target
+        })()
+  return buildTree(base, '', 0, { count: 0 })
+}
+
 implement('openWorkspace', () => openWorkspaceDialog())
 implement('getWorkspace', async () => getWorkspace())
 implement('listRecentWorkspaces', () => readRecent())
@@ -162,10 +179,7 @@ implement('openWorkspaceByPath', async ([p]) => {
   return setWorkspace(target)
 })
 
-implement('readTree', async () => {
-  const root = requireRoot()
-  return buildTree(root, '', 0, { count: 0 })
-})
+implement('readTree', async ([root]) => readTreeByRoot(root ?? null))
 
 implement('readFile', async ([relPath]) => {
   const root = requireRoot()

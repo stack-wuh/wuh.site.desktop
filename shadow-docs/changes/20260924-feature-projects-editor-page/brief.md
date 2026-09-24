@@ -1,0 +1,141 @@
+---
+{
+  "schema": "shadow-dev/v1",
+  "name": "20260924-feature-projects-editor-page",
+  "type": "feature",
+  "scope": "apps/desktop",
+  "status": "branched",
+  "baseBranch": "main",
+  "branch": "feature/20260924-feature-projects-editor-page",
+  "files": [
+    "app/(shell)/drafts/page.tsx",
+    "app/(shell)/editor/page.tsx",
+    "app/(shell)/layout.tsx",
+    "app/(shell)/projects/page.tsx",
+    "components/icons/index.tsx",
+    "lib/i18n/locales.ts",
+    "lib/projects.ts",
+    "lib/routes.ts",
+    "src/main/workspace.ts",
+    "src/preload/index.ts",
+    "src/shared/types.ts",
+    "tests/drafts-render.test.tsx",
+    "tests/editor-page.test.tsx",
+    "tests/projects-render.test.tsx",
+    "tests/projects.test.ts",
+    "tests/workspace-tree.test.ts"
+  ],
+  "github": {
+    "repository": "stack-wuh/wuh.site.desktop",
+    "issue": 73,
+    "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/73",
+    "pullRequest": null,
+    "pullRequestUrl": null
+  },
+  "review": {
+    "conclusion": "pending",
+    "verifiedCommit": null,
+    "verifiedAt": null
+  },
+  "workflow": {
+    "operation": null,
+    "checkpoint": "issue:73",
+    "planHash": "1b0c579287190a0f8182e2f6ee0dbfd121072d0945ad1428c6eb55c752948595",
+    "updatedAt": null,
+    "lastError": null,
+    "issuePlan": {
+      "title": "[feature] 按项目浏览（项目页）+ 统一编辑页（Typora 式沉浸）",
+      "titleRaw": null,
+      "supplement": "",
+      "body": "## 动机\n草稿箱落地后，「先写后存」链路已通，但文档浏览仍缺**按项目**维度：文件入口散在首页面板的 popover 与胶囊编辑器分区里，跨项目找文件要来回切工作区；草稿「继续编辑」回落首页面板，写面被首页 chrome（问候/热力图/面板边框）包裹，不沉浸。\n\n本次新增三件事：\n1. 左侧菜单新增【项目】页（`/projects`）：以项目维度划分 Group（当前工作区 + 最近项目），每个 Group 内列各自的 `.md` 文件，点击快速进入编辑；组内含「打开目录」入口。\n2. 统一编辑页（`/editor`）：窄栏居中、极简顶栏的 Typora 式沉浸写面，复用 CM6 即时渲染；从项目页点文件、从草稿箱「继续编辑」都进入这一页——草稿与项目文件共用同一编辑页。\n3. 主进程 `readTree` 增加可选 `root` 参数：项目页无需切换工作区即可列出任意最近项目的文件清单。\n\n## 引用规范\n- shadow-docs/knowledge/renderer-shell-routing.md\n  - 当前结论: 新右栏页面 = 新增 `app/(shell)/<segment>/page.tsx` 路由段，菜单项与路由段一一对应；`useSyncExternalStore` 必须带第三参 `getServerSnapshot`（静态导出）；客户端组件一律 'use client'。\n  - 适用 scope: `/projects` `/editor` 两个新路由段 + `lib/routes.ts` + `app/(shell)/layout.tsx` 菜单\n- shadow-docs/knowledge/editor.md\n  - 当前结论: content 双通道防回环（pushedRef 比对）、命令通道消费契约（EditorCommandHost 常驻壳层 layout 单实例）、UI 颜色只经主题 token、禁重新引入大体积静态资产管线；MarkdownEditor 为唯一编辑器内核。\n  - 适用 scope: `/editor` 页复用 MarkdownEditor；保存/新建经 publishEditorCommand，不绕命令通道\n- shadow-docs/knowledge/desktop-app-architecture.md（父仓库）\n  - 当前结论: fs 操作收敛主进程经 window.api 类型安全 IPC；草稿仓 `userData/drafts/`（先写后存语义）；DOM 渲染类变更验收必须跑 happy-dom 用例（零 React 告警）。\n  - 适用 scope: `readTree(root?)` 契约扩展、新页面 DOM 测试\n- norms/ui-patterns.md / norms/interaction.md\n  - 当前结论: 组件复用优先、暗色全覆盖禁裸色值、动效 150-300ms ease-out + reduced-motion、a11y 底线（aria-label/焦点环）、破坏性操作先确认、Esc 语义。\n  - 适用 scope: 两个新页面的全部 UI\n\n## 决策\n- **选型:** 方案 A′——双新路由段（`/projects`、`/editor`）+ `readTree(root?)` 签名扩展 + 草稿箱跳转改向 `/editor`；**首页 EditorPanel 原样保留**（产品明确要求先不撤），两处编辑面互斥挂载、共用 workspaceStore 单状态源。\n- **对比方案:** B（`/editor` 单页内嵌项目文件树侧栏）——编辑面 chrome 变重不 Typora，且 `/editor` 承载两个菜单语义破坏「菜单项=路由段」约定，排除；C（新增 `listMarkdownFiles(root)` 平铺 IPC）——主进程重复 `buildTree` 已有的深度/预算/忽略规则（有测试锁定），FilePicker 仍走 readTree 两套遍历并存，排除。\n- **理由:** 完全复用现有 store/命令通道/CM6 装饰层/草稿自动暂存；导航与草稿箱同构；IPC 面最小（仅一个签名扩展）。\n- **边界决策:**\n  - 首页 EditorPanel 及其 popover（WorkspacePicker/FilePicker）不动，`tests/home-editor-panel.test.ts` 不受影响；`/editor` 页是独立第二个挂载点，路由段互斥保证任一时刻仅一处挂载 CM6 实例。\n  - 草稿箱「继续编辑」从跳 `/` 改为跳 `/editor`（编辑页与草稿箱合流）；草稿会话语义（openDraft/activeDraftId/自动暂存/另存为消费）不变。\n  - `/editor` 冷启动（无文档无草稿会话，content==null）自动 `startDraft()` 进入新草稿会话——延续「先写后存」；页内无预览分栏（即时渲染即预览），胶囊渲染模式开关仍作用于同一 store。\n  - 极简顶栏：返回（`/projects`，无历史则 `/`）· 面包屑（项目名/文件名或「草稿」）· 脏点 · 新建 · 保存（canSave 语义与首页面板一致）；撤销/重做/查找走 CM6 原生快捷键与胶囊入口，不在顶栏重复；专注模式经 editor-state 总线联动（顶栏随 focusMode 淡出）。\n  - 项目页 Group：当前工作区组置顶（徽标「当前」），最近项目组随 `listRecentWorkspaces`（去重当前项）；首屏并行拉取各组清单（cap 8+1），失效目录组呈「不可访问」态并保留路径；组内行 = 文件名 + 相对路径；顶部筛选复用 `filterMarkdownFiles`。\n  - 跨组打开：脏文档先 `uiConfirm`；非当前组先 `openWorkspaceByPath(root)` 切工作区（登记最近）再 `readFile` → `openDoc` → `router.push('/editor')`；当前组直接 readFile → openDoc → `/editor`。\n  - `readTree(root?)`：root 提供时校验目录存在（不存在/非目录抛错）后按该根构树，**不切换当前工作区**；缺省保持现行为（requireRoot）。\n  - `/editor` 为非菜单路由 key（不高亮菜单项，与 `/account` 的菜单外路由处理同构）；菜单项顺序：首页 → 项目 → 草稿箱 → 插件视图。\n  - 图标走 lucide：菜单「项目」用既有 IconFolderOpen；顶栏返回新增 IconArrowLeft 导出。\n  - i18n 三语（zh/en/ja）：`menu.projects`、`projects.*` 族、编辑页顶栏 `editor.*` 新键；key 集合一致性由 `tests/i18n.test.ts` 锁定。\n\n## 任务\n### Phase 1 数据契约（主进程）\n- [ ] shared 契约：`readTree(root?: string)` 签名扩展 — `src/shared/types.ts` — 修改\n- [ ] 主进程实现：root 提供时校验目录存在并按根构树（不切工作区），缺省走 requireRoot 现行为 — `src/main/workspace.ts` — 修改\n- [ ] preload 透传可选 root — `src/preload/index.ts` — 修改\n- [ ] 主进程测试（node env + tmp dir：缺省=当前工作区、指定 root 构树、root 不存在/为文件抛错、隐藏文件与忽略目录规则不变） — `tests/workspace-tree.test.ts` — 新增\n\n### Phase 2 项目纯逻辑与路由菜单\n- [ ] lib/projects 纯逻辑：buildProjectGroups（当前置顶去重、组元数据）、组展开态 helpers（可独立测试，无 DOM） — `lib/projects.ts` — 新增\n- [ ] 路由：`routeKeyFromPathname` 增加 '/projects' → 'projects'、'/editor' → 'editor'（非菜单 key） — `lib/routes.ts` — 修改\n- [ ] 菜单：SideMenu items 增加「项目」项（IconFolderOpen，置于首页后）+ onChange 分发 `/projects` — `app/(shell)/layout.tsx` — 修改\n\n### Phase 3 项目页 UI\n- [ ] `/projects` 页：组列表（当前组徽标/最近组路径/失效组不可访问态）、组内 .md 行（文件名+相对路径）、顶部筛选、打开目录按钮、空态 — `app/(shell)/projects/page.tsx` — 新增\n- [ ] 打开文件流：脏确认 → 按需切工作区 → readFile → openDoc → 跳 `/editor` — `app/(shell)/projects/page.tsx` — 新增\n- [ ] i18n 三语：`menu.projects` + `projects.*` 族 — `lib/i18n/locales.ts` — 修改\n- [ ] 测试：纯逻辑（分组/去重/失效组）+ DOM 渲染（happy-dom + mock api：分组结构/空态/不可访问态/点击流转断言，零 React 告警） — `tests/projects.test.ts` `tests/projects-render.test.tsx` — 新增\n\n### Phase 4 统一编辑页\n- [ ] `/editor` 页：窄栏沉浸布局（~760px 居中列）+ 极简顶栏（返回/面包屑/脏点/新建/保存）+ MarkdownEditor 复用（无预览分栏）+ 冷启动自动 startDraft + focusMode 顶栏联动 — `app/(shell)/editor/page.tsx` — 新增\n- [ ] i18n 三语：编辑页顶栏 `editor.*` 新键 — `lib/i18n/locales.ts` — 修改\n- [ ] 草稿箱「继续编辑」跳转 `/` → `/editor` — `app/(shell)/drafts/page.tsx` — 修改\n- [ ] 图标：IconArrowLeft 导出 — `components/icons/index.tsx` — 修改\n- [ ] 测试：编辑页 DOM 渲染（顶栏结构/面包屑草稿与文档两态/保存可用性，零 React 告警）+ drafts-render 断言更新 — `tests/editor-page.test.tsx` `tests/drafts-render.test.tsx` — 新增/修改\n\n### Phase 5 全量验证\n- [ ] `pnpm typecheck`（node/next 双侧）+ `pnpm test` 全量回归 — 无文件 — 验证\n- [ ] 手动走查：四主题（wine/plain × light/dark）项目页与编辑页、跨组打开切工作区、草稿续写合流、reduced-motion — 无文件 — 验证\n\n完整 brief：shadow-docs/changes/20260924-feature-projects-editor-page/brief.md\n\n<!-- shadow-dev:issue-metadata {\"name\":\"20260924-feature-projects-editor-page\",\"type\":\"feature\",\"scope\":\"apps/desktop\",\"status\":\"proposed\",\"branch\":null,\"baseBranch\":\"main\",\"briefPath\":\"shadow-docs/changes/20260924-feature-projects-editor-page/brief.md\",\"cliVersion\":\"1.3.0\",\"prUrl\":null,\"issueNumber\":null} -->\n",
+      "labels": [
+        "feature"
+      ]
+    }
+  }
+}
+---
+
+# 按项目浏览（项目页）+ 统一编辑页（Typora 式沉浸）
+
+## 动机
+
+草稿箱落地后，「先写后存」链路已通，但文档浏览仍缺**按项目**维度：文件入口散在首页面板的 popover 与胶囊编辑器分区里，跨项目找文件要来回切工作区；草稿「继续编辑」回落首页面板，写面被首页 chrome（问候/热力图/面板边框）包裹，不沉浸。
+
+本次新增三件事：
+1. 左侧菜单新增【项目】页（`/projects`）：以项目维度划分 Group（当前工作区 + 最近项目），每个 Group 内列各自的 `.md` 文件，点击快速进入编辑；组内含「打开目录」入口。
+2. 统一编辑页（`/editor`）：窄栏居中、极简顶栏的 Typora 式沉浸写面，复用 CM6 即时渲染；从项目页点文件、从草稿箱「继续编辑」都进入这一页——草稿与项目文件共用同一编辑页。
+3. 主进程 `readTree` 增加可选 `root` 参数：项目页无需切换工作区即可列出任意最近项目的文件清单。
+
+## 引用规范
+
+- shadow-docs/knowledge/renderer-shell-routing.md
+  - 当前结论: 新右栏页面 = 新增 `app/(shell)/<segment>/page.tsx` 路由段，菜单项与路由段一一对应；`useSyncExternalStore` 必须带第三参 `getServerSnapshot`（静态导出）；客户端组件一律 'use client'。
+  - 适用 scope: `/projects` `/editor` 两个新路由段 + `lib/routes.ts` + `app/(shell)/layout.tsx` 菜单
+- shadow-docs/knowledge/editor.md
+  - 当前结论: content 双通道防回环（pushedRef 比对）、命令通道消费契约（EditorCommandHost 常驻壳层 layout 单实例）、UI 颜色只经主题 token、禁重新引入大体积静态资产管线；MarkdownEditor 为唯一编辑器内核。
+  - 适用 scope: `/editor` 页复用 MarkdownEditor；保存/新建经 publishEditorCommand，不绕命令通道
+- shadow-docs/knowledge/desktop-app-architecture.md（父仓库）
+  - 当前结论: fs 操作收敛主进程经 window.api 类型安全 IPC；草稿仓 `userData/drafts/`（先写后存语义）；DOM 渲染类变更验收必须跑 happy-dom 用例（零 React 告警）。
+  - 适用 scope: `readTree(root?)` 契约扩展、新页面 DOM 测试
+- norms/ui-patterns.md / norms/interaction.md
+  - 当前结论: 组件复用优先、暗色全覆盖禁裸色值、动效 150-300ms ease-out + reduced-motion、a11y 底线（aria-label/焦点环）、破坏性操作先确认、Esc 语义。
+  - 适用 scope: 两个新页面的全部 UI
+
+## 决策
+
+- **选型:** 方案 A′——双新路由段（`/projects`、`/editor`）+ `readTree(root?)` 签名扩展 + 草稿箱跳转改向 `/editor`；**首页 EditorPanel 原样保留**（产品明确要求先不撤），两处编辑面互斥挂载、共用 workspaceStore 单状态源。
+- **对比方案:** B（`/editor` 单页内嵌项目文件树侧栏）——编辑面 chrome 变重不 Typora，且 `/editor` 承载两个菜单语义破坏「菜单项=路由段」约定，排除；C（新增 `listMarkdownFiles(root)` 平铺 IPC）——主进程重复 `buildTree` 已有的深度/预算/忽略规则（有测试锁定），FilePicker 仍走 readTree 两套遍历并存，排除。
+- **理由:** 完全复用现有 store/命令通道/CM6 装饰层/草稿自动暂存；导航与草稿箱同构；IPC 面最小（仅一个签名扩展）。
+- **边界决策:**
+  - 首页 EditorPanel 及其 popover（WorkspacePicker/FilePicker）不动，`tests/home-editor-panel.test.ts` 不受影响；`/editor` 页是独立第二个挂载点，路由段互斥保证任一时刻仅一处挂载 CM6 实例。
+  - 草稿箱「继续编辑」从跳 `/` 改为跳 `/editor`（编辑页与草稿箱合流）；草稿会话语义（openDraft/activeDraftId/自动暂存/另存为消费）不变。
+  - `/editor` 冷启动（无文档无草稿会话，content==null）自动 `startDraft()` 进入新草稿会话——延续「先写后存」；页内无预览分栏（即时渲染即预览），胶囊渲染模式开关仍作用于同一 store。
+  - 极简顶栏：返回（`/projects`，无历史则 `/`）· 面包屑（项目名/文件名或「草稿」）· 脏点 · 新建 · 保存（canSave 语义与首页面板一致）；撤销/重做/查找走 CM6 原生快捷键与胶囊入口，不在顶栏重复；专注模式经 editor-state 总线联动（顶栏随 focusMode 淡出）。
+  - 项目页 Group：当前工作区组置顶（徽标「当前」），最近项目组随 `listRecentWorkspaces`（去重当前项）；首屏并行拉取各组清单（cap 8+1），失效目录组呈「不可访问」态并保留路径；组内行 = 文件名 + 相对路径；顶部筛选复用 `filterMarkdownFiles`。
+  - 跨组打开：脏文档先 `uiConfirm`；非当前组先 `openWorkspaceByPath(root)` 切工作区（登记最近）再 `readFile` → `openDoc` → `router.push('/editor')`；当前组直接 readFile → openDoc → `/editor`。
+  - `readTree(root?)`：root 提供时校验目录存在（不存在/非目录抛错）后按该根构树，**不切换当前工作区**；缺省保持现行为（requireRoot）。
+  - `/editor` 为非菜单路由 key（不高亮菜单项，与 `/account` 的菜单外路由处理同构）；菜单项顺序：首页 → 项目 → 草稿箱 → 插件视图。
+  - 图标走 lucide：菜单「项目」用既有 IconFolderOpen；顶栏返回新增 IconArrowLeft 导出。
+  - i18n 三语（zh/en/ja）：`menu.projects`、`projects.*` 族、编辑页顶栏 `editor.*` 新键；key 集合一致性由 `tests/i18n.test.ts` 锁定。
+
+## 任务
+
+### Phase 1 数据契约（主进程）
+- [x] shared 契约：`readTree(root?: string)` 签名扩展 — `src/shared/types.ts` — 修改
+- [x] 主进程实现：root 提供时校验目录存在并按根构树（不切工作区），缺省走 requireRoot 现行为 — `src/main/workspace.ts` — 修改
+- [x] preload 透传可选 root — `src/preload/index.ts` — 修改
+- [x] 主进程测试（node env + tmp dir：缺省=当前工作区、指定 root 构树、root 不存在/为文件抛错、隐藏文件与忽略目录规则不变） — `tests/workspace-tree.test.ts` — 新增
+
+### Phase 2 项目纯逻辑与路由菜单
+- [x] lib/projects 纯逻辑：buildProjectGroups（当前置顶去重、组元数据）、组展开态 helpers（可独立测试，无 DOM） — `lib/projects.ts` — 新增
+- [x] 路由：`routeKeyFromPathname` 增加 '/projects' → 'projects'、'/editor' → 'editor'（非菜单 key） — `lib/routes.ts` — 修改
+- [x] 菜单：SideMenu items 增加「项目」项（IconFolderOpen，置于首页后）+ onChange 分发 `/projects` — `app/(shell)/layout.tsx` — 修改
+
+### Phase 3 项目页 UI
+- [x] `/projects` 页：组列表（当前组徽标/最近组路径/失效组不可访问态）、组内 .md 行（文件名+相对路径）、顶部筛选、打开目录按钮、空态 — `app/(shell)/projects/page.tsx` — 新增
+- [x] 打开文件流：脏确认 → 按需切工作区 → readFile → openDoc → 跳 `/editor` — `app/(shell)/projects/page.tsx` — 新增
+- [x] i18n 三语：`menu.projects` + `projects.*` 族 — `lib/i18n/locales.ts` — 修改
+- [x] 测试：纯逻辑（分组/去重/失效组）+ DOM 渲染（happy-dom + mock api：分组结构/空态/不可访问态/点击流转断言，零 React 告警） — `tests/projects.test.ts` `tests/projects-render.test.tsx` — 新增
+
+### Phase 4 统一编辑页
+- [x] `/editor` 页：窄栏沉浸布局（~760px 居中列）+ 极简顶栏（返回/面包屑/脏点/新建/保存）+ MarkdownEditor 复用（无预览分栏）+ 冷启动自动 startDraft + focusMode 顶栏联动 — `app/(shell)/editor/page.tsx` — 新增
+- [x] i18n 三语：编辑页顶栏 `editor.*` 新键 — `lib/i18n/locales.ts` — 修改
+- [x] 草稿箱「继续编辑」跳转 `/` → `/editor` — `app/(shell)/drafts/page.tsx` — 修改
+- [x] 图标：IconArrowLeft 导出 — `components/icons/index.tsx` — 修改
+- [x] 测试：编辑页 DOM 渲染（顶栏结构/面包屑草稿与文档两态/保存可用性，零 React 告警）+ drafts-render 断言更新 — `tests/editor-page.test.tsx` `tests/drafts-render.test.tsx` — 新增/修改
+
+### Phase 5 全量验证
+- [x] `pnpm typecheck`（node/next 双侧）+ `pnpm test` 全量回归 — 无文件 — 验证
+- [ ] 手动走查：四主题（wine/plain × light/dark）项目页与编辑页、跨组打开切工作区、草稿续写合流、reduced-motion — 无文件 — 验证
+
+## 结果
+
+- 实际耗时: —
+- 验证: —
+
+## 知识评估
+
+- **预期影响:** 更新
+- **候选卡片:** shadow-docs/knowledge/renderer-shell-routing.md；shadow-docs/knowledge/editor.md
+- **理由:** renderer-shell-routing 卡需追加 `/projects` `/editor` 两个路由段与 `readTree(root?)` 契约事实（菜单项=路由段约定延续，'/editor' 为菜单外路由同 '/account'）；editor.md 卡需追加「首页面板之外的第二个编辑面挂载点 `/editor`（互斥挂载、同 store 单状态源、无预览分栏）」。查重：两卡 scope 覆盖本次变更，无重复卡片可合并。
