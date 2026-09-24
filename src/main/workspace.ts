@@ -4,7 +4,9 @@ import path from 'node:path'
 import { simpleGit, type SimpleGit } from 'simple-git'
 import { implement } from './ipc'
 import { recordRecent, readRecent } from './recentWorkspaces'
-import type { FileNode, GithubRemote, WorkspaceInfo } from '@shared/types'
+import { rewriteAssetsRefs, validateTransfer, type TransferMode } from '@shared/docTransfer'
+import { assetsDirNameFor } from '@shared/imagePlan'
+import type { FileNode, GithubRemote, TransferDocResult, WorkspaceInfo } from '@shared/types'
 
 const IGNORED_DIRS = new Set([
   '.git',
@@ -197,4 +199,59 @@ implement('writeFile', async ([relPath, content]) => {
   await fsp.mkdir(path.dirname(abs), { recursive: true })
   await fsp.writeFile(abs, content, 'utf-8')
   return { path: relPath, savedAt: Date.now() }
+})
+
+const TRANSFER_ERRORS: Record<string, string> = {
+  emptySrc: '源路径为空',
+  samePath: '目标与当前路径相同',
+  notMarkdown: '目标必须是 .md 文档',
+  assets: '目标不能是图片资产目录'
+}
+
+/**
+ * 迁移/复制工作区文档（move 是改名与搬目录的统一语义）：
+ * `<stem>.assets/` 图片目录先随迁、文档落位失败即回滚，保持「文档+图片」一致；
+ * 改名场景（assets 目录名含旧文件名）落位后按需改写正文相对引用（纯逻辑 shared/docTransfer）。
+ */
+implement('transferDoc', async ([srcRel, destRel, mode]) => {
+  const invalid = validateTransfer(String(srcRel ?? ''), String(destRel ?? ''))
+  if (invalid) throw new Error(TRANSFER_ERRORS[invalid] ?? '路径不合法')
+  if (mode !== 'move' && mode !== 'copy') throw new Error('未知的迁移模式')
+  const root = requireRoot()
+  const srcAbs = safeJoin(root, srcRel)
+  const destAbs = safeJoin(root, destRel)
+  const srcSt = await fsp.stat(srcAbs).catch(() => null)
+  if (!srcSt?.isFile()) throw new Error('源文档不存在')
+  if (await fsp.stat(destAbs).catch(() => null)) throw new Error('目标路径已存在')
+  await fsp.mkdir(path.dirname(destAbs), { recursive: true })
+
+  const srcAssetsAbs = path.join(path.dirname(srcAbs), assetsDirNameFor(srcRel))
+  const destAssetsAbs = path.join(path.dirname(destAbs), assetsDirNameFor(destRel))
+  const hasAssets = await fsp.stat(srcAssetsAbs).then((s) => s.isDirectory()).catch(() => false)
+  if (hasAssets) {
+    if (mode === 'copy') await fsp.cp(srcAssetsAbs, destAssetsAbs, { recursive: true })
+    else await fsp.rename(srcAssetsAbs, destAssetsAbs)
+  }
+  try {
+    if (mode === 'copy') await fsp.copyFile(srcAbs, destAbs)
+    else await fsp.rename(srcAbs, destAbs)
+  } catch (err) {
+    if (hasAssets) {
+      if (mode === 'copy') {
+        await fsp.rm(destAssetsAbs, { recursive: true, force: true }).catch(() => {})
+      } else {
+        await fsp.rename(destAssetsAbs, srcAssetsAbs).catch(() => {})
+      }
+    }
+    throw err
+  }
+
+  const result: TransferDocResult = { path: destRel, assetsCarried: hasAssets }
+  const oldAssetsName = assetsDirNameFor(srcRel)
+  const newAssetsName = assetsDirNameFor(destRel)
+  if (oldAssetsName !== newAssetsName) {
+    const content = await fsp.readFile(destAbs, 'utf-8')
+    await fsp.writeFile(destAbs, rewriteAssetsRefs(content, oldAssetsName, newAssetsName), 'utf-8')
+  }
+  return result
 })

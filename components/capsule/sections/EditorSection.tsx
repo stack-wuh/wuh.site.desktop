@@ -47,13 +47,26 @@ import {
 import type { IconComponent } from '../../ui/AppIcon'
 import { workspaceStore, useWorkspaceStore, type MarkdownInsertAction } from '../../../lib/store'
 import { consumeDraft } from '../../../lib/drafts'
+import { toast } from '../../../lib/feedback'
 import { publishEditorCommand, subscribeEditorCommands } from '../../../lib/editor-commands'
 import { getEditorLiveState, publishEditorLiveState, useEditorLiveState, type EditorTypography } from '../../../lib/editor-state'
 import { countWords, estimateReadingMinutes, parseOutline } from '../../../lib/editor-info'
 import { copyAsHtml, exportHtmlFile } from '../../../lib/editor-export'
+import {
+  assetsDirNameFor
+} from '@shared/imagePlan'
+import {
+  buildRenamePath,
+  collectDirOptions,
+  rewriteAssetsRefs,
+  transferDestFor,
+  validateDocName,
+  type DirOption
+} from '@shared/docTransfer'
 import { useLocale } from '../../../lib/i18n/context'
 import { FilePanelContent } from '../../workspace/FilePicker'
 import { WorkspacePanelContent } from '../../workspace/WorkspacePicker'
+import { errText } from '../../workspace/PickerShell'
 import {
   KbdTable,
   ModuleCard,
@@ -180,6 +193,61 @@ const DialogError = styled.p`
   font-size: 12px;
   color: var(--danger-color);
   word-break: break-all;
+`
+
+/** 迁移/复制 Dialog（20260924-feature-breadcrumb-doc-ops） */
+const TransferMeta = styled.p`
+  margin: 0 0 10px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  word-break: break-all;
+`
+
+const TransferLabel = styled.div`
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+`
+
+const DirList = styled.div`
+  max-height: 240px;
+  overflow: auto;
+  border: 1px solid var(--chrome-border);
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--background-color) 40%, var(--chrome-raised));
+`
+
+const DirRow = styled.button<{ $active: boolean; $depth: number }>`
+  display: block;
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 6px 10px;
+  padding-left: ${(props) => 10 + props.$depth * 16}px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--chrome-hover);
+  }
+
+  ${(props) =>
+    props.$active &&
+    `
+    background: color-mix(in oklab, var(--primary-color) 16%, transparent);
+    color: var(--primary-color);
+  `}
+`
+
+const DirEmpty = styled.p`
+  margin: 0;
+  padding: 12px 10px;
+  font-size: 12px;
+  color: var(--text-muted);
 `
 
 type SubPanelKind = 'none' | 'outline' | 'workspace' | 'file' | 'typeset' | 'kbd'
@@ -543,11 +611,106 @@ export function EditorCommandHost(): React.JSX.Element {
   const [savePath, setSavePath] = useState('')
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  // 迁移/复制 Dialog（20260924-feature-breadcrumb-doc-ops）：transferSrc 为打开时的文档路径快照
+  const [transferOpen, setTransferOpen] = useState(false)
+  const [transferSrc, setTransferSrc] = useState('')
+  const [dirOptions, setDirOptions] = useState<DirOption[] | null>(null)
+  const [transferDir, setTransferDir] = useState('')
+  const [transferBusy, setTransferBusy] = useState(false)
+  const [transferError, setTransferError] = useState<string | null>(null)
 
   const openSaveAs = (): void => {
     setSaveError(null)
     setSavePath('')
     setSaveAsOpen(true)
+  }
+
+  const openTransfer = (): void => {
+    setTransferSrc(workspaceStore.get().activePath ?? '')
+    setTransferDir('')
+    setTransferError(null)
+    setDirOptions(null)
+    setTransferOpen(true)
+    window.api
+      .readTree()
+      .then((tree) => setDirOptions(collectDirOptions(tree, t('editor.transferRoot'))))
+      .catch((err: unknown) => {
+        setDirOptions([])
+        setTransferError(errText(err))
+      })
+  }
+
+  /** 改名（面包屑原地输入提交）：校验 → 迁移式改名 → store 同步（脏缓冲跟随、引用按需改写） */
+  const executeRename = (rawName: string): void => {
+    const cur = workspaceStore.get()
+    const src = cur.activePath
+    if (!src) return
+    if (validateDocName(rawName.trim())) {
+      toast({ text: t('editor.renameInvalid'), kind: 'error' })
+      return
+    }
+    const destRel = buildRenamePath(src, rawName)
+    if (destRel === src) return
+    const wasDirty = cur.dirty
+    const prevContent = cur.content ?? ''
+    void (async (): Promise<void> => {
+      try {
+        const result = await window.api.transferDoc(src, destRel, 'move')
+        const disk = await window.api.readFile(result.path)
+        workspaceStore.openDoc(result.path, disk.content)
+        if (wasDirty) {
+          const oldAssets = assetsDirNameFor(src)
+          const newAssets = assetsDirNameFor(result.path)
+          workspaceStore.setContent(
+            oldAssets === newAssets ? prevContent : rewriteAssetsRefs(prevContent, oldAssets, newAssets)
+          )
+        }
+        toast({
+          text: t('editor.renameDone', { name: result.path.split('/').pop() ?? result.path }),
+          kind: 'success'
+        })
+      } catch (err) {
+        toast({ text: errText(err), kind: 'error' })
+      }
+    })()
+  }
+
+  /** 迁移/复制（文件夹选择 Dialog 双动作）：move 缓冲跟随保持 dirty；copy 停留原文 */
+  const executeTransfer = (dir: string, mode: 'move' | 'copy'): void => {
+    const cur = workspaceStore.get()
+    const src = cur.activePath
+    if (!src) return
+    const destRel = transferDestFor(src, dir)
+    const wasDirty = cur.dirty
+    const prevContent = cur.content ?? ''
+    setTransferBusy(true)
+    setTransferError(null)
+    void (async (): Promise<void> => {
+      try {
+        // 复制「所见即所存」：脏缓冲先落盘，副本与用户所见一致
+        if (mode === 'copy' && wasDirty) await workspaceStore.saveActive()
+        const result = await window.api.transferDoc(src, destRel, mode)
+        if (mode === 'move') {
+          const disk = await window.api.readFile(result.path)
+          workspaceStore.openDoc(result.path, disk.content)
+          if (wasDirty) {
+            const oldAssets = assetsDirNameFor(src)
+            const newAssets = assetsDirNameFor(result.path)
+            workspaceStore.setContent(
+              oldAssets === newAssets ? prevContent : rewriteAssetsRefs(prevContent, oldAssets, newAssets)
+            )
+          }
+          toast({ text: t('editor.transferMoveDone', { path: result.path }), kind: 'success' })
+        } else {
+          toast({ text: t('editor.transferCopyDone', { path: result.path }), kind: 'success' })
+        }
+        setTransferOpen(false)
+      } catch (err) {
+        setTransferError(errText(err))
+      } finally {
+        setTransferBusy(false)
+      }
+    })()
   }
 
   // 常驻订阅：文档操作与专注模式命令只认领自己的一类，其余放行给编辑器实例
@@ -600,6 +763,15 @@ export function EditorCommandHost(): React.JSX.Element {
           }
           return true
         }
+        case 'renameDoc': {
+          // 草稿态（无 activePath）无可改名文件，认领但 no-op
+          if (cur.activePath) executeRename(cmd.newName)
+          return true
+        }
+        case 'transferDoc': {
+          if (cur.activePath) openTransfer()
+          return true
+        }
         case 'toggleFocus': {
           publishEditorLiveState({ focusMode: !getEditorLiveState().focusMode })
           return true
@@ -632,6 +804,7 @@ export function EditorCommandHost(): React.JSX.Element {
   }
 
   return (
+    <>
     <Dialog
       open={saveAsOpen}
       title={t('editor.saveAsTitle')}
@@ -668,5 +841,46 @@ export function EditorCommandHost(): React.JSX.Element {
       </label>
       {saveError && <DialogError role="alert">{saveError}</DialogError>}
     </Dialog>
+
+    <Dialog
+      open={transferOpen}
+      title={t('editor.transferTitle')}
+      onClose={() => setTransferOpen(false)}
+      footer={
+        <>
+          <Button size="sm" variant="ghost" onClick={() => setTransferOpen(false)}>
+            {t('common.cancel')}
+          </Button>
+          <Button size="sm" onClick={() => executeTransfer(transferDir, 'move')} disabled={transferBusy}>
+            {t('editor.transferMove')}
+          </Button>
+          <Button size="sm" onClick={() => executeTransfer(transferDir, 'copy')} disabled={transferBusy}>
+            {t('editor.transferCopy')}
+          </Button>
+        </>
+      }
+    >
+      <TransferMeta>{t('editor.transferCurrent', { path: transferSrc })}</TransferMeta>
+      <TransferLabel>{t('editor.transferTargetLabel')}</TransferLabel>
+      <DirList role="listbox" aria-label={t('editor.transferTargetLabel')}>
+        {dirOptions === null && <DirEmpty>{t('editor.transferLoading')}</DirEmpty>}
+        {dirOptions?.map((opt) => (
+          <DirRow
+            key={opt.path || '__root__'}
+            type="button"
+            role="option"
+            aria-selected={transferDir === opt.path}
+            $active={transferDir === opt.path}
+            $depth={opt.depth}
+            title={opt.path}
+            onClick={() => setTransferDir(opt.path)}
+          >
+            {opt.name}
+          </DirRow>
+        ))}
+      </DirList>
+      {transferError && <DialogError role="alert">{transferError}</DialogError>}
+    </Dialog>
+    </>
   )
 }
