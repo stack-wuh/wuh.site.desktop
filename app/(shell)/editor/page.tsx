@@ -18,6 +18,7 @@ import { Button } from '../../../components/ui/Button'
 import { AppIcon } from '../../../components/ui/AppIcon'
 import { IconArrowLeft, IconSave } from '../../../components/icons'
 import { MarkdownEditor } from '../../../components/editor/MarkdownEditor'
+import { EditorToolbar } from '../../../components/editor/Toolbar'
 import { useWorkspaceStore, workspaceStore } from '../../../lib/store'
 import { publishEditorCommand } from '../../../lib/editor-commands'
 import { publishEditorLiveState, useEditorLiveState } from '../../../lib/editor-state'
@@ -274,6 +275,7 @@ export function EditorPage(): React.JSX.Element {
       </TopBar>
 
       <Column>
+        <EditorToolbar />
         <EditorBody>
           <MarkdownEditor />
         </EditorBody>

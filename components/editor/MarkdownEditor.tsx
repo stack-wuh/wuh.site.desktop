@@ -21,9 +21,9 @@
 import { useEffect, useRef, useState } from 'react'
 import styled from 'styled-components'
 import { Compartment, EditorSelection, EditorState } from '@codemirror/state'
-import { EditorView, keymap, placeholder } from '@codemirror/view'
+import { EditorView, drawSelection, keymap, placeholder } from '@codemirror/view'
 import { defaultKeymap, history, historyKeymap, redo, undo } from '@codemirror/commands'
-import { closeSearchPanel, highlightSelectionMatches, openSearchPanel, search, searchKeymap } from '@codemirror/search'
+import { closeSearchPanel, openSearchPanel, search, searchKeymap } from '@codemirror/search'
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language'
 import { markdown, markdownKeymap } from '@codemirror/lang-markdown'
 import { tags } from '@lezer/highlight'
@@ -420,12 +420,14 @@ export function MarkdownEditor(): React.JSX.Element {
 
     const extensions = [
       EditorView.lineWrapping,
+      // 选区自绘：主题的 .cm-selectionBackground 才会生效，且不再与 display:none
+      // 隐藏标记的原生选区渲染互相打架（20260924-fix-cm-selection-atomic）
+      drawSelection(),
       history(),
       renderComp.of(renderModeRef.current === 'render' ? livePreviewField : []),
       search({
         top: true
       }),
-      highlightSelectionMatches(),
       keymap.of([
         {
           key: 'Mod-s',

@@ -261,6 +261,15 @@ function rebuildNeeded(tr: Transaction): boolean {
 }
 
 /**
+ * 原子区子集：仅 widget replace 装饰（mermaid/公式/图片/圆点/分割线/围栏标头——
+ * 不可进入的替换呈现）。mark/hidden/line 装饰若一并原子化，光标会被挡在样式
+ * 文本之外、点击一律吸附到 span 边缘（20260924-fix-cm-selection-atomic）。
+ */
+export function atomicSubset(decos: DecorationSet): DecorationSet {
+  return decos.update({ filter: (_from, _to, value) => value.spec?.widget != null })
+}
+
+/**
  * L3 装饰扩展：StateField 直供装饰集与原子区（mermaid/公式块的跨行 replace
  * 只有直供合法）。挂载即参与渲染管线，卸载（纯源码态 Compartment 切空）零残留。
  */
@@ -272,7 +281,8 @@ export const livePreviewField = StateField.define<DecorationSet>({
   },
   provide: (field) => [
     EditorView.decorations.from(field),
-    // atomicRanges 的供给形态是 (view) => RangeSet：闭包持有本状态代的装饰集
-    EditorView.atomicRanges.from(field, (decos) => () => decos)
+    // atomicRanges 的供给形态是 (view) => RangeSet：闭包持有本状态代的装饰集，
+    // 经 atomicSubset 收窄为仅 widget replace（整集供给会锁死样式文本的光标）
+    EditorView.atomicRanges.from(field, (decos) => () => atomicSubset(decos))
   ]
 })
