@@ -784,11 +784,24 @@ export function SideMenu(props: {
       {props.toggleItems && props.toggleItems.length > 0 && (
         <Group $expanded={expanded}>{props.toggleItems.map(renderToggle)}</Group>
       )}
-      {/* 底部系统区两行制（20260924-feature-sidemenu-bottom-toggle）：用户入口在上
-          （行为不变：hover 快捷面板 / 点击 /account）；收起态下方渲染专属展开钮
-          ——一击直达展开菜单（复用导航项样式基命中区 + tooltip 复合快捷键提示）；
-          展开态不渲染该钮，收起仍走快捷面板行与 ⌘/Ctrl+B */}
+      {/* 底部系统区两行制（20260924-feature-sidemenu-bottom-toggle；走查修订：
+          展开钮在上、**用户入口 IconLogo 恒为底部最后一项**——设置/用户区永远
+          占底，不被任何图标压在下发）。收起态展开钮一击直达展开菜单（复用导航项
+          样式基命中区 + tooltip 复合快捷键提示）；展开态不渲染该钮，收起仍走
+          快捷面板行与 ⌘/Ctrl+B；用户入口行为不变（hover 快捷面板 / 点击 /account） */}
       <Group $expanded={expanded} $tail>
+        {!expanded && (
+          <Item
+            type="button"
+            $expanded={expanded}
+            $active={false}
+            data-tip={`${t('pop.expandMenu')} ⌘/Ctrl+B`}
+            aria-label={t('pop.expandMenu')}
+            onClick={props.onToggleExpanded}
+          >
+            <AppIcon icon={IconPanelExpand} size="md" />
+          </Item>
+        )}
         <UserWrap $expanded={expanded}>
           <UserAnchor
             onMouseEnter={openUser}
@@ -825,18 +838,6 @@ export function SideMenu(props: {
             )}
           </UserAnchor>
         </UserWrap>
-        {!expanded && (
-          <Item
-            type="button"
-            $expanded={expanded}
-            $active={false}
-            data-tip={`${t('pop.expandMenu')} ⌘/Ctrl+B`}
-            aria-label={t('pop.expandMenu')}
-            onClick={props.onToggleExpanded}
-          >
-            <AppIcon icon={IconPanelExpand} size="md" />
-          </Item>
-        )}
       </Group>
     </Nav>
   )
