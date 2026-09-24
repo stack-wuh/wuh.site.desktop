@@ -4,7 +4,7 @@
   "name": "20260924-feature-task-center-event-bus",
   "type": "feature",
   "scope": "desktop",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20260924-feature-task-center-event-bus",
   "files": [
@@ -24,18 +24,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 65,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/65",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 68,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/68"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "4799156e0263784e9e496696ba527e566b5f2b24",
-    "verifiedAt": "2026-09-24T03:15:23.287Z"
+    "verifiedCommit": "1cfd534a7ed9c4814da4d7a30426988dc5c780c3",
+    "verifiedAt": "2026-09-24T03:26:03.220Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "4799156e0263784e9e496696ba527e566b5f2b24",
-    "planHash": "2e2bbfa97e2f486587cb2aa924a2d9b3c4846e3bae6d68d6d055c3f30e6f5e0a",
+    "checkpoint": "merged-pr:68",
+    "planHash": "30f1b6feab5c346e2f29be4104c74f7c6892ca87523285fe777b8c0fcdf6d5fc",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
