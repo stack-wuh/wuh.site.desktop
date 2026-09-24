@@ -84,3 +84,4 @@ verified: 2026-09-24
 ## 关联知识
 
 - [Renderer 壳层两栏布局与 App Router 路由约定](renderer-shell-routing.md)
+- [UI 反馈提示系统（Toast / Message / Alert）](ui-feedback.md)

@@ -11,6 +11,7 @@ import styled, { keyframes } from 'styled-components'
 import type { PluginRecord } from '@shared/plugin'
 import { rebootstrapPluginsHost, togglePlugin } from '../plugins/PluginFrameHost'
 import { closePluginFloats } from '../../lib/floats'
+import { toast } from '../../lib/feedback'
 import { uiConfirm } from '../ui/Dialog'
 import { Button } from '../ui/Button'
 import { Empty } from '../ui/Empty'
@@ -215,15 +216,17 @@ export function PluginManagerSection(): React.JSX.Element {
       setBusy('__reload__')
       setError(null)
       try {
-        await rebootstrapPluginsHost()
+        const result = await rebootstrapPluginsHost()
         await load()
+        // 示范接入（20260924-feature-ui-feedback-system · Phase 4）：重载成功轻提示
+        toast({ text: t('settings.reloadDone', { count: result.records.length }), kind: 'success' })
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err))
       } finally {
         setBusy(null)
       }
     })(),
-  [load])
+  [load, t])
 
   const reveal = useCallback(
     (record: PluginRecord): void =>

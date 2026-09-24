@@ -19,9 +19,16 @@ import type {
   ToHostMessage
 } from '@shared/plugin'
 import { pluginLogicUrl, pluginViewUrl, resolveApproval } from '@shared/plugin'
+import {
+  createFeedbackRateLimiter,
+  sanitizeAlertArgs,
+  sanitizeMessageArgs,
+  sanitizeToastArgs
+} from '@shared/plugin'
 import type { WorkspaceInfo } from '@shared/types'
 import { buildThemeCss } from '../theme/tokens'
 import { uiConfirm } from '../ui/Dialog'
+import { alert, message, toast } from '../../lib/feedback'
 import { documentEvents, workspaceStore } from '../../lib/store'
 import {
   clearPluginStatusItems,
@@ -78,6 +85,9 @@ const frames = new Map<string, FrameState>()
 let hostWorkspace: WorkspaceInfo | null = null
 let logicContainer: HTMLDivElement | null = null
 let bootPromise: Promise<PluginListResult> | null = null
+
+/** 插件反馈频率护栏（全 kind 共享额度：10s 内 5 条；宿主内部调用不经此闸） */
+const feedbackGuard = createFeedbackRateLimiter()
 
 const FRAME_KEY = (pluginId: string, frameKey: string): string => `${pluginId}#${frameKey}`
 const HELLO_TIMEOUT_MS = 5000
@@ -188,6 +198,27 @@ async function handleFrameInvoke(
         const url = String(args[0] ?? '')
         if (/^https?:\/\//i.test(url)) window.open(url, '_blank', 'noopener')
         return null
+      }
+      // 反馈提示三方法（toast/message/alert）：与宿主共用 lib/feedback 总线；
+      // 入参经 shared 校验器钳制，频率护栏全 kind 共享额度（防插件刷屏）
+      if (method === 'toast' || method === 'message' || method === 'alert') {
+        if (!feedbackGuard.allow(pluginId)) {
+          throw new Error('反馈提示过于频繁，请稍后再试')
+        }
+        if (method === 'toast') {
+          const opts = sanitizeToastArgs(args)
+          if (!opts) throw new Error('toast 参数无效：text 必填')
+          toast(opts)
+          return null
+        }
+        if (method === 'message') {
+          const opts = sanitizeMessageArgs(args)
+          if (!opts) throw new Error('message 参数无效：text 必填')
+          return await message(opts)
+        }
+        const opts = sanitizeAlertArgs(args)
+        if (!opts) throw new Error('alert 参数无效：text 与 title 至少提供一个')
+        return await alert(opts)
       }
       throw new Error(`未知 UI 方法: ${method}`)
     }

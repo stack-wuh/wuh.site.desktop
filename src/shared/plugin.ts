@@ -587,3 +587,163 @@ export function authorizeCapability(
   }
   return { ok: true, permission: required }
 }
+
+// ---------- 反馈提示（帧协议 ui service 扩展） ----------
+
+/** 插件反馈入参护栏：超长/超量一律钳制（宿主渲染安全网，非权限门槛） */
+export const FEEDBACK_TEXT_MAX = 500
+export const FEEDBACK_TITLE_MAX = 120
+export const FEEDBACK_LABEL_MAX = 40
+export const FEEDBACK_ACTION_ID_MAX = 40
+export const FEEDBACK_MAX_ACTIONS = 3
+export const FEEDBACK_MAX_BUTTONS = 5
+export const FEEDBACK_DEFAULT_MAX = 5
+export const FEEDBACK_DEFAULT_WINDOW_MS = 10_000
+
+export type PluginFeedbackKind = 'info' | 'success' | 'warning' | 'error'
+
+export interface SanitizedToast {
+  text: string
+  kind?: PluginFeedbackKind
+  duration?: number
+}
+
+export interface SanitizedAction {
+  id: string
+  label?: string
+  variant?: 'primary' | 'danger' | 'ghost'
+}
+
+export interface SanitizedMessage {
+  title?: string
+  text: string
+  kind?: PluginFeedbackKind
+  actions?: SanitizedAction[]
+}
+
+export interface SanitizedAlert {
+  title?: string
+  text: string
+  kind?: PluginFeedbackKind
+  buttons?: SanitizedAction[]
+  systemNotify?: boolean
+}
+
+const FEEDBACK_KINDS: readonly PluginFeedbackKind[] = ['info', 'success', 'warning', 'error']
+const FEEDBACK_VARIANTS: readonly NonNullable<SanitizedAction['variant']>[] = [
+  'primary',
+  'danger',
+  'ghost'
+]
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null
+}
+
+function clipText(value: unknown, max: number): string | undefined {
+  if (typeof value !== 'string') return undefined
+  const text = value.trim()
+  if (!text) return undefined
+  return text.length > max ? text.slice(0, max) : text
+}
+
+function sanitizeKind(value: unknown): PluginFeedbackKind | undefined {
+  return FEEDBACK_KINDS.includes(value as PluginFeedbackKind)
+    ? (value as PluginFeedbackKind)
+    : undefined
+}
+
+/** actions/buttons 归一：非数组即忽略；剔除非串/缺 id 项后按上限截断（垃圾项不占配额） */
+export function sanitizeFeedbackActions(value: unknown, limit: number): SanitizedAction[] | undefined {
+  if (!Array.isArray(value)) return undefined
+  const out: SanitizedAction[] = []
+  for (const raw of value) {
+    if (out.length >= limit) break
+    const record = asRecord(raw)
+    if (!record) continue
+    const id = clipText(record.id, FEEDBACK_ACTION_ID_MAX)
+    if (!id) continue
+    const label = clipText(record.label, FEEDBACK_LABEL_MAX)
+    const variant = FEEDBACK_VARIANTS.includes(record.variant as NonNullable<SanitizedAction['variant']>)
+      ? (record.variant as SanitizedAction['variant'])
+      : undefined
+    out.push({ id, label, variant })
+  }
+  return out.length > 0 ? out : undefined
+}
+
+/** toast 入参：text 必填，其余白名单/钳制 */
+export function sanitizeToastArgs(args: unknown): SanitizedToast | null {
+  const record = asRecord(Array.isArray(args) ? args[0] : args)
+  const text = record ? clipText(record.text, FEEDBACK_TEXT_MAX) : undefined
+  if (!text) return null
+  const duration =
+    typeof record?.duration === 'number' && Number.isFinite(record.duration)
+      ? record.duration
+      : undefined
+  return { text, kind: sanitizeKind(record?.kind), duration }
+}
+
+/** message 入参：text 必填；actions ≤3，缺省不携带 */
+export function sanitizeMessageArgs(args: unknown): SanitizedMessage | null {
+  const record = asRecord(Array.isArray(args) ? args[0] : args)
+  const text = record ? clipText(record.text, FEEDBACK_TEXT_MAX) : undefined
+  if (!text) return null
+  return {
+    title: record ? clipText(record.title, FEEDBACK_TITLE_MAX) : undefined,
+    text,
+    kind: sanitizeKind(record?.kind),
+    actions: sanitizeFeedbackActions(record?.actions, FEEDBACK_MAX_ACTIONS)
+  }
+}
+
+/** alert 入参：text 与 title 至少其一（纯标题告警允许），buttons ≤5 */
+export function sanitizeAlertArgs(args: unknown): SanitizedAlert | null {
+  const record = asRecord(Array.isArray(args) ? args[0] : args)
+  if (!record) return null
+  const text = clipText(record.text, FEEDBACK_TEXT_MAX) ?? ''
+  const title = clipText(record.title, FEEDBACK_TITLE_MAX)
+  if (!text && !title) return null
+  return {
+    title,
+    text,
+    kind: sanitizeKind(record.kind),
+    buttons: sanitizeFeedbackActions(record.buttons, FEEDBACK_MAX_BUTTONS),
+    systemNotify: record.systemNotify === false ? false : undefined
+  }
+}
+
+/** 每插件反馈频率护栏（滑动窗口，纯逻辑）：全 kind 共享额度，防插件刷屏 */
+export function createFeedbackRateLimiter(opts?: {
+  max?: number
+  windowMs?: number
+  now?: () => number
+}): {
+  /** true=放行；false=超限拒绝（调用方应回错误让插件侧感知） */
+  allow(key: string, nowMs?: number): boolean
+  reset(key?: string): void
+} {
+  const max = opts?.max ?? FEEDBACK_DEFAULT_MAX
+  const windowMs = opts?.windowMs ?? FEEDBACK_DEFAULT_WINDOW_MS
+  const now = opts?.now ?? ((): number => Date.now())
+  const hits = new Map<string, number[]>()
+  return {
+    allow(key: string, nowMs?: number): boolean {
+      const at = nowMs ?? now()
+      const list = (hits.get(key) ?? []).filter((t) => at - t < windowMs)
+      if (list.length >= max) {
+        hits.set(key, list)
+        return false
+      }
+      list.push(at)
+      hits.set(key, list)
+      return true
+    },
+    reset(key?: string): void {
+      if (key === undefined) hits.clear()
+      else hits.delete(key)
+    }
+  }
+}

@@ -33,6 +33,7 @@ const api: DesktopApi = {
   saveDraft: (input) => invoke('saveDraft', input),
   readDraft: (id) => invoke('readDraft', id),
   removeDraft: (id) => invoke('removeDraft', id),
+  notifySystem: (payload) => invoke('notifySystem', payload),
   getWorkspace: () => invoke('getWorkspace'),
   readTree: () => invoke('readTree'),
   readFile: (p) => invoke('readFile', p),

@@ -141,7 +141,10 @@ export const PLUGIN_SDK_JS = `(function () {
     },
     ui: {
       confirm: function (opts) { return call('ui', 'confirm', [opts]); },
-      openExternal: function (url) { return call('ui', 'openExternal', [url]); }
+      openExternal: function (url) { return call('ui', 'openExternal', [url]); },
+      toast: function (opts) { return call('ui', 'toast', [opts || {}]); },
+      message: function (opts) { return call('ui', 'message', [opts || {}]); },
+      alert: function (opts) { return call('ui', 'alert', [opts || {}]); }
     },
     statusBar: {
       update: function (id, patch) { return call('statusBar', 'update', [id, patch || {}]); },
@@ -212,6 +215,37 @@ export interface WuhApi {
   ui: {
     confirm(opts: { title?: string; message: string; okText?: string; cancelText?: string; danger?: boolean }): Promise<boolean>
     openExternal(url: string): Promise<void>
+    /**
+     * 轻提示（非阻塞、约 3s 自动消退、无按钮）——操作成功/配置变动等确认性反馈；
+     * 同文案同 kind 去重，文本 ≤500 字符，超频被宿主拒绝
+     */
+    toast(opts: {
+      text: string
+      kind?: 'info' | 'success' | 'warning' | 'error'
+      duration?: number
+    }): Promise<void>
+    /**
+     * 常驻消息（非阻塞、手动关闭、可带 ≤3 操作按钮）——影响用户操作的提示；
+     * resolve 被点击的 action id，关闭（✕）resolve null
+     */
+    message(opts: {
+      title?: string
+      text: string
+      kind?: 'info' | 'success' | 'warning' | 'error'
+      actions?: { id: string; label?: string; variant?: 'primary' | 'danger' | 'ghost' }[]
+    }): Promise<string | null>
+    /**
+     * 模态告警（阻塞、必须明确响应、串行队列）——系统级推送；窗口失焦时宿主
+     * 降级发 OS 系统通知，回到窗口仍要求响应；resolve 被点击的按钮 id
+     * （缺省单按钮 ok）
+     */
+    alert(opts: {
+      title?: string
+      text: string
+      kind?: 'info' | 'success' | 'warning' | 'error'
+      buttons?: { id: string; label?: string; variant?: 'primary' | 'danger' | 'ghost' }[]
+      systemNotify?: boolean
+    }): Promise<string>
   }
   statusBar: {
     /** 更新 manifest 声明的状态项内容（未声明的 id 会被宿主拒绝） */

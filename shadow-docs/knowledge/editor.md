@@ -5,7 +5,7 @@ keywords: [主编辑器, MarkdownEditor, CodeMirror, CM6, 预览, PreviewPane, r
 scope: [components/editor, components/home/EditorPanel, lib/editor-cm, lib/editor-commands, lib/editor-info]
 status: active
 source:
-  - changes/20260922-refactor-codemirror-editor/brief.md
+  - changes/archive/20260922-refactor-codemirror-editor/brief.md
   - changes/archive/20260922-feature-vditor-md-editor/brief.md
   - changes/archive/20260923-feature-cm-live-preview/brief.md
   - changes/20260924-fix-live-preview-toggle-rebuild/brief.md

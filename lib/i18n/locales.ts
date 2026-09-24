@@ -241,7 +241,12 @@ const zh: Record<string, string> = {
   'settings.approvalChanged': '权限已变更',
   'settings.enableConfirmTitle': '启用 {name}',
   'settings.enableConfirmMsg': '该插件请求以下权限：{perms}',
-  'settings.approveEnable': '批准并启用'
+  'settings.approveEnable': '批准并启用',
+  'settings.reloadDone': '插件目录已重载，发现 {count} 个插件',
+  // 反馈提示（Toast / Message / Alert）
+  'feedback.toastRegion': '操作提示',
+  'feedback.messageRegion': '消息提示',
+  'feedback.close': '关闭'
 }
 
 const en: Record<string, string> = {
@@ -463,7 +468,12 @@ const en: Record<string, string> = {
   'settings.approvalChanged': 'Permissions changed',
   'settings.enableConfirmTitle': 'Enable {name}',
   'settings.enableConfirmMsg': 'This plugin requests the following permissions: {perms}',
-  'settings.approveEnable': 'Approve and enable'
+  'settings.approveEnable': 'Approve and enable',
+  'settings.reloadDone': 'Plugin directory reloaded — {count} plugin(s) found',
+  // Feedback notices (Toast / Message / Alert)
+  'feedback.toastRegion': 'Notifications',
+  'feedback.messageRegion': 'Messages',
+  'feedback.close': 'Close'
 }
 
 const ja: Record<string, string> = {
@@ -685,7 +695,12 @@ const ja: Record<string, string> = {
   'settings.approvalChanged': '権限が変更されました',
   'settings.enableConfirmTitle': '{name} を有効化',
   'settings.enableConfirmMsg': 'このプラグインは以下の権限を要求します：{perms}',
-  'settings.approveEnable': '承認して有効化'
+  'settings.approveEnable': '承認して有効化',
+  'settings.reloadDone': 'プラグインを再読み込みしました（{count} 件）',
+  // フィードバック通知（Toast / Message / Alert）
+  'feedback.toastRegion': '通知',
+  'feedback.messageRegion': 'メッセージ',
+  'feedback.close': '閉じる'
 }
 
 export const locales: Record<Locale, Record<string, string>> = { zh, en, ja }

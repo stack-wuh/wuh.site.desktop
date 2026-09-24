@@ -14,6 +14,7 @@ import './github/issues'
 import './github/identity'
 import './uploader'
 import './aboutActivity'
+import './systemNotify'
 
 // 发布目标（publisher）由插件 manifest 声明、loader 注册桥接实现（github-issues 为首个）
 implement('publish', async ([req]) => {
