@@ -1,6 +1,7 @@
 // 跨主进程/渲染进程共享的 IPC 契约。仅类型与纯函数，禁止引入 node/electron API。
 
 import type { DraftMeta } from './drafts'
+import type { TransferMode } from './docTransfer'
 
 // ---------- Workspace ----------
 export interface GithubRemote {
@@ -42,6 +43,14 @@ export interface FileContent {
 export interface SaveResult {
   path: string
   savedAt: number
+}
+
+/** 文档迁移/复制结果（<stem>.assets 目录随迁、改名场景正文引用已由主进程改写） */
+export interface TransferDocResult {
+  /** 目标文档相对工作区根路径（POSIX） */
+  path: string
+  /** assets 目录是否随迁（源文档无图片目录时为 false） */
+  assetsCarried: boolean
 }
 
 // ---------- 保存对话框（saveAs 原生化，20260924-feature-native-save-dialog） ----------
@@ -330,6 +339,12 @@ export interface DesktopApi {
   readTree(root?: string): Promise<FileNode[]>
   readFile(relPath: string): Promise<FileContent>
   writeFile(relPath: string, content: string): Promise<SaveResult>
+  /**
+   * 迁移/复制工作区文档（move=改名+搬目录的统一语义）：主进程同步搬运同目录
+   * `<stem>.assets/` 图片目录，改名场景（目录名含旧文件名）按需改写正文相对引用；
+   * 目标已存在/非法路径抛错。
+   */
+  transferDoc(srcRel: string, destRel: string, mode: TransferMode): Promise<TransferDocResult>
   /**
    * 原生保存面板（dialog.showSaveDialog）：目录+文件名一次选定，主进程记忆上次
    * 保存目录作后续缺省；用户取消返回 { canceled: true }。

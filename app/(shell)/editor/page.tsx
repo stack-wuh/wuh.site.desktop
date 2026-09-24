@@ -4,12 +4,14 @@
  * 统一编辑页（20260924-feature-projects-editor-page）：窄栏居中的 Typora 式沉浸写面。
  * 复用 MarkdownEditor（CM6 即时渲染即预览，不放预览分栏）；与首页编辑器面板互斥挂载、
  * 共用 workspaceStore 单状态源（content 双通道/命令通道契约不变，见 knowledge/editor.md）。
- * 极简顶栏：返回 · 面包屑（项目/文件名或「新草稿」+ 脏点）· 新建 · 保存——文档操作经
- * publishEditorCommand 与胶囊/首页面板同源；撤销/重做/查找走 CM6 原生快捷键与胶囊入口。
+ * 极简顶栏：返回 · 面包屑（完整相对路径 + 脏点）· 新建 · 保存——文档操作经
+ * publishEditorCommand 与胶囊/首页面板同源；面包屑可交互（20260924-feature-breadcrumb-doc-ops）：
+ * 点文件名原地改名（renameDoc）、点目录段唤起目标文件夹选择（transferDoc，宿主承载
+ * 迁移/复制 Dialog）；撤销/重做/查找走 CM6 原生快捷键与胶囊入口。
  * 冷启动（content==null）自动 startDraft 进入新草稿会话（先写后存）；focusMode 经
  * editor-state 总线联动淡出顶栏，Esc 退出（与首页同语义）。
  */
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import styled from 'styled-components'
 import { Button } from '../../../components/ui/Button'
@@ -67,6 +69,30 @@ const Crumb = styled.span`
   white-space: nowrap;
 `
 
+/** 可点击面包屑段（目录段=迁移/复制入口；文件名段=原地改名入口） */
+const CrumbButton = styled.button`
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 1px 4px;
+  margin: -1px -4px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text-primary);
+    background: var(--chrome-hover);
+  }
+
+  &:focus-visible {
+    outline: 1px solid var(--primary-color);
+  }
+`
+
 const CrumbSep = styled.span`
   flex: none;
   color: var(--chrome-border);
@@ -78,6 +104,20 @@ const DirtyDot = styled.span`
   height: 6px;
   border-radius: 50%;
   background: var(--warning-color);
+`
+
+/** 文件名原地改名输入框（Enter/失焦提交、Esc 取消） */
+const RenameInput = styled.input`
+  min-width: 0;
+  width: 180px;
+  padding: 1px 4px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  background: var(--background-color);
+  border: 1px solid var(--primary-color);
+  border-radius: 4px;
+  outline: none;
 `
 
 const TopSpacer = styled.span`
@@ -107,6 +147,8 @@ export function EditorPage(): React.JSX.Element {
   const router = useRouter()
   const live = useEditorLiveState()
   const [workspaceName, setWorkspaceName] = useState<string | null>(null)
+  const [renaming, setRenaming] = useState(false)
+  const [renameValue, setRenameValue] = useState('')
 
   // 冷启动/关闭后回到可写态：无文档（content==null）即进入新草稿会话（先写后存）
   useEffect(() => {
@@ -139,8 +181,27 @@ export function EditorPage(): React.JSX.Element {
     return () => window.removeEventListener('keydown', onKey)
   }, [live.focusMode])
 
-  const fileName = doc.activePath ? (doc.activePath.split('/').pop() ?? doc.activePath) : null
+  const pathSegments = doc.activePath ? doc.activePath.split('/') : []
+  const dirSegments = pathSegments.slice(0, -1)
+  const fileName = pathSegments.length > 0 ? (pathSegments[pathSegments.length - 1] ?? null) : null
   const canSave = doc.activePath ? doc.dirty : (doc.content ?? '').length > 0
+
+  const startRename = (): void => {
+    setRenameValue(fileName ?? '')
+    setRenaming(true)
+  }
+
+  const commitRename = (): void => {
+    if (!renaming) return
+    setRenaming(false)
+    const next = renameValue.trim()
+    if (!next || !doc.activePath || next === fileName) return
+    publishEditorCommand({ kind: 'renameDoc', newName: next })
+  }
+
+  const cancelRename = (): void => {
+    setRenaming(false)
+  }
 
   const back = (): void => {
     // 常规从项目页/草稿箱进入（有历史）回落来路；冷启动直达时回首页
@@ -157,8 +218,40 @@ export function EditorPage(): React.JSX.Element {
         </Button>
         <Breadcrumb>
           <Crumb>{workspaceName ?? t('editor.noProject')}</Crumb>
+          {dirSegments.map((dir, index) => (
+            <Fragment key={dirSegments.slice(0, index + 1).join('/')}>
+              <CrumbSep>/</CrumbSep>
+              <CrumbButton
+                title={t('editor.crumbDirTitle')}
+                onClick={() => publishEditorCommand({ kind: 'transferDoc' })}
+              >
+                {dir}
+              </CrumbButton>
+            </Fragment>
+          ))}
           <CrumbSep>/</CrumbSep>
-          <Crumb>{fileName ?? t('editor.newDraft')}</Crumb>
+          {doc.activePath && fileName ? (
+            renaming ? (
+              <RenameInput
+                value={renameValue}
+                aria-label={t('editor.renameAria')}
+                spellCheck={false}
+                autoFocus
+                onChange={(e) => setRenameValue(e.target.value)}
+                onBlur={commitRename}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') commitRename()
+                  else if (e.key === 'Escape') cancelRename()
+                }}
+              />
+            ) : (
+              <CrumbButton title={t('editor.crumbRenameTitle')} onClick={startRename}>
+                {fileName}
+              </CrumbButton>
+            )
+          ) : (
+            <Crumb>{t('editor.newDraft')}</Crumb>
+          )}
           {doc.dirty && <DirtyDot title={t('editor.dirtyTitle')} />}
         </Breadcrumb>
         <TopSpacer />
