@@ -4,7 +4,7 @@
   "name": "20260924-feature-breadcrumb-doc-ops",
   "type": "feature",
   "scope": "apps/desktop",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20260924-feature-breadcrumb-doc-ops",
   "files": [
@@ -24,18 +24,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 87,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/87",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 91,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/91"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "9d23c3c278617471706a6fcb0dfe9b879cc547ff",
-    "verifiedAt": "2026-09-24T14:17:36.265Z"
+    "verifiedCommit": "b9bfe442b1407f056083daf5ee0477cfd888cd8a",
+    "verifiedAt": "2026-09-25T01:11:38.260Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:87",
-    "planHash": "87f6392f399172cdc567dae2d3622b6aeb5c96a2b6502808d0982ec4de78bdab",
+    "checkpoint": "merged-pr:91",
+    "planHash": "bf2ed525ae5a453f9cf4978b54939ecfb13e1878938a630ec25818b723460eaf",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {

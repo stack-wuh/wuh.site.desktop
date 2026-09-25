@@ -35,14 +35,14 @@
 | 20260923-feature-cm-live-preview | ✅ 完成 | shadow-docs/changes/archive/20260923-feature-cm-live-preview/brief.md |
 | 20260923-fix-capsule-doc-card-nesting | ✅ 完成 | shadow-docs/changes/archive/20260923-fix-capsule-doc-card-nesting/brief.md |
 | 20260923-test-dom-render-guard | ✅ 完成 | shadow-docs/changes/archive/20260923-test-dom-render-guard/brief.md |
-| 20260924-feature-breadcrumb-doc-ops | proposed | shadow-docs/changes/20260924-feature-breadcrumb-doc-ops/brief.md |
+| 20260924-feature-breadcrumb-doc-ops | ✅ 完成 | shadow-docs/changes/archive/20260924-feature-breadcrumb-doc-ops/brief.md |
 | 20260924-feature-editor-simplify-draft-box | ✅ 完成 | shadow-docs/changes/archive/20260924-feature-editor-simplify-draft-box/brief.md |
 | 20260924-feature-editor-toolbar | ✅ 完成 | shadow-docs/changes/archive/20260924-feature-editor-toolbar/brief.md |
-| 20260924-feature-git-history-capsule | branched | shadow-docs/changes/20260924-feature-git-history-capsule/brief.md |
-| 20260924-feature-native-save-dialog | proposed | shadow-docs/changes/20260924-feature-native-save-dialog/brief.md |
+| 20260924-feature-git-history-capsule | reviewed | shadow-docs/changes/20260924-feature-git-history-capsule/brief.md |
+| 20260924-feature-native-save-dialog | reviewed | shadow-docs/changes/20260924-feature-native-save-dialog/brief.md |
 | 20260924-feature-projects-editor-page | ✅ 完成 | shadow-docs/changes/archive/20260924-feature-projects-editor-page/brief.md |
 | 20260924-feature-sidemenu-bottom-toggle | ✅ 完成 | shadow-docs/changes/archive/20260924-feature-sidemenu-bottom-toggle/brief.md |
-| 20260924-feature-sidemenu-settings-item | proposed | shadow-docs/changes/20260924-feature-sidemenu-settings-item/brief.md |
+| 20260924-feature-sidemenu-settings-item | reviewed | shadow-docs/changes/20260924-feature-sidemenu-settings-item/brief.md |
 | 20260924-feature-task-center-event-bus | ✅ 完成 | shadow-docs/changes/archive/20260924-feature-task-center-event-bus/brief.md |
 | 20260924-feature-ui-feedback-system | ✅ 完成 | shadow-docs/changes/archive/20260924-feature-ui-feedback-system/brief.md |
 | 20260924-fix-capsule-header-chrome | ✅ 完成 | shadow-docs/changes/archive/20260924-fix-capsule-header-chrome/brief.md |
