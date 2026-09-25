@@ -29,6 +29,10 @@ export type EditorCommand =
   | { kind: 'saveAs' }
   | { kind: 'newDraft' }
   | { kind: 'closeDoc' }
+  /** 改名（/editor 面包屑原地输入提交）：宿主校验并执行迁移式改名（assets 目录与引用同步） */
+  | { kind: 'renameDoc'; newName: string }
+  /** 打开目标文件夹选择器：宿主承载 Dialog，迁移/复制当前文档（复制停留原文） */
+  | { kind: 'transferDoc' }
   | { kind: 'focus' }
 
 export type InsertSnippetName = 'table' | 'codeBlock' | 'hr'

@@ -23,12 +23,9 @@ import type { ThemeFamily } from './theme/tokens'
 import { useLocale } from '../lib/i18n/context'
 import { localeLabels, localeOrder, type Locale } from '../lib/i18n/locales'
 import { useGithubIdentity } from '../lib/identity'
-import { BUILD_TIME, formatBuildTimeShort } from '../lib/buildInfo'
 
 // 构建期内联应用版本（next.config.ts env，NEXT_PUBLIC_ 前缀），不走 preload/broker 通道
 const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? '0.0.0'
-// 构建时间短格式与版本并排展示：显示值与当前会话对不上 = 渲染层是旧页面
-const BUILD_TIME_SHORT = formatBuildTimeShort(BUILD_TIME)
 
 /** 徽标：数字（>99 折叠为 99+）或无数圆点 */
 export interface SideMenuBadge {
@@ -347,19 +344,6 @@ const UserPop = styled.div`
   box-shadow: var(--elevation-card);
 `
 
-const PopHead = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 6px 10px 8px;
-  border-bottom: 1px solid var(--chrome-border);
-
-  & > strong {
-    font-size: 13px;
-    color: var(--text-primary);
-  }
-`
-
 const PopGroup = styled.div`
   display: flex;
   flex-direction: column;
@@ -430,21 +414,6 @@ const UserMeta = styled.span`
 
 /** GitHub 头像不再入壳层：远程图片（avatars.githubusercontent.com）网络不可靠时常破损，
  * 图标恒为品牌标，头像显示待 Settings「用户设置」本地接管；此处仅保留用户名文本投影。 */
-
-/** 快捷面板头部的身份行：仅用户名文本（未授权时回落「用户」标题） */
-const PopIdentity = styled.span`
-  display: flex;
-  align-items: center;
-  min-width: 0;
-
-  & > strong {
-    font-size: 13px;
-    color: var(--text-primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-`
 
 const UserVersion = styled.span`
   font-size: 10px;
@@ -541,16 +510,13 @@ function PopSubmenu(props: {
   )
 }
 
-/** 用户入口的悬停快捷面板：主题/外观/语言均为二级 popover 行 */
+/** 用户入口的悬停快捷面板（20260924-feature-sidemenu-settings-item 瘦身）：
+ * 身份头部与「设置」行内项移出（设置已独立成底部导航项），仅保留主题/外观/语言
+ * 三组二级 popover 与「收起/展开菜单」行（展开态收起动作的指针路径仍经面板）。 */
 function UserQuickPanel(props: {
   expanded: boolean
   onToggleExpanded: () => void
-  /** 面板头部/品牌区点击：进入用户中心 */
-  onOpenUser: () => void
-  onOpenSettings: () => void
   onClose: () => void
-  /** 已授权身份的文本投影（null = 未授权，头部回落「用户」标题） */
-  displayName: string | null
 }): React.JSX.Element {
   const { t, locale, setLocale } = useLocale()
   const { family, scheme, setFamily, setScheme } = useTheme()
@@ -565,15 +531,7 @@ function UserQuickPanel(props: {
     { id: 'dark', label: t('pop.dark') }
   ]
   return (
-    <UserPop role="menu" aria-label={t('pop.user')} onClick={(e) => e.stopPropagation()}>
-      <PopHead>
-        <PopIdentity>
-          <strong>{props.displayName ?? t('pop.user')}</strong>
-        </PopIdentity>
-        <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
-          {`v${APP_VERSION}${BUILD_TIME_SHORT ? ` · ${BUILD_TIME_SHORT}` : ''} · ${t('pop.userHint')}`}
-        </span>
-      </PopHead>
+    <UserPop role="menu" aria-label={t('pop.quickAria')} onClick={(e) => e.stopPropagation()}>
       <PopGroup role="group" aria-label={t('pop.theme')}>
         <PopSubmenu
           label={t('pop.theme')}
@@ -622,18 +580,6 @@ function UserQuickPanel(props: {
           </span>
           {props.expanded ? t('pop.collapseMenu') : t('pop.expandMenu')}
           <PopHint>⌘/Ctrl+B</PopHint>
-        </PopItem>
-        <PopItem
-          role="menuitem"
-          onClick={() => {
-            props.onOpenSettings()
-            props.onClose()
-          }}
-        >
-          <span className="icon" style={{ display: 'inline-flex' }}>
-            <AppIcon icon={IconSettings} size="sm" />
-          </span>
-          {t('pop.settings')}
         </PopItem>
       </PopGroup>
     </UserPop>
@@ -709,10 +655,12 @@ export function SideMenu(props: {
   onChange: (id: string) => void
   /** 用户入口点击去向（用户中心 /account） */
   onOpenUser: () => void
-  /** 快捷面板「设置」项去向（应用设置 /settings） */
+  /** 底部「设置」项去向（应用设置 /settings，展开态点击） */
   onOpenSettings: () => void
   /** 当前处于用户入口对应页面（用户中心）时高亮 */
   userActive?: boolean
+  /** 当前处于 /settings 时高亮底部设置项 */
+  settingsActive?: boolean
 }): React.JSX.Element {
   const { expanded } = props
   const { t } = useLocale()
@@ -784,24 +732,12 @@ export function SideMenu(props: {
       {props.toggleItems && props.toggleItems.length > 0 && (
         <Group $expanded={expanded}>{props.toggleItems.map(renderToggle)}</Group>
       )}
-      {/* 底部系统区两行制（20260924-feature-sidemenu-bottom-toggle；走查修订：
-          展开钮在上、**用户入口 IconLogo 恒为底部最后一项**——设置/用户区永远
-          占底，不被任何图标压在下发）。收起态展开钮一击直达展开菜单（复用导航项
-          样式基命中区 + tooltip 复合快捷键提示）；展开态不渲染该钮，收起仍走
-          快捷面板行与 ⌘/Ctrl+B；用户入口行为不变（hover 快捷面板 / 点击 /account） */}
+      {/* 底部系统区两项制（20260924-feature-sidemenu-settings-item，取代
+          20260924-feature-sidemenu-bottom-toggle 两行制）：【用户】在上（点击
+          /account、hover 快捷面板）、【设置】在下（收起态点击仅展开菜单不导航——
+          展开职责由设置项承担，收起态专属展开钮退役；展开态点击直达 /settings
+          并高亮）。⌘/Ctrl+B 全局不变，收起动作仍走快捷面板行 */}
       <Group $expanded={expanded} $tail>
-        {!expanded && (
-          <Item
-            type="button"
-            $expanded={expanded}
-            $active={false}
-            data-tip={`${t('pop.expandMenu')} ⌘/Ctrl+B`}
-            aria-label={t('pop.expandMenu')}
-            onClick={props.onToggleExpanded}
-          >
-            <AppIcon icon={IconPanelExpand} size="md" />
-          </Item>
-        )}
         <UserWrap $expanded={expanded}>
           <UserAnchor
             onMouseEnter={openUser}
@@ -830,14 +766,23 @@ export function SideMenu(props: {
               <UserQuickPanel
                 expanded={expanded}
                 onToggleExpanded={props.onToggleExpanded}
-                onOpenUser={props.onOpenUser}
-                onOpenSettings={props.onOpenSettings}
                 onClose={() => setUserOpen(false)}
-                displayName={displayName}
               />
             )}
           </UserAnchor>
         </UserWrap>
+        <Item
+          type="button"
+          $expanded={expanded}
+          $active={props.settingsActive === true}
+          data-tip={`${t('menu.settings')} · ${t('pop.expandMenu')}`}
+          aria-label={t('menu.settings')}
+          aria-current={props.settingsActive === true ? 'page' : undefined}
+          onClick={() => (expanded ? props.onOpenSettings() : props.onToggleExpanded())}
+        >
+          <AppIcon icon={IconSettings} size="md" />
+          {expanded && <Label>{t('menu.settings')}</Label>}
+        </Item>
       </Group>
     </Nav>
   )
