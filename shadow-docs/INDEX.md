@@ -50,3 +50,7 @@
 | 20260924-fix-cm-selection-atomic | ✅ 完成 | shadow-docs/changes/archive/20260924-fix-cm-selection-atomic/brief.md |
 | 20260924-fix-drafts-error-visibility | ✅ 完成 | shadow-docs/changes/archive/20260924-fix-drafts-error-visibility/brief.md |
 | 20260924-fix-live-preview-toggle-rebuild | ✅ 完成 | shadow-docs/changes/archive/20260924-fix-live-preview-toggle-rebuild/brief.md |
+| 20260925-feature-capsule-plugin-tab | proposed | shadow-docs/changes/20260925-feature-capsule-plugin-tab/brief.md |
+| 20260925-feature-draft-crumb-save | published | shadow-docs/changes/20260925-feature-draft-crumb-save/brief.md |
+| 20260925-feature-sidemenu-settings-consolidation | branched | shadow-docs/changes/20260925-feature-sidemenu-settings-consolidation/brief.md |
+| 20260925-fix-page-header-sticky | ✅ 完成 | shadow-docs/changes/archive/20260925-fix-page-header-sticky/brief.md |

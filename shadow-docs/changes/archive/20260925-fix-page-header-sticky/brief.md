@@ -4,7 +4,7 @@
   "name": "20260925-fix-page-header-sticky",
   "type": "fix",
   "scope": "renderer-shell",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20260925-fix-page-header-sticky",
   "files": [
@@ -18,18 +18,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 96,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/96",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 100,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/100"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "f6847bcd4771c812ed5626706547995df17b368e",
-    "verifiedAt": "2026-09-25T09:37:58.196Z"
+    "verifiedCommit": "28a17d67bfbb6eacbd0d30e0879d0d3107e527d5",
+    "verifiedAt": "2026-09-25T09:43:01.947Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:96",
-    "planHash": "7fe6b0cdbfac91822bb058f762d976281c7ec292b0ccd1f86bd3cbc940a84648",
+    "checkpoint": "merged-pr:100",
+    "planHash": "18c509d935a3d8a88eccb99c8092f556edc42e0e7e5d38d6a4db091273dc8dc2",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
