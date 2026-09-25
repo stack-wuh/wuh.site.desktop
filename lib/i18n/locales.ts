@@ -109,6 +109,7 @@ const zh: Record<string, string> = {
   // 面包屑文档操作（20260924-feature-breadcrumb-doc-ops）
   'editor.crumbRenameTitle': '点击重命名',
   'editor.crumbDirTitle': '选择目标文件夹（迁移或复制）',
+  'editor.crumbDraftTitle': '点击保存到工作区',
   'editor.renameAria': '重命名文档',
   'editor.renameInvalid': '文件名不合法',
   'editor.transferTitle': '迁移或复制文档',
@@ -412,6 +413,7 @@ const en: Record<string, string> = {
   'editor.openConfirm': 'This document has unsaved changes. Opening another file discards them. Continue?',
   'editor.crumbRenameTitle': 'Click to rename',
   'editor.crumbDirTitle': 'Choose target folder (move or copy)',
+  'editor.crumbDraftTitle': 'Click to save to workspace',
   'editor.renameAria': 'Rename document',
   'editor.renameInvalid': 'Invalid file name',
   'editor.transferTitle': 'Move or copy document',
@@ -624,6 +626,7 @@ const ja: Record<string, string> = {
   'editor.openConfirm': '未保存の変更があります。別のファイルを開くと変更は破棄されます。続行しますか？',
   'editor.crumbRenameTitle': 'クリックで名前変更',
   'editor.crumbDirTitle': '移動先フォルダを選択（移動またはコピー）',
+  'editor.crumbDraftTitle': 'クリックでワークスペースへ保存',
   'editor.renameAria': 'ドキュメント名を変更',
   'editor.renameInvalid': 'ファイル名が不正です',
   'editor.transferTitle': 'ドキュメントを移動・コピー',

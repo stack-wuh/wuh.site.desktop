@@ -12,7 +12,7 @@ import { EditorPage } from '../app/(shell)/editor/page'
  * 统一编辑页渲染冒烟（20260924-feature-projects-editor-page）：
  * 页面 chrome（极简顶栏/面包屑两态/保存可用性/冷启动自动新草稿）+ 零 React 告警。
  * 20260924-feature-breadcrumb-doc-ops 起面包屑可交互：完整路径渲染、目录段发
- * transferDoc、文件名段原地改名发 renameDoc、草稿态禁用。
+ * transferDoc、文件名段原地改名发 renameDoc、草稿态有内容「新草稿」可点发 saveAs（空内容纯文本）。
  * CM6 内核在 happy-dom 下从未挂载过（无既有先例），本页测试 mock MarkdownEditor——
  * 编辑器内核行为由 tests/editor-codemirror.test.ts（纯逻辑）与手动走查覆盖。
  */
@@ -158,8 +158,26 @@ describe('统一编辑页渲染冒烟', () => {
     unsubscribe()
   })
 
-  it('草稿会话：文件名段为纯文本「新草稿」不可点，无目录段', async () => {
+  it('草稿会话有内容：「新草稿」可点，点击经命令通道发布 saveAs（原生保存落盘）', async () => {
     workspaceStore.openDraft('# 未存稿', 'd1')
+    const { commands, unsubscribe } = captureCommands()
+    const console_ = captureRenderConsole()
+    renderPage()
+    await screen.findByText('新草稿')
+    console_.restore()
+
+    const crumb = screen.getByRole('button', { name: '新草稿' })
+    expect(crumb).toBeTruthy()
+    await act(async () => {
+      fireEvent.click(crumb)
+    })
+    expect(commands.some((c) => c.kind === 'saveAs')).toBe(true)
+    expect(screen.getAllByText('/')).toHaveLength(1)
+    unsubscribe()
+  })
+
+  it('草稿会话空内容（冷启动 startDraft）：「新草稿」纯文本不可点', async () => {
+    workspaceStore.startDraft()
     const console_ = captureRenderConsole()
     renderPage()
     await screen.findByText('新草稿')

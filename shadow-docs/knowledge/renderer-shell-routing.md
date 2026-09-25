@@ -21,9 +21,10 @@ source:
   - changes/20260924-feature-sidemenu-settings-item/brief.md
   - changes/20260924-feature-native-save-dialog/brief.md
   - changes/20260925-feature-sidemenu-settings-consolidation/brief.md
+  - changes/20260925-fix-page-header-sticky/brief.md
 verified: 2026-09-25
 verified-depth: runtime
-verified-scope: app/(shell)/layout.tsx, components/SideMenu.tsx, components/menu/PluginTree.tsx
+verified-scope: app/(shell)/layout.tsx, components/SideMenu.tsx, components/menu/PluginTree.tsx, components/ui/PageTopbar.tsx
 ---
 
 # Renderer 壳层两栏布局与 App Router 路由约定
@@ -35,6 +36,8 @@ verified-scope: app/(shell)/layout.tsx, components/SideMenu.tsx, components/menu
 - `/` → HomePage（默认入口 = **「新建博客」项目入口**，2026-09-21 起：项目区块承载打开本地目录 / clone 公开 https 仓库 / 最近项目列表；活动散点图与主编辑器面板卡片依次其下）
 - `/settings` → SettingsPage（仅应用级设置；GitHub 凭证与 Git 提交身份已归拢至 `/account`）
 - `/account` → AccountPage（用户中心，2026-09-22 起：GitHub OAuth Device Flow 授权 + 身份/仓库/默认站点仓库 + Git 提交身份）
+
+**右栏页头吸顶范式（20260925-fix-page-header-sticky）**：settings/account 两页的页头（返回+标题）经共享 `components/ui/PageTopbar` 渲染，由页面根 flex 列容器**固定在滚动流之外**（`/editor` TopBar 同范式）——页面根无 overflow，内容区包进独立滚动容器（原 padding 迁入），页头不随内容滚动。settings 左列 SettingsNav 的 sticky 与 scroll-spy 以该内容滚动容器为基准（top:8px 语义不变）。drafts/projects 页头仍在滚动流内（未跟进，候选后续）。
 - `/projects` → ProjectsPage（项目页，2026-09-24 起：当前工作区组置顶 + 最近项目组，组内列各自 `.md` 清单；组行点击经共享 `openProjectFile` 直达 `/editor`，失效目录组呈「无法访问」态）
 - `/editor` → EditorPage（统一编辑页「Typora 式沉浸」，2026-09-24 起：项目页/左栏树点文件与草稿箱「继续编辑」都进此页；**菜单外路由 key**，同 `/account` 不高亮菜单项，见 [主编辑器卡片](editor.md)）
 - `/plugin/<pluginId>/<viewId>` → PluginMainView（`views.area: 'main'` 的插件视图；`generateStaticParams` 从内置 `plugins/*/plugin.json` 构建期枚举）
