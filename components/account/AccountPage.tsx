@@ -13,12 +13,13 @@ import styled, { keyframes } from 'styled-components'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 import { AppIcon } from '../ui/AppIcon'
+import { PageTopbar } from '../ui/PageTopbar'
 import { ErrorText, HintText } from '../ui/Text'
 import { SettingRow } from '../ui/SettingRow'
 import { SettingSection } from '../settings/SettingSection'
 import { uiConfirm } from '../ui/Dialog'
 import { GithubIcon } from '../ui/GithubIcon'
-import { IconCheck, IconChevronLeft, IconCopy, IconExternalLink, IconSearch } from '../icons'
+import { IconCheck, IconCopy, IconExternalLink, IconSearch } from '../icons'
 import { useLocale } from '../../lib/i18n/context'
 import { syncIdentity } from '../../lib/identity'
 
@@ -34,8 +35,8 @@ const spin = keyframes`
 const Page = styled.div`
   flex: 1;
   min-width: 0;
-  overflow: auto;
-  padding: 20px 32px 48px;
+  display: flex;
+  flex-direction: column;
   background: var(--background-color);
   outline: none;
   animation: ${pageEnter} 200ms ease-out;
@@ -45,31 +46,26 @@ const Page = styled.div`
     outline: none;
   }
 
-  @media (max-width: 768px) {
-    padding: 16px 16px 40px;
-  }
-
   @media (prefers-reduced-motion: reduce) {
     animation: none;
+  }
+`
+
+/* 内容滚动容器：页头（PageTopbar）在其之外固定，不随滚动 */
+const ScrollArea = styled.div`
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 32px 48px;
+
+  @media (max-width: 768px) {
+    padding: 0 16px 40px;
   }
 `
 
 const Content = styled.div`
   max-width: 760px;
   margin: 0 auto;
-`
-
-const Topbar = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 14px;
-`
-
-const PageTitle = styled.h2`
-  margin: 0;
-  font-size: 18px;
-  color: var(--text-primary);
 `
 
 const Sections = styled.div`
@@ -522,14 +518,14 @@ export function AccountPage(): React.JSX.Element {
 
   return (
     <Page ref={pageRef} tabIndex={-1}>
+      <PageTopbar
+        title={t('account.title')}
+        backLabel={t('account.back')}
+        backAria={t('account.backAria')}
+        onBack={() => router.push('/')}
+      />
+      <ScrollArea>
       <Content>
-        <Topbar>
-          <Button variant="ghost" onClick={() => router.push('/')} aria-label={t('account.backAria')}>
-            <AppIcon icon={IconChevronLeft} size="sm" />
-            {t('account.back')}
-          </Button>
-          <PageTitle>{t('account.title')}</PageTitle>
-        </Topbar>
 
         <Sections>
           <SettingSection
@@ -763,6 +759,7 @@ export function AccountPage(): React.JSX.Element {
           </SettingSection>
         </Sections>
       </Content>
+      </ScrollArea>
     </Page>
   )
 }

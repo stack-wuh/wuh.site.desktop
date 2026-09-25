@@ -10,15 +10,15 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { AppSettings } from '@shared/types'
 import styled, { keyframes } from 'styled-components'
-import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 import { AppIcon } from '../ui/AppIcon'
+import { PageTopbar } from '../ui/PageTopbar'
 import { ErrorText, HintText } from '../ui/Text'
 import { SettingRow } from '../ui/SettingRow'
 import { SettingSection } from './SettingSection'
 import { SettingsNav, type SettingsNavItem } from './SettingsNav'
 import { PluginManagerSection } from './PluginManagerSection'
-import { IconCheck, IconChevronLeft, IconLogo } from '../icons'
+import { IconCheck, IconLogo } from '../icons'
 import { useLocale } from '../../lib/i18n/context'
 import { BUILD_TIME, formatBuildTime } from '../../lib/buildInfo'
 
@@ -37,8 +37,8 @@ const pageEnter = keyframes`
 const Page = styled.div`
   flex: 1;
   min-width: 0;
-  overflow: auto;
-  padding: 20px 32px 48px;
+  display: flex;
+  flex-direction: column;
   background: var(--background-color);
   outline: none;
   animation: ${pageEnter} 200ms ease-out;
@@ -48,12 +48,20 @@ const Page = styled.div`
     outline: none;
   }
 
-  @media (max-width: 768px) {
-    padding: 16px 16px 40px;
-  }
-
   @media (prefers-reduced-motion: reduce) {
     animation: none;
+  }
+`
+
+/* 内容滚动容器：页头（PageTopbar）在其之外固定，不随滚动 */
+const ScrollArea = styled.div`
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 32px 48px;
+
+  @media (max-width: 768px) {
+    padding: 0 16px 40px;
   }
 `
 
@@ -67,20 +75,6 @@ const Content = styled.div`
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
   }
-`
-
-const Topbar = styled.div`
-  grid-column: 1 / -1;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 14px;
-`
-
-const PageTitle = styled.h2`
-  margin: 0;
-  font-size: 18px;
-  color: var(--text-primary);
 `
 
 const Sections = styled.div`
@@ -168,6 +162,7 @@ export function SettingsPage(): React.JSX.Element {
   const [savedField, setSavedField] = useState<FieldKey | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<FieldKey, string>>>({})
   const pageRef = useRef<HTMLDivElement>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
   const savedTimer = useRef<number | null>(null)
 
   // 打开设置页时焦点移入页面容器（interaction.md 焦点管理）
@@ -214,21 +209,21 @@ export function SettingsPage(): React.JSX.Element {
 
   return (
     <Page ref={pageRef} tabIndex={-1}>
-      <Content>
-        <Topbar>
-          <Button variant="ghost" onClick={() => router.push('/')} aria-label={t('settings.backAria')}>
-            <AppIcon icon={IconChevronLeft} size="sm" />
-            {t('settings.back')}
-          </Button>
-          <PageTitle>{t('settings.title')}</PageTitle>
-        </Topbar>
-        {loadError && (
-          <ErrorText role="alert" style={{ gridColumn: '1 / -1' }}>
-            {loadError}
-          </ErrorText>
-        )}
+      <PageTopbar
+        title={t('settings.title')}
+        backLabel={t('settings.back')}
+        backAria={t('settings.backAria')}
+        onBack={() => router.push('/')}
+      />
+      <ScrollArea ref={scrollRef}>
+        <Content>
+          {loadError && (
+            <ErrorText role="alert" style={{ gridColumn: '1 / -1' }}>
+              {loadError}
+            </ErrorText>
+          )}
 
-        <SettingsNav items={navItems} containerRef={pageRef} />
+          <SettingsNav items={navItems} containerRef={scrollRef} />
 
         <Sections>
           <SettingSection id="about" title={t('settings.navAbout')} description={t('settings.aboutDesc')}>
@@ -274,7 +269,8 @@ export function SettingsPage(): React.JSX.Element {
 
           <PluginManagerSection />
         </Sections>
-      </Content>
+        </Content>
+      </ScrollArea>
     </Page>
   )
 }
