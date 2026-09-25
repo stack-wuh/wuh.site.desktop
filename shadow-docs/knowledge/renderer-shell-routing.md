@@ -20,8 +20,11 @@ source:
   - changes/20260924-feature-projects-editor-page/brief.md
   - changes/20260924-feature-sidemenu-settings-item/brief.md
   - changes/20260924-feature-native-save-dialog/brief.md
+  - changes/20260925-feature-sidemenu-settings-consolidation/brief.md
   - changes/20260925-fix-page-header-sticky/brief.md
 verified: 2026-09-25
+verified-depth: runtime
+verified-scope: app/(shell)/layout.tsx, components/SideMenu.tsx, components/menu/PluginTree.tsx, components/ui/PageTopbar.tsx
 ---
 
 # Renderer 壳层两栏布局与 App Router 路由约定
@@ -45,13 +48,13 @@ verified: 2026-09-25
 
 **壳层 i18n（2026-09-22 起）**：`lib/i18n/locales.ts` 三语字典（zh/en/ja flat key，`{name}` 占位符）+ `lib/i18n/context.tsx` 的 `LocaleProvider`/`useT()`，持久化键 `wd.locale`（与 `wd.theme` 同模式）。**两段式渲染**：首帧固定 zh 与导出 HTML 一致（防 hydration mismatch），mount 后切存储 locale——启动切换的中文闪帧由 splash 窗覆盖，运行时切换即时。字典 key 集合一致性由 `tests/i18n.test.ts` 锁定；**缺键会静默回落为 key 本身（UI 直接显示裸 key，如 `menu.projects`）**，故同文件另有「源码引用键 ⊆ 字典」覆盖扫描（字面量 `t()` 直调 + 按命名空间识别的字面量扫描，覆盖三元/映射表等间接传键）——新增文案键必须三语齐配，否则测试红。范围边界：仅壳层 chrome 文案；插件 manifest 标题与插件帧内容不在此机制内。
 
-`menuExpanded`（SideMenu 展开/收起）是 layout 内的客户端状态；菜单项 id 与路由段一一对应（`lib/routes.ts` 的 `pluginPanelKey` / `routeKeyFromPathname` 负责互转，`account` 为独立路由 key）。**左栏底部用户入口点击直达 `/account` 用户中心**（2026-09-22 起，替身期「进设置页」已退役）；**底部系统区两项制后（20260924-feature-sidemenu-settings-item）【设置】为独立底部项**——展开态点击直达 `/settings` 且 `settingsActive`（`active === 'settings'`）高亮，收起态点击仅展开菜单；主导航 items 数组仍不含 `settings`（底部区是 SideMenu 内硬编码 JSX）。`FloatLayer` 常驻 main 容器叠加其上（浮窗与右栏页面**共存**，切换页面不卸载）。
+`menuExpanded`（SideMenu 展开/收起）是 layout 内的客户端状态；菜单项 id 与路由段一一对应（`lib/routes.ts` 的 `pluginPanelKey` / `routeKeyFromPathname` 负责互转，`account` 为独立路由 key）。**底部系统区两项制重分工（20260925-feature-sidemenu-settings-consolidation）**：【用户】在上 = 纯导航直达 `/account`（`userActive` 高亮走 `data-active` 稳定属性，悬停不再弹任何面板）；【设置】在下 = **三态交互**——收起态图标为右箭头（`IconChevronRight`）且点击仅展开菜单（`data-tip`「设置 · 展开菜单」），展开态左 Setting 图标直达 `/settings`（`settingsActive` 高亮）+ 右缘收起旋钮（复用 TreeKnob 样式，`aria-label=pop.collapseMenu`，stopPropagation 防误触导航）收起菜单；主导航 items 数组仍不含 `settings`（底部区是 SideMenu 内硬编码 JSX）。**外观与语言快捷面板挂【设置】项**（仅展开态 hover/聚焦弹出，收起态保留 data-tip 单一职责——tooltip 与面板同锚右侧会重叠；面板仅主题/外观/语言三组，「收起/展开菜单」行已退役，⌘/Ctrl+B 全局不变）。**插件 main 视图不再平铺主导航**：统一收进【插件】单一可展开条目子树（`components/menu/PluginTree.tsx`：main 视图导航行 + 浮窗开关行 + 空态「无启用插件」；`pluginsTreeOpen` 状态在 layout，展开态点条目 = 切子树、收起态点条目 = 仅展开菜单），SideMenu 的 `toggleItems` 组已退役（浮窗开关行并入子树，`aria-pressed` 语义不变）。`FloatLayer` 常驻 main 容器叠加其上（浮窗与右栏页面**共存**，切换页面不卸载）。
 
 **左栏【项目】条目自带项目树**（2026-09-24 起；SideMenu 条目子树槽位 `tree/treeOpen/onToggleTree` 的通用设计见 shell-chrome-design 卡）：一级 = 项目节点（当前工作区置顶带「当前」徽标，其余最近项目），二级起 = 文件夹/`.md` 递归树（`pruneMarkdownTree` 只留含 .md 分支）；项目节点懒加载（首次展开才 `readTree(root)`），失效项目呈「无法访问」且再次点击重试；**点文件与 `/projects` 页共用 `openProjectFile`**（脏确认 → 非当前项目先 `openWorkspaceByPath` 切工作区 → `readFile` → `openDoc`），随后 `router.push('/editor')`——打开流单点收口，两处 UI 不得各写一份。清单数据走 `window.api.readTree(root?)`：**显式 root 校验目录存在后按该根构树、不切换当前工作区**；缺省 = `requireRoot()` 现行为（契约见 `src/shared/types.ts`，主进程实现与测试见 workspace 域）。
 
-**全局身份 store（2026-09-22 起）**：`lib/identity.ts`（useSyncExternalStore 快照注册表，与 tasks/statusItems/floats 同构）是 GitHub 身份（头像/昵称/login/scopes/kind/stale）的壳层唯一数据源——壳层 layout 挂载 `refreshIdentity()` 拉取一次（未配 token / `getGithubIdentity` 抛错一律落 null），用户中心 `AccountPage.reloadIdentity` 成功分支 `syncIdentity()` 写穿（授权成功 / PAT 保存 / 断开三时机全覆盖，页面本地 loading/error/stale 三态 UI 不动）；消费方 `useGithubIdentity()`：SideMenu 用户入口/快捷面板头部与 HomePage 问候语，**均仅文本投影**（`name‖login`；同日回退了侧栏头像 img 投影——远程图片网络不可靠，**壳层禁止渲染远程头像图片**，头像待 Settings「用户设置」本地接管，见 shell-chrome-design 卡）。**回退语义：undefined（尚未拉取）/ null（无身份）/ stale 一律回落品牌标 + wuh-site + 纯问候**；问候带名走 `home.greetNamed` 三语占位（昵称 name 优先、login 兜底），store 单测 `tests/identity-store.test.ts`。
+**全局身份 store（2026-09-22 起）**：`lib/identity.ts`（useSyncExternalStore 快照注册表，与 tasks/statusItems/floats 同构）是 GitHub 身份（头像/昵称/login/scopes/kind/stale）的壳层唯一数据源——壳层 layout 挂载 `refreshIdentity()` 拉取一次（未配 token / `getGithubIdentity` 抛错一律落 null），用户中心 `AccountPage.reloadIdentity` 成功分支 `syncIdentity()` 写穿（授权成功 / PAT 保存 / 断开三时机全覆盖，页面本地 loading/error/stale 三态 UI 不动）；消费方 `useGithubIdentity()`：SideMenu 用户入口（展开态用户名文本投影）与 HomePage 问候语，**均仅文本投影**（`name‖login`；同日回退了侧栏头像 img 投影——远程图片网络不可靠，**壳层禁止渲染远程头像图片**，头像待 Settings「用户设置」本地接管，见 shell-chrome-design 卡）。**回退语义：undefined（尚未拉取）/ null（无身份）/ stale 一律回落品牌标 + wuh-site + 纯问候**；问候带名走 `home.greetNamed` 三语占位（昵称 name 优先、login 兜底），store 单测 `tests/identity-store.test.ts`。
 
-**全屏视图体系已废止**（2026-09-20）：设置页与首页都是右栏普通页面，左栏常驻。键盘语义：`Cmd/Ctrl+,` 在 settings ↔ home 间 `router.push` 切换；`Cmd/Ctrl+B` 切换左栏展开/收起（控件入口在用户快捷面板内）；Esc 只关最顶层浮窗（FloatLayer 内处理，确认框打开时让位——用 `[data-dialog-overlay]` 稳定属性判定，styled 类名是哈希）。页面自身 mount 聚焦（`tabIndex={-1}`）保留。
+**全屏视图体系已废止**（2026-09-20）：设置页与首页都是右栏普通页面，左栏常驻。键盘语义：`Cmd/Ctrl+,` 在 settings ↔ home 间 `router.push` 切换；`Cmd/Ctrl+B` 切换左栏展开/收起（全局快捷键；指针路径 = 设置项右缘收起旋钮 / 收起态点设置项）；Esc 只关最顶层浮窗（FloatLayer 内处理，确认框打开时让位——用 `[data-dialog-overlay]` 稳定属性判定，styled 类名是哈希）。页面自身 mount 聚焦（`tabIndex={-1}`）保留。
 
 **内置编辑器已回归首页面板**（20260922-refactor-codemirror-editor 起：CodeMirror 6 源码编辑 + 分栏预览，见 [主编辑器卡片](editor.md)；2026-09-20 至 09-22 间曾有「内置编辑器已移除」窗口，其间 20260922-feature-vditor-md-editor 短暂引入 Vditor IR 后整体替换退场）。`lib/store.ts`（workspaceStore）既是首页编辑器的 content 状态源（content 双通道 + 防回环，见 editor.md 卡），也是插件 doc 服务（帧协议 `doc.get/set/save`）的宿主侧状态源。
 
