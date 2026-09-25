@@ -4,7 +4,7 @@
   "name": "20260924-feature-git-history-capsule",
   "type": "feature",
   "scope": "desktop",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20260924-feature-git-history-capsule",
   "files": [
@@ -18,18 +18,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 88,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/88",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 94,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/94"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "abb3eb63651654c0d61ca0493e0b989e46e34348",
-    "verifiedAt": "2026-09-24T22:04:02.982Z"
+    "verifiedCommit": "31ab5ec087f33cef9b552943ac1e22eb95fcea67",
+    "verifiedAt": "2026-09-25T01:27:55.063Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:88",
-    "planHash": "d27968db89c2b4bb396ad3bc9c2f20615908a41841d49a4b881ed5eb38982312",
+    "checkpoint": "merged-pr:94",
+    "planHash": "a19be810c4af21fbe4b45edff92fd086d8535d0c931644bc77a8fef9b84cc4e0",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {

@@ -38,7 +38,7 @@
 | 20260924-feature-breadcrumb-doc-ops | ✅ 完成 | shadow-docs/changes/archive/20260924-feature-breadcrumb-doc-ops/brief.md |
 | 20260924-feature-editor-simplify-draft-box | ✅ 完成 | shadow-docs/changes/archive/20260924-feature-editor-simplify-draft-box/brief.md |
 | 20260924-feature-editor-toolbar | ✅ 完成 | shadow-docs/changes/archive/20260924-feature-editor-toolbar/brief.md |
-| 20260924-feature-git-history-capsule | reviewed | shadow-docs/changes/20260924-feature-git-history-capsule/brief.md |
+| 20260924-feature-git-history-capsule | ✅ 完成 | shadow-docs/changes/archive/20260924-feature-git-history-capsule/brief.md |
 | 20260924-feature-native-save-dialog | reviewed | shadow-docs/changes/20260924-feature-native-save-dialog/brief.md |
 | 20260924-feature-projects-editor-page | ✅ 完成 | shadow-docs/changes/archive/20260924-feature-projects-editor-page/brief.md |
 | 20260924-feature-sidemenu-bottom-toggle | ✅ 完成 | shadow-docs/changes/archive/20260924-feature-sidemenu-bottom-toggle/brief.md |
