@@ -1,8 +1,9 @@
 {
   "id": "git-history",
   "name": "Git 历史与回退",
-  "version": "1.0.0",
-  "description": "工作区状态、提交/推送/拉取与提交历史回退（revert-only 语义由宿主能力保证）",
+  "version": "1.1.0",
+  "description": "工作区状态、提交/推送/拉取与提交历史回退（revert-only 语义由宿主能力保证）；经逻辑帧在胶囊聚合 Git 状态，视图自动跟随当前文档展示文件历史",
+  "logic": "logic/status.js",
   "views": [
     {
       "id": "git",
@@ -11,6 +12,15 @@
       "icon": "git-branch",
       "entry": "view/index.html",
       "order": 20
+    }
+  ],
+  "capsule": [
+    {
+      "id": "status",
+      "title": "Git 状态",
+      "icon": "git-branch",
+      "template": "status",
+      "viewId": "git"
     }
   ],
   "publishers": [],

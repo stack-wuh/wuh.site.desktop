@@ -25,7 +25,8 @@ source:
   - changes/archive/20260924-feature-task-center-event-bus/brief.md
   - changes/archive/20260924-fix-capsule-header-chrome/brief.md
   - changes/20260924-feature-sidemenu-bottom-toggle/brief.md
-verified: 2026-09-24
+  - changes/20260924-feature-git-history-capsule/brief.md
+verified: 2026-09-25
 ---
 
 # 壳层 chrome 设计与插件扩展点
@@ -52,7 +53,7 @@ verified: 2026-09-24
 
 **渲染层事件总线 events 扩展点（2026-09-24 起）**：`lib/events.ts` 纯逻辑模块，与 statusItems/floats/tasks 同构（快照 = 最近 200 条环形缓冲 + `commit()` 产新引用 + useSyncExternalStore；订阅表是路由态不进快照）。插件帧经 SDK `wuh.events.publish/subscribe/unsubscribe` 走帧协议 `events` 服务（`PluginFrameHost.handleFrameInvoke` 渲染层裁决，**主进程 broker 不参与**）：**信封 `{ id, type, pluginId, payload, ts }`，pluginId 由宿主按帧身份盖章（调用方不可冒名）**；插件事件名强制 `<pluginId>:<name>` 命名空间（`[a-z0-9][a-z0-9._-]{0,63}`）；宿主内转事件可发系统级类型（如 tasks 服务写穿后发 `tasks:upsert`/`tasks:remove`，信封归属 = 任务所属插件）。订阅模式：精确类型 / `<ns>:*` 前缀通配 / `*` 全通配，每插件 ≤16 个模式（去重不占额）；投递经 `onAnyEvent` 钩子（`wireHostOnce` 接线）按 `subscribersFor(type)` 推送订阅插件的**全部帧**（`{kind:'event', name:'event', payload:信封}`，SDK `wuh.on('event', cb)` 接收）。护栏：payload 须可 JSON 序列化且 ≤4KB。插件停用清订阅 + 清其缓冲事件。测试 `tests/events.test.ts`。
 
-**tasks 任务贡献点（2026-09-24 起事件溯源，manifest 声明制退役为可选预置）**：manifest `tasks` 仍是合法来源（bootstrap/启用注册，默认 pending，可带 viewId 跳转，每插件 ≤8），但不再是唯一来源——**运行时对未声明 id 首报带 title（1-80 字符）的 upsert 即动态创建**（任意插件随时触发任务展示的集散地入口；缺 title 报错）。SDK `wuh.tasks.upsert(id, patch)/remove(id)` 契约：patch 可含 title（仅创建首报生效，已存在任务携带 title 拒绝）/status（`pending|in_progress|done`）/progress（`{current,total}`，**严格 typeof number 校验**——帧消息来自 postMessage 不可用 `Number()` 宽转）/detail；声明任务 id/title/viewId 运行时不可变；**每插件并发可见任务 ≤8**（remove 隐藏腾位后可再建，注册表裁决）；`lib/tasks.ts` 任务增加 `declared/createdAt/updatedAt/doneAt` 字段（时间线排序与相对时间用）。注册表与 statusItems/floats 同构（commit() 产新引用 + useSyncExternalStore + getServerSnapshot 第三参）。插件停用清空、启用重注册。参考生产者：github-issues 发布流（逻辑帧内上报，失败回 pending + detail 原因）。
+**tasks 任务贡献点（2026-09-24 起事件溯源，manifest 声明制退役为可选预置）**：manifest `tasks` 仍是合法来源（bootstrap/启用注册，默认 pending，可带 viewId 跳转，每插件 ≤8），但不再是唯一来源——**运行时对未声明 id 首报带 title（1-80 字符）的 upsert 即动态创建**（任意插件随时触发任务展示的集散地入口；缺 title 报错）。SDK `wuh.tasks.upsert(id, patch)/remove(id)` 契约：patch 可含 title（仅创建首报生效，已存在任务携带 title 拒绝）/status（`pending|in_progress|done`）/progress（`{current,total}`，**严格 typeof number 校验**——帧消息来自 postMessage 不可用 `Number()` 宽转）/detail；声明任务 id/title/viewId 运行时不可变；**每插件并发可见任务 ≤8**（remove 隐藏腾位后可再建，注册表裁决）；`lib/tasks.ts` 任务增加 `declared/createdAt/updatedAt/doneAt` 字段（时间线排序与相对时间用）。注册表与 statusItems/floats 同构（commit() 产新引用 + useSyncExternalStore + getServerSnapshot 第三参）。插件停用清空、启用重注册。参考生产者：github-issues 发布流（逻辑帧内上报，失败回 pending + detail 原因）；git-history 状态流（20260924-feature-git-history-capsule 起，逻辑帧常驻上报 status 模板「分支 · N 未提交」，doc.saved/opened 与 workspace 事件驱动刷新，非 git 目录失败静默保持隐藏）。
 
 **插件状态项 = manifest 声明 + 运行时更新**：manifest `statusItems`（id 限 `[a-z0-9][a-z0-9._-]*`、icon 白名单、text 必填、alignment 默认 right、order 默认 100、每插件 ≤4 项）；SDK `wuh.statusBar.update(id, patch)/remove(id)` 走帧协议 `statusBar` 服务，由渲染层宿主（`components/plugins/PluginFrameHost.tsx` 的 `handleFrameInvoke`）直接裁决，**主进程 broker 不参与**；注册表 `lib/statusItems.ts` 为纯逻辑模块（useSyncExternalStore 快照模式）。插件只能 update/remove 自己声明过的项；icon/alignment/order 运行时不可变；插件停用清空、启用重注册。
 

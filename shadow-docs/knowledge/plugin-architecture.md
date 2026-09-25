@@ -9,7 +9,8 @@ source:
   - changes/archive/20260920-feature-plugin-manager/brief.md
   - changes/20260921-refactor-renderer-nextjs/brief.md
   - changes/20260921-fix-plugin-frame-scheme-cors/brief.md
-verified: 2026-09-21
+  - changes/20260924-feature-git-history-capsule/brief.md
+verified: 2026-09-25
 ---
 
 # 插件系统架构（loader/批准/重载）
@@ -28,6 +29,8 @@ verified: 2026-09-21
 
 **渲染层宿主**（`components/plugins/PluginFrameHost.tsx`，2026-09-21 迁移前路径为 `src/renderer/src/plugins/PluginFrameHost.tsx`）：`bootstrapPluginsHost` 只处理启动时已启用插件；`togglePlugin` 运行时启停——启用补建会话+逻辑帧+状态项注册，停用反向清理（配 `lib/floats.ts` 的 `closePluginFloats` 收起该插件浮窗）；`rebootstrapPluginsHost` 服务重载（主进程 rescan → 渲染层关全部帧 + `renderService.reset()` + 重建会话与逻辑帧）；`hostGeneration` 代际信号驱动两栏 shell layout 刷新 main/float 视图列表（失效插件路由段回退 Empty 兜底）。
 
+**协议注册与 SDK 下发（2026-09-25 修定，git-history-capsule 走查实证）**：`protocol.handle` 的 scheme 参数**不得带尾冒号**——electron 44.4.5 实测 `protocol.handle('plugin:', …)` 静默失效（注册不报错但 scheme 不可达，表象为帧导航「external protocol blocked」+ 宿主超时「帧文档未触发 load」），须写 `protocol.handle('plugin', …)`。SDK 经 `plugin://<id>/@core/sdk.js` 下发，**视图帧 HTML 必须自带 `<script src="/@core/sdk.js"></script>`**（协议处理器不注入，历史插件 html 均缺失即视图全空帧的直接原因）；逻辑帧宿主用**经典脚本对**（先 sdk 后 `window.__startLogic(entry)`）——SDK 是 IIFE 无 ES 导出，命名 `import { __startLogic }` 恒 SyntaxError；且逻辑入口必须**绝对 URL**（`plugin://<id>/<logic>`，不透明源帧 base 为 about:blank，根相对 specifier 无法解析）。**握手定时器必须随帧关闭取消**：`closeFrame` 若不清 hello 定时器，React StrictMode 双挂载下旧帧定时器会把接管同 key 的后继帧误杀（后继已握手成功仍被 5s 关闭，且错误被旧 effect 的 alive 守卫吞掉、界面无任何报错）——定时器回调也须守卫「只关自己」。以上三层（协议注册 / SDK 下发 / 定时器）任一缺失，插件帧在 dev 与 prod 表现一致地坏。
+
 **帧可达性前提（2026-09-21 修定）**：`plugin://` 必须在 `src/main/schemes.ts` 注册为 `standard + secure + supportFetchAPI + stream + corsEnabled`。插件视图帧是 `sandbox="allow-scripts"` 的**不透明源帧**（`origin: null`），帧内 `<script type="module">`、SDK 下发与逻辑入口 `import()` 全是 **CORS 模式的跨源请求**；Chromium 只对 CORS 已启用的协议放行跨源脚本，缺 `corsEnabled` 表现为「帧导航成功但握手永不就绪」——宿主 5s 超时报「插件视图加载失败」，而真正的 CORS 报错只在帧内 DevTools 可见，故长期隐形。**排除项（勿再误判）**：帧失败与 sandbox token 无关，实测 `allow-scripts`／加 `allow-top-navigation-to-custom-protocols`／去 sandbox／`allow-same-origin` 四组帧导航**全部成功**；历史 brief 记的 `Navigation to external protocol blocked by sandbox` 属误归因——已注册为 privileged 的自定义 scheme 不判为外部协议，且 Electron 的 `HandleExternalProtocol` **恒消费导航**，加 token 只会让报错消失而帧仍不加载。
 
 ## 执行约束
@@ -38,6 +41,7 @@ verified: 2026-09-21
 - manifest `logic` 约定为经典脚本语义（顶层 await 允许；运行于沙箱 allow-scripts 不透明源帧）
 - 消息协议 kind（hello/ready/invoke/result/event/request/response）变更须同步 shared 类型、SDK 字符串与帧宿主三方
 - 受特权 scheme 表（`src/main/schemes.ts`）是协议能力的唯一声明点：改特权位（尤其 `corsEnabled`）必须同步 `tests/plugin-schemes.test.ts`，并回到帧内实机验证握手是否就绪
+- `protocol.handle` 的 scheme 不得带尾冒号；插件视图 HTML 必须自带 sdk 脚本标签；逻辑帧走经典脚本对 + 绝对逻辑入口 URL；帧握手定时器随 closeFrame 取消且只关自己（2026-09-25 三层修复，见「协议注册与 SDK 下发」段）
 
 ## 适用边界
 

@@ -41,6 +41,8 @@ describe('官方参考插件资产', () => {
         const html = readFileSync(join(dir, view.entry), 'utf-8')
         const refs = [...html.matchAll(/(?:src|href)="([^"]+)"/g)].map((m) => m[1]).filter((r) => !r.startsWith('http'))
         for (const ref of refs) {
+          // /@core/* 是协议处理器下发的虚拟文件（sdk.js / logic-host.html），不在插件目录
+          if (ref.startsWith('/@core/')) continue
           const rel = ref.replace(/^\.\//, '')
           const abs = join(dir, view.entry).replace(/[\\/][^\\/]+$/, '')
           expect(existsSync(join(abs, rel)), `${name}: ${view.entry} 引用缺失 ${ref}`).toBe(true)
