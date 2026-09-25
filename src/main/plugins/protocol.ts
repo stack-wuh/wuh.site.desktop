@@ -67,12 +67,15 @@ export function parsePluginUrl(
 }
 
 export function buildLogicHostHtml(logicEntryUrl: string): string {
+  // 经典脚本对（20260924-feature-git-history-capsule 修复）：SDK 是 IIFE 无 ES
+  // 导出，原命名 import 恒 SyntaxError（逻辑帧自初版即不可用）。classic script
+  // 同步顺序执行，第二个脚本运行时 window.__startLogic 必已就位。
   return `<!doctype html>
 <html><head><meta charset="utf-8"><title>plugin logic host</title></head>
 <body>
-<script type="module">
-import { __startLogic } from '/${SDK_VIRTUAL_PATH}';
-__startLogic(${JSON.stringify(logicEntryUrl)});
+<script src="/${SDK_VIRTUAL_PATH}"></script>
+<script>
+window.__startLogic(${JSON.stringify(logicEntryUrl)});
 </script>
 </body></html>`
 }
@@ -88,7 +91,10 @@ function response(body: string | Uint8Array, contentType: string, status = 200):
 }
 
 export function initPluginProtocol(deps: PluginProtocolDeps): void {
-  protocol.handle(`${PLUGIN_SCHEME}:`, async (request) => {
+  // 诊断补丁（20260924-feature-git-history-capsule 走查）：handle 的 scheme 按
+  // Electron 文档不得带尾冒号；44.4.5 实测带冒号注册后 scheme 仍不可达（帧导航
+  // "external protocol blocked"）。若此改动让帧恢复加载，即为根因。
+  protocol.handle(PLUGIN_SCHEME, async (request) => {
     const parsed = parsePluginUrl(request.url)
     if (!parsed) return response('bad request', 'text/plain', 400)
     const { pluginId, relPath } = parsed
@@ -99,7 +105,8 @@ export function initPluginProtocol(deps: PluginProtocolDeps): void {
     if (relPath === LOGIC_HOST_PATH) {
       const logic = deps.getLogicEntry(pluginId)
       if (!logic) return response('no logic entry', 'text/plain', 404)
-      return response(buildLogicHostHtml(`/${logic}`), 'text/html; charset=utf-8')
+      // 逻辑入口必须绝对 URL：不透明源帧的 base 是 about:blank，根相对 specifier 无法解析
+      return response(buildLogicHostHtml(`${PLUGIN_SCHEME}://${pluginId}/${logic}`), 'text/html; charset=utf-8')
     }
 
     const dir = deps.getPluginDir(pluginId)

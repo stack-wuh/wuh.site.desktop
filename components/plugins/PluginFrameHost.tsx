@@ -76,6 +76,8 @@ interface FrameState {
   pending: Map<number | string, PendingCall>
   hostSeq: number
   closed: boolean
+  /** 握手超时定时器：closeFrame 必须取消，否则 StrictMode 双挂载下旧帧的定时器会误杀接管同 key 的后继帧 */
+  helloTimer?: ReturnType<typeof setTimeout>
   onReady?: () => void
 }
 
@@ -370,13 +372,15 @@ function openFrame(pluginId: string, frameKey: string, url: string, hostEl: HTML
     const timer = setTimeout(() => {
       if (settled) return
       settled = true
-      closeFrame(key)
+      // 只关自己：若同 key 已被后继帧接管（StrictMode 双挂载/快速重挂），不得误杀
+      if (frames.get(key) === frame) closeFrame(key)
       // 分层归因：load 未触发属导航层；已 load 却无 ready 属帧内脚本层（协议 CORS 资格/脚本报错）
       const layer = loaded
         ? '帧文档已加载但未完成握手——帧内脚本未执行（查协议 CORS 资格与脚本报错）'
         : '帧文档未触发 load——导航未完成（查协议注册与页面 CSP frame-src）'
       reject(new Error(`插件帧未就绪（${HELLO_TIMEOUT_MS}ms 超时，${layer}）: ${url}`))
     }, HELLO_TIMEOUT_MS)
+    frame.helloTimer = timer
 
     if (hostEl) {
       iframe.style.width = '100%'
@@ -404,6 +408,7 @@ function closeFrame(key: string): void {
   if (!frame) return
   frames.delete(key)
   frame.closed = true
+  if (frame.helloTimer) clearTimeout(frame.helloTimer)
   frame.pending.forEach((p) => {
     clearTimeout(p.timer)
     p.rej(new Error('插件帧已关闭'))

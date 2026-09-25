@@ -212,14 +212,27 @@ function render() {
   root.appendChild(sec2)
 }
 
+// 文件历史直达：跟随宿主当前文档——有文档自动切 file scope 展示该文件历史，
+// 无文档回 all scope；手动 scope 切换仍可在两次文档切换间使用。
+function followDoc(path) {
+  state.activePath = path
+  state.scope = path ? 'file' : 'all'
+  void refresh()
+}
+
 wuh.on('doc.opened', async () => {
   const doc = await wuh.document.get()
-  state.activePath = doc.path
-  void refresh()
+  followDoc(doc.path)
+})
+
+wuh.on('doc.closed', async () => {
+  const doc = await wuh.document.get()
+  followDoc(doc.path)
 })
 
 {
   const doc = await wuh.document.get()
   state.activePath = doc.path
+  if (doc.path) state.scope = 'file'
 }
 void refresh()
