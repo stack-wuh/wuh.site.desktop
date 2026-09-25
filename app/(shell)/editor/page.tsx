@@ -7,7 +7,8 @@
  * 极简顶栏：返回 · 面包屑（完整相对路径 + 脏点）· 新建 · 保存——文档操作经
  * publishEditorCommand 与胶囊/首页面板同源；面包屑可交互（20260924-feature-breadcrumb-doc-ops）：
  * 点文件名原地改名（renameDoc）、点目录段唤起目标文件夹选择（transferDoc，宿主承载
- * 迁移/复制 Dialog）；撤销/重做/查找走 CM6 原生快捷键与胶囊入口。
+ * 迁移/复制 Dialog）；草稿态有内容时「新草稿」可点、发布 saveAs 走原生保存面板落盘
+ * （20260925-feature-draft-crumb-save，空内容纯文本）；撤销/重做/查找走 CM6 原生快捷键与胶囊入口。
  * 冷启动（content==null）自动 startDraft 进入新草稿会话（先写后存）；focusMode 经
  * editor-state 总线联动淡出顶栏，Esc 退出（与首页同语义）。
  */
@@ -249,6 +250,12 @@ export function EditorPage(): React.JSX.Element {
                 {fileName}
               </CrumbButton>
             )
+          ) : canSave ? (
+            // 草稿态（activePath null）有内容：点击发布既有 saveAs → 宿主走原生保存面板落盘
+            // （20260925-feature-draft-crumb-save），落盘后面包屑自动变完整路径交互态
+            <CrumbButton title={t('editor.crumbDraftTitle')} onClick={() => publishEditorCommand({ kind: 'saveAs' })}>
+              {t('editor.newDraft')}
+            </CrumbButton>
           ) : (
             <Crumb>{t('editor.newDraft')}</Crumb>
           )}
