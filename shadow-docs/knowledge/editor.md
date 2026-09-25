@@ -14,7 +14,10 @@ source:
   - changes/20260924-feature-editor-toolbar/brief.md
   - changes/20260924-feature-breadcrumb-doc-ops/brief.md
   - changes/20260924-feature-native-save-dialog/brief.md
-verified: 2026-09-24
+  - changes/20260925-feature-draft-crumb-save/brief.md
+verified: 2026-09-25
+verified-depth: unit
+verified-scope: editor-page 9 + i18n 5 + saveas-flow 5 用例绿（草稿态有内容「新草稿」可点发 saveAs/空内容纯文本、三语 key 锁定、原生保存链共存）
 ---
 
 # 主编辑器（CodeMirror 6）、即时渲染与分栏预览
@@ -25,7 +28,7 @@ verified: 2026-09-24
 
 **第二个挂载点 `/editor`（统一编辑页，2026-09-24 起）**：窄栏沉浸布局（~760px 居中列）+ 极简顶栏（返回 · 面包屑 · 新建 · 保存）；与首页面板**共用同一 `workspaceStore` 与同一命令通道**——保存/新建经 `publishEditorCommand` 发布、由常驻壳层的 EditorCommandHost 认领，页内不直呼主进程；冷启动（无文档无草稿会话，`content == null`）自动 `startDraft()` 延续「先写后存」；页内不提供分栏预览（首页面板的预览 toggle 语义保留在首页）。两挂载点由**路由互斥**保证任一时刻仅一处挂载 CM6 实例（首页 EditorPanel 行为不变）。
 
-**面包屑文档操作（20260924-feature-breadcrumb-doc-ops）**：`/editor` 顶栏面包屑为**完整相对路径**（项目名/目录段/文件名 + 脏点）且可交互——点文件名原地变输入框（Enter/失焦提交、Esc 取消、草稿态纯文本不可点）发布 `renameDoc`；点目录段发布 `transferDoc` 唤起宿主承载的**目标文件夹选择 Dialog**（readTree 收集目录、迁移/复制双动作内嵌；复制停留原文 + Toast）。词表新增 `{ kind: 'renameDoc'; newName }` 与 `{ kind: 'transferDoc' }`，认领、校验、IPC 与 store 同步全在 EditorCommandHost。**`<stem>.assets` 随迁契约**：blog 约定图片落文档同目录同名 `.assets/` 且正文相对引用——改名/迁移必须经主进程 `transferDoc(srcRel, destRel, mode)` IPC（safeJoin 守卫 + assets 目录随迁、文档落位失败回滚 + 改名场景正文引用改写）；路径校验/引用改写/目录枚举纯逻辑唯一事实源是 `src/shared/docTransfer.ts`（渲染层与主进程共用），不得各写一份。move 时脏缓冲跟随新路径并保持 dirty（引用改写同步作用于内存缓冲），copy 前「所见即所存」先落盘。
+**面包屑文档操作（20260924-feature-breadcrumb-doc-ops）**：`/editor` 顶栏面包屑为**完整相对路径**（项目名/目录段/文件名 + 脏点）且可交互——点文件名原地变输入框（Enter/失焦提交、Esc 取消）发布 `renameDoc`；点目录段发布 `transferDoc` 唤起宿主承载的**目标文件夹选择 Dialog**（readTree 收集目录、迁移/复制双动作内嵌；复制停留原文 + Toast）。词表新增 `{ kind: 'renameDoc'; newName }` 与 `{ kind: 'transferDoc' }`，认领、校验、IPC 与 store 同步全在 EditorCommandHost。**草稿态入口（20260925-feature-draft-crumb-save）**：有内容时「新草稿」可点、发布**既有 `saveAs`** 走原生保存面板落盘（合规「凡选位置一律原生弹窗」约束，不自建位置 UI；`canSave` 复用保证与保存按钮禁用态一致），空内容纯文本；落盘后面包屑自动变完整路径交互态。**`<stem>.assets` 随迁契约**：blog 约定图片落文档同目录同名 `.assets/` 且正文相对引用——改名/迁移必须经主进程 `transferDoc(srcRel, destRel, mode)` IPC（safeJoin 守卫 + assets 目录随迁、文档落位失败回滚 + 改名场景正文引用改写）；路径校验/引用改写/目录枚举纯逻辑唯一事实源是 `src/shared/docTransfer.ts`（渲染层与主进程共用），不得各写一份。move 时脏缓冲跟随新路径并保持 dirty（引用改写同步作用于内存缓冲），copy 前「所见即所存」先落盘。
 
 **content 双通道与防回环**：编辑器自发输入与命令事务经 `EditorView.updateListener` 的 docChanged → `workspaceStore.setContent`（CM6 无 Vditor「命令突变不触发回调」问题，命令事务自动回同步）；store 侧外部注入（openDoc/startDraft/插件帧 doc.set）经 `lib/editor-cm.ts` 的 `cmExternalContent` 全量回写（原光标 head 越界钳制），组件侧 `pushedRef` 与 `store.content` 比对防回环，编辑中不做全量重置。
 
