@@ -19,9 +19,10 @@ import { FloatLayer } from '../../components/FloatLayer'
 import { Capsule } from '../../components/capsule/Capsule'
 import { SideMenu, type SideMenuItem } from '../../components/SideMenu'
 import { ProjectsTree } from '../../components/menu/ProjectsTree'
+import { PluginTree } from '../../components/menu/PluginTree'
 import { EditorCommandHost } from '../../components/capsule/sections/EditorSection'
 import ShellReady from '../../components/ShellReady'
-import { IconFolderOpen, IconHome, IconInbox, pluginIcon } from '../../components/icons'
+import { IconFolderOpen, IconHome, IconInbox, IconPuzzle } from '../../components/icons'
 import {
   bootstrapPluginsHost,
   broadcastTheme,
@@ -87,6 +88,9 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
   const [menuExpanded, setMenuExpanded] = useState(false)
   // 左栏项目树展开态（走查反馈修订）：状态在壳层，旋钮只切子树显隐，条目行本体仍导航 /projects
   const [projectsTreeOpen, setProjectsTreeOpen] = useState(false)
+  // 左栏插件树展开态（20260925-feature-sidemenu-settings-consolidation）：插件 main 视图
+  // 不再平铺主导航，改挂【插件】条目子树；展开态点条目行 = 切子树显隐（无独立路由页）
+  const [pluginsTreeOpen, setPluginsTreeOpen] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
   const pluginsReady = usePluginsReady()
@@ -137,6 +141,19 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
   // 草稿箱快照：侧栏徽标 = 暂存草稿数
   const drafts = useDrafts()
 
+  const mainAreaRef = useRef<HTMLElement | null>(null)
+
+  /** 浮窗 toggle：开/关由 floats 注册表裁决，几何以 main 容器为视口（插件树开关行注入） */
+  const handleToggleFloat = (id: string): void => {
+    const decl = floatViews.find((entry) => pluginPanelKey(entry.pluginId, entry.view.id) === id)
+    if (!decl) return
+    const rect = mainAreaRef.current?.getBoundingClientRect()
+    toggleFloat(
+      { pluginId: decl.pluginId, viewId: decl.view.id, title: decl.view.title, icon: decl.view.icon, entry: decl.view.entry },
+      { width: rect?.width ?? window.innerWidth, height: rect?.height ?? window.innerHeight }
+    )
+  }
+
   const items: SideMenuItem[] = [
     // 首页 = 「新建博客」项目入口（路由 key 仍为 home / 路径 /，仅显示名升级）
     { id: 'home', icon: IconHome, title: t('menu.home') },
@@ -154,30 +171,17 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
     ...(drafts.loaded && drafts.drafts.length > 0
       ? [{ id: 'drafts', icon: IconInbox, title: t('menu.drafts'), badge: { count: drafts.drafts.length } }]
       : [{ id: 'drafts', icon: IconInbox, title: t('menu.drafts') }]),
-    ...mainViews.map(({ pluginId, view }) => ({
-      id: pluginPanelKey(pluginId, view.id),
-      icon: pluginIcon(view.icon),
-      title: view.title
-    }))
+    // 插件（20260925-feature-sidemenu-settings-consolidation）：main 视图不再平铺主导航，
+    // 收进「插件」条目子树（含浮窗开关行）；条目常驻，无启用插件时子树给空态行
+    {
+      id: 'plugins',
+      icon: IconPuzzle,
+      title: t('menu.plugins'),
+      tree: <PluginTree mainViews={mainViews} floatViews={floatViews} openKeys={openKeys} onToggle={handleToggleFloat} />,
+      treeOpen: pluginsTreeOpen,
+      onToggleTree: () => setPluginsTreeOpen((v) => !v)
+    }
   ]
-  const toggleItems: SideMenuItem[] = floatViews.map(({ pluginId, view }) => ({
-    id: pluginPanelKey(pluginId, view.id),
-    icon: pluginIcon(view.icon),
-    title: view.title
-  }))
-
-  const mainAreaRef = useRef<HTMLElement | null>(null)
-
-  /** 浮窗 toggle：开/关由 floats 注册表裁决，几何以 main 容器为视口 */
-  const handleToggleFloat = (id: string): void => {
-    const decl = floatViews.find((entry) => pluginPanelKey(entry.pluginId, entry.view.id) === id)
-    if (!decl) return
-    const rect = mainAreaRef.current?.getBoundingClientRect()
-    toggleFloat(
-      { pluginId: decl.pluginId, viewId: decl.view.id, title: decl.view.title, icon: decl.view.icon, entry: decl.view.entry },
-      { width: rect?.width ?? window.innerWidth, height: rect?.height ?? window.innerHeight }
-    )
-  }
 
   const active = routeKeyFromPathname(pathname)
 
@@ -194,16 +198,17 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
           expanded={menuExpanded}
           onToggleExpanded={() => setMenuExpanded((v) => !v)}
           items={items}
-          toggleItems={toggleItems}
-          openToggleKeys={openKeys}
-          onToggle={handleToggleFloat}
           active={active}
           onChange={(id) => {
             if (id === 'home') router.push('/')
             else if (id === 'projects') router.push('/projects')
             else if (id === 'drafts') router.push('/drafts')
             else if (id === 'settings') router.push('/settings')
-            else {
+            else if (id === 'plugins') {
+              // 无独立路由页：收起态先展开菜单，展开态点行 = 切子树显隐
+              if (!menuExpanded) setMenuExpanded(true)
+              else setPluginsTreeOpen((v) => !v)
+            } else {
               const [prefix, pluginId, viewId] = id.split(':')
               if (prefix === 'plugin' && pluginId && viewId) router.push(`/plugin/${pluginId}/${viewId}`)
             }

@@ -41,6 +41,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Plus,
+  Puzzle,
   Quote,
   Save,
   Search,
@@ -96,6 +97,7 @@ export const IconPalette = Palette
 export const IconPanelCollapse = PanelLeftClose
 export const IconPanelExpand = PanelLeftOpen
 export const IconPlus = Plus
+export const IconPuzzle = Puzzle
 export const IconQuote = Quote
 export const IconRedo = Redo2
 export const IconSave = Save

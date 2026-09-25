@@ -199,13 +199,15 @@ export function SwitchCard(props: {
   )
 }
 
-/** 整行可展开模块 + 手风琴子面板（排版/快捷键；220ms unfold） */
+/** 整行可展开模块 + 手风琴子面板（排版/快捷键；220ms unfold）。
+    纵向 margin 6px（20260925-feature-sidemenu-settings-consolidation）：此前 `0 4px`
+    使上下堆叠的行在子面板收起时贴死无间距 */
 export const ModuleRow = styled.button<{ $open?: boolean }>`
   display: flex;
   align-items: center;
   gap: 8px;
   width: calc(100% - 8px);
-  margin: 0 4px;
+  margin: 6px 4px;
   padding: 8px 10px;
   background: var(--chrome-raised);
   border: 1px solid color-mix(in oklab, var(--chrome-border) 72%, transparent);
