@@ -4,7 +4,7 @@
   "name": "20260925-feature-capsule-plugin-tab",
   "type": "feature",
   "scope": "desktop",
-  "status": "branched",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20260925-feature-capsule-plugin-tab",
   "files": [
@@ -24,18 +24,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 99,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/99",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 103,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/103"
   },
   "review": {
-    "conclusion": "pending",
-    "verifiedCommit": null,
-    "verifiedAt": null
+    "conclusion": "passed",
+    "verifiedCommit": "6ee0078ec6fcaffaefdce3d9a6ff167034fd3fe1",
+    "verifiedAt": "2026-09-26T14:00:20.148Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:99",
-    "planHash": "e2d84396e7361c611a19f7b68c072a4c58c6349e651475bd8a75884338e258b9",
+    "checkpoint": "merged-pr:103",
+    "planHash": "93ed78e20c9741fe8dba351adc47b96e9e656e55fedde06904e694a303903ff0",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -46,8 +46,28 @@
       "labels": [
         "feature"
       ]
+    },
+    "release": {
+      "files": [
+        "components/capsule/CapsulePanel.tsx",
+        "components/plugins/PluginFrameHost.tsx",
+        "lib/capsule.ts",
+        "lib/i18n/locales.ts",
+        "plugins/git-history/logic/status.js",
+        "plugins/git-history/plugin.json",
+        "shadow-docs/knowledge/shell-chrome-design.md",
+        "src/plugin-sdk/index.ts",
+        "src/shared/plugin.ts",
+        "tests/capsule-render.test.tsx",
+        "tests/plugin-capsule.test.ts",
+        "tests/plugin-manifest.test.ts"
+      ],
+      "message": "feat(capsule): 胶囊插件 Tab 贡献点——manifest tabs 声明制（每插件 ≤1）+ capsule.updateTab/removeTab 帧服务（shared 类型/SDK 字符串/帧宿主三方同步）+ 面板「任务|模块|插件tab」动态结构与通用 sections/rows 渲染 + git-history 首个接入 Git Tab（变更文件/最近提交行点击直达视图）（Closes #99）",
+      "title": "胶囊插件 Tab 贡献点 + git-history 单开 Git Tab",
+      "body": "Closes #99\n\n完整 brief：shadow-docs/changes/20260925-feature-capsule-plugin-tab/brief.md"
     }
-  }
+  },
+  "knowledge": null
 }
 ---
 
@@ -85,15 +105,15 @@
 ## 任务
 
 ### Phase 1
-- [ ] 契约层：shared/plugin.ts 增 CapsuleTabDecl 类型 + validateManifest 校验 tabs 段（id 正则/title/icon 白名单/每插件 ≤1），tests/plugin-manifest.test.ts 用例 — src/shared/plugin.ts, tests/plugin-manifest.test.ts
-- [ ] 注册表：lib/capsule.ts 增 tab 声明注册（默认 hidden）+ updateTab/removeTab（严格 typeof 校验、sections/rows/体积上限、未声明报错、跨插件拒绝、viewId 归属校验），tests/plugin-capsule.test.ts 用例 — lib/capsule.ts, tests/plugin-capsule.test.ts
+- [x] 契约层：shared/plugin.ts 增 CapsuleTabDecl 类型 + validateManifest 校验 tabs 段（id 正则/title/icon 白名单/每插件 ≤1），tests/plugin-manifest.test.ts 用例 — src/shared/plugin.ts, tests/plugin-manifest.test.ts
+- [x] 注册表：lib/capsule.ts 增 tab 声明注册（默认 hidden）+ updateTab/removeTab（严格 typeof 校验、sections/rows/体积上限、未声明报错、跨插件拒绝、viewId 归属校验），tests/plugin-capsule.test.ts 用例 — lib/capsule.ts, tests/plugin-capsule.test.ts
 ### Phase 2
-- [ ] 面板渲染：CapsulePanel 动态插件 tab（声明序追加、hidden 不出按钮、失效回落 tasks）+ 通用 sections/rows 渲染器（tone 色点、viewId 行可点跳转并 onClose）+ 空态三语文案 — components/capsule/CapsulePanel.tsx, lib/i18n/locales.ts, tests/capsule-render.test.tsx
+- [x] 面板渲染：CapsulePanel 动态插件 tab（声明序追加、hidden 不出按钮、失效回落 tasks）+ 通用 sections/rows 渲染器（tone 色点、viewId 行可点跳转并 onClose）+ 空态三语文案 — components/capsule/CapsulePanel.tsx, lib/i18n/locales.ts, tests/capsule-render.test.tsx
 ### Phase 3
-- [ ] 帧链路：SDK 字符串增 updateTab/removeTab（capsule 服务方法扩展），PluginFrameHost handleFrameInvoke 裁决接线——三方同步核对（shared/plugin.ts 类型 ↔ SDK 字符串 ↔ 帧宿主） — src/main/plugins/protocol.ts, components/plugins/PluginFrameHost.tsx
-- [ ] git-history 接入：plugin.json 声明 tabs；logic/status.js 扩展上报（文件 ≤5 + 提交 ≤5 → updateTab，非 git 目录 removeTab 静默） — plugins/git-history/plugin.json, plugins/git-history/logic/status.js
+- [x] 帧链路：SDK 字符串增 updateTab/removeTab（capsule 服务方法扩展），PluginFrameHost handleFrameInvoke 裁决接线——三方同步核对（shared/plugin.ts 类型 ↔ SDK 字符串 ↔ 帧宿主） — src/main/plugins/protocol.ts, components/plugins/PluginFrameHost.tsx
+- [x] git-history 接入：plugin.json 声明 tabs；logic/status.js 扩展上报（文件 ≤5 + 提交 ≤5 → updateTab，非 git 目录 removeTab 静默） — plugins/git-history/plugin.json, plugins/git-history/logic/status.js
 ### Phase 4
-- [ ] runtime 验证：dev 起应用真机走查「打开 git 仓库 → 胶囊出现 Git tab → 渲染真实分支/变更文件/最近提交 → 行点击跳 /plugin/git-history/git；停用插件 tab 消失」；tsc 双侧 + vitest 全绿 — 全部
+- [x] runtime 验证：dev 起应用真机走查「打开 git 仓库 → 胶囊出现 Git tab → 渲染真实分支/变更文件/最近提交 → 行点击跳 /plugin/git-history/git；停用插件 tab 消失」；tsc 双侧 + vitest 全绿 — 全部
 
 ## 结果
 
