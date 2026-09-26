@@ -4,7 +4,7 @@
   "name": "20260924-feature-sidemenu-settings-item",
   "type": "feature",
   "scope": "renderer-shell",
-  "status": "reviewed",
+  "status": "branched",
   "baseBranch": "main",
   "branch": "feature/20260924-feature-sidemenu-settings-item",
   "files": [
@@ -24,13 +24,13 @@
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "abb3eb63651654c0d61ca0493e0b989e46e34348",
-    "verifiedAt": "2026-09-24T15:42:51.209Z"
+    "verifiedCommit": "54ae1b308138214f216a1e78db929d5a86b75f16",
+    "verifiedAt": "2026-09-26T15:53:51.401Z"
   },
   "workflow": {
     "operation": null,
     "checkpoint": "issue:86",
-    "planHash": "380d1ca0977749baeb3cf208c9873a0dbbb6cd666369cd3e67e248042239c23e",
+    "planHash": "e0c6fd185e1a0fde3abb87592b71054c7912395be1901d37113eee7b5a95e2c7",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -39,6 +39,12 @@
       "labels": [
         "feature"
       ]
+    },
+    "commit": {
+      "files": [
+        "shadow-docs/changes/20260924-feature-sidemenu-settings-item/brief.md"
+      ],
+      "message": "docs(shadow): sidemenu-settings-item 状态回填——review 记录对齐当前 HEAD（实现已随历史提交进入 main，流程补录）"
     }
   },
   "knowledge": null
