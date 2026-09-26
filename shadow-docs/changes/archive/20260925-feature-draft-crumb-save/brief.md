@@ -4,7 +4,7 @@
   "name": "20260925-feature-draft-crumb-save",
   "type": "feature",
   "scope": "apps/desktop",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20260925-feature-draft-crumb-save",
   "files": [
@@ -16,18 +16,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 95,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/95",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 97,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/97"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "f6847bcd4771c812ed5626706547995df17b368e",
-    "verifiedAt": "2026-09-25T08:52:04.226Z"
+    "verifiedCommit": "0dbb910a5edbc9a6aaab1b5fdc3ae168ecffb9f8",
+    "verifiedAt": "2026-09-26T15:44:16.562Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:95",
-    "planHash": "91fcd02f3970c225d5bc078ccbb61bdce9c0f974e2a274d23285b898e69eb6dd",
+    "checkpoint": "merged-pr:97",
+    "planHash": "f6228253dede3273ec71bcc184176ecc5bc2fd24959b59e1c3b3690d0b1657b3",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -52,11 +52,7 @@
       "body": "Closes #95\n\n完整 brief：shadow-docs/changes/20260925-feature-draft-crumb-save/brief.md"
     }
   },
-  "knowledge": {
-    "action": "更新",
-    "target": "shadow-docs/knowledge/editor.md",
-    "reason": "面包屑文档操作段落撤回「草稿态纯文本不可点」绝对表述，补草稿态入口语义：有内容时「新草稿」可点、发布既有 saveAs 走原生保存面板落盘（合规 #92 原生位置选择约束），空内容纯文本；verified-depth: unit；verified-scope: app/(shell)/editor, lib/i18n/locales, tests/editor-page"
-  }
+  "knowledge": null
 }
 ---
 
