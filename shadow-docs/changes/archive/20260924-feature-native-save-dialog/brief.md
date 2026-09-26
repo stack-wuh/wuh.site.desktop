@@ -4,7 +4,7 @@
   "name": "20260924-feature-native-save-dialog",
   "type": "feature",
   "scope": "desktop",
-  "status": "published",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20260924-feature-native-save-dialog",
   "files": [
@@ -28,13 +28,13 @@
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "54ae1b308138214f216a1e78db929d5a86b75f16",
-    "verifiedAt": "2026-09-26T15:53:50.249Z"
+    "verifiedCommit": "04d9f6252deeb1437b3ca88b934a5027735c7827",
+    "verifiedAt": "2026-09-26T16:11:30.328Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "pr:106",
-    "planHash": "17605b4ca00f01b9ff69cecae8538f832f28a6ef9ca076d4bebd34d71ba08f47",
+    "checkpoint": "merged-pr:106",
+    "planHash": "1f639b299b9f99406ac17aedf2758e5eef8de2d6939f675a52522e6290ec75b8",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
