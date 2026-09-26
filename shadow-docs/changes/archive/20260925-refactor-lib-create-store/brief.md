@@ -4,7 +4,7 @@
   "name": "20260925-refactor-lib-create-store",
   "type": "refactor",
   "scope": "lib,tests",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "refactor/20260925-refactor-lib-create-store",
   "files": [
@@ -24,18 +24,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 104,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/104",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 105,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/105"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "d3893d350052205043ecebb3cf9aa146f8a48fb3",
-    "verifiedAt": "2026-09-26T15:19:19.943Z"
+    "verifiedCommit": "55e50429880d62380485457235341da858147a07",
+    "verifiedAt": "2026-09-26T15:37:10.969Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:104",
-    "planHash": "2f78ba08c463d231aed998a00317b2261b273b33ec5a0c361098f5d7404553a1",
+    "checkpoint": "merged-pr:105",
+    "planHash": "220000ac87f11e032391e805c42e94b8676bc960daefdbd1e12c1143d682a163",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -67,11 +67,7 @@
       "body": "Closes #104\n\n完整 brief：shadow-docs/changes/20260925-refactor-lib-create-store/brief.md"
     }
   },
-  "knowledge": {
-    "action": "无需变更",
-    "target": null,
-    "reason": "契约零变更的机械收敛（8/9 处迁移，feedback 逐监听器异常隔离为语义特例按预案保留并留注释）；导出面 diff 零增删，残留三件套扫描为零；验证：全量 vitest 58 文件/501 用例绿 + 三 tsconfig typecheck 绿（最终 diff 上新鲜运行）；偏差三条已记入 brief 结果段；知识复评无需变更——store 消费侧约定已由 renderer-shell-routing.md 覆盖。"
-  }
+  "knowledge": null
 }
 ---
 
