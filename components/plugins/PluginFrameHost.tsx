@@ -48,7 +48,9 @@ import {
   clearPluginCapsule,
   registerManifestCapsule,
   removeCapsule,
-  updateCapsule
+  removeCapsuleTab,
+  updateCapsule,
+  updateCapsuleTab
 } from '../../lib/capsule'
 import {
   clearPluginEvents,
@@ -265,6 +267,17 @@ async function handleFrameInvoke(
       }
       if (method === 'remove') {
         removeCapsule(pluginId, String(args[0] ?? ''))
+        return null
+      }
+      // 插件 tab（20260925-feature-capsule-plugin-tab）：manifest tabs 声明制（每插件 ≤1），
+      // sections/rows 结构化上报，护栏与归属校验在注册表（updateCapsuleTab）
+      if (method === 'updateTab') {
+        const [tabId, payload] = args as [string, unknown]
+        updateCapsuleTab(pluginId, String(tabId), payload)
+        return null
+      }
+      if (method === 'removeTab') {
+        removeCapsuleTab(pluginId, String(args[0] ?? ''))
         return null
       }
       throw new Error(`未知胶囊模块方法: ${method}`)

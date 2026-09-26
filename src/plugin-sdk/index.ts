@@ -156,7 +156,9 @@ export const PLUGIN_SDK_JS = `(function () {
     },
     capsule: {
       update: function (id, data) { return call('capsule', 'update', [id, data || {}]); },
-      remove: function (id) { return call('capsule', 'remove', [id]); }
+      remove: function (id) { return call('capsule', 'remove', [id]); },
+      updateTab: function (id, payload) { return call('capsule', 'updateTab', [id, payload || {}]); },
+      removeTab: function (id) { return call('capsule', 'removeTab', [id]); }
     },
     publisher: {
       register: function (id, handler) { publishers[id] = handler; }
@@ -283,6 +285,29 @@ export interface WuhApi {
     ): Promise<void>
     /** 隐藏 manifest 声明的胶囊模块 */
     remove(id: string): Promise<void>
+    /**
+     * 上报 manifest 声明的胶囊插件 tab 内容（20260925-feature-capsule-plugin-tab；
+     * 未声明的 id / 校验不过会被宿主拒绝）：payload = { sections: [{ title?, rows }]
+     * ，row = { icon?, text(1-60), detail?, tone?, viewId? }；护栏 ≤3 sections ×
+     * ≤8 rows、序列化 ≤4KB，row.viewId 须为本插件声明的 main 视图
+     */
+    updateTab(
+      id: string,
+      payload?: {
+        sections?: {
+          title?: string
+          rows: {
+            icon?: string
+            text: string
+            detail?: string
+            tone?: 'default' | 'primary' | 'success' | 'warning'
+            viewId?: string
+          }[]
+        }[]
+      }
+    ): Promise<void>
+    /** 隐藏 manifest 声明的胶囊插件 tab */
+    removeTab(id: string): Promise<void>
   }
   events: {
     /**

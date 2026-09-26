@@ -6,7 +6,7 @@ import type { ReactElement } from 'react'
 import { CapsulePanel } from '../components/capsule/CapsulePanel'
 import { Capsule } from '../components/capsule/Capsule'
 import { EditorSection } from '../components/capsule/sections/EditorSection'
-import { registerManifestCapsule, updateCapsule } from '../lib/capsule'
+import { registerManifestCapsule, removeCapsuleTab, updateCapsule, updateCapsuleTab } from '../lib/capsule'
 import { registerManifestTasks, upsertTask } from '../lib/tasks'
 import { workspaceStore } from '../lib/store'
 import { LocaleProvider } from '../lib/i18n/context'
@@ -19,8 +19,10 @@ import { captureRenderConsole, resetRenderEnv } from './helpers/dom-env'
  * 报出——20260923-fix-capsule-doc-card-nesting 的 button 嵌套即此类）与关键结构约束。
  */
 
+const { pushMock } = vi.hoisted(() => ({ pushMock: vi.fn() }))
+
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn() })
+  useRouter: () => ({ push: pushMock, replace: vi.fn() })
 }))
 
 const MANIFEST: PluginManifest = {
@@ -150,6 +152,104 @@ describe('编辑器模块区渲染冒烟', () => {
   })
 })
 
+
+describe('胶囊插件 tab 渲染（20260925-feature-capsule-plugin-tab）', () => {
+  const TAB_MANIFEST: PluginManifest = {
+    id: 'git-history',
+    name: 'Git 历史',
+    version: '1.0.0',
+    views: [{ id: 'git', area: 'main', title: 'Git 历史', icon: 'git-branch', entry: 'view/index.html', order: 20 }],
+    publishers: [],
+    tabs: [{ id: 'git', title: 'Git', icon: 'git-branch' }],
+    permissions: []
+  }
+
+  beforeEach(() => {
+    pushMock.mockClear()
+  })
+
+  it('未上报（hidden）不出 tab 按钮；运行时上报后动态 tab 出现并渲染 sections/rows，零告警', () => {
+    registerManifestCapsule(TAB_MANIFEST)
+    const console_ = captureRenderConsole()
+    const { container } = renderWithLocale(<CapsulePanel onClose={() => undefined} />)
+
+    expect(screen.queryByRole('tab', { name: 'Git' })).toBeNull()
+
+    act(() => {
+      updateCapsuleTab('git-history', 'git', {
+        sections: [
+          {
+            title: '变更文件',
+            rows: [{ icon: 'file-text', text: 'M lib/capsule.ts', detail: '已修改', tone: 'primary', viewId: 'git' }]
+          },
+          { rows: [{ text: '9f71164 docs(shadow)…' }] }
+        ]
+      })
+    })
+
+    expect(screen.getByRole('tab', { name: 'Git' })).toBeTruthy()
+    act(() => {
+      fireEvent.click(screen.getByRole('tab', { name: 'Git' }))
+    })
+    expect(screen.getByText('变更文件')).toBeTruthy()
+    expect(screen.getByText('M lib/capsule.ts')).toBeTruthy()
+    expect(screen.getByText('已修改')).toBeTruthy()
+    expect(screen.getByText('9f71164 docs(shadow)…')).toBeTruthy()
+    expect(container.querySelectorAll('button button').length).toBe(0)
+    expect(console_.errors).toEqual([])
+    expect(console_.warnings).toEqual([])
+    console_.restore()
+  })
+
+  it('含 viewId 的行整行可点：跳来源插件视图并关面板', () => {
+    registerManifestCapsule(TAB_MANIFEST)
+    updateCapsuleTab('git-history', 'git', {
+      sections: [{ rows: [{ text: 'M lib/capsule.ts', viewId: 'git' }] }]
+    })
+    const onClose = vi.fn()
+    renderWithLocale(<CapsulePanel onClose={onClose} />)
+
+    act(() => {
+      fireEvent.click(screen.getByRole('tab', { name: 'Git' }))
+    })
+    const row = screen.getByText('M lib/capsule.ts').closest('button')
+    expect(row).toBeTruthy()
+    act(() => {
+      fireEvent.click(row!)
+    })
+    expect(pushMock).toHaveBeenCalledWith('/plugin/git-history/git')
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
+  it('removeTab 后 tab 按钮消失，选中态回落 tasks', () => {
+    registerManifestCapsule(TAB_MANIFEST)
+    updateCapsuleTab('git-history', 'git', { sections: [{ rows: [{ text: 'x' }] }] })
+    renderWithLocale(<CapsulePanel onClose={() => undefined} />)
+
+    act(() => {
+      fireEvent.click(screen.getByRole('tab', { name: 'Git' }))
+    })
+    expect(screen.getByText('x')).toBeTruthy()
+
+    act(() => {
+      removeCapsuleTab('git-history', 'git')
+    })
+    expect(screen.queryByRole('tab', { name: 'Git' })).toBeNull()
+    // 回落 tasks：空态可见
+    expect(screen.getByText('等待插件任务')).toBeTruthy()
+  })
+
+  it('无 section 空数据：tab 在但显示空态文案', () => {
+    registerManifestCapsule(TAB_MANIFEST)
+    updateCapsuleTab('git-history', 'git', { sections: [] })
+    renderWithLocale(<CapsulePanel onClose={() => undefined} />)
+
+    act(() => {
+      fireEvent.click(screen.getByRole('tab', { name: 'Git' }))
+    })
+    expect(screen.getByText('暂无数据')).toBeTruthy()
+  })
+})
 
 describe('胶囊 chip 开合与点外关语义（20260924-fix-capsule-self-close）', () => {
   function openCapsule(): {

@@ -25,13 +25,15 @@ import {
   type TaskState,
   type TaskStatus
 } from '../../lib/tasks'
-import { capsuleStore, visibleCapsuleModules, type CapsuleModuleState } from '../../lib/capsule'
+import { capsuleStore, visibleCapsuleModules, visibleCapsuleTabs, type CapsuleModuleState, type CapsuleTabRow } from '../../lib/capsule'
 import { useLocale } from '../../lib/i18n/context'
 import { EditorSection } from './sections/EditorSection'
 import { CenterSection, ModuleBig, ModuleCard, ModuleGrid, ModuleHead, ModuleIcon, ModulePanel, ModuleSub, SectionHint, SectionLabel } from './modules'
 
 type TaskTab = 'tasks' | 'modules'
 type StatusFilter = 'all' | 'active' | 'done'
+/** 插件 tab 的选中值 = lib/capsule 注册表 key（`plugin:<pid>:<tid>`）；tabs 消失时回落 tasks */
+type PanelTab = TaskTab | string
 
 const Pop = styled.div`
   /* 贴 chip（TitleBar 右侧，垂直居中）下缘向下弹出：panel 顶约落在 TitleBar
@@ -100,6 +102,9 @@ const TabRow = styled.div`
 `
 
 const Tab = styled.button<{ $active: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   padding: 6px 10px 7px;
   background: transparent;
   border: none;
@@ -124,6 +129,83 @@ const Tab = styled.button<{ $active: boolean }>`
   @media (prefers-reduced-motion: reduce) {
     transition: none;
   }
+`
+
+/* 插件 tab 内容：通用 sections/rows 渲染器（20260925-feature-capsule-plugin-tab）——
+   分区间 border-top 分隔，行 = tone 色点/白名单图标 + 文本 + detail；含 viewId 的
+   行整行可点跳来源插件视图（button 不嵌套：面板本体是 div，安全） */
+const TabSection = styled.section`
+  padding: 6px 0 4px;
+
+  & + & {
+    border-top: 1px solid var(--chrome-border);
+  }
+`
+
+const TabRows = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 6px 4px;
+`
+
+const PluginTabRow = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: calc(100% - 8px);
+  margin: 0 4px;
+  padding: 6px 8px;
+  background: transparent;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-family: var(--font-sans);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 150ms ease-out;
+
+  &:hover {
+    background: var(--chrome-hover);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: -2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+`
+
+const PluginTabRowStatic = styled(PluginTabRow)`
+  cursor: default;
+
+  &:hover {
+    background: transparent;
+  }
+`
+
+const TabRowText = styled.span`
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+`
+
+const TabRowDetail = styled.span`
+  flex: none;
+  max-width: 45%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-muted);
+  font-size: 10.5px;
 `
 
 const FilterRow = styled.div`
@@ -626,16 +708,53 @@ function CapsuleModuleTile(props: { mod: CapsuleModuleState; onNavigate: () => v
   )
 }
 
+/** 插件 tab 行：tone 色点/白名单图标 + mono 文本 + detail；含 viewId 整行可点跳来源视图 */
+function PluginTabRowItem(props: { row: CapsuleTabRow; pluginId: string; onNavigate: () => void }): React.JSX.Element {
+  const { row, pluginId } = props
+  const router = useRouter()
+  const RowBase = row.viewId ? PluginTabRow : PluginTabRowStatic
+  const inner = (
+    <>
+      {row.tone && row.tone !== 'default' && <ToneDot $tone={row.tone} />}
+      {row.icon && (
+        <span style={{ display: 'inline-flex', color: 'var(--primary-color)', flex: 'none' }}>
+          <AppIcon icon={pluginIcon(row.icon as PluginIconName)} size="xs" decorative />
+        </span>
+      )}
+      <TabRowText>{row.text}</TabRowText>
+      {row.detail && <TabRowDetail>{row.detail}</TabRowDetail>}
+    </>
+  )
+  if (row.viewId) {
+    return (
+      <RowBase
+        type="button"
+        onClick={() => {
+          router.push(`/plugin/${pluginId}/${row.viewId}`)
+          props.onNavigate()
+        }}
+      >
+        {inner}
+      </RowBase>
+    )
+  }
+  return <RowBase>{inner}</RowBase>
+}
+
 export function CapsulePanel(props: { onClose: () => void }): React.JSX.Element {
   const { t } = useLocale()
   useSyncExternalStore(tasksStore.subscribe, tasksStore.get, tasksStore.get)
   useSyncExternalStore(capsuleStore.subscribe, capsuleStore.get, capsuleStore.get)
-  const [tab, setTab] = useState<TaskTab>('tasks')
+  const [tab, setTab] = useState<PanelTab>('tasks')
   const [filter, setFilter] = useState<StatusFilter>('all')
   const [pluginFilter, setPluginFilter] = useState<string | null>(null)
   const tasks = visibleTasks()
   const agg = taskAggregate()
   const modules = visibleCapsuleModules()
+  const pluginTabs = visibleCapsuleTabs()
+  // 插件 tab key = 注册表 key；被移除/停用时回落 tasks（派生兜底，无需 effect）
+  const activePlugin = tab.startsWith('plugin:') ? pluginTabs.find((t) => t.key === tab) : undefined
+  const effectiveTab: 'tasks' | 'modules' | string = activePlugin ? tab : tab === 'modules' ? 'modules' : 'tasks'
   const now = Date.now()
 
   const sourceIds = [...new Set(tasks.map((task) => task.pluginId))].sort()
@@ -684,9 +803,9 @@ export function CapsulePanel(props: { onClose: () => void }): React.JSX.Element 
           type="button"
           role="tab"
           id="capsule-tab-tasks"
-          aria-selected={tab === 'tasks'}
+          aria-selected={effectiveTab === 'tasks'}
           aria-controls="capsule-tabpanel-tasks"
-          $active={tab === 'tasks'}
+          $active={effectiveTab === 'tasks'}
           onClick={() => setTab('tasks')}
         >
           {t('capsule.tabTasks')}
@@ -695,16 +814,34 @@ export function CapsulePanel(props: { onClose: () => void }): React.JSX.Element 
           type="button"
           role="tab"
           id="capsule-tab-modules"
-          aria-selected={tab === 'modules'}
+          aria-selected={effectiveTab === 'modules'}
           aria-controls="capsule-tabpanel-modules"
-          $active={tab === 'modules'}
+          $active={effectiveTab === 'modules'}
           onClick={() => setTab('modules')}
         >
           {t('capsule.tabModules')}
         </Tab>
+        {pluginTabs.map((pt) => {
+          const Icon = pluginIcon(pt.icon as PluginIconName)
+          return (
+            <Tab
+              key={pt.key}
+              type="button"
+              role="tab"
+              id={`capsule-tab-${pt.key}`}
+              aria-selected={effectiveTab === pt.key}
+              aria-controls={`capsule-tabpanel-${pt.key}`}
+              $active={effectiveTab === pt.key}
+              onClick={() => setTab(pt.key)}
+            >
+              <AppIcon icon={Icon} size="xs" decorative />
+              {pt.title}
+            </Tab>
+          )
+        })}
       </TabRow>
 
-      {tab === 'tasks' ? (
+      {effectiveTab === 'tasks' ? (
         <div id="capsule-tabpanel-tasks" role="tabpanel" aria-labelledby="capsule-tab-tasks">
           <FilterRow>
             <FilterChip type="button" aria-pressed={filter === 'all'} $on={filter === 'all'} onClick={() => setFilter('all')}>
@@ -768,7 +905,7 @@ export function CapsulePanel(props: { onClose: () => void }): React.JSX.Element 
             </Timeline>
           )}
         </div>
-      ) : (
+      ) : effectiveTab === 'modules' ? (
         <div id="capsule-tabpanel-modules" role="tabpanel" aria-labelledby="capsule-tab-modules">
           <EditorSection />
           <CenterSection aria-label={t('capsule.pluginsSection')}>
@@ -788,6 +925,36 @@ export function CapsulePanel(props: { onClose: () => void }): React.JSX.Element 
             <PluginNote>{t('capsule.pluginNote')}</PluginNote>
           </CenterSection>
         </div>
+      ) : (
+        activePlugin && (
+          <div
+            id={`capsule-tabpanel-${activePlugin.key}`}
+            role="tabpanel"
+            aria-labelledby={`capsule-tab-${activePlugin.key}`}
+          >
+            {activePlugin.sections.length === 0 ? (
+              <EmptyState data-testid="capsule-tab-empty">
+                <EmptyTitle>{t('capsule.tabEmpty')}</EmptyTitle>
+              </EmptyState>
+            ) : (
+              activePlugin.sections.map((sec, i) => (
+                <TabSection key={`${activePlugin.key}:${i}`} aria-label={sec.title}>
+                  {sec.title && (
+                    <SectionLabel>
+                      {sec.title}
+                      <SectionHint>{activePlugin.title.toUpperCase()}</SectionHint>
+                    </SectionLabel>
+                  )}
+                  <TabRows>
+                    {sec.rows.map((row, j) => (
+                      <PluginTabRowItem key={j} row={row} pluginId={activePlugin.pluginId} onNavigate={props.onClose} />
+                    ))}
+                  </TabRows>
+                </TabSection>
+              ))
+            )}
+          </div>
+        )
       )}
     </Pop>
   )

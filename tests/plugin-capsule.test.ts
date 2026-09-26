@@ -5,9 +5,12 @@ import {
   clearPluginCapsule,
   registerManifestCapsule,
   removeCapsule,
+  removeCapsuleTab,
   resetCapsuleForTests,
   updateCapsule,
-  visibleCapsuleModules
+  updateCapsuleTab,
+  visibleCapsuleModules,
+  visibleCapsuleTabs
 } from '../lib/capsule'
 
 /**
@@ -160,5 +163,121 @@ describe('capsule 注册表（声明制槽位）', () => {
     updateCapsule('acme', 'issues', { value: 5 })
     clearPluginCapsule('acme')
     expect(capsuleStore.get().modules).toHaveLength(0)
+  })
+})
+
+// ---------- 插件 Tab（20260925-feature-capsule-plugin-tab） ----------
+
+const manifestWithTab: PluginManifest = {
+  id: 'git-history',
+  name: 'Git 历史',
+  version: '1.0.0',
+  views: [
+    { id: 'git', area: 'main', title: 'Git 历史', icon: 'git-branch', entry: 'view/index.html', order: 20 },
+    { id: 'peek', area: 'float', title: '浮窗', icon: 'eye', entry: 'view/peek.html', order: 21 }
+  ],
+  publishers: [],
+  tabs: [{ id: 'git', title: 'Git', icon: 'git-branch' }],
+  permissions: []
+}
+
+describe('capsule tab 注册表（声明制，20260925-feature-capsule-plugin-tab）', () => {
+  it('注册 manifest tab：默认隐藏（未上报前不出 tab 按钮），固化 main 视图集合', () => {
+    registerManifestCapsule(manifestWithTab)
+    expect(visibleCapsuleTabs()).toEqual([])
+    const tabs = capsuleStore.get().tabs
+    expect(tabs).toHaveLength(1)
+    expect(tabs[0]).toMatchObject({ pluginId: 'git-history', id: 'git', title: 'Git', hidden: true })
+    expect(tabs[0]?.viewIds).toEqual(['git'])
+  })
+
+  it('updateTab 合法上报后可见；重复注册幂等不覆盖数据', () => {
+    registerManifestCapsule(manifestWithTab)
+    updateCapsuleTab('git-history', 'git', {
+      sections: [
+        {
+          title: '变更文件',
+          rows: [
+            { icon: 'file-text', text: 'M lib/capsule.ts', detail: '已修改', tone: 'primary', viewId: 'git' },
+            { text: 'A tests/plugin-capsule.test.ts' }
+          ]
+        },
+        { title: '最近提交', rows: [{ text: '9f71164 docs(shadow)…' }] }
+      ]
+    })
+    const visible = visibleCapsuleTabs()
+    expect(visible).toHaveLength(1)
+    expect(visible[0]?.hidden).toBe(false)
+    expect(visible[0]?.sections).toHaveLength(2)
+    expect(visible[0]?.sections[0]?.rows[0]).toMatchObject({ text: 'M lib/capsule.ts', tone: 'primary', viewId: 'git' })
+
+    registerManifestCapsule(manifestWithTab)
+    expect(capsuleStore.get().tabs[0]?.sections).toHaveLength(2)
+  })
+
+  it('removeTab 隐藏；未声明/跨插件拒绝；再 update 恢复', () => {
+    registerManifestCapsule(manifestWithTab)
+    updateCapsuleTab('git-history', 'git', { sections: [{ rows: [{ text: 'x' }] }] })
+    removeCapsuleTab('git-history', 'git')
+    expect(visibleCapsuleTabs()).toHaveLength(0)
+
+    expect(() => updateCapsuleTab('git-history', 'ghost', { sections: [] })).toThrow(/未声明/)
+    expect(() => removeCapsuleTab('other', 'git')).toThrow(/未声明/)
+
+    updateCapsuleTab('git-history', 'git', { sections: [] })
+    expect(visibleCapsuleTabs()).toHaveLength(1)
+  })
+
+  it('护栏：sections ≤3、每段 rows ≤8、序列化 ≤4KB', () => {
+    registerManifestCapsule(manifestWithTab)
+    expect(() => updateCapsuleTab('git-history', 'git', { sections: Array.from({ length: 4 }, () => ({ rows: [] })) })).toThrow(/最多 3/)
+    expect(() =>
+      updateCapsuleTab('git-history', 'git', { sections: [{ rows: Array.from({ length: 9 }, () => ({ text: 'x' })) }] })
+    ).toThrow(/最多 8/)
+    expect(() =>
+      updateCapsuleTab('git-history', 'git', { sections: [{ rows: [{ text: 'x'.repeat(5000) }] }] })
+    ).toThrow(/4096/)
+  })
+
+  it('严格 typeof：text 必填 1-60、icon 白名单、detail/tone/title 类型与上限', () => {
+    registerManifestCapsule(manifestWithTab)
+    expect(() => updateCapsuleTab('git-history', 'git', { sections: 'nope' })).toThrow(/数组/)
+    expect(() => updateCapsuleTab('git-history', 'git', { sections: [{ rows: [{ text: '' }] }] })).toThrow(/text/)
+    expect(() => updateCapsuleTab('git-history', 'git', { sections: [{ rows: [{ text: 42 }] }] })).toThrow(/text/)
+    expect(() => updateCapsuleTab('git-history', 'git', { sections: [{ rows: [{ text: 'x', icon: '💀' }] }] })).toThrow(/白名单/)
+    expect(() => updateCapsuleTab('git-history', 'git', { sections: [{ rows: [{ text: 'x', detail: 'd'.repeat(81) }] }] })).toThrow(/detail/)
+    expect(() => updateCapsuleTab('git-history', 'git', { sections: [{ rows: [{ text: 'x', tone: 'rainbow' }] }] })).toThrow(/tone/)
+    expect(() => updateCapsuleTab('git-history', 'git', { sections: [{ title: 't'.repeat(21), rows: [] }] })).toThrow(/title/)
+    expect(() => updateCapsuleTab('git-history', 'git', { sections: [{ rows: ['x'] }] })).toThrow(/对象/)
+    // 非法调用不产生可见 tab（校验抛错前未 commit）
+    expect(visibleCapsuleTabs()).toHaveLength(0)
+  })
+
+  it('row.viewId 须指向本插件已声明的 main 视图（float 视图拒绝）', () => {
+    registerManifestCapsule(manifestWithTab)
+    expect(() =>
+      updateCapsuleTab('git-history', 'git', { sections: [{ rows: [{ text: 'x', viewId: 'ghost' }] }] })
+    ).toThrow(/main 视图/)
+    expect(() =>
+      updateCapsuleTab('git-history', 'git', { sections: [{ rows: [{ text: 'x', viewId: 'peek' }] }] })
+    ).toThrow(/main 视图/)
+
+    updateCapsuleTab('git-history', 'git', { sections: [{ rows: [{ text: 'x', viewId: 'git' }] }] })
+    expect(visibleCapsuleTabs()[0]?.sections[0]?.rows[0]?.viewId).toBe('git')
+  })
+
+  it('clearPluginCapsule 移除插件 tab；停用即消失', () => {
+    registerManifestCapsule(manifestWithTab)
+    updateCapsuleTab('git-history', 'git', { sections: [{ rows: [{ text: 'x' }] }] })
+    clearPluginCapsule('git-history')
+    expect(capsuleStore.get().tabs).toHaveLength(0)
+    expect(visibleCapsuleTabs()).toHaveLength(0)
+  })
+
+  it('tab payload 须可 JSON 序列化', () => {
+    registerManifestCapsule(manifestWithTab)
+    const cyclic: Record<string, unknown> = {}
+    cyclic.self = cyclic
+    expect(() => updateCapsuleTab('git-history', 'git', { sections: [{ rows: [{ text: cyclic as unknown as string }] }] })).toThrow(/序列化/)
   })
 })
