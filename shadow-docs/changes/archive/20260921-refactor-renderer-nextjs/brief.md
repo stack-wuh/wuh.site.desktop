@@ -4,7 +4,7 @@
   "name": "20260921-refactor-renderer-nextjs",
   "type": "refactor",
   "scope": "app,components,lib,src,tests,shadow-docs/knowledge",
-  "status": "published",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "refactor/20260921-refactor-renderer-nextjs",
   "files": [
@@ -34,13 +34,13 @@
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "6c3fc5cec75c7fd69ef5ebb883e20e99c74482fa",
-    "verifiedAt": "2026-09-21T10:17:31.041Z"
+    "verifiedCommit": "e5b64f48169004767377e84ddea0d6291c6c1a56",
+    "verifiedAt": "2026-09-26T15:52:31.500Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "pr:14",
-    "planHash": "ea767d0df25736668c7de90f40f15d7950bd4802f55f9335f87c3854002af1a7",
+    "checkpoint": "merged-pr:14",
+    "planHash": "2d2e2fd4919f4e333de7ef8ead7d523d0908257f1488095a6162897b501a705e",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
