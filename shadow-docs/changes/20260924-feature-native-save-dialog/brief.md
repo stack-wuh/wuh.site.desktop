@@ -4,7 +4,7 @@
   "name": "20260924-feature-native-save-dialog",
   "type": "feature",
   "scope": "desktop",
-  "status": "reviewed",
+  "status": "published",
   "baseBranch": "main",
   "branch": "feature/20260924-feature-native-save-dialog",
   "files": [
@@ -23,18 +23,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 85,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/85",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 106,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/106"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "9d23c3c278617471706a6fcb0dfe9b879cc547ff",
-    "verifiedAt": "2026-09-24T15:42:34.772Z"
+    "verifiedCommit": "54ae1b308138214f216a1e78db929d5a86b75f16",
+    "verifiedAt": "2026-09-26T15:53:50.249Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:85",
-    "planHash": "8aaa4b90af342e14990dd7c23e67501772a2b0026e355203d781c87a2ad3d88d",
+    "checkpoint": "pr:106",
+    "planHash": "17605b4ca00f01b9ff69cecae8538f832f28a6ef9ca076d4bebd34d71ba08f47",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -43,6 +43,12 @@
       "labels": [
         "feature"
       ]
+    },
+    "commit": {
+      "files": [
+        "shadow-docs/changes/20260924-feature-native-save-dialog/brief.md"
+      ],
+      "message": "docs(shadow): native-save-dialog 状态回填——review 记录对齐当前 HEAD（实现已随历史提交进入 main，流程补录）"
     }
   },
   "knowledge": null
