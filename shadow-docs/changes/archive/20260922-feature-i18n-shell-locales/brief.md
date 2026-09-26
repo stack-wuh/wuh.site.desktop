@@ -4,7 +4,7 @@
   "name": "20260922-feature-i18n-shell-locales",
   "type": "feature",
   "scope": "desktop",
-  "status": "branched",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20260922-feature-i18n-shell-locales",
   "files": [
@@ -25,18 +25,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 27,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/27",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 109,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/109"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "54ae1b308138214f216a1e78db929d5a86b75f16",
-    "verifiedAt": "2026-09-26T15:53:49.175Z"
+    "verifiedCommit": "3a4a77522fe0ab2f40e6290d8bba8a3ea074ad72",
+    "verifiedAt": "2026-09-26T16:16:02.269Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:27",
-    "planHash": "f9241ceebcba3a511969bea8c318e565cdcfb9e43c229d787752b1efb4f9a74f",
+    "checkpoint": "merged-pr:109",
+    "planHash": "b7cd5c421a90341b016fbd1f435f6f541f7a68179a1bfaf648454c569ca74cb2",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {

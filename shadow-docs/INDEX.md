@@ -2,7 +2,7 @@
 
 | 变更 | 状态 | 路径 |
 |------|------|------|
-| 20260917-feature-settings-main-view | branched | shadow-docs/changes/20260917-feature-settings-main-view/brief.md |
+| 20260917-feature-settings-main-view | reviewed | shadow-docs/changes/20260917-feature-settings-main-view/brief.md |
 | 20260917-feature-shell-chrome-plugin-api | ✅ 完成 | shadow-docs/changes/archive/20260917-feature-shell-chrome-plugin-api/brief.md |
 | 20260918-feature-shell-float-layer | ✅ 完成 | shadow-docs/changes/archive/20260918-feature-shell-float-layer/brief.md |
 | 20260919-feature-brand-icon-redesign | ✅ 完成 | shadow-docs/changes/archive/20260919-feature-brand-icon-redesign/brief.md |
@@ -19,7 +19,7 @@
 | 20260921-refactor-renderer-nextjs | ✅ 完成 | shadow-docs/changes/archive/20260921-refactor-renderer-nextjs/brief.md |
 | 20260922-feature-git-identity-default | ✅ 完成 | shadow-docs/changes/archive/20260922-feature-git-identity-default/brief.md |
 | 20260922-feature-home-editor-panel | ✅ 完成 | shadow-docs/changes/archive/20260922-feature-home-editor-panel/brief.md |
-| 20260922-feature-i18n-shell-locales | branched | shadow-docs/changes/20260922-feature-i18n-shell-locales/brief.md |
+| 20260922-feature-i18n-shell-locales | ✅ 完成 | shadow-docs/changes/archive/20260922-feature-i18n-shell-locales/brief.md |
 | 20260922-feature-shell-capsule | ✅ 完成 | shadow-docs/changes/archive/20260922-feature-shell-capsule/brief.md |
 | 20260922-feature-user-center-github-oauth | ✅ 完成 | shadow-docs/changes/archive/20260922-feature-user-center-github-oauth/brief.md |
 | 20260922-feature-user-identity-sync | ✅ 完成 | shadow-docs/changes/archive/20260922-feature-user-identity-sync/brief.md |
@@ -42,7 +42,7 @@
 | 20260924-feature-native-save-dialog | ✅ 完成 | shadow-docs/changes/archive/20260924-feature-native-save-dialog/brief.md |
 | 20260924-feature-projects-editor-page | ✅ 完成 | shadow-docs/changes/archive/20260924-feature-projects-editor-page/brief.md |
 | 20260924-feature-sidemenu-bottom-toggle | ✅ 完成 | shadow-docs/changes/archive/20260924-feature-sidemenu-bottom-toggle/brief.md |
-| 20260924-feature-sidemenu-settings-item | branched | shadow-docs/changes/20260924-feature-sidemenu-settings-item/brief.md |
+| 20260924-feature-sidemenu-settings-item | reviewed | shadow-docs/changes/20260924-feature-sidemenu-settings-item/brief.md |
 | 20260924-feature-task-center-event-bus | ✅ 完成 | shadow-docs/changes/archive/20260924-feature-task-center-event-bus/brief.md |
 | 20260924-feature-ui-feedback-system | ✅ 完成 | shadow-docs/changes/archive/20260924-feature-ui-feedback-system/brief.md |
 | 20260924-fix-capsule-header-chrome | ✅ 完成 | shadow-docs/changes/archive/20260924-fix-capsule-header-chrome/brief.md |
