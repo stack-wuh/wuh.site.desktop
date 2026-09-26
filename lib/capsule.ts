@@ -6,9 +6,14 @@
  * 运行时插件帧（视图帧或逻辑帧）经 capsule.update / capsule.remove 只能更新
  * 「自己声明过」的模块内容或隐藏——跨插件、未声明、模板不符的数据一律拒绝。
  * 数据单向上报，宿主按模板白名单渲染（count/status），插件帧不触 DOM。
+ *
+ * 插件 Tab（20260925-feature-capsule-plugin-tab）：manifest tabs 声明（每插件 ≤1），
+ * 运行时经 capsule.updateTab / capsule.removeTab 以 sections/rows 结构化上报显隐——
+ * 严格 typeof 校验（帧消息禁 Number() 宽转）+ 数量/体积护栏（≤3 sections × ≤8 rows、
+ * 序列化 ≤4KB，沿用 events/tasks 先例）；row.viewId 须为本插件已声明的 main 视图。
  */
 
-import type { CapsuleTemplate, PluginManifest } from '@shared/plugin'
+import { PLUGIN_ICONS, type CapsuleTemplate, type PluginManifest } from '@shared/plugin'
 
 export type CapsuleTone = 'default' | 'primary' | 'success' | 'warning'
 
@@ -35,11 +40,40 @@ export interface CapsuleModuleState {
   hidden: boolean
 }
 
-interface CapsuleState {
-  modules: CapsuleModuleState[]
+/** 插件 Tab 行：宿主通用渲染器绘制；icon 白名单、viewId 归属在更新入口校验 */
+export interface CapsuleTabRow {
+  icon?: string
+  text: string
+  detail?: string
+  tone?: CapsuleTone
+  viewId?: string
 }
 
-let state: CapsuleState = { modules: [] }
+export interface CapsuleTabSection {
+  title?: string
+  rows: CapsuleTabRow[]
+}
+
+export interface CapsuleTabState {
+  /** `plugin:${pluginId}:${tabId}`（对齐 lib/routes pluginPanelKey 约定，面板选中态寻址用） */
+  key: string
+  pluginId: string
+  id: string
+  title: string
+  icon: string
+  /** 运行时 removeTab 后隐藏（首次 updateTab 前亦隐藏，不出 tab 按钮） */
+  hidden: boolean
+  sections: CapsuleTabSection[]
+  /** 声明期固化的本插件 main 视图 id 集合（updateTab 的 viewId 归属校验用，不参与渲染） */
+  viewIds: string[]
+}
+
+interface CapsuleState {
+  modules: CapsuleModuleState[]
+  tabs: CapsuleTabState[]
+}
+
+let state: CapsuleState = { modules: [], tabs: [] }
 const listeners = new Set<() => void>()
 
 function emit(): void {
@@ -47,7 +81,7 @@ function emit(): void {
 }
 
 function commit(): void {
-  state = { modules: [...state.modules] }
+  state = { modules: [...state.modules], tabs: [...state.tabs] }
   emit()
 }
 
@@ -63,6 +97,11 @@ export const capsuleStore = {
 
 export function capsuleKey(pluginId: string, moduleId: string): string {
   return `${pluginId}:${moduleId}`
+}
+
+/** tab 注册表 key：plugin:<pid>:<tid>（对齐 lib/routes pluginPanelKey 约定） */
+function tabKey(pluginId: string, tabId: string): string {
+  return `plugin:${pluginId}:${tabId}`
 }
 
 const TONES: readonly CapsuleTone[] = ['default', 'primary', 'success', 'warning']
@@ -85,14 +124,30 @@ export function registerManifestCapsule(manifest: PluginManifest): void {
     })
     changed = true
   }
+  for (const tab of manifest.tabs ?? []) {
+    const key = tabKey(manifest.id, tab.id)
+    if (state.tabs.some((t) => t.key === key)) continue
+    state.tabs.push({
+      key,
+      pluginId: manifest.id,
+      id: tab.id,
+      title: tab.title,
+      icon: tab.icon,
+      hidden: true,
+      sections: [],
+      viewIds: manifest.views.filter((v) => v.area === 'main').map((v) => v.id)
+    })
+    changed = true
+  }
   if (changed) commit()
 }
 
-/** 停用/卸载插件时移除其全部模块 */
+/** 停用/卸载插件时移除其全部模块与 tab */
 export function clearPluginCapsule(pluginId: string): void {
-  const before = state.modules.length
+  const before = state.modules.length + state.tabs.length
   state.modules = state.modules.filter((m) => m.pluginId !== pluginId)
-  if (state.modules.length !== before) commit()
+  state.tabs = state.tabs.filter((t) => t.pluginId !== pluginId)
+  if (state.modules.length + state.tabs.length !== before) commit()
 }
 
 /** count 模板数据校验；非法抛错（错误信息含期望字段，供插件帧排查） */
@@ -154,12 +209,103 @@ export function removeCapsule(pluginId: string, moduleId: string): void {
   commit()
 }
 
+// ---------- 插件 Tab（20260925-feature-capsule-plugin-tab） ----------
+
+const MAX_TAB_SECTIONS = 3
+const MAX_TAB_ROWS_PER_SECTION = 8
+const MAX_TAB_PAYLOAD_BYTES = 4096
+
+/** 运行时上报 tab 内容（未声明 tab 报错；update 同时恢复 removeTab 的隐藏）。
+    payload = sections[]，逐字段严格 typeof 校验（帧消息禁 Number() 宽转），护栏：
+    ≤3 sections × ≤8 rows、JSON 序列化 ≤4KB、row.icon 白名单、row.viewId 归属本插件 main 视图 */
+export function updateCapsuleTab(pluginId: string, tabId: string, payload: unknown): void {
+  const tab = state.tabs.find((t) => t.key === tabKey(pluginId, tabId))
+  if (!tab) throw new Error(`胶囊 Tab 未声明: ${pluginId}/${tabId}`)
+  let raw = ''
+  try {
+    raw = JSON.stringify(payload ?? {})
+  } catch {
+    throw new Error('tab payload 须可 JSON 序列化')
+  }
+  if (raw.length > MAX_TAB_PAYLOAD_BYTES) {
+    throw new Error(`tab payload 序列化须 ≤${MAX_TAB_PAYLOAD_BYTES} 字节: ${raw.length}`)
+  }
+  const p = (payload ?? {}) as Record<string, unknown>
+  if (!Array.isArray(p.sections)) throw new Error('sections 须为数组')
+  if (p.sections.length > MAX_TAB_SECTIONS) {
+    throw new Error(`sections 最多 ${MAX_TAB_SECTIONS} 组`)
+  }
+  const sections: CapsuleTabSection[] = p.sections.map((s, si) => {
+    if (typeof s !== 'object' || s === null || Array.isArray(s)) {
+      throw new Error(`sections[${si}] 须为对象`)
+    }
+    const sec = s as Record<string, unknown>
+    if (sec.title !== undefined && (typeof sec.title !== 'string' || sec.title.length === 0 || sec.title.length > 20)) {
+      throw new Error(`sections[${si}].title 须为 1-20 字符的字符串`)
+    }
+    if (!Array.isArray(sec.rows)) throw new Error(`sections[${si}].rows 须为数组`)
+    if (sec.rows.length > MAX_TAB_ROWS_PER_SECTION) {
+      throw new Error(`sections[${si}].rows 最多 ${MAX_TAB_ROWS_PER_SECTION} 行`)
+    }
+    const rows: CapsuleTabRow[] = sec.rows.map((r, ri) => {
+      if (typeof r !== 'object' || r === null || Array.isArray(r)) {
+        throw new Error(`sections[${si}].rows[${ri}] 须为对象`)
+      }
+      const row = r as Record<string, unknown>
+      if (typeof row.text !== 'string' || row.text.length === 0 || row.text.length > 60) {
+        throw new Error(`sections[${si}].rows[${ri}].text 须为 1-60 字符的字符串`)
+      }
+      if (row.icon !== undefined && !(PLUGIN_ICONS as readonly string[]).includes(String(row.icon))) {
+        throw new Error(`sections[${si}].rows[${ri}].icon 不在白名单: ${String(row.icon)}`)
+      }
+      if (row.detail !== undefined && (typeof row.detail !== 'string' || row.detail.length > 80)) {
+        throw new Error(`sections[${si}].rows[${ri}].detail 须为 ≤80 字符的字符串`)
+      }
+      if (row.tone !== undefined && !TONES.includes(row.tone as CapsuleTone)) {
+        throw new Error(`sections[${si}].rows[${ri}].tone 只能是 ${TONES.join('/')}: ${String(row.tone)}`)
+      }
+      if (row.viewId !== undefined) {
+        if (typeof row.viewId !== 'string' || !tab.viewIds.includes(row.viewId)) {
+          throw new Error(`sections[${si}].rows[${ri}].viewId 须指向本插件已声明的 main 视图: ${String(row.viewId)}`)
+        }
+      }
+      return {
+        ...(row.icon !== undefined ? { icon: row.icon as string } : {}),
+        text: row.text,
+        ...(row.detail !== undefined ? { detail: row.detail as string } : {}),
+        ...(row.tone !== undefined ? { tone: row.tone as CapsuleTone } : {}),
+        ...(row.viewId !== undefined ? { viewId: row.viewId as string } : {})
+      }
+    })
+    return {
+      ...(sec.title !== undefined ? { title: sec.title as string } : {}),
+      rows
+    }
+  })
+  tab.sections = sections
+  tab.hidden = false
+  commit()
+}
+
+/** 运行时隐藏 tab（未声明报错） */
+export function removeCapsuleTab(pluginId: string, tabId: string): void {
+  const tab = state.tabs.find((t) => t.key === tabKey(pluginId, tabId))
+  if (!tab) throw new Error(`胶囊 Tab 未声明: ${pluginId}/${tabId}`)
+  tab.hidden = true
+  commit()
+}
+
 /** 控制中心插件区渲染用：可见模块（已排序：pluginId → 声明序） */
 export function visibleCapsuleModules(): CapsuleModuleState[] {
   return state.modules.filter((m) => !m.hidden)
 }
 
+/** 面板动态 tab 渲染用：非隐藏 tab（声明序 = manifest 声明序 × 插件注册序） */
+export function visibleCapsuleTabs(): CapsuleTabState[] {
+  return state.tabs.filter((t) => !t.hidden)
+}
+
 export function resetCapsuleForTests(): void {
-  state = { modules: [] }
+  state = { modules: [], tabs: [] }
   emit()
 }

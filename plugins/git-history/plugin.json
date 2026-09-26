@@ -23,6 +23,13 @@
       "viewId": "git"
     }
   ],
+  "tabs": [
+    {
+      "id": "git",
+      "title": "Git",
+      "icon": "git-branch"
+    }
+  ],
   "publishers": [],
   "permissions": ["git.status.read", "git.history.write", "document.read.write"]
 }

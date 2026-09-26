@@ -89,6 +89,16 @@ export interface PluginCapsuleContribution {
   viewId?: string
 }
 
+/** 胶囊面板插件 Tab 声明：声明制（每插件 ≤1）；内容经 SDK capsule.updateTab/removeTab
+ * 以 sections/rows 结构化上报，宿主按通用渲染器绘制，插件帧不触 DOM（20260925-feature-capsule-plugin-tab） */
+export interface PluginCapsuleTabContribution {
+  /** 插件内唯一，[a-z0-9][a-z0-9._-]*；SDK 上报/隐藏以该 id 寻址 */
+  id: string
+  /** tab 标题（运行时不可变；插件 manifest 文案不进壳层 i18n 机制） */
+  title: string
+  icon: PluginIconName
+}
+
 export interface PluginPublisherContribution {
   id: string
   label: string
@@ -107,6 +117,7 @@ export interface PluginManifest {
   statusItems?: PluginStatusItemContribution[]
   tasks?: PluginTaskContribution[]
   capsule?: PluginCapsuleContribution[]
+  tabs?: PluginCapsuleTabContribution[]
   permissions: PluginPermission[]
 }
 
@@ -519,6 +530,48 @@ export function validateManifest(
     }
   }
 
+  // tabs：可选，声明制胶囊面板插件 Tab（每插件 ≤1）；内容运行时经 capsule.updateTab 上报
+  const tabs: PluginCapsuleTabContribution[] = []
+  if (raw.tabs !== undefined) {
+    if (!Array.isArray(raw.tabs)) {
+      errors.push('tabs 必须是数组')
+    } else {
+      if (raw.tabs.length > 1) errors.push('tabs 最多声明 1 个')
+      const tabIds = new Set<string>()
+      raw.tabs.forEach((tb, i) => {
+        if (!isRecord(tb)) {
+          errors.push(`tabs[${i}] 必须是对象`)
+          return
+        }
+        let valid = true
+        if (typeof tb.id !== 'string' || !ID_RE.test(tb.id)) {
+          errors.push(`tabs[${i}].id 非法（须匹配 ${ID_RE}）: ${String(tb.id)}`)
+          valid = false
+        } else if (tabIds.has(tb.id)) {
+          errors.push(`tab id 重复: ${tb.id}`)
+          valid = false
+        } else {
+          tabIds.add(tb.id)
+        }
+        if (typeof tb.title !== 'string' || !tb.title.trim() || tb.title.length > 20) {
+          errors.push(`tabs[${i}].title 须为 1-20 字符: ${String(tb.title)}`)
+          valid = false
+        }
+        if (!(PLUGIN_ICONS as readonly string[]).includes(String(tb.icon))) {
+          errors.push(`tabs[${i}].icon 不在白名单: ${String(tb.icon)}`)
+          valid = false
+        }
+        if (valid) {
+          tabs.push({
+            id: tb.id as string,
+            title: tb.title as string,
+            icon: tb.icon as PluginIconName
+          })
+        }
+      })
+    }
+  }
+
   if (errors.length > 0) return { ok: false, errors }
   return {
     ok: true,
@@ -533,6 +586,7 @@ export function validateManifest(
       ...(statusItems.length > 0 ? { statusItems } : {}),
       ...(tasks.length > 0 ? { tasks } : {}),
       ...(capsule.length > 0 ? { capsule } : {}),
+      ...(tabs.length > 0 ? { tabs } : {}),
       permissions: perms
     }
   }

@@ -262,6 +262,64 @@ describe('validateManifest', () => {
     expect(res.ok).toBe(false)
   })
 
+  // ---------- tabs（胶囊面板插件 Tab 贡献点，20260925-feature-capsule-plugin-tab） ----------
+
+  it('tabs 合法声明被接受，缺省不携带字段', () => {
+    const res = validateManifest({ ...withTaskViews(), tabs: [{ id: 'git', title: 'Git', icon: 'git-branch' }] })
+    expect(res.ok).toBe(true)
+    if (res.ok) expect(res.manifest.tabs).toEqual([{ id: 'git', title: 'Git', icon: 'git-branch' }])
+
+    const bare = validateManifest(withTaskViews())
+    expect(bare.ok).toBe(true)
+    if (bare.ok) expect(bare.manifest.tabs).toBeUndefined()
+  })
+
+  it('tabs 每插件最多 1 个，超过即拒绝', () => {
+    const res = validateManifest({
+      ...withTaskViews(),
+      tabs: [
+        { id: 'a', title: 'A', icon: 'eye' },
+        { id: 'b', title: 'B', icon: 'tag' }
+      ]
+    })
+    expect(res.ok).toBe(false)
+    if (!res.ok) expect(res.errors.join(' ')).toMatch(/最多/)
+  })
+
+  it('tabs id 非法被拒绝；重复 id 场景被 ≤1 上限先行拦截', () => {
+    const badId = validateManifest({ ...withTaskViews(), tabs: [{ id: 'A_B 中', title: 't', icon: 'eye' }] })
+    expect(badId.ok).toBe(false)
+    if (!badId.ok) expect(badId.errors.join(' ')).toMatch(/tabs/)
+
+    const dup = validateManifest({
+      ...withTaskViews(),
+      tabs: [
+        { id: 'a', title: 'x', icon: 'eye' },
+        { id: 'a', title: 'y', icon: 'eye' }
+      ]
+    })
+    expect(dup.ok).toBe(false)
+    if (!dup.ok) expect(dup.errors.join(' ')).toMatch(/最多/)
+  })
+
+  it('tabs.title 须为 1-20 字符、icon 须在白名单', () => {
+    const longTitle = validateManifest({ ...withTaskViews(), tabs: [{ id: 'a', title: 'x'.repeat(21), icon: 'eye' }] })
+    expect(longTitle.ok).toBe(false)
+    if (!longTitle.ok) expect(longTitle.errors.join(' ')).toMatch(/title/)
+
+    const emptyTitle = validateManifest({ ...withTaskViews(), tabs: [{ id: 'a', title: '  ', icon: 'eye' }] })
+    expect(emptyTitle.ok).toBe(false)
+
+    const badIcon = validateManifest({ ...withTaskViews(), tabs: [{ id: 'a', title: 't', icon: '💀' }] })
+    expect(badIcon.ok).toBe(false)
+    if (!badIcon.ok) expect(badIcon.errors.join(' ')).toMatch(/白名单/)
+  })
+
+  it('tabs 不是数组被拒绝', () => {
+    const res = validateManifest({ ...withTaskViews(), tabs: 'nope' })
+    expect(res.ok).toBe(false)
+  })
+
   it('权限枚举非空且唯一', () => {
     expect(PLUGIN_PERMISSIONS.length).toBeGreaterThan(0)
     expect(new Set(PLUGIN_PERMISSIONS).size).toBe(PLUGIN_PERMISSIONS.length)
