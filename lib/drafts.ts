@@ -10,6 +10,7 @@ import { useSyncExternalStore } from 'react'
 import type { DraftMeta } from '@shared/drafts'
 import type { DesktopApi } from '../src/shared/types'
 import { documentEvents, workspaceStore } from './store'
+import { createStore } from './createStore'
 
 const AUTOSAVE_DELAY = 800
 
@@ -47,21 +48,11 @@ interface DraftsSnapshot {
   drafts: DraftMeta[]
 }
 
-let snapshot: DraftsSnapshot = { loaded: false, drafts: [] }
-const subscribers = new Set<() => void>()
-
-function emit(): void {
-  subscribers.forEach((l) => l())
-}
+const store = createStore<DraftsSnapshot>({ loaded: false, drafts: [] })
 
 export const draftsStore = {
-  get: (): DraftsSnapshot => snapshot,
-  subscribe(l: () => void): () => void {
-    subscribers.add(l)
-    return () => {
-      subscribers.delete(l)
-    }
-  }
+  get: store.get,
+  subscribe: store.subscribe
 }
 
 export function useDrafts(): DraftsSnapshot {
@@ -73,18 +64,16 @@ export function useDrafts(): DraftsSnapshot {
 export async function refreshDrafts(): Promise<void> {
   const apiObj = draftsApi()
   if (!apiObj) {
-    snapshot = { loaded: true, drafts: snapshot.drafts }
-    emit()
+    store.commit((cur) => ({ loaded: true, drafts: cur.drafts }))
     return
   }
   try {
     const drafts = await apiObj.listDrafts()
-    snapshot = { loaded: true, drafts }
+    store.commit({ loaded: true, drafts })
   } catch (err) {
     console.warn('拉取草稿列表失败，保留旧快照', err)
-    snapshot = { loaded: true, drafts: snapshot.drafts }
+    store.commit((cur) => ({ loaded: true, drafts: cur.drafts }))
   }
-  emit()
 }
 
 // ---------- 自动暂存（新草稿会话 → 草稿箱） ----------
@@ -151,8 +140,7 @@ export function resetDraftsForTests(): void {
     clearTimeout(saveTimer)
     saveTimer = null
   }
-  snapshot = { loaded: false, drafts: [] }
-  subscribers.clear()
+  store.commit({ loaded: false, drafts: [] })
   installed = false
   apiWarned = false
 }

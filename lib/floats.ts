@@ -8,6 +8,7 @@
  */
 
 import type { PluginIconName } from '@shared/plugin'
+import { createStore } from './createStore'
 
 export interface FloatGeometry {
   x: number
@@ -55,17 +56,11 @@ const MIN_WIDTH = 280
 const MIN_HEIGHT = 180
 const DEFAULT_WIDTH = 520
 
-let state: FloatsState = { floats: [], seq: 0 }
-const listeners = new Set<() => void>()
-
-function emit(): void {
-  listeners.forEach((l) => l())
-}
+const store = createStore<FloatsState>({ floats: [], seq: 0 })
 
 /** 就地变更后统一走这里产出新快照（useSyncExternalStore 依赖新引用） */
 function commit(): void {
-  state = { floats: [...state.floats].sort((a, b) => a.z - b.z), seq: state.seq }
-  emit()
+  store.commit((cur) => ({ floats: [...cur.floats].sort((a, b) => a.z - b.z), seq: cur.seq }))
 }
 
 export function floatKey(pluginId: string, viewId: string): string {
@@ -102,26 +97,22 @@ function defaultGeometry(viewport: FloatViewport, openCount: number): FloatGeome
 }
 
 export const floatsStore = {
-  get: (): FloatsState => state,
-  subscribe(l: () => void): () => void {
-    listeners.add(l)
-    return () => {
-      listeners.delete(l)
-    }
-  }
+  get: store.get,
+  subscribe: store.subscribe
 }
 
 export function isOpen(key: string): boolean {
-  return state.floats.some((f) => f.key === key)
+  return store.get().floats.some((f) => f.key === key)
 }
 
 /** 已开浮窗的 key 集合（SideMenu toggle 激活态） */
 export function openFloatKeys(): Set<string> {
-  return new Set(state.floats.map((f) => f.key))
+  return new Set(store.get().floats.map((f) => f.key))
 }
 
 /** 打开（已开则置顶并还原）；重复打开幂等 */
 export function openFloat(decl: FloatDecl, viewport: FloatViewport): void {
+  const state = store.get()
   const key = floatKey(decl.pluginId, decl.viewId)
   const existing = state.floats.find((f) => f.key === key)
   state.seq += 1
@@ -146,6 +137,7 @@ export function openFloat(decl: FloatDecl, viewport: FloatViewport): void {
 }
 
 export function closeFloat(key: string): void {
+  const state = store.get()
   const before = state.floats.length
   state.floats = state.floats.filter((f) => f.key !== key)
   if (state.floats.length !== before) commit()
@@ -153,6 +145,7 @@ export function closeFloat(key: string): void {
 
 /** 停用插件时关闭其全部浮窗（PluginView 随注册表卸载，帧宿主收尾） */
 export function closePluginFloats(pluginId: string): void {
+  const state = store.get()
   const before = state.floats.length
   state.floats = state.floats.filter((f) => f.pluginId !== pluginId)
   if (state.floats.length !== before) commit()
@@ -168,7 +161,7 @@ export function toggleFloat(decl: FloatDecl, viewport: FloatViewport): void {
 }
 
 export function minimizeFloat(key: string): void {
-  const float = state.floats.find((f) => f.key === key)
+  const float = store.get().floats.find((f) => f.key === key)
   if (!float || float.minimized) return
   float.minimized = true
   commit()
@@ -176,6 +169,7 @@ export function minimizeFloat(key: string): void {
 
 /** 从 chip 还原并置顶 */
 export function restoreFloat(key: string): void {
+  const state = store.get()
   const float = state.floats.find((f) => f.key === key)
   if (!float) return
   state.seq += 1
@@ -186,6 +180,7 @@ export function restoreFloat(key: string): void {
 
 /** 点按窗口置顶 */
 export function focusFloat(key: string): void {
+  const state = store.get()
   const float = state.floats.find((f) => f.key === key)
   if (!float || float.minimized) return
   const top = topFloat()
@@ -196,14 +191,14 @@ export function focusFloat(key: string): void {
 }
 
 export function moveFloat(key: string, x: number, y: number, viewport: FloatViewport): void {
-  const float = state.floats.find((f) => f.key === key)
+  const float = store.get().floats.find((f) => f.key === key)
   if (!float) return
   float.geometry = clampToViewport({ ...float.geometry, x, y }, viewport)
   commit()
 }
 
 export function resizeFloat(key: string, geometry: FloatGeometry, viewport: FloatViewport): void {
-  const float = state.floats.find((f) => f.key === key)
+  const float = store.get().floats.find((f) => f.key === key)
   if (!float) return
   float.geometry = clampToViewport(geometry, viewport)
   commit()
@@ -211,10 +206,9 @@ export function resizeFloat(key: string, geometry: FloatGeometry, viewport: Floa
 
 /** 最顶层未最小化浮窗（「聚焦浮窗」，Esc 关闭对象） */
 export function topFloat(): FloatState | undefined {
-  return [...state.floats].filter((f) => !f.minimized).sort((a, b) => a.z - b.z).pop()
+  return [...store.get().floats].filter((f) => !f.minimized).sort((a, b) => a.z - b.z).pop()
 }
 
 export function resetFloatsForTests(): void {
-  state = { floats: [], seq: 0 }
-  emit()
+  store.commit({ floats: [], seq: 0 })
 }
