@@ -4,7 +4,7 @@
   "name": "20260917-feature-settings-main-view",
   "type": "feature",
   "scope": "renderer-ui",
-  "status": "branched",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20260917-feature-settings-main-view",
   "files": [
@@ -16,18 +16,18 @@
     "repository": null,
     "issue": null,
     "issueUrl": null,
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 111,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/111"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "54ae1b308138214f216a1e78db929d5a86b75f16",
-    "verifiedAt": "2026-09-26T15:53:48.181Z"
+    "verifiedCommit": "952be90affb9a61414cf832bfaaa7bc2d9960ec6",
+    "verifiedAt": "2026-09-26T16:16:47.803Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": null,
-    "planHash": "2a749d6447e3b0ae14756fda1944de8b7c7d83a6a73c22ec36035a5108814d65",
+    "checkpoint": "merged-pr:111",
+    "planHash": "d14b75e4fc0b98b46c7dad7ebdcbcb9577b3caa3242fb6849c911b8d85cd7cb9",
     "updatedAt": null,
     "lastError": null,
     "commit": {
