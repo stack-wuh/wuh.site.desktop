@@ -4,7 +4,7 @@
   "name": "20260917-feature-shell-chrome-plugin-api",
   "type": "feature",
   "scope": "renderer-chrome",
-  "status": "published",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20260917-feature-shell-chrome-plugin-api",
   "files": [
@@ -36,17 +36,18 @@
     "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/2"
   },
   "review": {
-    "conclusion": "pending",
-    "verifiedCommit": null,
-    "verifiedAt": null
+    "conclusion": "passed",
+    "verifiedCommit": "91a80f7ca87208b5a806b520e26e39115d21d249",
+    "verifiedAt": "2026-09-26T15:53:31.199Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "pr:2",
-    "planHash": "ba9b1d75c1e930312d8950095adba6a74708bf493c22e7003b8854826abd523b",
+    "checkpoint": "merged-pr:2",
+    "planHash": "3ded8a8882bf4ebf3c36c078b34d9892102fcd2347ba2acd665b21cbc30e4a7b",
     "updatedAt": null,
     "lastError": null
-  }
+  },
+  "knowledge": null
 }
 ---
 
@@ -88,7 +89,7 @@
 
 ### Phase 4 验证
 - [x] `pnpm typecheck` + `pnpm test` 回归通过 — 仓库根
-- [ ] `pnpm dev` 手动走查：四主题 × 亮暗色逐 token 校验（对比度/焦点环）、插件状态项声明与运行时增删、ActivityBar 键盘遍历与 aria、`prefers-reduced-motion` 下动效关闭 — 手动
+- [x] `pnpm dev` 手动走查：四主题 × 亮暗色逐 token 校验（对比度/焦点环）、插件状态项声明与运行时增删、ActivityBar 键盘遍历与 aria、`prefers-reduced-motion` 下动效关闭 — 手动
 
 ## 结果
 - 实际耗时: —
