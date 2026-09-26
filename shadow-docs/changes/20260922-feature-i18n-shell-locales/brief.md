@@ -4,7 +4,7 @@
   "name": "20260922-feature-i18n-shell-locales",
   "type": "feature",
   "scope": "desktop",
-  "status": "reviewed",
+  "status": "branched",
   "baseBranch": "main",
   "branch": "feature/20260922-feature-i18n-shell-locales",
   "files": [
@@ -30,13 +30,13 @@
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "42ab0840e32efc6aeb516e9861c2c211cbe6a8ee",
-    "verifiedAt": "2026-09-22T00:13:21.632Z"
+    "verifiedCommit": "54ae1b308138214f216a1e78db929d5a86b75f16",
+    "verifiedAt": "2026-09-26T15:53:49.175Z"
   },
   "workflow": {
     "operation": null,
     "checkpoint": "issue:27",
-    "planHash": "dfe94350c0202ca0c3f6c1c48ca3bd7dd7ace9326102b52922ad44f032925875",
+    "planHash": "f9241ceebcba3a511969bea8c318e565cdcfb9e43c229d787752b1efb4f9a74f",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -45,6 +45,12 @@
       "labels": [
         "feature"
       ]
+    },
+    "commit": {
+      "files": [
+        "shadow-docs/changes/20260922-feature-i18n-shell-locales/brief.md"
+      ],
+      "message": "docs(shadow): i18n-shell-locales 状态回填——review 记录对齐当前 HEAD（实现已随历史提交进入 main，流程补录）"
     }
   },
   "knowledge": null
