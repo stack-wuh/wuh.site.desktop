@@ -146,6 +146,7 @@ function resolveToastDuration(duration: unknown): number {
   return Math.min(MAX_TOAST_MS, Math.max(MIN_TOAST_MS, Math.round(n)))
 }
 
+/** 未收敛到 lib/createStore：此处需逐监听器异常隔离（不上抛），与公共件广播语义不同 */
 function commit(): void {
   snapshot = { toasts: [...toasts], messages: [...messages], alerts: [...alerts] }
   listeners.forEach((l) => {

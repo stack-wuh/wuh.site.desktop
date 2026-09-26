@@ -14,6 +14,7 @@
  */
 
 import { PLUGIN_ICONS, type CapsuleTemplate, type PluginManifest } from '@shared/plugin'
+import { createStore } from './createStore'
 
 export type CapsuleTone = 'default' | 'primary' | 'success' | 'warning'
 
@@ -73,26 +74,15 @@ interface CapsuleState {
   tabs: CapsuleTabState[]
 }
 
-let state: CapsuleState = { modules: [], tabs: [] }
-const listeners = new Set<() => void>()
-
-function emit(): void {
-  listeners.forEach((l) => l())
-}
+const store = createStore<CapsuleState>({ modules: [], tabs: [] })
 
 function commit(): void {
-  state = { modules: [...state.modules], tabs: [...state.tabs] }
-  emit()
+  store.commit((cur) => ({ modules: [...cur.modules], tabs: [...cur.tabs] }))
 }
 
 export const capsuleStore = {
-  get: (): CapsuleState => state,
-  subscribe(l: () => void): () => void {
-    listeners.add(l)
-    return () => {
-      listeners.delete(l)
-    }
-  }
+  get: store.get,
+  subscribe: store.subscribe
 }
 
 export function capsuleKey(pluginId: string, moduleId: string): string {
@@ -108,6 +98,7 @@ const TONES: readonly CapsuleTone[] = ['default', 'primary', 'success', 'warning
 
 /** bootstrap/启用插件时注册 manifest 声明；重复注册幂等且不覆盖运行时数据 */
 export function registerManifestCapsule(manifest: PluginManifest): void {
+  const state = store.get()
   let changed = false
   for (const mod of manifest.capsule ?? []) {
     const key = capsuleKey(manifest.id, mod.id)
@@ -144,6 +135,7 @@ export function registerManifestCapsule(manifest: PluginManifest): void {
 
 /** 停用/卸载插件时移除其全部模块与 tab */
 export function clearPluginCapsule(pluginId: string): void {
+  const state = store.get()
   const before = state.modules.length + state.tabs.length
   state.modules = state.modules.filter((m) => m.pluginId !== pluginId)
   state.tabs = state.tabs.filter((t) => t.pluginId !== pluginId)
@@ -186,6 +178,7 @@ function applyStatusPatch(mod: CapsuleModuleState, patch: Record<string, unknown
 
 /** 运行时更新内容（未声明模块报错；update 同时恢复 remove 的隐藏） */
 export function updateCapsule(pluginId: string, moduleId: string, patch: unknown): void {
+  const state = store.get()
   const mod = state.modules.find((m) => m.key === capsuleKey(pluginId, moduleId))
   if (!mod) throw new Error(`胶囊模块未声明: ${pluginId}/${moduleId}`)
   const p = (patch ?? {}) as Record<string, unknown>
@@ -203,6 +196,7 @@ export function updateCapsule(pluginId: string, moduleId: string, patch: unknown
 
 /** 运行时隐藏（未声明模块报错） */
 export function removeCapsule(pluginId: string, moduleId: string): void {
+  const state = store.get()
   const mod = state.modules.find((m) => m.key === capsuleKey(pluginId, moduleId))
   if (!mod) throw new Error(`胶囊模块未声明: ${pluginId}/${moduleId}`)
   mod.hidden = true
@@ -219,6 +213,7 @@ const MAX_TAB_PAYLOAD_BYTES = 4096
     payload = sections[]，逐字段严格 typeof 校验（帧消息禁 Number() 宽转），护栏：
     ≤3 sections × ≤8 rows、JSON 序列化 ≤4KB、row.icon 白名单、row.viewId 归属本插件 main 视图 */
 export function updateCapsuleTab(pluginId: string, tabId: string, payload: unknown): void {
+  const state = store.get()
   const tab = state.tabs.find((t) => t.key === tabKey(pluginId, tabId))
   if (!tab) throw new Error(`胶囊 Tab 未声明: ${pluginId}/${tabId}`)
   let raw = ''
@@ -289,6 +284,7 @@ export function updateCapsuleTab(pluginId: string, tabId: string, payload: unkno
 
 /** 运行时隐藏 tab（未声明报错） */
 export function removeCapsuleTab(pluginId: string, tabId: string): void {
+  const state = store.get()
   const tab = state.tabs.find((t) => t.key === tabKey(pluginId, tabId))
   if (!tab) throw new Error(`胶囊 Tab 未声明: ${pluginId}/${tabId}`)
   tab.hidden = true
@@ -297,15 +293,14 @@ export function removeCapsuleTab(pluginId: string, tabId: string): void {
 
 /** 控制中心插件区渲染用：可见模块（已排序：pluginId → 声明序） */
 export function visibleCapsuleModules(): CapsuleModuleState[] {
-  return state.modules.filter((m) => !m.hidden)
+  return store.get().modules.filter((m) => !m.hidden)
 }
 
 /** 面板动态 tab 渲染用：非隐藏 tab（声明序 = manifest 声明序 × 插件注册序） */
 export function visibleCapsuleTabs(): CapsuleTabState[] {
-  return state.tabs.filter((t) => !t.hidden)
+  return store.get().tabs.filter((t) => !t.hidden)
 }
 
 export function resetCapsuleForTests(): void {
-  state = { modules: [], tabs: [] }
-  emit()
+  store.commit({ modules: [], tabs: [] })
 }

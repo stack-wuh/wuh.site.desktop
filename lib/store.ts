@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import type { DesktopApi, FileNode } from '../src/shared/types'
+import { createStore } from './createStore'
 
 /**
  * preload 注入的 DesktopApi。经 globalThis 取用而非裸 window：
@@ -56,49 +57,38 @@ function emitChangedDebounced(): void {
   if (changedTimer) clearTimeout(changedTimer)
   changedTimer = setTimeout(() => {
     changedTimer = null
-    documentEvents.emit('doc.changed', { path: state.activePath, dirty: state.dirty })
+    const { activePath, dirty } = store.get()
+    documentEvents.emit('doc.changed', { path: activePath, dirty })
   }, 300)
 }
 
-let state: WorkspaceState = {
+const store = createStore<WorkspaceState>({
   root: null,
   activePath: null,
   content: null,
   saved: null,
   dirty: false,
   activeDraftId: null
-}
-
-const listeners = new Set<() => void>()
-
-function emit(): void {
-  listeners.forEach((l) => l())
-}
+})
 
 function setState(patch: Partial<WorkspaceState>): void {
-  state = { ...state, ...patch }
-  emit()
+  store.commit((cur) => ({ ...cur, ...patch }))
 }
 
 export const workspaceStore = {
-  get: (): WorkspaceState => state,
-  subscribe(l: () => void): () => void {
-    listeners.add(l)
-    return () => {
-      listeners.delete(l)
-    }
-  },
+  get: store.get,
+  subscribe: store.subscribe,
   setContent(content: string): void {
-    setState({ content, dirty: content !== state.saved })
+    setState({ content, dirty: content !== store.get().saved })
     emitChangedDebounced()
   },
   markSaved(): void {
-    setState({ saved: state.content, dirty: false })
-    documentEvents.emit('doc.saved', { path: state.activePath })
+    setState({ saved: store.get().content, dirty: false })
+    documentEvents.emit('doc.saved', { path: store.get().activePath })
   },
   /** 写盘当前文档（插件 documentHooks 的 save 入口） */
   async saveActive(): Promise<void> {
-    const { activePath, content } = state
+    const { activePath, content } = store.get()
     if (!activePath || content == null) return
     await api().writeFile(activePath, content)
     this.markSaved()
@@ -116,7 +106,7 @@ export const workspaceStore = {
   },
   /** 草稿落盘后回填/清除会话归属（静默，不广播；同值幂等） */
   adoptDraft(draftId: string | null): void {
-    if (state.activeDraftId === draftId) return
+    if (store.get().activeDraftId === draftId) return
     setState({ activeDraftId: draftId })
   },
   /** 宿主编辑器回到新草稿态：无 activePath、空内容、clean */
@@ -126,8 +116,9 @@ export const workspaceStore = {
   },
   /** 关闭当前文档（回到无文档态）；空态下 no-op 不广播 */
   closeDoc(): void {
-    if (!state.activePath && state.content == null) return
-    const path = state.activePath
+    const cur = store.get()
+    if (!cur.activePath && cur.content == null) return
+    const path = cur.activePath
     setState({ activePath: null, content: null, saved: null, dirty: false, activeDraftId: null })
     if (path) documentEvents.emit('doc.closed', { path })
     documentEvents.emit('doc.changed', { path: null, dirty: false })

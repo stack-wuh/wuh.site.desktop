@@ -12,6 +12,8 @@
  * （渲染相关部分）；订阅表是纯路由状态，不进快照。
  */
 
+import { createStore } from './createStore'
+
 export const EVENT_BUFFER_LIMIT = 200
 export const MAX_PAYLOAD_BYTES = 4096
 export const MAX_SUBSCRIPTIONS_PER_PLUGIN = 16
@@ -36,31 +38,21 @@ interface EventsState {
   events: EventEnvelope[]
 }
 
-let state: EventsState = { events: [] }
-const listeners = new Set<() => void>()
+const store = createStore<EventsState>({ events: [] })
 /** pluginId → 订阅模式列表（路由状态，不进快照） */
 const subs = new Map<string, string[]>()
 /** 宿主派发钩子（PluginFrameHost 接线，投递到订阅帧） */
 const dispatchListeners = new Set<(env: EventEnvelope) => void>()
 let eventSeq = 0
 
-function emit(): void {
-  listeners.forEach((l) => l())
-}
-
 export const eventsStore = {
-  get: (): EventsState => state,
-  subscribe(l: () => void): () => void {
-    listeners.add(l)
-    return () => {
-      listeners.delete(l)
-    }
-  }
+  get: store.get,
+  subscribe: store.subscribe
 }
 
 /** 快照消费：最近事件（旧 → 新） */
 export function recentEvents(): EventEnvelope[] {
-  return state.events
+  return store.get().events
 }
 
 function assertPayload(payload: unknown): void {
@@ -81,8 +73,7 @@ export function publishEvent(type: string, pluginId: string, payload: unknown): 
   assertPayload(payload)
   eventSeq += 1
   const env: EventEnvelope = { id: `ev${eventSeq}`, type, pluginId, payload: payload ?? null, ts: Date.now() }
-  state = { events: [...state.events, env].slice(-EVENT_BUFFER_LIMIT) }
-  emit()
+  store.commit((cur) => ({ events: [...cur.events, env].slice(-EVENT_BUFFER_LIMIT) }))
   dispatchListeners.forEach((l) => l(env))
   return env
 }
@@ -147,11 +138,10 @@ export function subscribersFor(type: string): string[] {
 /** 停用/卸载插件：清其订阅 + 从缓冲清除其归属事件 */
 export function clearPluginEvents(pluginId: string): void {
   subs.delete(pluginId)
-  const before = state.events.length
-  const filtered = state.events.filter((e) => e.pluginId !== pluginId)
-  if (filtered.length !== before) {
-    state = { events: filtered }
-    emit()
+  const cur = store.get()
+  const filtered = cur.events.filter((e) => e.pluginId !== pluginId)
+  if (filtered.length !== cur.events.length) {
+    store.commit({ events: filtered })
   }
 }
 
@@ -164,9 +154,8 @@ export function onAnyEvent(listener: (env: EventEnvelope) => void): () => void {
 }
 
 export function resetEventsForTests(): void {
-  state = { events: [] }
+  store.commit({ events: [] })
   subs.clear()
   dispatchListeners.clear()
   eventSeq = 0
-  emit()
 }

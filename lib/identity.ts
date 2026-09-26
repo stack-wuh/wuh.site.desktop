@@ -14,6 +14,7 @@
 import { useSyncExternalStore } from 'react'
 
 import type { GithubIdentity, SettingsStatus } from '@shared/types'
+import { createStore } from './createStore'
 
 /** 身份拉取所需的最小 API 面（生产 = window.api，测试可注入） */
 export interface IdentityApi {
@@ -21,8 +22,7 @@ export interface IdentityApi {
   getGithubIdentity(): Promise<GithubIdentity>
 }
 
-let state: GithubIdentity | null | undefined
-const listeners = new Set<() => void>()
+const store = createStore<GithubIdentity | null | undefined>(undefined)
 
 let apiOverride: IdentityApi | null = null
 
@@ -33,42 +33,30 @@ function api(): IdentityApi {
   return injected
 }
 
-function emit(): void {
-  listeners.forEach((l) => l())
-}
-
 export const identityStore = {
   /** undefined = 尚未拉取；null = 已确认无身份；GithubIdentity = 已授权 */
-  get: (): GithubIdentity | null | undefined => state,
-  subscribe(l: () => void): () => void {
-    listeners.add(l)
-    return () => {
-      listeners.delete(l)
-    }
-  }
+  get: store.get,
+  subscribe: store.subscribe
 }
 
 /** 拉取并落快照：未配置 token 或拉取异常一律落 null（壳层展示回落默认态） */
 export async function refreshIdentity(): Promise<void> {
   try {
     const status = await api().getSettings()
-    state = status.hasToken ? await api().getGithubIdentity() : null
+    store.commit(status.hasToken ? await api().getGithubIdentity() : null)
   } catch {
-    state = null
+    store.commit(null)
   }
-  emit()
 }
 
 /** 写穿入口：调用方（用户中心）已持有最新身份时直接落快照，不重复走 IPC */
 export function syncIdentity(next: GithubIdentity | null): void {
-  state = next
-  emit()
+  store.commit(next)
 }
 
 export function resetIdentityForTests(): void {
-  state = undefined
   apiOverride = null
-  emit()
+  store.commit(undefined)
 }
 
 export function setIdentityApiForTests(injected: IdentityApi): void {

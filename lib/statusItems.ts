@@ -8,6 +8,7 @@
  */
 
 import type { PluginIconName, PluginManifest, StatusItemAlignment } from '@shared/plugin'
+import { createStore } from './createStore'
 
 export interface StatusItemState {
   /** `${pluginId}:${itemId}` */
@@ -27,12 +28,7 @@ interface StatusItemsState {
   items: StatusItemState[]
 }
 
-let state: StatusItemsState = { items: [] }
-const listeners = new Set<() => void>()
-
-function emit(): void {
-  listeners.forEach((l) => l())
-}
+const store = createStore<StatusItemsState>({ items: [] })
 
 function sortItems(a: StatusItemState, b: StatusItemState): number {
   if (a.order !== b.order) return a.order - b.order
@@ -42,18 +38,12 @@ function sortItems(a: StatusItemState, b: StatusItemState): number {
 
 /** 就地变更后统一走这里产出新快照（useSyncExternalStore 依赖新引用） */
 function commit(): void {
-  state = { items: [...state.items].sort(sortItems) }
-  emit()
+  store.commit((cur) => ({ items: [...cur.items].sort(sortItems) }))
 }
 
 export const statusItemsStore = {
-  get: (): StatusItemsState => state,
-  subscribe(l: () => void): () => void {
-    listeners.add(l)
-    return () => {
-      listeners.delete(l)
-    }
-  }
+  get: store.get,
+  subscribe: store.subscribe
 }
 
 export function statusItemKey(pluginId: string, itemId: string): string {
@@ -62,6 +52,7 @@ export function statusItemKey(pluginId: string, itemId: string): string {
 
 /** bootstrap/启用插件时注册 manifest 声明；重复注册幂等 */
 export function registerManifestStatusItems(manifest: PluginManifest): void {
+  const state = store.get()
   let changed = false
   for (const item of manifest.statusItems ?? []) {
     const key = statusItemKey(manifest.id, item.id)
@@ -83,6 +74,7 @@ export function registerManifestStatusItems(manifest: PluginManifest): void {
 
 /** 停用插件时移除其全部状态项 */
 export function clearPluginStatusItems(pluginId: string): void {
+  const state = store.get()
   const before = state.items.length
   state.items = state.items.filter((s) => s.pluginId !== pluginId)
   if (state.items.length !== before) commit()
@@ -95,6 +87,7 @@ export interface StatusItemPatch {
 
 /** 运行时更新内容（未声明项报错；update 同时恢复 remove 的隐藏） */
 export function updateStatusItem(pluginId: string, itemId: string, patch: StatusItemPatch): void {
+  const state = store.get()
   const item = state.items.find((s) => s.key === statusItemKey(pluginId, itemId))
   if (!item) throw new Error(`状态项未声明: ${pluginId}/${itemId}`)
   if (patch.text !== undefined) {
@@ -109,6 +102,7 @@ export function updateStatusItem(pluginId: string, itemId: string, patch: Status
 
 /** 运行时隐藏（未声明项报错） */
 export function removeStatusItem(pluginId: string, itemId: string): void {
+  const state = store.get()
   const item = state.items.find((s) => s.key === statusItemKey(pluginId, itemId))
   if (!item) throw new Error(`状态项未声明: ${pluginId}/${itemId}`)
   item.hidden = true
@@ -117,10 +111,9 @@ export function removeStatusItem(pluginId: string, itemId: string): void {
 
 /** StatusBar 渲染用：可见项（已排序） */
 export function visibleStatusItems(): StatusItemState[] {
-  return state.items.filter((s) => !s.hidden)
+  return store.get().items.filter((s) => !s.hidden)
 }
 
 export function resetStatusItemsForTests(): void {
-  state = { items: [] }
-  emit()
+  store.commit({ items: [] })
 }

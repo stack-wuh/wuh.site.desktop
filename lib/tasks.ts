@@ -10,6 +10,7 @@
  */
 
 import type { PluginManifest } from '@shared/plugin'
+import { createStore } from './createStore'
 
 export type TaskStatus = 'pending' | 'in_progress' | 'done'
 
@@ -55,12 +56,7 @@ interface TasksState {
   tasks: TaskState[]
 }
 
-let state: TasksState = { tasks: [] }
-const listeners = new Set<() => void>()
-
-function emit(): void {
-  listeners.forEach((l) => l())
-}
+const store = createStore<TasksState>({ tasks: [] })
 
 function sortTasks(a: TaskState, b: TaskState): number {
   if (a.pluginId !== b.pluginId) return a.pluginId < b.pluginId ? -1 : 1
@@ -69,18 +65,12 @@ function sortTasks(a: TaskState, b: TaskState): number {
 
 /** 就地变更后统一走这里产出新快照（useSyncExternalStore 依赖新引用） */
 function commit(): void {
-  state = { tasks: [...state.tasks].sort(sortTasks) }
-  emit()
+  store.commit((cur) => ({ tasks: [...cur.tasks].sort(sortTasks) }))
 }
 
 export const tasksStore = {
-  get: (): TasksState => state,
-  subscribe(l: () => void): () => void {
-    listeners.add(l)
-    return () => {
-      listeners.delete(l)
-    }
-  }
+  get: store.get,
+  subscribe: store.subscribe
 }
 
 export function taskKey(pluginId: string, taskId: string): string {
@@ -89,6 +79,7 @@ export function taskKey(pluginId: string, taskId: string): string {
 
 /** bootstrap/启用插件时注册 manifest 声明；重复注册幂等且不覆盖运行时状态 */
 export function registerManifestTasks(manifest: PluginManifest): void {
+  const state = store.get()
   let changed = false
   const now = Date.now()
   for (const task of manifest.tasks ?? []) {
@@ -115,6 +106,7 @@ export function registerManifestTasks(manifest: PluginManifest): void {
 
 /** 停用/卸载插件时移除其全部任务 */
 export function clearPluginTasks(pluginId: string): void {
+  const state = store.get()
   const before = state.tasks.length
   state.tasks = state.tasks.filter((t) => t.pluginId !== pluginId)
   if (state.tasks.length !== before) commit()
@@ -164,6 +156,7 @@ function applyPatch(task: TaskState, patch: TaskPatch): void {
  * upsert 同时恢复 remove 的隐藏；每插件可见任务数超限拒绝创建。
  */
 export function upsertTask(pluginId: string, taskId: string, patch: TaskPatch): void {
+  const state = store.get()
   const p = patch ?? {}
   const task = state.tasks.find((t) => t.key === taskKey(pluginId, taskId))
   if (!task) {
@@ -206,6 +199,7 @@ export function upsertTask(pluginId: string, taskId: string, patch: TaskPatch): 
 
 /** 运行时隐藏（未声明任务报错） */
 export function removeTask(pluginId: string, taskId: string): void {
+  const state = store.get()
   const task = state.tasks.find((t) => t.key === taskKey(pluginId, taskId))
   if (!task) throw new Error(`任务未声明: ${pluginId}/${taskId}`)
   task.hidden = true
@@ -214,11 +208,12 @@ export function removeTask(pluginId: string, taskId: string): void {
 
 /** 胶囊/Popover 渲染用：可见任务（已排序） */
 export function visibleTasks(): TaskState[] {
-  return state.tasks.filter((t) => !t.hidden)
+  return store.get().tasks.filter((t) => !t.hidden)
 }
 
 /** 胶囊聚合派生（只统计可见任务） */
 export function taskAggregate(): TaskAggregate {
+  const state = store.get()
   const agg: TaskAggregate = { total: 0, done: 0, active: 0, pending: 0 }
   for (const t of state.tasks) {
     if (t.hidden) continue
@@ -231,6 +226,5 @@ export function taskAggregate(): TaskAggregate {
 }
 
 export function resetTasksForTests(): void {
-  state = { tasks: [] }
-  emit()
+  store.commit({ tasks: [] })
 }
