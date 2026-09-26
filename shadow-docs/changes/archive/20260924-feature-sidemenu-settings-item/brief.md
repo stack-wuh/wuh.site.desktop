@@ -4,7 +4,7 @@
   "name": "20260924-feature-sidemenu-settings-item",
   "type": "feature",
   "scope": "renderer-shell",
-  "status": "branched",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20260924-feature-sidemenu-settings-item",
   "files": [
@@ -19,18 +19,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 86,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/86",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 110,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/110"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "54ae1b308138214f216a1e78db929d5a86b75f16",
-    "verifiedAt": "2026-09-26T15:53:51.401Z"
+    "verifiedCommit": "0dd4aa4aa4ec1efd3c0e41753b2c9ca530f6e1df",
+    "verifiedAt": "2026-09-26T16:16:43.899Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:86",
-    "planHash": "e0c6fd185e1a0fde3abb87592b71054c7912395be1901d37113eee7b5a95e2c7",
+    "checkpoint": "merged-pr:110",
+    "planHash": "7c15b1fc5a3d36856c19a4790780f74e8dbcc0a02721d88388dff0d971ac929d",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
