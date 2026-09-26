@@ -4,7 +4,7 @@
   "name": "20260917-feature-settings-main-view",
   "type": "feature",
   "scope": "renderer-ui",
-  "status": "reviewed",
+  "status": "branched",
   "baseBranch": "main",
   "branch": "feature/20260917-feature-settings-main-view",
   "files": [
@@ -21,21 +21,23 @@
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "10ed287410d709024de18799e570ffb4a377b334",
-    "verifiedAt": "2026-09-17T16:05:50.956Z"
+    "verifiedCommit": "54ae1b308138214f216a1e78db929d5a86b75f16",
+    "verifiedAt": "2026-09-26T15:53:48.181Z"
   },
   "workflow": {
     "operation": null,
     "checkpoint": null,
-    "planHash": "cf61f5e2738e7727e17b5497bb7ba8a5e5e50a118600b6f58a73d5c862d56d89",
+    "planHash": "2a749d6447e3b0ae14756fda1944de8b7c7d83a6a73c22ec36035a5108814d65",
     "updatedAt": null,
-    "lastError": null
+    "lastError": null,
+    "commit": {
+      "files": [
+        "shadow-docs/changes/20260917-feature-settings-main-view/brief.md"
+      ],
+      "message": "docs(shadow): settings-main-view 状态回填——review 记录对齐当前 HEAD（实现已随历史提交进入 main，流程补录）"
+    }
   },
-  "knowledge": {
-    "action": "新增",
-    "target": "shadow-docs/knowledge/renderer-shell-routing.md",
-    "reason": "首次沉淀 renderer 壳层「侧栏面板 activePanel + 全屏视图 mainView」双层路由约定"
-  }
+  "knowledge": null
 }
 ---
 
