@@ -5,144 +5,36 @@
  * 批准状态）+ Switch 启停（首次启用弹权限确认）+ 打开插件目录 + 重载重扫。
  * 数据经 plugin:list，动作经 togglePlugin/rebootstrap，通道与确认框语义不变；
  * manifest 校验失败目录（problems）一并列出。加载态为 skeleton（interaction 规范）。
+ * 样式原子见 ./styles（20260927-refactor-midsize-component-split 拆分）。
  */
 import { useCallback, useEffect, useState } from 'react'
-import styled, { keyframes } from 'styled-components'
 import type { PluginRecord } from '@shared/plugin'
-import { rebootstrapPluginsHost, togglePlugin } from '../plugins/PluginFrameHost'
-import { closePluginFloats } from '../../lib/floats'
-import { toast } from '../../lib/feedback'
-import { uiConfirm } from '../ui/Dialog'
-import { Button } from '../ui/Button'
-import { Empty } from '../ui/Empty'
-import { AppIcon } from '../ui/AppIcon'
-import { Switch } from '../ui/Switch'
-import { ErrorText, HintText } from '../ui/Text'
-import { SettingSection } from './SettingSection'
-import { pluginIcon } from '../icons'
-import { useLocale } from '../../lib/i18n/context'
-
-const List = styled.ul`
-  list-style: none;
-  margin: 4px 0 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-`
-
-const Card = styled.li`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  border: 1px solid var(--chrome-border);
-  border-radius: var(--border-radius-sm);
-  background: var(--background-color);
-`
-
-const IconTile = styled.div`
-  width: 32px;
-  height: 32px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--border-radius-sm);
-  background: var(--chrome-hover);
-  color: var(--primary-color);
-  font-size: 13px;
-`
-
-const CardMain = styled.div`
-  flex: 1;
-  min-width: 0;
-`
-
-const CardTitle = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-
-  & > strong {
-    color: var(--text-primary);
-    font-size: 13px;
-  }
-`
-
-const Pill = styled.span<{ $accent?: boolean }>`
-  padding: 1px 8px;
-  border-radius: 9px;
-  font-size: 11px;
-  border: 1px solid var(--chrome-border);
-  color: var(--text-muted);
-  white-space: nowrap;
-
-  ${(props) =>
-    props.$accent &&
-    `
-    color: var(--primary-color);
-    border-color: var(--primary-color);
-  `}
-`
-
-const PermRow = styled.div`
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 6px;
-`
-
-const SourceText = styled.span`
-  font-size: 11px;
-  color: var(--text-muted);
-`
-
-const CardActions = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-`
-
-const shimmer = keyframes`
-  from { opacity: 1; }
-  to { opacity: 0.55; }
-`
-
-const SkeletonWrap = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 4px;
-`
-
-const SkeletonCard = styled.div`
-  height: 56px;
-  border-radius: var(--border-radius-sm);
-  background: var(--chrome-hover);
-  animation: ${shimmer} 1.2s ease-in-out infinite alternate;
-
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-  }
-`
-
-const Problems = styled.div`
-  margin-top: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-
-  & p {
-    margin: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-`
+import { rebootstrapPluginsHost, togglePlugin } from '../../plugins/PluginFrameHost'
+import { closePluginFloats } from '../../../lib/floats'
+import { toast } from '../../../lib/feedback'
+import { uiConfirm } from '../../ui/Dialog'
+import { Button } from '../../ui/Button'
+import { Empty } from '../../ui/Empty'
+import { AppIcon } from '../../ui/AppIcon'
+import { Switch } from '../../ui/Switch'
+import { ErrorText, HintText } from '../../ui/Text'
+import { SettingSection } from '../SettingSection'
+import { pluginIcon } from '../../icons'
+import { useLocale } from '../../../lib/i18n/context'
+import {
+  Card,
+  CardActions,
+  CardMain,
+  CardTitle,
+  IconTile,
+  List,
+  PermRow,
+  Pill,
+  Problems,
+  SkeletonCard,
+  SkeletonWrap,
+  SourceText
+} from './styles'
 
 function dirName(dir: string): string {
   const parts = dir.split(/[\\/]/).filter(Boolean)
