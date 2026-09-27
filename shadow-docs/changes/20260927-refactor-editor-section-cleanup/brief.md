@@ -4,7 +4,7 @@
   "name": "20260927-refactor-editor-section-cleanup",
   "type": "refactor",
   "scope": "components",
-  "status": "reviewed",
+  "status": "published",
   "baseBranch": "main",
   "branch": "refactor/20260927-refactor-editor-section-cleanup",
   "files": [
@@ -15,8 +15,8 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 117,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/117",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 121,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/121"
   },
   "review": {
     "conclusion": "passed",
@@ -25,7 +25,7 @@
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:117",
+    "checkpoint": "pr:121",
     "planHash": "04a66511d88b6de03c192ba67d4349994ecf121addccd609dabf5e3a7b54b7d0",
     "updatedAt": null,
     "lastError": null,
