@@ -1,0 +1,143 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`milkdown transformer round-trip PoC（打开→直接保存） > round-trip: GFM 任务列表与表格 > GFM 任务列表与表格 1`] = `
+"* [ ] 待办
+* [x] 已办
+
+| 列一 | 列二 |
+| -- | -- |
+| a  | b  |
+"
+`;
+
+exports[`milkdown transformer round-trip PoC（打开→直接保存） > round-trip: HTML 块 > HTML 块 1`] = `
+"<div class="note">
+HTML 块内容
+</div>
+
+正文。
+"
+`;
+
+exports[`milkdown transformer round-trip PoC（打开→直接保存） > round-trip: autolink 与裸链接 > autolink 与裸链接 1`] = `
+"见 <https://example.com/path?a=1&b=2> 与 [文字链接](https://example.com)。
+"
+`;
+
+exports[`milkdown transformer round-trip PoC（打开→直接保存） > round-trip: frontmatter 笔记头 > frontmatter 笔记头 1`] = `
+"***
+
+title: 我的笔记
+date: 2026-09-25
+tags: \\[随笔]
+-----------
+
+正文第一段。
+"
+`;
+
+exports[`milkdown transformer round-trip PoC（打开→直接保存） > round-trip: setext 标题 > setext 标题 1`] = `
+"# 设置标题
+
+正文。
+"
+`;
+
+exports[`milkdown transformer round-trip PoC（打开→直接保存） > round-trip: 下划线强调 > 下划线强调 1`] = `
+"这是 _emphasis 强调_ 与 **加粗** 混排。
+"
+`;
+
+exports[`milkdown transformer round-trip PoC（打开→直接保存） > round-trip: 中文正文混排 > 中文正文混排 1`] = `
+"# 中文标题
+
+中文与 English 混排的一段话，包含「引号」和标点。
+
+## 二级标题
+
+列表：
+
+* 苹果
+* 香蕉
+"
+`;
+
+exports[`milkdown transformer round-trip PoC（打开→直接保存） > round-trip: 围栏代码块 > 围栏代码块 1`] = `
+"\`\`\`ts
+const a = 1
+\`\`\`
+
+正文。
+"
+`;
+
+exports[`milkdown transformer round-trip PoC（打开→直接保存） > round-trip: 图片 ASCII 相对路径（对照） > 图片 ASCII 相对路径（对照） 1`] = `""`;
+
+exports[`milkdown transformer round-trip PoC（打开→直接保存） > round-trip: 图片相对引用（blog assets 约定） > 图片相对引用（blog assets 约定） 1`] = `""`;
+
+exports[`milkdown transformer round-trip PoC（打开→直接保存） > round-trip: 嵌套强调 > 嵌套强调 1`] = `
+"**加粗中含 _下划线强调_ 的嵌套结构**
+"
+`;
+
+exports[`milkdown transformer round-trip PoC（打开→直接保存） > round-trip: 括号有序列表 > 括号有序列表 1`] = `
+"1. 第一项
+2. 第二项
+"
+`;
+
+exports[`milkdown transformer round-trip PoC（打开→直接保存） > round-trip: 相邻双列表 > 相邻双列表 1`] = `
+"* 无序列表项
+
+1. 有序列表项
+"
+`;
+
+exports[`milkdown transformer round-trip PoC（打开→直接保存） > round-trip: 短横分隔线 > 短横分隔线 1`] = `
+"第一节
+
+***
+
+第二节
+"
+`;
+
+exports[`milkdown transformer round-trip PoC（打开→直接保存） > round-trip: 短横列表（最常见风格） > 短横列表（最常见风格） 1`] = `
+"* 第一项
+* 第二项
+* 第三项
+"
+`;
+
+exports[`milkdown transformer round-trip PoC（打开→直接保存） > round-trip: 硬换行（两空格） > 硬换行（两空格） 1`] = `
+"行尾两空格\\
+下一行。
+"
+`;
+
+exports[`milkdown transformer round-trip PoC（打开→直接保存） > round-trip: 转义字符 > 转义字符 1`] = `
+"不需要的转义 \\* 与 -，以及必要的转义 \\*\\*。
+"
+`;
+
+exports[`milkdown transformer round-trip PoC（打开→直接保存） > 翻写率汇总（变更行/总行，一次 round-trip） > metrics-summary 1`] = `
+{
+  "GFM 任务列表与表格": "4/7 (57%)",
+  "HTML 块": "0/6 (0%)",
+  "autolink 与裸链接": "0/2 (0%)",
+  "frontmatter 笔记头": "9/8 (113%)",
+  "setext 标题": "5/5 (100%)",
+  "下划线强调": "0/2 (0%)",
+  "中文正文混排": "2/11 (18%)",
+  "围栏代码块": "0/6 (0%)",
+  "图片 ASCII 相对路径（对照）": "2/2 (100%)",
+  "图片相对引用（blog assets 约定）": "2/2 (100%)",
+  "嵌套强调": "0/2 (0%)",
+  "括号有序列表": "2/3 (67%)",
+  "相邻双列表": "1/4 (25%)",
+  "短横分隔线": "1/6 (17%)",
+  "短横列表（最常见风格）": "3/4 (75%)",
+  "硬换行（两空格）": "1/3 (33%)",
+  "转义字符": "1/2 (50%)",
+}
+`;
