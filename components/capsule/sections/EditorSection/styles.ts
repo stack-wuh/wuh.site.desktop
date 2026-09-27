@@ -2,40 +2,10 @@
 
 /**
  * 编辑器模块区 section 局部样式原子（拆分自 EditorSection 单文件，
- * 20260926-refactor-mega-component-split）：文档 chip、图标网格、大纲列表、
- * 迷你动作钮。其中 DocChip/DocPath/DirtyDot 为早期迭代遗留、当前 JSX 未消费，
- * 按机械搬移原则原样携带，删除留给后续清理变更。
+ * 20260926-refactor-mega-component-split）：图标网格、大纲列表、迷你动作钮。
+ * （早期遗留的 DocChip/DocPath/DirtyDot 死代码已于 20260927-fix-shell-ux-defects 删除）
  */
 import styled from 'styled-components'
-
-export const DocChip = styled.span`
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  max-width: 100%;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: var(--chrome-raised);
-  border: 1px solid var(--chrome-border);
-  font-size: 11px;
-  font-family: var(--font-mono);
-  color: var(--text-muted);
-`
-
-export const DocPath = styled.span`
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-`
-
-export const DirtyDot = styled.span`
-  flex: none;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--warning-color);
-`
 
 export const IconRow = styled.div`
   display: flex;

@@ -14,20 +14,24 @@ import { useEffect, useRef, useSyncExternalStore } from 'react'
 import { closeFloat, floatsStore, restoreFloat, topFloat } from '../../lib/floats'
 import { AppIcon } from '../ui/AppIcon'
 import { pluginIcon } from '../icons'
+import { useLocale } from '../../lib/i18n/context'
 import type { DragContext } from './geometry'
 import { FloatWindow } from './FloatWindow'
 import { Chip, Chips, Layer } from './styles'
 
 export function FloatLayer(props: { containerRef: React.RefObject<HTMLElement | null> }): React.JSX.Element {
   const snapshot = useSyncExternalStore(floatsStore.subscribe, floatsStore.get, floatsStore.get)
+  const { t } = useLocale()
   const containerRef = props.containerRef
   const dragRef = useRef<DragContext | null>(null)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
       if (e.key !== 'Escape') return
-      // 确认框打开时让位（styled 类名是哈希，用稳定 data 属性判定）
+      // 确认框或胶囊面板打开时让位（styled 类名是哈希，用稳定 data 属性判定）——
+      // 修复「一次 Esc 同时关面板和关最上层浮窗」的双关冲突
       if (document.querySelector('[data-dialog-overlay]')) return
+      if (document.querySelector('[data-capsule-panel]')) return
       const top = topFloat()
       if (top) closeFloat(top.key)
     }
@@ -45,12 +49,12 @@ export function FloatLayer(props: { containerRef: React.RefObject<HTMLElement | 
         <FloatWindow key={float.key} float={float} focused={float.key === topKey} containerRef={containerRef} dragRef={dragRef} />
       ))}
       {minimized.length > 0 && (
-        <Chips role="toolbar" aria-label="最小化浮窗">
+        <Chips role="toolbar" aria-label={t('float.minimizedBar')}>
           {minimized.map((float) => (
             <Chip
               key={float.key}
               type="button"
-              title={`还原 ${float.title}`}
+              title={`${t('float.restore')} ${float.title}`}
               onClick={() => restoreFloat(float.key)}
             >
               <AppIcon icon={pluginIcon(float.icon)} size="sm" />

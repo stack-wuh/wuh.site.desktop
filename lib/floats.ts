@@ -56,6 +56,17 @@ const MIN_WIDTH = 280
 const MIN_HEIGHT = 180
 const DEFAULT_WIDTH = 520
 
+/**
+ * 浮窗 CSS z 上限：与既有层带共存（SideMenu tooltip 60 / 胶囊面板 70 / Toast 90 / Dialog 100）。
+ * 焦点序 z 单调递增仅用于注册表内排序；渲染层钳在 58，超限后相对次序交给
+ * DOM 排序（z 升序、后画在上）——修复无限递增最终压过面板/Toast/Dialog 的缺陷。
+ */
+export const FLOAT_Z_MAX = 58
+
+export function floatZIndex(z: number): number {
+  return Math.min(z + 1, FLOAT_Z_MAX)
+}
+
 const store = createStore<FloatsState>({ floats: [], seq: 0 })
 
 /** 就地变更后统一走这里产出新快照（useSyncExternalStore 依赖新引用） */

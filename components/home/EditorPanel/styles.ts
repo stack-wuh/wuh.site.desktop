@@ -101,7 +101,6 @@ export const DirtyDot = styled.span`
   background: var(--warning-color);
 `
 
-/** 预览降级态（ghosted）：仅导出/严格排版对照场景使用 */
-export const GhostButton = styled(Button)`
-  opacity: 0.45;
-`
+/** 预览入口（ghost 语义壳）：不再恒定降灰——0.45 与 Button disabled 撞值，
+ * 可用/禁用不可辨（20260927-fix-shell-ux-defects）；降级语义由 title/aria-pressed 表达 */
+export const GhostButton = styled(Button)``

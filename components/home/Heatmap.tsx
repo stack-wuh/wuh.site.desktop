@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import styled from 'styled-components'
 import { getMonthPositions, type HeatmapViewData } from './heatmapData'
+import { useLocale } from '../../lib/i18n/context'
 
 /**
  * 综合活动热力图（自持组件，结构与站点 @wuh.site/components/heatmap 同构）：
@@ -12,14 +13,15 @@ import { getMonthPositions, type HeatmapViewData } from './heatmapData'
 
 const DAY_LABELS = ['', 'Mon', '', 'Wed', '', 'Fri', ''] as const
 
-const ACTIVITY_LABELS: Record<string, string> = {
-  visits: '浏览',
-  published: '发布',
-  updated: '更新',
-  comments: '评论',
-  guestbook: '留言',
-  projectUpdates: '项目更新',
-  githubContributions: 'GitHub 贡献'
+/** 活动分类数据键 → locale 键（文案三语，20260927-fix-shell-ux-defects 收口硬编码中文） */
+const ACTIVITY_KEYS: Record<string, string> = {
+  visits: 'heatmap.actVisits',
+  published: 'heatmap.actPublished',
+  updated: 'heatmap.actUpdated',
+  comments: 'heatmap.actComments',
+  guestbook: 'heatmap.actGuestbook',
+  projectUpdates: 'heatmap.actProjectUpdates',
+  githubContributions: 'heatmap.actGithub'
 }
 
 const Root = styled.div`
@@ -234,14 +236,17 @@ interface TooltipCellProps {
 
 function TooltipCell(props: TooltipCellProps): React.JSX.Element {
   const [visible, setVisible] = useState(false)
+  const { t } = useLocale()
   const d = new Date(`${props.date}T00:00:00`)
-  const dateLabel = `${d.getMonth() + 1} 月 ${d.getDate()} 日`
+  const dateLabel = t('heatmap.date', { m: d.getMonth() + 1, d: d.getDate() })
   const details = props.breakdown
     ? Object.entries(props.breakdown).filter(([, value]) => value > 0)
     : []
-  const totalLabel = props.breakdown ? `总量 ${props.count}` : `${props.count} 条${props.activityLabel}`
+  const totalLabel = props.breakdown
+    ? t('heatmap.total', { count: props.count })
+    : t('heatmap.count', { count: props.count, label: props.activityLabel })
   const accessibleDetails = details
-    .map(([key, value]) => `${ACTIVITY_LABELS[key] ?? key}: ${value}`)
+    .map(([key, value]) => `${ACTIVITY_KEYS[key] ? t(ACTIVITY_KEYS[key]) : key}: ${value}`)
     .join(' · ')
   const label = [dateLabel, totalLabel, accessibleDetails].filter(Boolean).join(' · ')
 
@@ -267,7 +272,7 @@ function TooltipCell(props: TooltipCellProps): React.JSX.Element {
           <TooltipDetails>
             {details.map(([key, value]) => (
               <TooltipRow key={key}>
-                <TooltipLabel>{ACTIVITY_LABELS[key] ?? key}</TooltipLabel>
+                <TooltipLabel>{ACTIVITY_KEYS[key] ? t(ACTIVITY_KEYS[key]) : key}</TooltipLabel>
                 <TooltipValue>{value}</TooltipValue>
               </TooltipRow>
             ))}
@@ -383,13 +388,14 @@ export function Heatmap({
 }
 
 function Legend(): React.JSX.Element {
+  const { t } = useLocale()
   return (
     <LegendBox>
-      <span>Less</span>
+      <span>{t('heatmap.less')}</span>
       {[0, 1, 2, 3, 4].map((level) => (
         <LegendCell data-level={level} key={level} />
       ))}
-      <span>More</span>
+      <span>{t('heatmap.more')}</span>
     </LegendBox>
   )
 }

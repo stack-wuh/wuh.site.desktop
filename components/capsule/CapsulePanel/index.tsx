@@ -149,7 +149,14 @@ export function CapsulePanel(props: { onClose: () => void }): React.JSX.Element 
   }
 
   return (
-    <Pop role="dialog" aria-label={t('capsule.title')} data-testid="capsule-panel" onClick={(e) => e.stopPropagation()}>
+    <Pop
+      role="dialog"
+      aria-label={t('capsule.title')}
+      data-testid="capsule-panel"
+      /* 稳定 data 属性：浮窗层 Esc 让位判定（对齐 data-dialog-overlay 先例） */
+      data-capsule-panel="true"
+      onClick={(e) => e.stopPropagation()}
+    >
       <PopHead>
         <strong>{t('capsule.title')}</strong>
         <PopCount>

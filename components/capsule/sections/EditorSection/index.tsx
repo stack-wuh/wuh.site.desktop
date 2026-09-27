@@ -57,6 +57,7 @@ import {
   ModuleHead,
   ModuleIcon,
   ModuleMore,
+  ModuleHeadTitle,
   ModulePanel,
   ModuleRow,
   ModuleSub,
@@ -154,9 +155,7 @@ export function EditorSection(): React.JSX.Element {
             <ModuleIcon>
               <AppIcon icon={IconFile} size="xs" decorative />
             </ModuleIcon>
-            <span className="truncate" style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
-              {doc.activePath ?? t('editor.newDraft')}
-            </span>
+            <ModuleHeadTitle>{doc.activePath ?? t('editor.newDraft')}</ModuleHeadTitle>
             {doc.dirty && (
               <span title={t('editor.dirtyTitle')} style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--warning-color)', flex: 'none' }} />
             )}
@@ -189,7 +188,7 @@ export function EditorSection(): React.JSX.Element {
         <SwitchCard
           icon={<AppIcon icon={IconSparkles} size="xs" decorative />}
           label={t('editor.renderLive')}
-          hint="⌘/ 切换纯源码"
+          hint={t('editor.switchSourceHint')}
           on={live.renderMode === 'render'}
           onToggle={() => publishEditorCommand({ kind: 'toggleRender' })}
         />

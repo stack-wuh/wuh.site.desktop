@@ -27,7 +27,7 @@ const Base = styled.button`
 
   &:disabled {
     opacity: 0.45;
-    cursor: default;
+    cursor: not-allowed;
   }
 `
 

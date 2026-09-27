@@ -215,6 +215,8 @@ export function SideMenu(props: {
           </User>
         </UserWrap>
         <PopAnchor
+          $expanded={expanded}
+          data-expanded={expanded ? 'true' : undefined}
           onMouseEnter={openSettingsPop}
           onMouseLeave={scheduleCloseSettings}
           onFocus={openSettingsPop}
@@ -234,6 +236,7 @@ export function SideMenu(props: {
             {expanded && (
               <TreeKnob
                 $open={false}
+                data-ghost="true"
                 role="button"
                 tabIndex={0}
                 aria-label={t('pop.collapseMenu')}

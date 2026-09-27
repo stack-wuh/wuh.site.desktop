@@ -7,6 +7,7 @@
  */
 import {
   closeFloat,
+  floatZIndex,
   focusFloat,
   minimizeFloat,
   moveFloat,
@@ -16,6 +17,7 @@ import {
 import { PluginView } from '../plugins/PluginFrameHost'
 import { AppIcon } from '../ui/AppIcon'
 import { IconChevronDown, IconClose, pluginIcon } from '../icons'
+import { useLocale } from '../../lib/i18n/context'
 import { nextGeometry, RESIZE_DIRS, viewportOf, type DragContext, type ResizeDir } from './geometry'
 import { Actions, Header, ResizeHandle, WinBody, WinBtn, Window, WinTitle } from './styles'
 
@@ -26,6 +28,7 @@ export function FloatWindow(props: {
   dragRef: React.MutableRefObject<DragContext | null>
 }): React.JSX.Element {
   const { float, focused, containerRef, dragRef } = props
+  const { t } = useLocale()
   const geometry = float.geometry
 
   const onHeaderPointerDown = (e: React.PointerEvent<HTMLDivElement>): void => {
@@ -85,7 +88,7 @@ export function FloatWindow(props: {
     <Window
       $minimized={float.minimized}
       $focused={focused}
-      style={{ left: geometry.x, top: geometry.y, width: geometry.width, height: geometry.height, zIndex: float.z + 1 }}
+      style={{ left: geometry.x, top: geometry.y, width: geometry.width, height: geometry.height, zIndex: floatZIndex(float.z) }}
       role="dialog"
       aria-label={float.title}
       onPointerDown={() => focusFloat(float.key)}
@@ -101,16 +104,16 @@ export function FloatWindow(props: {
         <Actions>
           <WinBtn
             type="button"
-            title="最小化"
-            aria-label={`最小化 ${float.title}`}
+            title={t('float.minimize')}
+            aria-label={`${t('float.minimize')} ${float.title}`}
             onClick={() => minimizeFloat(float.key)}
           >
             <AppIcon icon={IconChevronDown} size="sm" />
           </WinBtn>
           <WinBtn
             type="button"
-            title="关闭"
-            aria-label={`关闭 ${float.title}`}
+            title={t('float.close')}
+            aria-label={`${t('float.close')} ${float.title}`}
             onClick={() => closeFloat(float.key)}
           >
             <AppIcon icon={IconClose} size="sm" />
