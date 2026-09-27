@@ -38,7 +38,7 @@ pnpm dist         # 生产打包（electron-builder --dir，含 app:// 产物）
 pnpm dist:mac     # macOS .app
 ```
 
-> 本机 Node 高负载下偶发段错误时，可加 `NODE_OPTIONS=--max-old-space-size=6144` 重试。
+> Node 版本钉定 **22.23.2**（仓库根 `mise.toml`，major 与 CI 一致）：node 24.19 的 V8（并发 GC/CodeSerializer）高负载下随机段错误（CLI/tsc/vitest 均曾中招）。mise 用户进入仓库自动生效；非 mise 环境以 `package.json` 的 `engines` 字段提示（历史备注：`NODE_OPTIONS=--max-old-space-size=6144` 缓解实测不足，已弃）。
 > 打包机若访问 GitHub 受限，electron/electron-builder 资源可走 `ELECTRON_MIRROR` / `ELECTRON_BUILDER_MIRROR` 指向 npmmirror。
 
 ## 安全
