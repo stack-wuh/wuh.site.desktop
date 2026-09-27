@@ -41,3 +41,53 @@ export const Notice = styled.div`
   color: var(--text-secondary);
   pointer-events: none;
 `
+
+/* 图片 lightbox（20260927-feature-editor-interactions）：portal 至 body，
+   data-dialog-overlay 让浮窗层 Esc 让位；z 130 > Dialog 100（覆盖一切编辑器外浮层） */
+export const Lightbox = styled.div`
+  position: fixed;
+  inset: 0;
+  z-index: 130;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: color-mix(in oklab, var(--background-color) 18%, #000 82%);
+  outline: none;
+  animation: wd-lightbox-in var(--motion-dur-quick, 150ms) var(--motion-ease-out-soft, ease-out);
+
+  img {
+    max-width: 90vw;
+    max-height: 82vh;
+    border-radius: var(--border-radius-base);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+  }
+
+  @keyframes wd-lightbox-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+`
+
+export const LightboxCap = styled.div`
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.75);
+
+  kbd {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: var(--border-radius-xs);
+    padding: 0 4px;
+    margin: 0 2px;
+  }
+`

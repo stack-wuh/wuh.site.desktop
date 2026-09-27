@@ -164,6 +164,12 @@ const zh: Record<string, string> = {
   'editor.exportCopyDone': '已复制',
   'editor.exportFile': '导出文件',
   'editor.exportFileDone': '已导出',
+  // 编辑器 L4 交互（20260927-feature-editor-interactions）
+  'editor.commentTag': '注释',
+  'editor.foldAction': '折叠本节',
+  'editor.foldLines': '已折叠 {count} 行',
+  'editor.taskToggle': '切换任务状态',
+  'editor.lightboxHint': '{alt} · Esc 或点击任意处关闭',
   'capsule.title': '任务中心',
   'capsule.tasks': '任务 {done}/{total}',
   'capsule.editorSection': '编辑器',
@@ -493,6 +499,11 @@ const en: Record<string, string> = {
   'editor.exportCopyDone': 'Copied',
   'editor.exportFile': 'Export file',
   'editor.exportFileDone': 'Exported',
+  'editor.commentTag': 'Note',
+  'editor.foldAction': 'Fold section',
+  'editor.foldLines': '{count} lines folded',
+  'editor.taskToggle': 'Toggle task',
+  'editor.lightboxHint': '{alt} · Esc or click anywhere to close',
   'capsule.title': 'Task Center',
   'capsule.tasks': 'Tasks {done}/{total}',
   'capsule.editorSection': 'Editor',
@@ -731,6 +742,11 @@ const ja: Record<string, string> = {
   'editor.exportCopyDone': 'コピーしました',
   'editor.exportFile': 'ファイル出力',
   'editor.exportFileDone': '出力しました',
+  'editor.commentTag': 'コメント',
+  'editor.foldAction': 'セクションを折りたたむ',
+  'editor.foldLines': '{count} 行を折りたたみ',
+  'editor.taskToggle': 'タスクを切り替え',
+  'editor.lightboxHint': '{alt} · Esc またはクリックで閉じる',
   'capsule.title': 'タスクセンター',
   'capsule.tasks': 'タスク {done}/{total}',
   'capsule.editorSection': 'エディター',
@@ -873,3 +889,29 @@ const ja: Record<string, string> = {
 }
 
 export const locales: Record<Locale, Record<string, string>> = { zh, en, ja }
+
+/** 供 CM widget 等非 React 环境使用的纯翻译（与 context.tsx 的 translate 同一实现） */
+export function translateText(
+  locale: Locale,
+  key: string,
+  params?: Record<string, string | number>
+): string {
+  let text = locales[locale][key] ?? locales[defaultLocale][key] ?? key
+  if (params) {
+    for (const [name, value] of Object.entries(params)) {
+      text = text.replaceAll(`{${name}}`, String(value))
+    }
+  }
+  return text
+}
+
+/** 读取持久化 locale（localStorage `wd.locale`，存储不可用回落默认）——widget 挂载期调用 */
+export function storedLocale(): Locale {
+  try {
+    const raw = typeof localStorage === 'undefined' ? null : localStorage.getItem('wd.locale')
+    if (raw === 'zh' || raw === 'en' || raw === 'ja') return raw
+  } catch {
+    // 存储不可用走默认
+  }
+  return defaultLocale
+}

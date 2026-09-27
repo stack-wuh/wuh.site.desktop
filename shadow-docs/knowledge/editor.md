@@ -17,9 +17,10 @@ source:
   - changes/archive/20260925-feature-draft-crumb-save/brief.md
   - changes/archive/20260925-chore-milkdown-editor-poc/brief.md
   - changes/20260927-style-editor-render-language/brief.md
+  - changes/20260927-feature-editor-interactions/brief.md
 verified: 2026-09-27
 verified-depth: unit
-verified-scope: editor-page + i18n + saveas-flow 用例绿（草稿态 saveAs、三语 key 锁定、原生保存链共存）；20260927-style-editor-render-language：typecheck 三 tsconfig 绿 + vitest 64 文件/547 用例绿（纯样式零契约；四主题走查由原型截图验收替代，renderTheme 值与原型 1:1 映射）
+verified-scope: editor-page + i18n + saveas-flow 用例绿（草稿态 saveAs、三语 key 锁定、原生保存链共存）；20260927-style-editor-render-language：typecheck 三 tsconfig 绿 + vitest 64 文件/547 用例绿（纯样式零契约；四主题走查由原型截图验收替代，renderTheme 值与原型 1:1 映射）；20260927-feature-editor-interactions：L 级完整 TDD（先红 23 失败→绿，交互纯逻辑 26 + 组件行为用例，真实 EditorView 驱动点击）+ 全量 66 文件/581 用例 + 三 tsconfig 绿
 ---
 
 # 主编辑器（CodeMirror 6）、即时渲染与分栏预览
@@ -48,6 +49,8 @@ verified-scope: editor-page + i18n + saveas-flow 用例绿（草稿态 saveAs、
 
 **编辑引擎选型评估（20260925-chore-milkdown-editor-poc，PoC 实测）**：Milkdown（ProseMirror+remark，Typora 式 WYSIWYG）替换 CM6 的议题经用户硬性判据「`.md` 在 GitHub 上保持原状（字节保真）」+ `@milkdown/kit@7.22.2` 真实 transformer 实测**否决**：headless 默认 preset（commonmark+gfm）下 frontmatter 笔记头被毁（`---`→`***`、元数据降级为段落、`tags: [随笔]`→`tags: \[随笔]`，证实上游 #1712 OPEN）、图片行 round-trip 整行丢失（`<stem>.assets` 相对引用约定数据丢失，中/英路径同现）、`-` 列表/`---` 分隔线/setext 标题/`1)` 有序列表/行尾两空格硬换行首次保存即被翻写（翻写率明细见 `changes/archive/20260925-chore-milkdown-editor-poc/report.md`）；规范化为一次性（17 样例二次保存零差异），#2349 autolink 转义翻倍在 7.22.2 未能复现。结论：问题不是上游工程质量（MIT、双周发版、健康度优秀）而是架构目标错配——它优化「编辑体验的语义模型」，本产品要求「磁盘字节即事实源」。
 
+**L4 渲染态交互（20260927-feature-editor-interactions，L 级完整 TDD）**：五项交互的位置/改写计算唯一事实源在 `lib/editor-cm.ts` 纯函数层（字节保真：UI 只消费纯函数结果 dispatch）。①**链接**：Ctrl/Cmd+点击 `findLinkTargetAt` → `window.api.openExternal` 直达 IPC（不进 EditorCommand 词表，同图片粘贴先例），仅放行 http/https，相对链接静默忽略；②**任务列表**：GFM `- [ ]` 渲染态 checkbox widget，点击经 `toggleTaskLine` 改写整行（MathWidget 先例），光标行保持源码态；③**标题折叠**：独立 `foldField`（StateField<Set>，与渲染开关无关、纯源码态可用）直供占位 replace + 自有 atomicRanges（全 widget replace，契约天然满足），光标进入折叠区自动展开、docChanged 清空折叠（v1：不持久化、跨挂载点不记忆）；④**注释**：parseBlocks 新 BlockKind `comment`（多行未闭合回退源码态），渲染态收成标注条，预览/导出不渲染（html:false 语义一致）；⑤**脚注** v1 仅样式（引用上标 + 定义行分节），不做跳转（预览面板无 footnote 插件，不单方面超前）。**lightbox**：ImageWidget 点击经 `wd-editor-lightbox` CustomEvent → MarkdownEditor React portal，复用 `data-dialog-overlay` 属性使浮窗层 Esc 让位（z130 > Dialog 100），焦点移入归还、reduced-motion 关停。widget 文案三语经 `translateText` + `storedLocale()`（locales.ts 纯函数，非 React 环境）。正文默认排版 15px/1.8（`lib/editor-state.ts` DEFAULT_TYPOGRAPHY，用户仍可调）。
+
 ## 执行约束
 
 - 内核与命令语义变更必须保持：双通道防回环（pushedRef 比对）、命令通道消费契约（EditorSection/TaskCapsule 只经 editor-commands 与编辑器交互）、面板紧凑形态（min 140px / max 45vh）。
@@ -61,6 +64,7 @@ verified-scope: editor-page + i18n + saveas-flow 用例绿（草稿态 saveAs、
 - `atomicRanges` 只供 widget replace 装饰子集（`components/editor/decorations.ts` 的 `atomicSubset`），禁止整集供给；扩展列表必带 `drawSelection()`——缺省时选区走浏览器原生渲染，主题 `.cm-selectionBackground` 不生效，且与 `display:none` 隐藏标记互相打架（选区高亮跳块）。
 - 依赖只经 package.json 声明消费；禁止重新引入本地化大体积静态资产管线（如 copy-vditor 式 prepare 脚本）。
 - 编辑器引擎选型必须满足**字节保真**（缓冲区/磁盘字节即事实源，渲染层只改显示不改内容）；禁止引入 parse→re-serialize 型引擎（Milkdown/Vditor 类）作为可保存编辑面。实证与翻写率见 `changes/archive/20260925-chore-milkdown-editor-poc/report.md`（上游行为观察哨测试与 devDep 已于 20260927-style-editor-render-language 经用户批准移除——本约束本身即护栏，如再议 Milkdown 须重跑 PoC）。
+- 渲染态交互改写源码（现仅任务点选）必须经 `lib/editor-cm.ts` 纯函数计算再 dispatch，禁止在 widget/handler 内手拼事务；位置反查（链接定位/折叠区间）同层实现同层测试。折叠域与 livePreview 域各自的 atomicRanges 都只供 widget replace 子集（20260924-fix-cm-selection-atomic 契约）。链接打开仅 http/https 经 `window.api.openExternal`；浮层类交互（lightbox）必须复用 `data-dialog-overlay` 让位机制并尊重 reduced-motion。
 
 ## 适用边界
 
@@ -68,7 +72,8 @@ verified-scope: editor-page + i18n + saveas-flow 用例绿（草稿态 saveAs、
 
 ## 验证方式
 
-- `vitest run tests/editor-codemirror.test.ts tests/home-editor-panel.test.ts tests/editor-live-preview-toggle.test.tsx tests/editor-live-preview-atomic.test.tsx tests/editor-toolbar.test.tsx tests/editor-page.test.tsx tests/doc-transfer.test.ts`（CM6 适配/双通道语义/命令契约/大纲/字数/即时渲染开关时序/原子区契约/工具条命令发布 + `/editor` 顶栏与冷启动草稿会话 + 面包屑完整路径与改名/迁移命令发布 + docTransfer 纯逻辑）；`vitest run tests/save-dialog.test.ts tests/saveas-flow.test.tsx`（原生保存面板：文件名清洗/目录记忆/saveAs 四分支流转）。
+- `vitest run tests/editor-codemirror.test.ts tests/home-editor-panel.test.ts tests/editor-live-preview-toggle.test.tsx tests/editor-live-preview-atomic.test.tsx tests/editor-toolbar.test.tsx tests/editor-page.test.tsx tests/doc-transfer.test.ts tests/editor-interactions.test.ts tests/editor-interactions-widgets.test.tsx`（CM6 适配/双通道语义/命令契约/大纲/字数/即时渲染开关时序/原子区契约/工具条命令发布 + `/editor` 顶栏与冷启动草稿会话 + 面包屑完整路径与改名/迁移命令发布 + docTransfer 纯逻辑 + L4 交互纯逻辑与 widget 行为：任务点选改写/折叠展开/注释脚注/字节保真）；`vitest run tests/save-dialog.test.ts tests/saveas-flow.test.tsx`（原生保存面板：文件名清洗/目录记忆/saveAs 四分支流转）。
+- `pnpm dev` 手动路径（L4 交互走查）：渲染态点任务 checkbox（源码改写 + 明暗核对）、标题 hover 箭头折叠/点击占位条展开/光标进入自动展开、`<!-- -->` 注释收成标注条/点击展开、脚注上标与定义行分节、图片点击 lightbox（Esc 关闭且浮窗层让位、焦点归还）、Ctrl/Cmd+点击 http(s) 链接直达浏览器（相对链接无动作）。
 - `grep -rn "vditor" --include="*.ts" --include="*.tsx" --include="*.mjs" .`（排除 node_modules/out/dist/shadow-docs）应无**代码级**引用（注释性历史提及除外，如 tests/editor-codemirror.test.ts 契约回归的来源注记）。
 - `pnpm dev` 手动路径：首页面板打字（明暗四主题）、胶囊格式化/插入命令、图片粘贴落盘 `.assets/`、预览 toggle 分栏与窄容器纵堆、Cmd/Ctrl+S 保存、outline 跳转；`/editor`：左栏项目树或项目页点文件进入、脏点与保存、新建、返回、Esc 退专注、冷启动自动草稿。
 

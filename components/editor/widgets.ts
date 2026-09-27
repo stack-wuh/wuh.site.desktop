@@ -5,8 +5,19 @@
  * import 惰性分块（首块出现才加载，离线可用），加载失败一律回退纯文本。
  * 点击公式块把光标送回块内 → decorations 检测到光标行后自动换回源码态。
  */
+import { EditorState, StateEffect } from '@codemirror/state'
 import { EditorView, WidgetType } from '@codemirror/view'
 import { isExternalRef, toFileUrl } from '@shared/url'
+import { toggleTaskLine } from '../../lib/editor-cm'
+import { storedLocale, translateText } from '../../lib/i18n/locales'
+
+/** 标题折叠状态效果（fold StateField 消费； widgets 层定义避免与 decorations 循环依赖） */
+export const wdFoldEffect = StateEffect.define<{ line: number; fold: boolean }>()
+
+/** 由 widget DOM 反查所属编辑器实例（MathWidget 先例：EditorView.findFromDOM） */
+function findView(el: HTMLElement): EditorView | null {
+  return EditorView.findFromDOM(el)
+}
 
 /** 相对图片引用 → local-resource 绝对地址（与 PreviewPane 同一解析链） */
 export function resolveImageUrl(src: string, root: string | null, docPath: string | null): string {
@@ -20,7 +31,7 @@ export function resolveImageUrl(src: string, root: string | null, docPath: strin
   }
 }
 
-/** 图片内联缩略图：hover 出尺寸角标由 CSS 承担；加载失败显示占位 */
+/** 图片内联大图：点击派发 lightbox 事件（MarkdownEditor portal 承载）；加载失败显示占位 */
 export class ImageWidget extends WidgetType {
   constructor(
     readonly alt: string,
@@ -42,6 +53,13 @@ export class ImageWidget extends WidgetType {
     img.alt = this.alt
     img.src = resolveImageUrl(this.src, this.root, this.docPath)
     img.loading = 'lazy'
+    img.addEventListener('click', () => {
+      window.dispatchEvent(
+        new CustomEvent('wd-editor-lightbox', {
+          detail: { src: img.src, alt: this.alt }
+        })
+      )
+    })
     img.addEventListener('error', () => {
       wrap.classList.add('cm-live-img--broken')
       wrap.textContent = this.alt || this.src || 'image'
@@ -52,6 +70,142 @@ export class ImageWidget extends WidgetType {
 
   ignoreEvent(): boolean {
     return true
+  }
+}
+
+/** GFM 任务列表渲染态 checkbox：点击经 toggleTaskLine 纯函数改写源码（字节保真） */
+export class TaskToggleWidget extends WidgetType {
+  constructor(
+    /** CM 1-based 行号（装饰重建即刷新，点击时重读行文本，脏则 no-op） */
+    readonly lineNo: number,
+    readonly checked: boolean
+  ) {
+    super()
+  }
+
+  eq(other: TaskToggleWidget): boolean {
+    return other.lineNo === this.lineNo && other.checked === this.checked
+  }
+
+  toDOM(): HTMLElement {
+    const box = document.createElement('span')
+    box.className = 'cm-live-taskbox' + (this.checked ? ' done' : '')
+    box.setAttribute('role', 'checkbox')
+    box.setAttribute('aria-checked', String(this.checked))
+    box.setAttribute('aria-label', translateText(storedLocale(), 'editor.taskToggle'))
+    box.addEventListener('click', () => {
+      const view = findView(box)
+      if (!view) return
+      const line = view.state.doc.line(this.lineNo)
+      const next = toggleTaskLine(line.text)
+      if (next == null || next === line.text) return
+      view.dispatch({ changes: { from: line.from, to: line.to, insert: next } })
+    })
+    return box
+  }
+
+  ignoreEvent(): boolean {
+    return true
+  }
+}
+
+/** 标题折叠箭头（hover 浮现，点击折叠本节） */
+export class FoldChevronWidget extends WidgetType {
+  constructor(readonly lineNo: number) {
+    super()
+  }
+
+  eq(other: FoldChevronWidget): boolean {
+    return other.lineNo === this.lineNo
+  }
+
+  toDOM(): HTMLElement {
+    const chev = document.createElement('span')
+    chev.className = 'cm-live-foldchev'
+    chev.setAttribute('role', 'button')
+    chev.setAttribute('aria-label', translateText(storedLocale(), 'editor.foldAction'))
+    chev.textContent = '▸'
+    chev.addEventListener('click', () => {
+      const view = findView(chev)
+      if (!view) return
+      view.dispatch({ effects: wdFoldEffect.of({ line: this.lineNo - 1, fold: true }) })
+    })
+    return chev
+  }
+
+  ignoreEvent(): boolean {
+    return true
+  }
+}
+
+/** 折叠占位条：整段内容行替换，点击展开 */
+export class FoldPlaceholderWidget extends WidgetType {
+  constructor(
+    readonly startLine: number,
+    readonly count: number
+  ) {
+    super()
+  }
+
+  eq(other: FoldPlaceholderWidget): boolean {
+    return other.startLine === this.startLine && other.count === this.count
+  }
+
+  toDOM(): HTMLElement {
+    const el = document.createElement('span')
+    el.className = 'cm-live-fold'
+    el.setAttribute('role', 'button')
+    el.setAttribute('aria-label', translateText(storedLocale(), 'editor.foldLines', { count: this.count }))
+    el.textContent = translateText(storedLocale(), 'editor.foldLines', { count: this.count })
+    el.addEventListener('click', () => {
+      const view = findView(el)
+      if (!view) return
+      view.dispatch({ effects: wdFoldEffect.of({ line: this.startLine, fold: false }) })
+      view.focus()
+    })
+    return el
+  }
+
+  ignoreEvent(): boolean {
+    return true
+  }
+}
+
+/** HTML 注释标注条：整块替换为淡色标注（点击回源码态展开） */
+export class CommentWidget extends WidgetType {
+  constructor(
+    readonly text: string,
+    /** 点击时把光标送回的位置（注释块首行行首绝对偏移） */
+    readonly at: number
+  ) {
+    super()
+  }
+
+  eq(other: CommentWidget): boolean {
+    return other.text === this.text && other.at === this.at
+  }
+
+  toDOM(): HTMLElement {
+    const el = document.createElement('span')
+    el.className = 'cm-live-comment'
+    const tag = document.createElement('span')
+    tag.className = 'cm-live-comment-tag'
+    tag.textContent = translateText(storedLocale(), 'editor.commentTag')
+    const body = document.createElement('span')
+    body.className = 'cm-live-comment-text'
+    body.textContent = this.text
+    el.append(tag, body)
+    el.addEventListener('click', () => {
+      const view = findView(el)
+      if (!view) return
+      view.dispatch({ selection: { anchor: this.at }, scrollIntoView: true })
+      view.focus()
+    })
+    return el
+  }
+
+  ignoreEvent(): boolean {
+    return false
   }
 }
 
