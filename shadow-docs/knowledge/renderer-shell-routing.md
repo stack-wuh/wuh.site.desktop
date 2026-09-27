@@ -24,6 +24,7 @@ source:
   - changes/20260925-fix-page-header-sticky/brief.md
   - changes/20260926-refactor-mega-component-split/brief.md
   - changes/20260927-refactor-midsize-component-split/brief.md
+  - changes/20260925-build-pin-node22/brief.md
 verified: 2026-09-27
 verified-depth: unit
 verified-scope: app/(shell)/layout.tsx, components/SideMenu/index.tsx, components/capsule/CapsulePanel/index.tsx, components/capsule/sections/EditorSection/index.tsx, components/account/AccountPage/index.tsx, components/plugins/PluginFrameHost/index.tsx, components/editor/MarkdownEditor/index.tsx, components/ui/FeedbackHost/index.tsx, components/FloatLayer/index.tsx, components/home/EditorPanel/index.tsx, components/settings/PluginManagerSection/index.tsx, app/(shell)/projects/ProjectsPage.tsx, app/(shell)/drafts/DraftsPage.tsx
@@ -62,6 +63,8 @@ verified-scope: app/(shell)/layout.tsx, components/SideMenu/index.tsx, component
 
 **内置编辑器已回归首页面板**（20260922-refactor-codemirror-editor 起：CodeMirror 6 源码编辑 + 分栏预览，见 [主编辑器卡片](editor.md)；2026-09-20 至 09-22 间曾有「内置编辑器已移除」窗口，其间 20260922-feature-vditor-md-editor 短暂引入 Vditor IR 后整体替换退场）。`lib/store.ts`（workspaceStore）既是首页编辑器的 content 状态源（content 双通道 + 防回环，见 editor.md 卡），也是插件 doc 服务（帧协议 `doc.get/set/save`）的宿主侧状态源。
 
+**Node 工具链钉定（20260925-build-pin-node22）**：仓库根 `mise.toml` 精确钉定 `node = "22.23.2"`（major 与父仓库 CI `ci-cd.yml` 的 `node-version: '22'` 一致），`package.json` `engines: { "node": "22" }` 供非 mise 环境提示。根因：node 24.19 的 V8（并发 GC/CodeSerializer）高负载下随机 SIGSEGV（exit 139）——20260925 实测波及 shadow-dev CLI/tsc 三 tsconfig/vitest，且 139 与真实失败混淆会污染验证结论；22.23.2 同等负载零崩溃。所有 dev/test/typecheck/dist 命令默认应运行在钉定 node 上（历史注：82a86b1 曾以 dist 脚本包装缓解打包段，随 renderer-nextjs 丢失，本钉定以环境级方案取代）。
+
 ## 执行约束
 
 - 新增/拆分渲染层组件按**域内文件夹化**落位：`组件名/index.tsx` 对外（含原具名导出的 re-export）+ 子单元文件 + styles；**路由段页面**用变体：`page.tsx` 留薄入口 + 同目录 Page 组件 + styles；拆分必须逐字搬移仅调整 import/export，由全量绿灯测试 + 三 tsconfig typecheck 护航（vitest 运行时宽松解析不报相对路径错，tsc 门禁不可省）。职责单一的过线文件（自包含可视化/样式库/单树件）不强拆。
@@ -73,6 +76,7 @@ verified-scope: app/(shell)/layout.tsx, components/SideMenu/index.tsx, component
 - 任何 `useSyncExternalStore` 必须传第三参 `getServerSnapshot`（静态导出预渲染要求，否则 `next build` 在预渲染阶段报错退出）。
 - 新增会首帧渲染的 CSS/主题能力时必须保持「构建期内联 + 属性路由」机制：不要把 token CSS 改回运行时注入，不要移除 layout 的 pre-paint 纠偏脚本（其键名与 ThemeProvider 的 `STORAGE_KEY` 锚点同步）。
 - 壳层不再展示工作区 UI；工作区信息两处 seed：layout 挂载时 `getWorkspace` 一次性 seed，以及**项目入口切换时 `applyWorkspaceSwitch` 重入**（`setWorkspaceInfo` + `workspaceStore.switchWorkspace` 失效 doc 状态 + `documentEvents.emit('workspace')` 经既有链路广播进全部插件帧，SDK `wuh.on('workspace')` 可感知）。打开工作区的入口：项目区块打开本地目录 / clone / 最近项目列表，以及 **saveAs 无工作区时的原生目录选择引导**（20260924-feature-native-save-dialog——引导前先捕获编辑内容，切换会清 doc 状态）。最近项目持久化在主进程 `userData/recent-workspaces.json`（`setWorkspace` 成功即登记，cap 8）。
+- Node 版本以仓库根 `mise.toml` 钉定为准（`22.23.2`，与 CI 同 major）；验证与长任务前先 `mise exec -- node --version` 确认环境——node 24.x 的 V8 有随机 SIGSEGV 前科（exit 139），139 崩溃不得计入测试/类型检查结论。
 
 ## 适用边界
 
@@ -81,7 +85,7 @@ verified-scope: app/(shell)/layout.tsx, components/SideMenu/index.tsx, component
 ## 验证方式
 
 - 读 `app/(shell)/layout.tsx` 与 `lib/routes.ts`：路由段 ↔ 菜单项映射、Cmd+, 切换、FloatLayer 常驻。
-- `pnpm typecheck`（node 侧 + tsconfig.next.json）+ `pnpm test` 回归（tsc + vitest）；项目/编辑面专项：`tests/projects.test.ts`（分组/树剪枝纯逻辑）、`tests/projects-render.test.tsx`、`tests/projects-tree.test.tsx`（懒加载/失效重试/点击流转）、`tests/editor-page.test.tsx`（happy-dom，零 React 告警）、`tests/i18n.test.ts`（三语 parity + 源码键覆盖）。
+- Node 环境经仓库根 `mise.toml` 钉定（22.23.2）；`pnpm typecheck`（node 侧 + tsconfig.next.json）+ `pnpm test` 回归（tsc + vitest）；项目/编辑面专项：`tests/projects.test.ts`（分组/树剪枝纯逻辑）、`tests/projects-render.test.tsx`、`tests/projects-tree.test.tsx`（懒加载/失效重试/点击流转）、`tests/editor-page.test.tsx`（happy-dom，零 React 告警）、`tests/i18n.test.ts`（三语 parity + 源码键覆盖）。
 - `pnpm dev` 手动路径：启动默认 Home（左栏可见）→ 左栏切设置/插件 main 视图 → `Ctrl+,` 切换设置 ↔ 首页 → 浮窗 toggle 开合、切页后浮窗仍在、Esc 关浮窗；左栏展开/收起瞬时切换；展开【项目】旋钮 → 点树内 `.md` 直达 `/editor`、跨项目打开自动切工作区、失效项目「无法访问」可重试。
 - 生产加载路径：`app://shell/index.html` 仅在**打包产物**（`pnpm dist`）中生效；未打包 `electron .` 恒走 dev 路径（wait-on next dev）。splash 人工走查：启动即现品牌标 splash → 主窗带样式切换无白屏/乱序；`tests/splash.test.ts` 锁定 splash 静态契约。
 
