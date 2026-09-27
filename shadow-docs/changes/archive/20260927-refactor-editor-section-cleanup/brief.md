@@ -4,7 +4,7 @@
   "name": "20260927-refactor-editor-section-cleanup",
   "type": "refactor",
   "scope": "components",
-  "status": "published",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "refactor/20260927-refactor-editor-section-cleanup",
   "files": [
@@ -20,13 +20,13 @@
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "368857ffecc75a13c1d92bd7008f4822c00797d0",
-    "verifiedAt": "2026-09-27T07:12:48.569Z"
+    "verifiedCommit": "5f597f80cc1fbc64bd2f519b93123b09dd6b95cd",
+    "verifiedAt": "2026-09-27T09:09:16.275Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "pr:121",
-    "planHash": "04a66511d88b6de03c192ba67d4349994ecf121addccd609dabf5e3a7b54b7d0",
+    "checkpoint": "merged-pr:121",
+    "planHash": "3bcb25bbe55a2fcbb30ee93d9e0c72eac7577d5c2d1c7813fd25b59010a890d3",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -54,7 +54,7 @@
   "knowledge": {
     "action": "无需变更",
     "target": null,
-    "reason": "死 styled 删除与 FormatGrid/PanelsExport 纯展示拆分均按 brief 落地，tsc next PASS + editor-page/capsule-render 22 用例 + capsule-nesting 结构守卫 3 用例全绿；纯清理与既有约定内重组，无新长期事实"
+    "reason": "归档前在合并后 HEAD 重打：死 styled 删除与 FormatGrid/PanelsExport 拆分已随 PR #121 合入，验证结论不变（tsc next PASS + editor-page/capsule-render 22 用例 + capsule-nesting 守卫 3 用例绿）"
   }
 }
 ---
