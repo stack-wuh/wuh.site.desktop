@@ -4,7 +4,7 @@
   "name": "20260925-build-pin-node22",
   "type": "build",
   "scope": "desktop",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "build/20260925-build-pin-node22",
   "files": [
@@ -17,18 +17,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 127,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/127",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 129,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/129"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "9b2f823468092970e61a03b3726084ff9aea9986",
-    "verifiedAt": "2026-09-27T08:51:39.349Z"
+    "verifiedCommit": "5f597f80cc1fbc64bd2f519b93123b09dd6b95cd",
+    "verifiedAt": "2026-09-27T09:13:28.678Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:127",
-    "planHash": "6d1c2f52d8fa8021132698c2a1cf15a033ca5b22694f43c36b01ea9aeecdc652",
+    "checkpoint": "merged-pr:129",
+    "planHash": "7bc8cd9beaa4bb04ce3dbe7facdb1b2e095d964d1d32a5a4b3ed189ff9b942cf",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -56,7 +56,7 @@
   "knowledge": {
     "action": "更新",
     "target": "shadow-docs/knowledge/renderer-shell-routing.md",
-    "reason": "构建域新增长期约定：node 钉定 22.23.2（mise.toml）+ engines 信号 + 段错误根因与验证方式——已原位更新该卡三处并追加 source；验证=钉定 node 下全量 519 用例绿 + mise 解析断言 + canonical 树 tsconfig node/next 绿"
+    "reason": "同前次审查结论在合并后 main HEAD 重录（恢复 PR 关联后）：node 钉定 22.23.2 + engines + README + 构建域知识回写；验证=钉定解析断言 + 519 用例绿 + canonical 树 tsconfig node/next 绿"
   }
 }
 ---

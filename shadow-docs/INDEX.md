@@ -50,6 +50,7 @@
 | 20260924-fix-cm-selection-atomic | ✅ 完成 | shadow-docs/changes/archive/20260924-fix-cm-selection-atomic/brief.md |
 | 20260924-fix-drafts-error-visibility | ✅ 完成 | shadow-docs/changes/archive/20260924-fix-drafts-error-visibility/brief.md |
 | 20260924-fix-live-preview-toggle-rebuild | ✅ 完成 | shadow-docs/changes/archive/20260924-fix-live-preview-toggle-rebuild/brief.md |
+| 20260925-build-pin-node22 | ✅ 完成 | shadow-docs/changes/archive/20260925-build-pin-node22/brief.md |
 | 20260925-chore-milkdown-editor-poc | ✅ 完成 | shadow-docs/changes/archive/20260925-chore-milkdown-editor-poc/brief.md |
 | 20260925-feature-capsule-plugin-tab | ✅ 完成 | shadow-docs/changes/archive/20260925-feature-capsule-plugin-tab/brief.md |
 | 20260925-feature-draft-crumb-save | ✅ 完成 | shadow-docs/changes/archive/20260925-feature-draft-crumb-save/brief.md |
@@ -57,4 +58,8 @@
 | 20260925-fix-page-header-sticky | ✅ 完成 | shadow-docs/changes/archive/20260925-fix-page-header-sticky/brief.md |
 | 20260925-refactor-lib-create-store | ✅ 完成 | shadow-docs/changes/archive/20260925-refactor-lib-create-store/brief.md |
 | 20260926-refactor-mega-component-split | ✅ 完成 | shadow-docs/changes/archive/20260926-refactor-mega-component-split/brief.md |
+| 20260927-feature-sticky-header-drafts-projects | published | shadow-docs/changes/20260927-feature-sticky-header-drafts-projects/brief.md |
+| 20260927-refactor-editor-section-cleanup | published | shadow-docs/changes/20260927-refactor-editor-section-cleanup/brief.md |
+| 20260927-refactor-frame-protocol-split | reviewed | shadow-docs/changes/20260927-refactor-frame-protocol-split/brief.md |
 | 20260927-refactor-midsize-component-split | ✅ 完成 | shadow-docs/changes/archive/20260927-refactor-midsize-component-split/brief.md |
+| 20260927-test-net-backfill | published | shadow-docs/changes/20260927-test-net-backfill/brief.md |
