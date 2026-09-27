@@ -1,7 +1,9 @@
 'use client'
 
 /**
- * 插件帧宿主（渲染层）：会话建立、沙箱帧生命周期、host 侧服务与消息路由。
+ * 插件帧宿主·协议与会话（拆分自 PluginFrameHost 单文件，20260926-refactor-mega-component-split）：
+ * 会话建立、沙箱帧生命周期、host 侧服务与消息路由、宿主代际/就绪信号、启停/重载/
+ * 工作区切换与视图枚举 API。视图槽位组件见 ./PluginView（经 index 汇出）。
  *
  * 帧规则：iframe sandbox="allow-scripts"（不透明源，无 preload / 无宿主 DOM），
  * 逐帧 MessagePort 绑定插件身份；能力调用按 service 分流：
@@ -9,7 +11,7 @@
  * - doc / render / ui → host 直接服务（同样先查 manifest 权限）。
  * sessionId 只在 host 内存中流转，绝不下发给插件帧。
  */
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { useSyncExternalStore } from 'react'
 import type {
   PluginListResult,
   PluginPermission,
@@ -18,7 +20,7 @@ import type {
   PluginViewContribution,
   ToHostMessage
 } from '@shared/plugin'
-import { pluginLogicUrl, pluginViewUrl, resolveApproval } from '@shared/plugin'
+import { pluginLogicUrl, resolveApproval } from '@shared/plugin'
 import {
   createFeedbackRateLimiter,
   sanitizeAlertArgs,
@@ -26,24 +28,24 @@ import {
   sanitizeToastArgs
 } from '@shared/plugin'
 import type { WorkspaceInfo } from '@shared/types'
-import { buildThemeCss } from '../theme/tokens'
-import { uiConfirm } from '../ui/Dialog'
-import { alert, message, toast } from '../../lib/feedback'
-import { documentEvents, workspaceStore } from '../../lib/store'
+import { buildThemeCss } from '../../theme/tokens'
+import { uiConfirm } from '../../ui/Dialog'
+import { alert, message, toast } from '../../../lib/feedback'
+import { documentEvents, workspaceStore } from '../../../lib/store'
 import {
   clearPluginStatusItems,
   registerManifestStatusItems,
   removeStatusItem,
   updateStatusItem,
   type StatusItemPatch
-} from '../../lib/statusItems'
+} from '../../../lib/statusItems'
 import {
   clearPluginTasks,
   registerManifestTasks,
   removeTask,
   upsertTask,
   type TaskPatch
-} from '../../lib/tasks'
+} from '../../../lib/tasks'
 import {
   clearPluginCapsule,
   registerManifestCapsule,
@@ -51,7 +53,7 @@ import {
   removeCapsuleTab,
   updateCapsule,
   updateCapsuleTab
-} from '../../lib/capsule'
+} from '../../../lib/capsule'
 import {
   clearPluginEvents,
   onAnyEvent,
@@ -60,17 +62,16 @@ import {
   subscribePlugin,
   subscribersFor,
   unsubscribePlugin
-} from '../../lib/events'
-import { renderService } from '../../lib/renderPipeline'
-import styled from 'styled-components'
+} from '../../../lib/events'
+import { renderService } from '../../../lib/renderPipeline'
 
-interface PendingCall {
+export interface PendingCall {
   res: (v: unknown) => void
   rej: (e: Error) => void
   timer: ReturnType<typeof setTimeout>
 }
 
-interface FrameState {
+export interface FrameState {
   pluginId: string
   frameKey: string
   iframe: HTMLIFrameElement
@@ -93,7 +94,7 @@ let bootPromise: Promise<PluginListResult> | null = null
 /** 插件反馈频率护栏（全 kind 共享额度：10s 内 5 条；宿主内部调用不经此闸） */
 const feedbackGuard = createFeedbackRateLimiter()
 
-const FRAME_KEY = (pluginId: string, frameKey: string): string => `${pluginId}#${frameKey}`
+export const FRAME_KEY = (pluginId: string, frameKey: string): string => `${pluginId}#${frameKey}`
 const HELLO_TIMEOUT_MS = 5000
 const REQUEST_TIMEOUT_MS = 25_000
 
@@ -339,7 +340,7 @@ function onFrameMessage(frame: FrameState, ev: MessageEvent): void {
   )
 }
 
-function openFrame(pluginId: string, frameKey: string, url: string, hostEl: HTMLElement | null): Promise<FrameState> {
+export function openFrame(pluginId: string, frameKey: string, url: string, hostEl: HTMLElement | null): Promise<FrameState> {
   return new Promise((resolve, reject) => {
     const key = FRAME_KEY(pluginId, frameKey)
     closeFrame(key)
@@ -416,7 +417,7 @@ function ensureLogicContainer(): HTMLDivElement {
   return logicContainer
 }
 
-function closeFrame(key: string): void {
+export function closeFrame(key: string): void {
   const frame = frames.get(key)
   if (!frame) return
   frames.delete(key)
@@ -658,52 +659,4 @@ export async function togglePlugin(
     clearPluginEvents(pluginId)
   }
   hostGeneration.bump()
-}
-
-// ---------- 视图槽位 ----------
-
-const ViewSlot = styled.div`
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-`
-
-const ViewError = styled.p`
-  color: var(--danger-color);
-  font-size: 12px;
-  margin: 6px 0;
-  word-break: break-all;
-`
-
-/** 插件视图槽位：挂载/卸载沙箱帧 */
-export function PluginView(props: {
-  pluginId: string
-  view: PluginViewContribution
-}): React.JSX.Element {
-  const hostRef = useRef<HTMLDivElement | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const { pluginId, view } = props
-
-  useEffect(() => {
-    let alive = true
-    setError(null)
-    const el = hostRef.current
-    if (!el) return
-    void openFrame(pluginId, view.id, pluginViewUrl(pluginId, view.entry), el).catch((err: unknown) => {
-      if (alive) setError(err instanceof Error ? err.message : String(err))
-    })
-    return () => {
-      alive = false
-      closeFrame(FRAME_KEY(pluginId, view.id))
-    }
-  }, [pluginId, view.id, view.entry])
-
-  if (error) {
-    return (
-      <ViewSlot>
-        <ViewError>插件视图加载失败：{error}</ViewError>
-      </ViewSlot>
-    )
-  }
-  return <ViewSlot ref={hostRef} />
 }
