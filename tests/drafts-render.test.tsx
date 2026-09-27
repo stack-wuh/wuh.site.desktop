@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import type { ReactElement } from 'react'
-import { DraftsPage } from '../app/(shell)/drafts/page'
+import { DraftsPage } from '../app/(shell)/drafts/DraftsPage'
 import { LocaleProvider } from '../lib/i18n/context'
 import { workspaceStore } from '../lib/store'
 import { captureRenderConsole, resetRenderEnv } from './helpers/dom-env'

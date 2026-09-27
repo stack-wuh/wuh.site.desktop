@@ -5,7 +5,7 @@ import type { FileNode, FileContent, WorkspaceInfo } from '@shared/types'
 import { LocaleProvider } from '../lib/i18n/context'
 import { workspaceStore } from '../lib/store'
 import { captureRenderConsole, resetRenderEnv } from './helpers/dom-env'
-import { ProjectsPage } from '../app/(shell)/projects/page'
+import { ProjectsPage } from '../app/(shell)/projects/ProjectsPage'
 
 /**
  * 项目页渲染冒烟（20260924-feature-projects-editor-page）：
