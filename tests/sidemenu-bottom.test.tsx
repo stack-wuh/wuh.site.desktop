@@ -176,6 +176,31 @@ describe('快捷面板挂设置项', () => {
   })
 })
 
+describe('设置行对齐与旋钮降噪（20260927-fix-shell-ux-defects）', () => {
+  it('展开态：设置锚点带 data-expanded（条目通栏拉伸，与导航行同栅格）', () => {
+    renderMenu()
+    const anchor = screen.getByLabelText('设置').parentElement as HTMLElement
+    expect(anchor.getAttribute('data-expanded')).toBe('true')
+  })
+
+  it('收起态：锚点无 data-expanded（图标居中 rail 态保持）', () => {
+    renderMenu({ expanded: false })
+    const anchor = screen.getByLabelText('设置').parentElement as HTMLElement
+    expect(anchor.getAttribute('data-expanded')).toBeNull()
+  })
+
+  it('展开态：设置行收起旋钮带 data-ghost（默认隐形，hover/focus 才显形）', () => {
+    renderMenu()
+    expect(screen.getByLabelText('收起菜单').getAttribute('data-ghost')).toBe('true')
+  })
+
+  it('插件子树旋钮不 ghost（chevron 常显语义不受降噪影响）', () => {
+    renderMenu({ items: PLUGIN_ITEMS(false) })
+    const treeKnob = screen.getByLabelText('展开或收起子树')
+    expect(treeKnob.getAttribute('data-ghost')).toBeNull()
+  })
+})
+
 describe('插件条目子树', () => {
   it('展开态：旋钮开子树后 main 视图行与浮窗开关行渲染，开着的浮窗行 aria-pressed', () => {
     renderMenu({ items: PLUGIN_ITEMS(true) })

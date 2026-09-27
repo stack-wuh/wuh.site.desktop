@@ -4,6 +4,7 @@ import { act, render, screen } from '@testing-library/react'
 import { createRef } from 'react'
 import { FloatLayer } from '../components/FloatLayer'
 import { minimizeFloat, openFloat, resetFloatsForTests } from '../lib/floats'
+import { LocaleProvider } from '../lib/i18n/context'
 import { captureRenderConsole, resetRenderEnv } from './helpers/dom-env'
 
 /**
@@ -12,6 +13,7 @@ import { captureRenderConsole, resetRenderEnv } from './helpers/dom-env'
  * 最小化 chip 条（role=toolbar）互斥呈现；渲染期零 React 告警。
  * PluginView 以桩替换——沙箱帧导航（plugin:// 协议）不在 happy-dom 支持范围，
  * 帧生命周期由 plugin-broker/protocol 契约测试覆盖。
+ * （20260927-fix-shell-ux-defects 合并适配：浮窗 chrome 文案走 i18n，渲染包 LocaleProvider）
  */
 
 vi.mock('../components/plugins/PluginFrameHost', () => ({
@@ -33,7 +35,11 @@ beforeEach(() => {
 describe('FloatLayer 渲染冒烟', () => {
   it('空层：无窗口无 chip，渲染期零 React 告警', () => {
     const console_ = captureRenderConsole()
-    const { container, unmount } = render(<FloatLayer containerRef={createRef()} />)
+    const { container, unmount } = render(
+      <LocaleProvider>
+        <FloatLayer containerRef={createRef()} />
+      </LocaleProvider>
+    )
     expect(container.querySelector('[role="toolbar"]')).toBeNull()
     expect(screen.queryByRole('dialog')).toBeNull()
     unmount()
@@ -44,7 +50,11 @@ describe('FloatLayer 渲染冒烟', () => {
 
   it('seed 单窗：窗口 chrome 就位（标题/最小化/关闭）', () => {
     seed()
-    render(<FloatLayer containerRef={createRef()} />)
+    render(
+      <LocaleProvider>
+        <FloatLayer containerRef={createRef()} />
+      </LocaleProvider>
+    )
     expect(screen.getByRole('dialog', { name: 'Demo 窗口' })).toBeTruthy()
     expect(screen.getByRole('button', { name: '最小化 Demo 窗口' })).toBeTruthy()
     expect(screen.getByRole('button', { name: '关闭 Demo 窗口' })).toBeTruthy()
@@ -53,7 +63,11 @@ describe('FloatLayer 渲染冒烟', () => {
 
   it('最小化后窗口整体隐藏（退出可访问树），chip 条接管入口', () => {
     seed()
-    render(<FloatLayer containerRef={createRef()} />)
+    render(
+      <LocaleProvider>
+        <FloatLayer containerRef={createRef()} />
+      </LocaleProvider>
+    )
     expect(screen.getByRole('dialog', { name: 'Demo 窗口' })).toBeTruthy()
     act(() => {
       minimizeFloat('demo:panel')

@@ -92,6 +92,17 @@ export const ModuleHead = styled.span`
   color: var(--text-secondary);
 `
 
+/** 文档卡标题：行内截断（ModuleHead 子项；min-width:0 让 flex 子项 ellipsis 生效）。
+ * 修复：截断 CSS 原只挂在 ModuleBig 的 & > .truncate 下，该处根本不生效 */
+export const ModuleHeadTitle = styled.span`
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+  color: var(--text-primary);
+`
+
 /** 模块图标位：主题色淡底圆角方块 */
 export const ModuleIcon = styled.span`
   width: 22px;

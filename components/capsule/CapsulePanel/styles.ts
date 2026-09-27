@@ -55,12 +55,16 @@ export const HeadBar = styled.div`
   overflow: hidden;
 `
 
+/* 头部聚合进度条填充：scaleX 而非 width 过渡（项目约束「布局切换瞬时、禁 width 过渡」，
+   transform 不触发布局） */
 export const HeadBarFill = styled.div<{ $pct: number; $allDone: boolean }>`
   height: 100%;
-  width: ${({ $pct }) => $pct}%;
+  width: 100%;
   border-radius: 999px;
   background: ${({ $allDone }) => ($allDone ? 'var(--success-color)' : 'var(--primary-color)')};
-  transition: width 300ms ease-out;
+  transform: scaleX(${({ $pct }) => $pct / 100});
+  transform-origin: left center;
+  transition: transform 300ms ease-out;
 
   @media (prefers-reduced-motion: reduce) {
     transition: none;

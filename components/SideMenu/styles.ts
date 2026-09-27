@@ -159,7 +159,8 @@ export const TreeWrap = styled.div`
   overscroll-behavior: contain;
 `
 
-/** 子树展开旋钮：span 仿按钮（Item 本体是 button，避免 button 嵌套），点击不冒泡到条目导航 */
+/** 子树展开旋钮：span 仿按钮（Item 本体是 button，避免 button 嵌套），点击不冒泡到条目导航。
+ * data-ghost 变体（设置行收起旋钮专用）：默认透明，hover/focus 才显形——降噪「怪字符」观感 */
 export const TreeKnob = styled.span<{ $open: boolean }>`
   flex: none;
   display: inline-flex;
@@ -177,9 +178,18 @@ export const TreeKnob = styled.span<{ $open: boolean }>`
     color var(--transition-fast) ease;
   transform: rotate(${(props) => (props.$open ? 90 : 0)}deg);
 
+  &[data-ghost='true'] {
+    color: transparent;
+  }
+
   &:hover {
     color: var(--text-primary);
     background: var(--chrome-hover);
+  }
+
+  &:hover[data-ghost='true'],
+  &[data-ghost='true']:focus-visible {
+    color: var(--text-muted);
   }
 
   &:focus-visible {
@@ -244,12 +254,25 @@ export const Badge = styled.span<{ $dot: boolean; $expanded: boolean }>`
   `}
 `
 
-/* 快捷面板锚点（设置项 hover 面板挂点）：右侧弹出（nav 不得 overflow:hidden，否则被裁剪） */
-export const PopAnchor = styled.div`
+/* 快捷面板锚点（设置项 hover 面板挂点）：右侧弹出（nav 不得 overflow:hidden，否则被裁剪）。
+ * 收起态图标居中；展开态条目通栏拉伸（flex-direction 切换让 Item 占满行宽，与导航行同栅格），
+ * 修复 consolidation 引入的「展开态设置行被 justify-content:center 整团居中」回归 */
+export const PopAnchor = styled.div<{ $expanded: boolean }>`
   position: relative;
   display: flex;
-  justify-content: center;
   width: 100%;
+
+  ${(props) =>
+    props.$expanded
+      ? `
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+  `
+      : `
+    align-items: center;
+    justify-content: center;
+  `}
 `
 
 export const User = styled.button<{ $expanded: boolean; $active: boolean }>`

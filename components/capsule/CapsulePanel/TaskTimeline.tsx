@@ -303,7 +303,7 @@ export function TaskRow(props: { task: TaskState; now: number; onClose: () => vo
       </RowBody>
       <MetaCol>
         <Time>{relativeTime(timeTs, now, t)}</Time>
-        {task.viewId && <ViewHint>查看 ›</ViewHint>}
+        {task.viewId && <ViewHint>{t('capsule.viewHint')}</ViewHint>}
       </MetaCol>
     </>
   )

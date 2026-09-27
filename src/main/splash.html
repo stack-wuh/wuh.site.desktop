@@ -45,9 +45,43 @@
       body.splash--hide #splash {
         opacity: 0;
       }
+      /* Loading 动效（纯 CSS，零脚本）：W 描边两笔生长 + accent 块呼吸。
+         基态即终态（dashoffset 0 / opacity 1），reduced-motion 关停动画即静态成品 */
+      #splash path {
+        stroke-dasharray: 70;
+        stroke-dashoffset: 0;
+        animation: splash-draw 640ms cubic-bezier(0.33, 0, 0.2, 1) both;
+      }
+      #splash path:nth-of-type(2) {
+        animation-delay: 160ms;
+      }
+      #splash rect:nth-of-type(1) {
+        animation: splash-breathe 1.8s ease-in-out 900ms infinite;
+      }
+      @keyframes splash-draw {
+        from {
+          stroke-dashoffset: 70;
+        }
+        to {
+          stroke-dashoffset: 0;
+        }
+      }
+      @keyframes splash-breathe {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.45;
+        }
+      }
       @media (prefers-reduced-motion: reduce) {
         #splash {
           transition: none;
+        }
+        #splash path,
+        #splash rect {
+          animation: none;
         }
       }
     </style>

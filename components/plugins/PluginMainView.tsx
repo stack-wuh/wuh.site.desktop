@@ -8,9 +8,11 @@
 import { useSyncExternalStore } from 'react'
 import { hostGeneration, listMainViews, PluginView, usePluginsReady } from './PluginFrameHost'
 import { Empty } from '../ui/Empty'
+import { useLocale } from '../../lib/i18n/context'
 
 export function PluginMainView(props: { pluginId: string; viewId: string }): React.JSX.Element {
   const ready = usePluginsReady()
+  const { t } = useLocale()
   useSyncExternalStore(hostGeneration.subscribe, hostGeneration.get, hostGeneration.get)
 
   const entry = ready
@@ -20,7 +22,7 @@ export function PluginMainView(props: { pluginId: string; viewId: string }): Rea
     : undefined
 
   if (!entry) {
-    return <Empty title="该插件视图已停用" hint="可在设置页重新启用对应插件" />
+    return <Empty title={t('pluginView.disabledTitle')} hint={t('pluginView.disabledHint')} />
   }
   return <PluginView pluginId={entry.pluginId} view={entry.view} />
 }

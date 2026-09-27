@@ -22,6 +22,7 @@ import { MarkdownEditor } from '../../../components/editor/MarkdownEditor'
 import { EditorToolbar } from '../../../components/editor/Toolbar'
 import { useWorkspaceStore, workspaceStore } from '../../../lib/store'
 import { publishEditorCommand } from '../../../lib/editor-commands'
+import { toast } from '../../../lib/feedback'
 import { publishEditorLiveState, useEditorLiveState } from '../../../lib/editor-state'
 import { useLocale } from '../../../lib/i18n/context'
 
@@ -187,6 +188,27 @@ export function EditorPage(): React.JSX.Element {
   const fileName = pathSegments.length > 0 ? (pathSegments[pathSegments.length - 1] ?? null) : null
   const canSave = doc.activePath ? doc.dirty : (doc.content ?? '').length > 0
 
+  /** 保存 busy（20260927-fix-shell-ux-defects）：保存是命令通道异步宿主执行，
+   * 以 dirty 翻转（saveActive 成功 markSaved）为完成信号 + 超时兜底；草稿态
+   * 走 saveAs 原生面板（需用户交互），不进入 busy 语义 */
+  const [saving, setSaving] = useState(false)
+  const onSave = (): void => {
+    if (saving) return
+    if (doc.activePath && doc.dirty) setSaving(true)
+    publishEditorCommand({ kind: 'save' })
+  }
+
+  useEffect(() => {
+    if (!saving) return
+    if (!doc.dirty) {
+      setSaving(false)
+      void toast({ text: t('editor.saved'), kind: 'success' })
+      return
+    }
+    const timer = window.setTimeout(() => setSaving(false), 4000)
+    return () => window.clearTimeout(timer)
+  }, [saving, doc.dirty, t])
+
   const startRename = (): void => {
     setRenameValue(fileName ?? '')
     setRenaming(true)
@@ -273,8 +295,8 @@ export function EditorPage(): React.JSX.Element {
         <Button
           size="sm"
           aria-label={t('editor.saveAria')}
-          disabled={!canSave}
-          onClick={() => publishEditorCommand({ kind: 'save' })}
+          disabled={!canSave || saving}
+          onClick={onSave}
         >
           <AppIcon icon={IconSave} size="xs" decorative />
           {t('editor.save')}
