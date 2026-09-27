@@ -4,7 +4,7 @@
   "name": "20260927-test-net-backfill",
   "type": "test",
   "scope": "tests",
-  "status": "reviewed",
+  "status": "published",
   "baseBranch": "main",
   "branch": null,
   "files": [
@@ -18,8 +18,8 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 118,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/118",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 124,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/124"
   },
   "review": {
     "conclusion": "passed",
@@ -28,8 +28,8 @@
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:118",
-    "planHash": "af0f1b97c01b6b130d6ad50ef379a6eff1f7de11da87b6135b0dc6943eca6154",
+    "checkpoint": "pr:124",
+    "planHash": "ec77c48bfeb63e4b8f8e55a1b7872442b42bfa5164b6a8c906f357509f18de1d",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
