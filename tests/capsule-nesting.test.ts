@@ -15,8 +15,8 @@ const CAPSULE_DIR = join(process.cwd(), 'components', 'capsule')
 
 const SOURCES = [
   join(CAPSULE_DIR, 'modules.tsx'),
-  join(CAPSULE_DIR, 'CapsulePanel.tsx'),
-  join(CAPSULE_DIR, 'sections', 'EditorSection.tsx')
+  join(CAPSULE_DIR, 'CapsulePanel', 'index.tsx'),
+  join(CAPSULE_DIR, 'sections', 'EditorSection', 'index.tsx')
 ]
 
 /** 提取 <Tag ...>…</Tag> 完整块（含开标签；自闭合标签不在扫描范围——其无子元素） */
@@ -51,7 +51,7 @@ describe('模块卡嵌套守卫', () => {
   })
 
   it('文档卡为内容型 ModulePanel，动作组承载于卡内', () => {
-    const source = readFileSync(join(CAPSULE_DIR, 'sections', 'EditorSection.tsx'), 'utf-8')
+    const source = readFileSync(join(CAPSULE_DIR, 'sections', 'EditorSection', 'index.tsx'), 'utf-8')
     const panels = blocksOf(source, 'ModulePanel')
     expect(panels.length).toBeGreaterThan(0)
     expect(panels.some((block) => block.includes('<ActionMini'))).toBe(true)
