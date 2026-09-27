@@ -4,7 +4,7 @@
   "name": "20260927-test-net-backfill",
   "type": "test",
   "scope": "tests",
-  "status": "published",
+  "status": "archived",
   "baseBranch": "main",
   "branch": null,
   "files": [
@@ -23,13 +23,13 @@
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "7fd70eab13bf73b2ea14730754d1ba4f3302b66b",
-    "verifiedAt": "2026-09-27T07:40:10.987Z"
+    "verifiedCommit": "dc32da42cc61a579b165dbf6fb57e3a08d0f0e53",
+    "verifiedAt": "2026-09-27T09:09:43.360Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "pr:124",
-    "planHash": "ec77c48bfeb63e4b8f8e55a1b7872442b42bfa5164b6a8c906f357509f18de1d",
+    "checkpoint": "merged-pr:124",
+    "planHash": "0f0075937715232e2c3eabce74d40d65cf03a0cecda2f7cae093ddaa41228a0c",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -58,7 +58,7 @@
   "knowledge": {
     "action": "无需变更",
     "target": null,
-    "reason": "纯测试新增零产品代码改动：5 文件 26 用例绿 + 全量 63 文件/530 用例单次全绿 + 三 tsconfig PASS；测试与既有 happy-dom 冒烟同构，无新长期事实（dom-env 桩行为与 pluginApi 直读事实已固化在测试注释内）"
+    "reason": "归档前在合并后 HEAD 重打：5 测试文件 26 用例随 PR #124 合入且全量 63 文件/530 用例验证结论不变；纯测试新增无新长期事实"
   }
 }
 ---
