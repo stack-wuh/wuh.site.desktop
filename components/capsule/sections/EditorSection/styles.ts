@@ -1,9 +1,10 @@
 'use client'
 
 /**
- * 编辑器模块区 section 局部样式原子（拆分自 EditorSection 单文件，
- * 20260926-refactor-mega-component-split）：图标网格、大纲列表、迷你动作钮。
- * （早期遗留的 DocChip/DocPath/DirtyDot 死代码已于 20260927-fix-shell-ux-defects 删除）
+ * 编辑器模块区 section 局部样式原子（20260926 拆分自 EditorSection 单文件；
+ * 20260927-refactor-editor-section-cleanup 与 20260927-fix-shell-ux-defects
+ * 先后清理早期迭代遗留的死 styled——DocChip/DocPath/DirtyDot 已删）：
+ * 图标网格、大纲列表、迷你动作钮。
  */
 import styled from 'styled-components'
 

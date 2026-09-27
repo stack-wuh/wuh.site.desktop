@@ -47,6 +47,7 @@ import {
   HeadSpacer,
   Inner,
   PageShell,
+  ScrollArea,
   SearchInput,
   Unreachable
 } from './styles'
@@ -124,16 +125,17 @@ export function ProjectsPage(): React.JSX.Element {
 
   return (
     <PageShell aria-label={t('projects.title')}>
-      <Inner>
-        <Head>
-          <h1>{t('projects.title')}</h1>
-          {hasGroups && <Count>{t('projects.count', { n: groups.length })}</Count>}
-          <HeadSpacer />
-          <Button size="sm" onClick={() => void openLocal()} disabled={busy}>
-            {busy ? t('project.opening') : t('project.openLocal')}
-          </Button>
-        </Head>
+      <Head>
+        <h1>{t('projects.title')}</h1>
+        {hasGroups && <Count>{t('projects.count', { n: groups.length })}</Count>}
+        <HeadSpacer />
+        <Button size="sm" onClick={() => void openLocal()} disabled={busy}>
+          {busy ? t('project.opening') : t('project.openLocal')}
+        </Button>
+      </Head>
 
+      <ScrollArea>
+      <Inner>
         {hasGroups && (
           <SearchInput
             type="text"
@@ -205,6 +207,7 @@ export function ProjectsPage(): React.JSX.Element {
 
         {error && <ErrorText role="alert">{error}</ErrorText>}
       </Inner>
+      </ScrollArea>
     </PageShell>
   )
 }

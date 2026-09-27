@@ -32,7 +32,8 @@ import {
   RowMeta,
   RowTitle,
   RowTitleText,
-  EditingMark
+  EditingMark,
+  ScrollArea
 } from './styles'
 
 function formatTime(ts: number, locale: string): string {
@@ -86,12 +87,13 @@ export function DraftsPage(): React.JSX.Element {
 
   return (
     <PageShell aria-label={t('drafts.title')}>
-      <Inner>
-        <Head>
-          <h1>{t('drafts.title')}</h1>
-          {loaded && drafts.length > 0 && <Count>{t('drafts.count', { n: drafts.length })}</Count>}
-        </Head>
+      <Head>
+        <h1>{t('drafts.title')}</h1>
+        {loaded && drafts.length > 0 && <Count>{t('drafts.count', { n: drafts.length })}</Count>}
+      </Head>
 
+      <ScrollArea>
+      <Inner>
         {loaded && drafts.length === 0 ? (
           <Empty>
             <AppIcon icon={IconInbox} size="lg" decorative />
@@ -134,6 +136,7 @@ export function DraftsPage(): React.JSX.Element {
 
         {error && <ErrorText role="alert">{error}</ErrorText>}
       </Inner>
+      </ScrollArea>
     </PageShell>
   )
 }
