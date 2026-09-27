@@ -58,6 +58,7 @@
 | 20260925-fix-page-header-sticky | ✅ 完成 | shadow-docs/changes/archive/20260925-fix-page-header-sticky/brief.md |
 | 20260925-refactor-lib-create-store | ✅ 完成 | shadow-docs/changes/archive/20260925-refactor-lib-create-store/brief.md |
 | 20260926-refactor-mega-component-split | ✅ 完成 | shadow-docs/changes/archive/20260926-refactor-mega-component-split/brief.md |
+| 20260927-feature-editor-interactions | ✅ 完成 | shadow-docs/changes/archive/20260927-feature-editor-interactions/brief.md |
 | 20260927-feature-sticky-header-drafts-projects | ✅ 完成 | shadow-docs/changes/archive/20260927-feature-sticky-header-drafts-projects/brief.md |
 | 20260927-fix-shell-ux-defects | ✅ 完成 | shadow-docs/changes/archive/20260927-fix-shell-ux-defects/brief.md |
 | 20260927-refactor-editor-section-cleanup | ✅ 完成 | shadow-docs/changes/archive/20260927-refactor-editor-section-cleanup/brief.md |
