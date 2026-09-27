@@ -61,7 +61,7 @@
 | 20260927-feature-sticky-header-drafts-projects | published | shadow-docs/changes/20260927-feature-sticky-header-drafts-projects/brief.md |
 | 20260927-fix-shell-ux-defects | ✅ 完成 | shadow-docs/changes/archive/20260927-fix-shell-ux-defects/brief.md |
 | 20260927-refactor-editor-section-cleanup | ✅ 完成 | shadow-docs/changes/archive/20260927-refactor-editor-section-cleanup/brief.md |
-| 20260927-refactor-frame-protocol-split | reviewed | shadow-docs/changes/20260927-refactor-frame-protocol-split/brief.md |
+| 20260927-refactor-frame-protocol-split | ✅ 完成 | shadow-docs/changes/archive/20260927-refactor-frame-protocol-split/brief.md |
 | 20260927-refactor-midsize-component-split | ✅ 完成 | shadow-docs/changes/archive/20260927-refactor-midsize-component-split/brief.md |
 | 20260927-style-shell-visual-consistency | proposed | shadow-docs/changes/20260927-style-shell-visual-consistency/brief.md |
 | 20260927-test-net-backfill | ✅ 完成 | shadow-docs/changes/archive/20260927-test-net-backfill/brief.md |

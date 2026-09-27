@@ -4,7 +4,7 @@
   "name": "20260927-refactor-frame-protocol-split",
   "type": "refactor",
   "scope": "components,tests",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "refactor/20260927-refactor-frame-protocol-split",
   "files": [
@@ -16,18 +16,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 119,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/119",
-    "pullRequest": null,
+    "pullRequest": 126,
     "pullRequestUrl": null
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "368857ffecc75a13c1d92bd7008f4822c00797d0",
-    "verifiedAt": "2026-09-27T08:24:06.417Z"
+    "verifiedCommit": "b72992586b0653bc73ecd6033b55551c2c36c96d",
+    "verifiedAt": "2026-09-27T09:43:24.772Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:119",
-    "planHash": "887a394437dc4f7a8071494550b8e39d793167242c22b742e28f500aa6fd2c1b",
+    "checkpoint": "merged-pr:126",
+    "planHash": "fd8445cf35ea80dc01a477229a5162db6a32e5169a730d099fa5d463032eda89",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -54,7 +54,7 @@
   "knowledge": {
     "action": "更新",
     "target": "shadow-docs/knowledge/plugin-architecture.md",
-    "reason": "帧宿主分层为协议层（frameProtocol：帧生命周期/握手/接线）与服务层（frameServices：八 service 权限裁决/方法路由/参数钳制），对外协议词表与导出面零变化；frame-services 10 用例 + 插件域 56 用例 + 全量 59 文件/511 用例单次全绿 + 三 tsconfig PASS。卡片增补分层边界一句，release 时补 verified-depth: unit 与 verified-scope"
+    "reason": "归档前在合并后 HEAD 重打：帧宿主分层已随 PR #126 合入，验证结论不变；知识卡分层段落与 verified(unit)/scope 已补写"
   }
 }
 ---
