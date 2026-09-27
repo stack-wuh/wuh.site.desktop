@@ -8,7 +8,7 @@ function validManifest(): Record<string, unknown> {
     version: '1.0.0',
     logic: 'logic.js',
     views: [
-      { id: 'preview', area: 'preview', title: '预览', icon: 'eye', entry: 'view/index.html', order: 10 }
+      { id: 'preview', area: 'float', title: '预览', icon: 'eye', entry: 'view/index.html', order: 10 }
     ],
     publishers: [],
     permissions: ['render.execute', 'document.read.write']
@@ -49,9 +49,9 @@ describe('validateManifest', () => {
 
   it('视图入口必须是相对 .html 且禁止越界', () => {
     const bad = [
-      { ...validManifest(), views: [{ id: 'v', area: 'preview', title: 't', icon: 'eye', entry: '/abs.html' }] },
-      { ...validManifest(), views: [{ id: 'v', area: 'preview', title: 't', icon: 'eye', entry: '../escape.html' }] },
-      { ...validManifest(), views: [{ id: 'v', area: 'preview', title: 't', icon: 'eye', entry: 'view/no.ts' }] }
+      { ...validManifest(), views: [{ id: 'v', area: 'float', title: 't', icon: 'eye', entry: '/abs.html' }] },
+      { ...validManifest(), views: [{ id: 'v', area: 'float', title: 't', icon: 'eye', entry: '../escape.html' }] },
+      { ...validManifest(), views: [{ id: 'v', area: 'float', title: 't', icon: 'eye', entry: 'view/no.ts' }] }
     ]
     for (const raw of bad) {
       const res = validateManifest(raw)
@@ -64,7 +64,7 @@ describe('validateManifest', () => {
       ...validManifest(),
       views: [
         { id: 'x', area: 'sidebar', title: 'a', icon: 'tag', entry: 'a.html' },
-        { id: 'x', area: 'preview', title: 'b', icon: 'tag', entry: 'b.html' }
+        { id: 'x', area: 'float', title: 'b', icon: 'tag', entry: 'b.html' }
       ]
     })
     expect(dup.ok).toBe(false)
@@ -81,6 +81,26 @@ describe('validateManifest', () => {
       views: [{ id: 'x', area: 'sidebar', title: 'a', icon: '💀', entry: 'a.html' }]
     })
     expect(badIcon.ok).toBe(false)
+  })
+
+  it('float 区域合法、多 float 视图共存，preview 已废弃被拒', () => {
+    const float = validateManifest({
+      ...validManifest(),
+      views: [
+        { id: 'preview', area: 'float', title: '预览', icon: 'eye', entry: 'view/index.html', order: 10 },
+        { id: 'preview-mini', area: 'float', title: '迷你预览', icon: 'eye', entry: 'view/mini.html', order: 20 },
+        { id: 'tree', area: 'sidebar', title: '目录', icon: 'file-text', entry: 'view/tree.html', order: 30 }
+      ]
+    })
+    expect(float.ok).toBe(true)
+    if (float.ok) expect(float.manifest.views).toHaveLength(3)
+
+    const deprecated = validateManifest({
+      ...validManifest(),
+      views: [{ id: 'x', area: 'preview', title: 'a', icon: 'eye', entry: 'a.html' }]
+    })
+    expect(deprecated.ok).toBe(false)
+    if (!deprecated.ok) expect(deprecated.errors.join(' ')).toMatch(/sidebar\/float/)
   })
 
   it('publisher 贡献 id 唯一且字段完整', () => {

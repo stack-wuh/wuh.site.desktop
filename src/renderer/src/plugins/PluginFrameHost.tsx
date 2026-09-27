@@ -389,9 +389,9 @@ export function listSidebarViews(): { pluginId: string; view: PluginViewContribu
     .sort((a, b) => a.view.order - b.view.order)
 }
 
-export function listPreviewViews(): { pluginId: string; view: PluginViewContribution }[] {
+export function listFloatViews(): { pluginId: string; view: PluginViewContribution }[] {
   return enabledRecords()
-    .flatMap((r) => r.manifest.views.filter((v) => v.area === 'preview').map((view) => ({ pluginId: r.manifest.id, view })))
+    .flatMap((r) => r.manifest.views.filter((v) => v.area === 'float').map((view) => ({ pluginId: r.manifest.id, view })))
     .sort((a, b) => a.view.order - b.view.order)
 }
 

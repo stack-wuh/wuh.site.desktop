@@ -23,7 +23,8 @@ export type PluginPermission = (typeof PLUGIN_PERMISSIONS)[number]
 
 // ---------- manifest ----------
 
-export type ViewArea = 'sidebar' | 'preview'
+/** 视图区域：sidebar=侧栏面板；float=浮窗层（内核浮窗槽位，按需开合，替代已废弃的固定 preview 分栏） */
+export type ViewArea = 'sidebar' | 'float'
 
 /** 图标白名单：host 按名称映射到同源 lucide/品牌图标，插件不携带图标资源 */
 export const PLUGIN_ICONS = [
@@ -259,8 +260,8 @@ export function validateManifest(
       } else {
         viewIds.add(v.id)
       }
-      if (v.area !== 'sidebar' && v.area !== 'preview') {
-        errors.push(`views[${i}].area 只能是 sidebar/preview: ${String(v.area)}`)
+      if (v.area !== 'sidebar' && v.area !== 'float') {
+        errors.push(`views[${i}].area 只能是 sidebar/float: ${String(v.area)}`)
         valid = false
       }
       if (typeof v.title !== 'string' || !v.title.trim()) {

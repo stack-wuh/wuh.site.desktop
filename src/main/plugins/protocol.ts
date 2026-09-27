@@ -87,6 +87,14 @@ function response(body: string | Uint8Array, contentType: string, status = 200):
   })
 }
 
+/** 视图帧注入 SDK：head 起始处插入（classic 脚本先于帧内任何 module 执行）；幂等 */
+export function injectSdkScript(html: string): string {
+  if (html.includes(SDK_VIRTUAL_PATH)) return html
+  const tag = `<script src="/${SDK_VIRTUAL_PATH}"></script>`
+  if (/<head[^>]*>/i.test(html)) return html.replace(/<head[^>]*>/i, (m) => `${m}\n  ${tag}`)
+  return `${tag}\n${html}`
+}
+
 export function initPluginProtocol(deps: PluginProtocolDeps): void {
   protocol.handle(`${PLUGIN_SCHEME}:`, async (request) => {
     const parsed = parsePluginUrl(request.url)
@@ -110,6 +118,9 @@ export function initPluginProtocol(deps: PluginProtocolDeps): void {
     }
     try {
       const data = await fsp.readFile(abs)
+      if (mimeFor(relPath) === MIME['.html']) {
+        return response(injectSdkScript(data.toString('utf-8')), MIME['.html'])
+      }
       return response(new Uint8Array(data), mimeFor(relPath))
     } catch {
       return response('not found', 'text/plain', 404)

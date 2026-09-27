@@ -11,6 +11,8 @@ export interface ActivityItem {
   icon: IconComponent
   title: string
   badge?: ActivityBadge
+  /** toggle 型项（如浮窗开关）：提供时激活指示跟随勾选态而非面板选中态 */
+  checked?: boolean
 }
 
 function ActivityButton(props: {
@@ -18,7 +20,8 @@ function ActivityButton(props: {
   active: boolean
   onChange: (id: string) => void
 }): React.JSX.Element {
-  const { item, active, onChange } = props
+  const { item, onChange } = props
+  const active = item.checked ?? props.active
   const badge = item.badge
   const showCount = typeof badge?.count === 'number' && badge.count > 0
   const showDot = badge?.dot === true && !showCount

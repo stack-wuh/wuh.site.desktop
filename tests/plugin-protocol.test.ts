@@ -5,7 +5,7 @@ vi.mock('electron', () => ({
   net: { fetch: vi.fn() }
 }))
 
-import { buildLogicHostHtml, mimeFor, parsePluginUrl } from '../src/main/plugins/protocol'
+import { buildLogicHostHtml, injectSdkScript, mimeFor, parsePluginUrl } from '../src/main/plugins/protocol'
 
 describe('parsePluginUrl', () => {
   it('解析插件资源为 { pluginId, relPath }', () => {
@@ -54,5 +54,25 @@ describe('buildLogicHostHtml', () => {
     expect(html).toContain('/@core/sdk.js')
     expect(html).toContain('__startLogic')
     expect(html).toContain('/logic/index.js')
+  })
+})
+
+describe('injectSdkScript', () => {
+  const html = '<!doctype html><html><head><meta charset="utf-8"><title>t</title></head><body><p>x</p></body></html>'
+
+  it('head 内注入 SDK 标签，先于任何脚本执行', () => {
+    const out = injectSdkScript(html)
+    expect(out).toContain('<script src="/@core/sdk.js"></script>')
+    expect(out.indexOf('@core/sdk.js')).toBeGreaterThan(out.indexOf('<head'))
+    expect(out.indexOf('@core/sdk.js')).toBeLessThan(out.indexOf('<body'))
+  })
+
+  it('幂等：已含 SDK 引用的 HTML 不重复注入', () => {
+    const once = injectSdkScript(html)
+    expect(injectSdkScript(once)).toBe(once)
+  })
+
+  it('无 head 的 HTML 前置 SDK 标签', () => {
+    expect(injectSdkScript('<p>x</p>').startsWith('<script src="/@core/sdk.js"></script>')).toBe(true)
   })
 })

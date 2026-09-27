@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import type { AppSettings, WorkspaceInfo } from '@shared/types'
 import { FileTree } from './components/FileTree'
 import { EditorPane } from './editor/EditorPane'
 import { ActivityBar, type ActivityItem } from './components/ActivityBar'
+import { FloatLayer } from './components/FloatLayer'
 import { SettingsPage } from './settings/SettingsPage'
 import { ConfirmHost } from './components/ui/Dialog'
 import { AppearanceMenu } from './components/AppearanceMenu'
@@ -15,11 +16,12 @@ import { useWorkspaceStore, workspaceStore } from './store'
 import {
   bootstrapPluginsHost,
   broadcastTheme,
-  listPreviewViews,
+  listFloatViews,
   listSidebarViews,
   PluginView,
   setWorkspaceInfo
 } from './plugins/PluginFrameHost'
+import { floatKey, floatsStore, toggleFloat, viewportOf } from './plugins/floats'
 import { useTheme } from './theme/ThemeProvider'
 
 declare global {
@@ -56,7 +58,7 @@ function useAutoCommit(): void {
   }, [dirty, activePath, settings])
 }
 
-/** 主区视图：work = 编辑器+预览，settings = 全屏设置页（盖住 ActivityBar+侧栏，未来 tab 化的挂载点） */
+/** 主区视图：work = 编辑器 + 浮窗层（float 视图按需开合），settings = 全屏设置页（盖住 ActivityBar+侧栏，未来 tab 化的挂载点） */
 export type MainView = 'work' | 'settings'
 
 export default function App(): React.JSX.Element {
@@ -103,6 +105,11 @@ export default function App(): React.JSX.Element {
       openSettings()
       return
     }
+    if (floatKeys.has(id)) {
+      // float 视图：开关浮窗，不切换侧栏面板
+      toggleFloat(id, viewportOf(window.innerWidth, window.innerHeight))
+      return
+    }
     if (id === activePanel) {
       // 再点当前面板图标：折叠/展开侧栏（VSCode 语义）
       setSidebarCollapsed((v) => !v)
@@ -128,7 +135,13 @@ export default function App(): React.JSX.Element {
   }, [family, scheme, pluginsReady])
 
   const sidebarViews = useMemo(() => (pluginsReady ? listSidebarViews() : []), [pluginsReady])
-  const previewView = useMemo(() => (pluginsReady ? listPreviewViews()[0] : undefined), [pluginsReady])
+  const floatViews = useMemo(() => (pluginsReady ? listFloatViews() : []), [pluginsReady])
+  // float 视图窗口态在内核注册表（随 work 卸载/还原），这里订阅以驱动 ActivityBar 勾选态
+  const floatsState = useSyncExternalStore(floatsStore.subscribe, floatsStore.get)
+  const floatKeys = useMemo(
+    () => new Set(floatViews.map(({ pluginId, view }) => floatKey(pluginId, view.id))),
+    [floatViews]
+  )
 
   const items: ActivityItem[] = [
     { id: 'files', icon: IconFile, title: '文件' },
@@ -136,6 +149,13 @@ export default function App(): React.JSX.Element {
       id: pluginPanelKey(pluginId, view.id),
       icon: pluginIcon(view.icon),
       title: view.title
+    })),
+    // float 视图 = toggle 项：激活指示跟随浮窗开合，不参与侧栏面板选择
+    ...floatViews.map(({ pluginId, view }) => ({
+      id: floatKey(pluginId, view.id),
+      icon: pluginIcon(view.icon),
+      title: view.title,
+      checked: floatsState.windows.some((w) => w.key === floatKey(pluginId, view.id) && w.open)
     }))
   ]
   const tailItems: ActivityItem[] = [{ id: 'settings', icon: IconSettings, title: '设置' }]
@@ -220,18 +240,9 @@ export default function App(): React.JSX.Element {
               <section className="editor-area">
                 <EditorPane />
               </section>
-              <section className="preview-area">
-                {previewView ? (
-                  <PluginView pluginId={previewView.pluginId} view={previewView.view} />
-                ) : (
-                  <Empty
-                    icon={<AppIcon icon={pluginIcon('eye')} size="lg" />}
-                    title="预览区"
-                    hint="未启用提供预览视图的插件"
-                  />
-                )}
-              </section>
             </main>
+            {/* 浮窗层：float 视图按需窗口；随 work 卸载，开合/几何由 floats 注册表保持 */}
+            <FloatLayer floats={floatViews} />
           </>
         )}
       </div>
