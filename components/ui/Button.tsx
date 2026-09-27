@@ -25,6 +25,11 @@ const Base = styled.button`
     color: var(--primary-color);
   }
 
+  &:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: -2px;
+  }
+
   &:disabled {
     opacity: 0.45;
     cursor: not-allowed;

@@ -29,24 +29,38 @@ const Bar = styled.footer`
     border-color 0.3s ease;
 `
 
-const Zone = styled.div`
+/* 20260927-style-shell-visual-consistency：左区可收缩 + 条目内文 ellipsis——
+   statusItems 过多时左区自行截断，不再把右区挤飞 */
+const Zone = styled.div<{ $grow?: boolean }>`
   display: flex;
   align-items: center;
   gap: 14px;
   min-width: 0;
+  overflow: hidden;
+  ${(props) => (props.$grow ? 'flex: 1 1 0;' : 'flex: 0 1 auto;')}
 `
 
 const Item = styled.span`
   display: inline-flex;
   align-items: center;
   gap: 5px;
+  min-width: 0;
+  overflow: hidden;
   white-space: nowrap;
   color: var(--text-secondary);
 
   & > svg {
     color: var(--primary-color);
     opacity: 0.8;
+    flex: none;
   }
+`
+
+const ItemText = styled.span`
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 `
 
 function PluginStatusItem(props: { item: StatusItemState }): React.JSX.Element {
@@ -54,7 +68,7 @@ function PluginStatusItem(props: { item: StatusItemState }): React.JSX.Element {
   return (
     <Item title={item.title ?? undefined}>
       <AppIcon icon={pluginIcon(item.icon)} size="xs" decorative={false} label={item.title ?? item.text} />
-      {item.text}
+      <ItemText>{item.text}</ItemText>
     </Item>
   )
 }
@@ -65,7 +79,7 @@ export function StatusBar(): React.JSX.Element {
 
   return (
     <Bar>
-      <Zone>
+      <Zone $grow>
         {items
           .filter((s) => s.alignment === 'left')
           .map((s) => (

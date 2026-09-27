@@ -42,7 +42,7 @@ export const PickerButton = styled.button`
 
   &:focus-visible {
     outline: 2px solid var(--primary-color);
-    outline-offset: 1px;
+    outline-offset: -2px;
   }
 
   @media (prefers-reduced-motion: reduce) {

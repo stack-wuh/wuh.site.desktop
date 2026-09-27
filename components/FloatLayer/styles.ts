@@ -167,7 +167,7 @@ export const Chip = styled.button`
   height: 28px;
   padding: 0 10px;
   border: 1px solid var(--chrome-border);
-  border-radius: 14px;
+  border-radius: 12px;
   background: var(--chrome-raised);
   color: var(--text-secondary);
   font-size: 12px;

@@ -111,7 +111,8 @@ describe('项目页渲染冒烟', () => {
     })
     const console_ = captureRenderConsole()
     renderPage()
-    expect(await screen.findByText('还没有项目。打开一个目录开始写作。')).toBeTruthy()
+    expect(await screen.findByText('还没有项目')).toBeTruthy()
+    expect(screen.getByText('打开一个目录开始写作。')).toBeTruthy()
     console_.restore()
   })
 

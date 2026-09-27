@@ -15,13 +15,13 @@ import { refreshDrafts, useDrafts } from '../../../lib/drafts'
 import { useWorkspaceStore, workspaceStore } from '../../../lib/store'
 import { uiConfirm } from '../../../components/ui/Dialog'
 import { AppIcon } from '../../../components/ui/AppIcon'
+import { Empty } from '../../../components/ui/Empty'
+import { PageTopbar } from '../../../components/ui/PageTopbar'
 import { IconInbox, IconTrash } from '../../../components/icons'
 import { useLocale } from '../../../lib/i18n/context'
 import {
   Count,
-  Empty,
   ErrorText,
-  Head,
   Inner,
   List,
   PageShell,
@@ -87,18 +87,19 @@ export function DraftsPage(): React.JSX.Element {
 
   return (
     <PageShell aria-label={t('drafts.title')}>
-      <Head>
-        <h1>{t('drafts.title')}</h1>
-        {loaded && drafts.length > 0 && <Count>{t('drafts.count', { n: drafts.length })}</Count>}
-      </Head>
+      <PageTopbar
+        title={t('drafts.title')}
+        actions={loaded && drafts.length > 0 ? <Count>{t('drafts.count', { n: drafts.length })}</Count> : undefined}
+      />
 
       <ScrollArea>
       <Inner>
         {loaded && drafts.length === 0 ? (
-          <Empty>
-            <AppIcon icon={IconInbox} size="lg" decorative />
-            <span>{t('drafts.empty')}</span>
-          </Empty>
+          <Empty
+            icon={<AppIcon icon={IconInbox} size="lg" decorative />}
+            title={t('drafts.emptyTitle')}
+            hint={t('drafts.emptyHint')}
+          />
         ) : (
           <List>
             {drafts.map((meta) => {

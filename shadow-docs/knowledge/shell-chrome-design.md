@@ -30,6 +30,7 @@ source:
   - changes/20260925-feature-sidemenu-settings-consolidation/brief.md
   - changes/20260925-feature-capsule-plugin-tab/brief.md
   - changes/20260927-fix-shell-ux-defects/brief.md
+  - changes/20260927-style-shell-visual-consistency/brief.md
 verified: 2026-09-27
 verified-depth: runtime
 verified-scope: components/SideMenu/index.tsx, components/SideMenu/styles.ts, components/menu/PluginTree.tsx, components/capsule/modules.tsx, lib/capsule.ts, lib/floats.ts, components/capsule/CapsulePanel/index.tsx, src/plugin-sdk/index.ts, src/main/splash.html, plugins/git-history
@@ -69,6 +70,8 @@ verified-scope: components/SideMenu/index.tsx, components/SideMenu/styles.ts, co
 
 - 业务代码禁止裸 `import ... from 'lucide-react'`，一律从 `components/icons` 取 `Icon*`；新图标先进注册表再使用。
 - 组件样式用 styled-components + 主题 token（`chrome-*`/`primary-*`/语义 token）；四主题 × 亮暗逐 token 校验；动效 150-300ms ease-out 并响应 `prefers-reduced-motion`；左栏展开收起必须瞬时（禁 width/布局位移过渡）——**进度类填充一律 `transform: scaleX` 而非 width 过渡**（20260927-fix-shell-ux-defects 起全仓统一，CapsulePanel HeadBarFill 即范）。
+- **键盘焦点统一规范（20260927-style-shell-visual-consistency 起）**：一律 `outline: 2px solid var(--primary-color); outline-offset: -2px`（Button 基类、列表行、Picker、大纲条目同款）——禁再引入 box-shadow 光环变体或 1px offset。
+- **圆角/字号散值禁新增（20260927-style-shell-visual-consistency 起）**：圆角走 token scale（2/4/8/12/16，999 药丸与 50% 圆点除外）；字号禁半 px 值（10.5/11.5/12.5 已清零归整）。
 - 品牌标书写动效属**入场型展示动画**（非过渡）：单笔 400ms（token `--motion-dur-write`）+ stagger，总长 ≤900ms，mount 播放一次，`prefers-reduced-motion: reduce` 下必须直接渲染静态终态；仅 `animated` prop 显式开启。
 - 品牌/ Dock 图标几何改动必须同步 `components/icons/brand.tsx` 与 `build/icon.svg`（含亮/暗变体 token 表），并重跑 `build:icon` 重新提交产物（png/ico/icns）；`tests/icon-build.test.ts` 校验同源几何、产物尺寸、ico 容器结构与重跑可复现。
 - 应用版本号与构建时间戳经 `next.config.ts` 的 `env.NEXT_PUBLIC_APP_VERSION` / `env.NEXT_PUBLIC_BUILD_TIME` 构建期内联（消费方读 `process.env`，格式化统一走 `lib/buildInfo` 的确定性 UTC 输出——禁 `toLocaleString`，避免 SSR/客户端 locale 差异 hydration mismatch），不得新增 preload/broker 通道消费版本。构建时间戳展示于设置页「关于」与快捷面板版本行（dev 下 = dev 服务器启动时刻，build 下 = 构建时刻；显示值与当前会话对不上 = 渲染层旧页面，即僵尸实例检测）。
