@@ -9,12 +9,22 @@ import styled from 'styled-components'
 
 export const MIN_EDITOR_HEIGHT = 140
 
-/* 挂载容器：布局与滚动在这里，视觉（背景/光标/选区/语法色/L3）全在 editorTheme */
+/* 挂载容器：布局与滚动在这里，视觉（背景/光标/选区/语法色/L3）全在 editorTheme。
+   reduced-motion 降级在这里统一关停（renderTheme 的沉静过渡均为颜色类属性，
+   首页面板与 /editor 页共用本容器，两挂载点无分叉） */
 export const EditorMount = styled.div`
   position: relative;
   flex: 1;
   min-width: 0;
   min-height: ${MIN_EDITOR_HEIGHT}px;
+
+  @media (prefers-reduced-motion: reduce) {
+    .cm-editor [class*='cm-live'],
+    .cm-editor .cm-panel.cm-search button,
+    .cm-editor .cm-panel.cm-search input {
+      transition: none;
+    }
+  }
 `
 
 export const Notice = styled.div`
