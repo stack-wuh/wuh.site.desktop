@@ -92,6 +92,12 @@ export const Tab = styled.button<{ $active: boolean }>`
   font-family: var(--font-sans);
   cursor: pointer;
   transition: color 150ms ease-out;
+  /* 溢出防护：tab 多/标题长（ja）时截断而非撑出横向滚动 */
+  min-width: 0;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 
   &:hover {
     color: var(--text-primary);

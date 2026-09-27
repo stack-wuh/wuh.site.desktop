@@ -66,7 +66,7 @@ const ScrollArea = styled.div`
 `
 
 const Content = styled.div`
-  max-width: 920px;
+  max-width: 900px;
   margin: 0 auto;
   display: grid;
   grid-template-columns: 168px minmax(0, 1fr);
@@ -82,7 +82,7 @@ const Sections = styled.div`
   flex-direction: column;
   gap: 16px;
   min-width: 0;
-  max-width: 720px;
+  max-width: 760px;
 `
 
 const AboutBody = styled.div`

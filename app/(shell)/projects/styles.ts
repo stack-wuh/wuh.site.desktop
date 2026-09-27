@@ -40,35 +40,11 @@ export const ScrollArea = styled.div`
   }
 `
 
-export const Head = styled.header`
-  flex: none;
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  width: 100%;
-  max-width: 860px;
-  margin: 0 auto;
-  box-sizing: border-box;
-  padding: 20px 32px 10px;
-
-  @media (max-width: 768px) {
-    padding: 16px 16px 8px;
-  }
-
-  & > h1 {
-    margin: 0;
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--text-primary);
-    font-family: var(--font-sans);
-  }
-`
-
 export const Inner = styled.div`
   display: flex;
   flex-direction: column;
   gap: 14px;
-  max-width: 860px;
+  max-width: 900px;
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
@@ -80,7 +56,8 @@ export const Count = styled.span`
   color: var(--text-muted);
 `
 
-export const HeadSpacer = styled.span`
+/** 组头弹性占位：把尾缘 chevron 推到行右 */
+export const Spacer = styled.span`
   flex: 1;
 `
 
@@ -142,12 +119,12 @@ export const CurrentBadge = styled.span`
   border-radius: 999px;
   background: color-mix(in oklab, var(--primary-color) 14%, transparent);
   color: var(--primary-color);
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 600;
 `
 
 export const GroupPath = styled.span`
-  font-size: 10.5px;
+  font-size: 10px;
   font-family: var(--font-mono);
   color: var(--text-muted);
   overflow: hidden;
@@ -205,7 +182,7 @@ export const FileName = styled.span`
 `
 
 export const FilePath = styled.span`
-  font-size: 10.5px;
+  font-size: 10px;
   font-family: var(--font-mono);
   color: var(--text-muted);
   overflow: hidden;
@@ -223,17 +200,6 @@ export const GroupEmpty = styled.p`
   margin: 4px 4px 2px;
   font-size: 12px;
   color: var(--text-muted);
-`
-
-export const Empty = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 56px 0;
-  color: var(--text-muted);
-  font-size: 13px;
-  text-align: center;
 `
 
 export const ErrorText = styled.p`

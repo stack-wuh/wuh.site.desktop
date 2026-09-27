@@ -24,6 +24,8 @@ source:
   - changes/20260925-fix-page-header-sticky/brief.md
   - changes/20260926-refactor-mega-component-split/brief.md
   - changes/20260927-refactor-midsize-component-split/brief.md
+  - changes/20260927-feature-sticky-header-drafts-projects/brief.md
+  - changes/20260927-style-shell-visual-consistency/brief.md
   - changes/20260925-build-pin-node22/brief.md
 verified: 2026-09-27
 verified-depth: unit
@@ -40,7 +42,7 @@ verified-scope: app/(shell)/layout.tsx, components/SideMenu/index.tsx, component
 - `/settings` → SettingsPage（仅应用级设置；GitHub 凭证与 Git 提交身份已归拢至 `/account`）
 - `/account` → AccountPage（用户中心，2026-09-22 起：GitHub OAuth Device Flow 授权 + 身份/仓库/默认站点仓库 + Git 提交身份）
 
-**右栏页头吸顶范式（20260925-fix-page-header-sticky）**：settings/account 两页的页头（返回+标题）经共享 `components/ui/PageTopbar` 渲染，由页面根 flex 列容器**固定在滚动流之外**（`/editor` TopBar 同范式）——页面根无 overflow，内容区包进独立滚动容器（原 padding 迁入），页头不随内容滚动。settings 左列 SettingsNav 的 sticky 与 scroll-spy 以该内容滚动容器为基准（top:8px 语义不变）。drafts/projects 页头仍在滚动流内（未跟进，候选后续）。
+**右栏页头吸顶范式（20260925-fix-page-header-sticky 起，20260927-style-shell-visual-consistency 收编完成）**：右栏全部页面视图的页头经共享 `components/ui/PageTopbar` 渲染，由页面根 flex 列容器**固定在滚动流之外**（`/editor` TopBar 同范式）——页面根无 overflow，内容区包进独立滚动容器（原 padding 迁入），页头不随内容滚动。settings 左列 SettingsNav 的 sticky 与 scroll-spy 以该内容滚动容器为基准（top:8px 语义不变）。**PageTopbar 原语契约（20260927-style 起）**：`title` 必选；`backLabel/backAria/onBack` 可选（有 onBack 才渲染返回钮——settings/account 有返回语义，drafts/projects 等顶层视图无）；`actions` 插槽承载右缘计数徽标与动作按钮（projects「打开目录」、drafts 计数）。**内容宽度两档栅格（20260927-style 起）**：760（表单/编辑：settings 内列、account、/editor 列）、900（列表/首页：settings Content、drafts/projects Inner、home Body）——禁止新增 860/920 等第三档；页面底距统一 48（移动 40）。
 
 **渲染层组件域内文件夹化（20260926-refactor-mega-component-split）**：巨型组件拆分/重组统一落位为「`组件名/` 目录 + `index.tsx`（对外唯一入口，原具名导出全部经此可达）+ 按逻辑区域拆的子单元文件 + `styles.ts`（styled 大块）」——相对 import 无扩展名时旧 specifier 靠目录解析保持字节不变，消费方零改动。首例六组件（CapsulePanel/EditorSection/SideMenu/AccountPage/PluginFrameHost/MarkdownEditor，原 600–961 行）迁入后最大单文件 407 行；例外：PluginFrameHost/frameProtocol.ts 为帧协议+模块级状态拓扑的单一职责整体（662 行），不强行再拆。**路由段变体（20260927-refactor-midsize-component-split）**：页面拆分时 `page.tsx` 受 App Router 约定不可改名，落位为「page.tsx 留薄路由入口（default export）+ 同目录 `XxxPage.tsx` 视图主体 + `styles.ts`」，消费方测试的具名导入随迁到 Page 组件文件——首例 `/projects`、`/drafts`。**正向筛选示例**：Heatmap（自包含可视化）、capsule/modules.tsx（样式库）、ProjectsTree（单树件）虽过 300 行信号但职责单一，不强拆（「300 行是信号不是门槛」的正向应用）。
 - `/projects` → ProjectsPage（项目页，2026-09-24 起：当前工作区组置顶 + 最近项目组，组内列各自 `.md` 清单；组行点击经共享 `openProjectFile` 直达 `/editor`，失效目录组呈「无法访问」态）

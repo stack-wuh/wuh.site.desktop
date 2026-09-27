@@ -30,7 +30,7 @@ const Page = styled.div`
   flex: 1;
   min-width: 0;
   overflow: auto;
-  padding: 20px 32px 40px;
+  padding: 20px 32px 48px;
   background: var(--background-color);
   outline: none;
   animation: ${pageEnter} 200ms ease-out;
@@ -41,7 +41,7 @@ const Page = styled.div`
   }
 
   @media (max-width: 768px) {
-    padding: 16px 16px 32px;
+    padding: 16px 16px 40px;
   }
 
   @media (prefers-reduced-motion: reduce) {

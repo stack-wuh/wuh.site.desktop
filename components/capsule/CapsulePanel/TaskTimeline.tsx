@@ -183,7 +183,7 @@ const TitleLine = styled.span`
 `
 
 const Title = styled.span`
-  font-size: 12.5px;
+  font-size: 12px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -200,7 +200,7 @@ const SourceBadge = styled.span`
   background: color-mix(in oklab, var(--chrome-border) 40%, transparent);
   color: var(--text-muted);
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 10px;
 `
 
 const RowDetail = styled.span`

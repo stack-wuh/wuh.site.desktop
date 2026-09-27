@@ -92,9 +92,9 @@ export function EditorSection(): React.JSX.Element {
               <AppIcon icon={IconFile} size="xs" decorative />
             </ModuleIcon>
             <ModuleHeadTitle>{doc.activePath ?? t('editor.newDraft')}</ModuleHeadTitle>
-            {doc.dirty && (
-              <span title={t('editor.dirtyTitle')} style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--warning-color)', flex: 'none' }} />
-            )}
+              {doc.dirty && (
+                <span title={t('editor.dirtyTitle')} style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--warning-color)', flex: 'none' }} />
+              )}
           </ModuleHead>
           <ModuleSub>
             {activeDoc
@@ -158,13 +158,14 @@ export function EditorSection(): React.JSX.Element {
       <PanelsExport panel={panel} onTogglePanel={togglePanel} />
 
       {panel === 'outline' && (
-        <OutlineList aria-label={t('editor.outline')}>
+        <OutlineList role="list" aria-label={t('editor.outline')}>
           {outline.length === 0 ? (
             <OutlineEmpty>{t('editor.outlineEmpty')}</OutlineEmpty>
           ) : (
             outline.map((item, index) => (
               <OutlineItem
                 key={`${item.line}-${item.text}`}
+                type="button"
                 $level={item.level}
                 $active={live.outlineFollow && live.activeHeading === index}
                 title={item.text}

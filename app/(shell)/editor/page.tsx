@@ -17,7 +17,7 @@ import { useRouter } from 'next/navigation'
 import styled from 'styled-components'
 import { Button } from '../../../components/ui/Button'
 import { AppIcon } from '../../../components/ui/AppIcon'
-import { IconArrowLeft, IconSave } from '../../../components/icons'
+import { IconChevronLeft, IconSave } from '../../../components/icons'
 import { MarkdownEditor } from '../../../components/editor/MarkdownEditor'
 import { EditorToolbar } from '../../../components/editor/Toolbar'
 import { useWorkspaceStore, workspaceStore } from '../../../lib/store'
@@ -41,7 +41,8 @@ const TopBar = styled.header<{ $dim: boolean }>`
   align-items: center;
   gap: 8px;
   flex: none;
-  padding: 6px 14px;
+  /* 水平 32px 对齐全局页头栅格（垂直保持编辑器密排）；窄窗 16px 同 PageTopbar */
+  padding: 6px 32px;
   border-bottom: 1px solid var(--chrome-border);
   opacity: ${(props) => (props.$dim ? 0.05 : 1)};
   pointer-events: ${(props) => (props.$dim ? 'none' : 'auto')};
@@ -49,6 +50,10 @@ const TopBar = styled.header<{ $dim: boolean }>`
     opacity var(--motion-dur-reveal, 600ms) var(--motion-ease-out-soft, ease-out),
     background-color 0.3s ease,
     border-color 0.3s ease;
+
+  @media (max-width: 768px) {
+    padding: 6px 16px;
+  }
 
   @media (prefers-reduced-motion: reduce) {
     transition: background-color 0.3s ease, border-color 0.3s ease;
@@ -236,7 +241,7 @@ export function EditorPage(): React.JSX.Element {
     <PageShell aria-label={t('editor.pageAria')}>
       <TopBar $dim={live.focusMode}>
         <Button size="sm" variant="ghost" aria-label={t('editor.back')} title={t('editor.back')} onClick={back}>
-          <AppIcon icon={IconArrowLeft} size="xs" decorative />
+          <AppIcon icon={IconChevronLeft} size="sm" decorative />
           {t('editor.back')}
         </Button>
         <Breadcrumb>

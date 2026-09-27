@@ -48,7 +48,7 @@ export const IconBtn = styled.button`
   }
 `
 
-export const OutlineList = styled.ul`
+export const OutlineList = styled.div`
   list-style: none;
   margin: 2px 10px 6px;
   padding: 0;
@@ -57,7 +57,14 @@ export const OutlineList = styled.ul`
   border-top: 1px solid var(--chrome-border);
 `
 
-export const OutlineItem = styled.li<{ $level: number; $active?: boolean }>`
+/* 20260927-style-shell-visual-consistency：li+onClick 改真 button——键盘可达 + focus-visible */
+export const OutlineItem = styled.button<{ $level: number; $active?: boolean }>`
+  display: block;
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+  font-family: var(--font-sans);
   padding: 4px 6px;
   padding-left: ${(props) => 6 + (props.$level - 1) * 12}px;
   font-size: 12px;
@@ -72,9 +79,14 @@ export const OutlineItem = styled.li<{ $level: number; $active?: boolean }>`
     color: var(--text-primary);
     background: color-mix(in oklab, var(--primary-color) 8%, transparent);
   }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: -2px;
+  }
 `
 
-export const OutlineEmpty = styled.li`
+export const OutlineEmpty = styled.div`
   padding: 6px;
   font-size: 12px;
   color: var(--text-muted);
@@ -90,9 +102,9 @@ export const ActionMini = styled.button<{ $accent?: boolean }>`
   gap: 4px;
   background: color-mix(in oklab, var(--background-color) 45%, var(--chrome-raised));
   border: 1px solid color-mix(in oklab, var(--chrome-border) 70%, transparent);
-  border-radius: 7px;
+  border-radius: 8px;
   color: ${(props) => (props.$accent ? 'var(--primary-color)' : 'var(--text-secondary)')};
-  font-size: 10.5px;
+  font-size: 10px;
   font-family: var(--font-sans);
   white-space: nowrap;
   cursor: pointer;

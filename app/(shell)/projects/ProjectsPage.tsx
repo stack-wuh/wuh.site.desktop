@@ -23,7 +23,9 @@ import { collectMarkdownFiles, filterMarkdownFiles } from '../../../lib/store'
 import { openProjectFile } from '../../../lib/projectOpen'
 import { AppIcon } from '../../../components/ui/AppIcon'
 import { Button } from '../../../components/ui/Button'
+import { Empty } from '../../../components/ui/Empty'
 import { Input } from '../../../components/ui/Input'
+import { PageTopbar } from '../../../components/ui/PageTopbar'
 import { IconChevronDown, IconFolderOpen } from '../../../components/icons'
 import { useLocale } from '../../../lib/i18n/context'
 import { errText } from '../../../components/workspace/PickerShell'
@@ -31,7 +33,6 @@ import {
   Chevron,
   Count,
   CurrentBadge,
-  Empty,
   ErrorText,
   FileRow,
   FileName,
@@ -43,12 +44,11 @@ import {
   GroupList,
   GroupName,
   GroupPath,
-  Head,
-  HeadSpacer,
   Inner,
   PageShell,
   ScrollArea,
   SearchInput,
+  Spacer,
   Unreachable
 } from './styles'
 
@@ -125,14 +125,17 @@ export function ProjectsPage(): React.JSX.Element {
 
   return (
     <PageShell aria-label={t('projects.title')}>
-      <Head>
-        <h1>{t('projects.title')}</h1>
-        {hasGroups && <Count>{t('projects.count', { n: groups.length })}</Count>}
-        <HeadSpacer />
-        <Button size="sm" onClick={() => void openLocal()} disabled={busy}>
-          {busy ? t('project.opening') : t('project.openLocal')}
-        </Button>
-      </Head>
+      <PageTopbar
+        title={t('projects.title')}
+        actions={
+          <>
+            {hasGroups && <Count>{t('projects.count', { n: groups.length })}</Count>}
+            <Button size="sm" onClick={() => void openLocal()} disabled={busy}>
+              {busy ? t('project.opening') : t('project.openLocal')}
+            </Button>
+          </>
+        }
+      />
 
       <ScrollArea>
       <Inner>
@@ -147,10 +150,11 @@ export function ProjectsPage(): React.JSX.Element {
         )}
 
         {groups != null && groups.length === 0 && (
-          <Empty>
-            <AppIcon icon={IconFolderOpen} size="lg" decorative />
-            <span>{t('projects.noProjects')}</span>
-          </Empty>
+          <Empty
+            icon={<AppIcon icon={IconFolderOpen} size="lg" decorative />}
+            title={t('projects.emptyTitle')}
+            hint={t('projects.emptyHint')}
+          />
         )}
 
         {hasGroups && (
@@ -170,7 +174,7 @@ export function ProjectsPage(): React.JSX.Element {
                     <GroupName>{g.name}</GroupName>
                     {g.current && <CurrentBadge>{t('projects.currentBadge')}</CurrentBadge>}
                     {!g.current && <GroupPath>{g.root}</GroupPath>}
-                    <HeadSpacer />
+                    <Spacer />
                     <Chevron $open={open}>
                       <AppIcon icon={IconChevronDown} size="xs" decorative />
                     </Chevron>

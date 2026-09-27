@@ -88,7 +88,7 @@ export const ModuleHead = styled.span`
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 11.5px;
+  font-size: 11px;
   color: var(--text-secondary);
 `
 
@@ -107,7 +107,7 @@ export const ModuleHeadTitle = styled.span`
 export const ModuleIcon = styled.span`
   width: 22px;
   height: 22px;
-  border-radius: 7px;
+  border-radius: 8px;
   background: color-mix(in oklab, var(--primary-color) 13%, transparent);
   color: var(--primary-color);
   display: inline-flex;
@@ -141,7 +141,7 @@ export const ModuleBig = styled.span`
 
 export const ModuleSub = styled.span`
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 10px;
   color: var(--text-muted);
   margin-top: 2px;
   overflow: hidden;
@@ -224,7 +224,7 @@ export const ModuleRow = styled.button<{ $open?: boolean }>`
   border: 1px solid color-mix(in oklab, var(--chrome-border) 72%, transparent);
   border-radius: var(--border-radius-md);
   cursor: pointer;
-  font-size: 11.5px;
+  font-size: 11px;
   font-family: var(--font-sans);
   color: var(--text-secondary);
   text-align: left;
@@ -268,7 +268,7 @@ export const StepperLine = styled.div`
   align-items: center;
   gap: 10px;
   padding: 5px 0;
-  font-size: 11.5px;
+  font-size: 11px;
   color: var(--text-secondary);
 
   & > .name {
@@ -280,7 +280,7 @@ export const Stepper = styled.span`
   display: inline-flex;
   align-items: center;
   border: 1px solid var(--chrome-border);
-  border-radius: 7px;
+  border-radius: 8px;
   overflow: hidden;
 
   & > button {
@@ -317,7 +317,7 @@ export const KbdTable = styled.div`
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 4px 14px;
-  font-size: 11.5px;
+  font-size: 11px;
 
   & > kbd {
     font-family: var(--font-mono);
@@ -325,7 +325,7 @@ export const KbdTable = styled.div`
     background: var(--background-color);
     border: 1px solid var(--chrome-border);
     border-bottom-width: 2px;
-    border-radius: 5px;
+    border-radius: 4px;
     padding: 1px 6px;
     color: var(--text-secondary);
     white-space: nowrap;

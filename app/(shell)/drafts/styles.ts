@@ -39,35 +39,11 @@ export const ScrollArea = styled.div`
   }
 `
 
-export const Head = styled.header`
-  flex: none;
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  width: 100%;
-  max-width: 860px;
-  margin: 0 auto;
-  box-sizing: border-box;
-  padding: 20px 32px 10px;
-
-  @media (max-width: 768px) {
-    padding: 16px 16px 8px;
-  }
-
-  & > h1 {
-    margin: 0;
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--text-primary);
-    font-family: var(--font-sans);
-  }
-`
-
 export const Inner = styled.div`
   display: flex;
   flex-direction: column;
   gap: 14px;
-  max-width: 860px;
+  max-width: 900px;
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
@@ -146,7 +122,7 @@ export const EditingMark = styled.span`
   border-radius: 999px;
   background: color-mix(in oklab, var(--primary-color) 14%, transparent);
   color: var(--primary-color);
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 600;
 `
 
@@ -162,7 +138,7 @@ export const RowExcerpt = styled.span`
 export const RowMeta = styled.span`
   display: inline-flex;
   gap: 10px;
-  font-size: 10.5px;
+  font-size: 10px;
   font-family: var(--font-mono);
   color: var(--text-muted);
 `
@@ -191,17 +167,6 @@ export const RowDelete = styled.button`
     outline: 2px solid var(--primary-color);
     outline-offset: -2px;
   }
-`
-
-export const Empty = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  padding: 56px 0;
-  color: var(--text-muted);
-  font-size: 13px;
-  text-align: center;
 `
 
 export const ErrorText = styled.p`

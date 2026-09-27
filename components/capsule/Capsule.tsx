@@ -40,7 +40,7 @@ const CapsuleButton = styled.button<{ $open: boolean }>`
   padding: 0 12px;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 13px;
+  border-radius: 12px;
   color: var(--text-secondary);
   font-size: 12px;
   font-family: var(--font-sans);
@@ -168,6 +168,10 @@ const Label = styled.span<{ $tone: 'idle' | 'active' | 'done' }>`
   font-size: ${({ $tone }) => ($tone === 'idle' ? 'inherit' : '11.5px')};
   letter-spacing: ${({ $tone }) => ($tone === 'idle' ? 'inherit' : '0.3px')};
   white-space: nowrap;
+  /* 溢出防护：标签超长时截断，不撑破 header */
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `
 
 const Chevron = styled.span<{ $open: boolean }>`
