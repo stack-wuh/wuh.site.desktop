@@ -4,7 +4,7 @@
   "name": "20260926-refactor-mega-component-split",
   "type": "refactor",
   "scope": "components",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "refactor/20260926-refactor-mega-component-split",
   "files": [
@@ -19,18 +19,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 108,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/108",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 112,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/112"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "04d9f6252deeb1437b3ca88b934a5027735c7827",
-    "verifiedAt": "2026-09-27T00:56:11.952Z"
+    "verifiedCommit": "2655ceefd49c01b7ff353d6ae9a86cab88567b4f",
+    "verifiedAt": "2026-09-27T01:06:33.903Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:108",
-    "planHash": "6f8a305df7571bc0a5fbb6f1afd0a81358ca2b2858ed21e70ce54ef02370a777",
+    "checkpoint": "merged-pr:112",
+    "planHash": "c23ccb557e72ee833da5fc25f20f8be0a948c7bd1dd354c063381a77a00bff1b",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -85,7 +85,7 @@
   "knowledge": {
     "action": "更新",
     "target": "shadow-docs/knowledge/renderer-shell-routing.md",
-    "reason": "域内文件夹化（组件名/ 目录 + index.tsx 对外出口 + 子单元文件 + styles）经六组件 58 文件/501 用例全量回归与三 tsconfig typecheck 验证，成为渲染层组件组织约定与后续中型拆分的固定落位模式；卡片增补该约定一句，release 写入时补 verified-depth: unit 与 verified-scope"
+    "reason": "域内文件夹化（组件名/ 目录 + index.tsx 对外出口 + 子单元文件 + styles）经六组件 58 文件/501 用例全量回归与三 tsconfig typecheck 验证，成为渲染层组件组织约定与后续中型拆分的固定落位模式；卡片增补该约定并补 verified-depth: unit 与 verified-scope（已随 PR #112 落地）"
   }
 }
 ---
