@@ -4,7 +4,7 @@
   "name": "20260927-feature-sticky-header-drafts-projects",
   "type": "feature",
   "scope": "app",
-  "status": "published",
+  "status": "archived",
   "baseBranch": "main",
   "branch": null,
   "files": [
@@ -22,13 +22,13 @@
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "e20ae2bf492f54b7271db557164abb3e9ce4a65e",
-    "verifiedAt": "2026-09-27T08:36:28.402Z"
+    "verifiedCommit": "58a3c1fea4a6b5bd11e4b7980dead3683719c14d",
+    "verifiedAt": "2026-09-27T09:44:23.949Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "pr:128",
-    "planHash": "5a2514aa8e05836bed62bb81b32f0a281ae37ed359b3b1c4e08b3b12ce23bd6e",
+    "checkpoint": "merged-pr:128",
+    "planHash": "e555e1fd2f0d96c4184ec91bc9364c1f7fb6fb687d98ba94787d708b6c3309ec",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -56,7 +56,7 @@
   "knowledge": {
     "action": "更新",
     "target": "shadow-docs/knowledge/renderer-shell-routing.md",
-    "reason": "drafts/projects 两页按 PageTopbar 范式完成页头吸顶，tsc next PASS + 页面回归 18 用例 + 全量 59 文件/511 用例单次全绿；吸顶范式段落由两页扩为四页全覆盖，release 时补 verified-depth: unit 与 verified-scope"
+    "reason": "归档前在合并后 HEAD 重打：drafts/projects 页头吸顶已随 PR #128 合入，页面回归 18 用例 + 全量 59/511 验证结论不变；吸顶范式四页全覆盖表述已随 PR #128 落地知识卡"
   }
 }
 ---
