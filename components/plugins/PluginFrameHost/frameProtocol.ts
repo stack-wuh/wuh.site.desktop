@@ -1,9 +1,11 @@
 'use client'
 
 /**
- * 插件帧宿主·协议与会话（拆分自 PluginFrameHost 单文件，20260926-refactor-mega-component-split）：
- * 会话建立、沙箱帧生命周期、host 侧服务与消息路由、宿主代际/就绪信号、启停/重载/
- * 工作区切换与视图枚举 API。视图槽位组件见 ./PluginView（经 index 汇出）。
+ * 插件帧宿主·协议与会话（20260926 mega 拆分自单文件；20260927-refactor-frame-protocol-split
+ * 起协议层与能力调用服务层分治）：本文件承载会话建立、沙箱帧生命周期、握手与消息
+ * 路由、宿主代际/就绪信号、启停/重载/工作区切换与视图枚举 API；能力调用的权限
+ * 裁决与方法路由在 ./frameServices（经内部访问器回读本文件状态）。
+ * 视图槽位组件见 ./PluginView，对外入口见 ./index。
  *
  * 帧规则：iframe sandbox="allow-scripts"（不透明源，无 preload / 无宿主 DOM），
  * 逐帧 MessagePort 绑定插件身份；能力调用按 service 分流：
@@ -14,56 +16,21 @@
 import { useSyncExternalStore } from 'react'
 import type {
   PluginListResult,
-  PluginPermission,
   PluginRecord,
   PluginSessionInfo,
   PluginViewContribution,
   ToHostMessage
 } from '@shared/plugin'
 import { pluginLogicUrl, resolveApproval } from '@shared/plugin'
-import {
-  createFeedbackRateLimiter,
-  sanitizeAlertArgs,
-  sanitizeMessageArgs,
-  sanitizeToastArgs
-} from '@shared/plugin'
 import type { WorkspaceInfo } from '@shared/types'
 import { buildThemeCss } from '../../theme/tokens'
-import { uiConfirm } from '../../ui/Dialog'
-import { alert, message, toast } from '../../../lib/feedback'
 import { documentEvents, workspaceStore } from '../../../lib/store'
-import {
-  clearPluginStatusItems,
-  registerManifestStatusItems,
-  removeStatusItem,
-  updateStatusItem,
-  type StatusItemPatch
-} from '../../../lib/statusItems'
-import {
-  clearPluginTasks,
-  registerManifestTasks,
-  removeTask,
-  upsertTask,
-  type TaskPatch
-} from '../../../lib/tasks'
-import {
-  clearPluginCapsule,
-  registerManifestCapsule,
-  removeCapsule,
-  removeCapsuleTab,
-  updateCapsule,
-  updateCapsuleTab
-} from '../../../lib/capsule'
-import {
-  clearPluginEvents,
-  onAnyEvent,
-  publishEvent,
-  publishPluginEvent,
-  subscribePlugin,
-  subscribersFor,
-  unsubscribePlugin
-} from '../../../lib/events'
+import { clearPluginStatusItems, registerManifestStatusItems } from '../../../lib/statusItems'
+import { clearPluginTasks, registerManifestTasks } from '../../../lib/tasks'
+import { clearPluginCapsule, registerManifestCapsule } from '../../../lib/capsule'
+import { clearPluginEvents, onAnyEvent, subscribersFor } from '../../../lib/events'
 import { renderService } from '../../../lib/renderPipeline'
+import { handleFrameInvoke } from './frameServices'
 
 export interface PendingCall {
   res: (v: unknown) => void
@@ -91,9 +58,6 @@ let hostWorkspace: WorkspaceInfo | null = null
 let logicContainer: HTMLDivElement | null = null
 let bootPromise: Promise<PluginListResult> | null = null
 
-/** 插件反馈频率护栏（全 kind 共享额度：10s 内 5 条；宿主内部调用不经此闸） */
-const feedbackGuard = createFeedbackRateLimiter()
-
 export const FRAME_KEY = (pluginId: string, frameKey: string): string => `${pluginId}#${frameKey}`
 const HELLO_TIMEOUT_MS = 5000
 const REQUEST_TIMEOUT_MS = 25_000
@@ -102,13 +66,14 @@ function enabledRecords(): PluginRecord[] {
   return records.filter((r) => r.enabled)
 }
 
-function sessionOf(pluginId: string): PluginSessionInfo {
+// 会话/权限/文档状态的内部访问器：仅供 ./frameServices 服务层回读（不经 index 汇出）
+export function sessionOf(pluginId: string): PluginSessionInfo {
   const s = sessions.get(pluginId)
   if (!s) throw new Error(`插件 ${pluginId} 会话未建立`)
   return s
 }
 
-function requirePermission(pluginId: string, permission: PluginPermission, action: string): void {
+export function requirePermission(pluginId: string, permission: PluginSessionInfo['permissions'][number], action: string): void {
   if (!sessionOf(pluginId).permissions.includes(permission)) {
     throw new Error(`插件未声明/未授予权限 ${permission}，禁止${action}`)
   }
@@ -141,169 +106,9 @@ function sendHello(frame: FrameState, viewId: string | null): void {
   })
 }
 
-function currentDocState(): { path: string | null; content: string | null; saved: string | null; dirty: boolean; root: string | null } {
+export function currentDocState(): { path: string | null; content: string | null; saved: string | null; dirty: boolean; root: string | null } {
   const s = workspaceStore.get()
   return { path: s.activePath, content: s.content, saved: s.saved, dirty: s.dirty, root: hostWorkspace?.root ?? s.root }
-}
-
-async function handleFrameInvoke(
-  pluginId: string,
-  service: 'cap' | 'doc' | 'render' | 'ui' | 'statusBar' | 'tasks' | 'capsule' | 'events',
-  method: string,
-  args: unknown[]
-): Promise<unknown> {
-  switch (service) {
-    case 'cap': {
-      const s = sessionOf(pluginId)
-      return await window.pluginApi.invoke(s.sessionId, method, args)
-    }
-    case 'doc': {
-      requirePermission(pluginId, 'document.read.write', '文档访问')
-      if (method === 'get') return currentDocState()
-      if (method === 'set') {
-        workspaceStore.setContent(String(args[0] ?? ''))
-        return null
-      }
-      if (method === 'save') {
-        await workspaceStore.saveActive()
-        return null
-      }
-      throw new Error(`未知文档方法: ${method}`)
-    }
-    case 'render': {
-      if (method === 'execute') {
-        requirePermission(pluginId, 'render.execute', '渲染调用')
-        const doc = currentDocState()
-        return await renderService.execute(
-          { root: doc.root, docPath: doc.path },
-          String(args[0] ?? '')
-        )
-      }
-      if (method === 'register') {
-        requirePermission(pluginId, 'render.rule.register', '注册渲染规则')
-        const meta = (args[0] ?? { order: 100 }) as { order?: number; preprocess?: boolean; postRender?: boolean }
-        return renderService.register(pluginId, {
-          order: typeof meta.order === 'number' ? meta.order : 100,
-          preprocess: meta.preprocess === true,
-          postRender: meta.postRender === true
-        })
-      }
-      if (method === 'unregister') {
-        renderService.unregister(Number(args[0]))
-        return null
-      }
-      throw new Error(`未知渲染方法: ${method}`)
-    }
-    case 'ui': {
-      if (method === 'confirm') {
-        const opts = (args[0] ?? { message: '' }) as { title?: string; message: string; okText?: string; cancelText?: string; danger?: boolean }
-        return await uiConfirm(opts)
-      }
-      if (method === 'openExternal') {
-        const url = String(args[0] ?? '')
-        if (/^https?:\/\//i.test(url)) window.open(url, '_blank', 'noopener')
-        return null
-      }
-      // 反馈提示三方法（toast/message/alert）：与宿主共用 lib/feedback 总线；
-      // 入参经 shared 校验器钳制，频率护栏全 kind 共享额度（防插件刷屏）
-      if (method === 'toast' || method === 'message' || method === 'alert') {
-        if (!feedbackGuard.allow(pluginId)) {
-          throw new Error('反馈提示过于频繁，请稍后再试')
-        }
-        if (method === 'toast') {
-          const opts = sanitizeToastArgs(args)
-          if (!opts) throw new Error('toast 参数无效：text 必填')
-          toast(opts)
-          return null
-        }
-        if (method === 'message') {
-          const opts = sanitizeMessageArgs(args)
-          if (!opts) throw new Error('message 参数无效：text 必填')
-          return await message(opts)
-        }
-        const opts = sanitizeAlertArgs(args)
-        if (!opts) throw new Error('alert 参数无效：text 与 title 至少提供一个')
-        return await alert(opts)
-      }
-      throw new Error(`未知 UI 方法: ${method}`)
-    }
-    case 'statusBar': {
-      // 状态项为 manifest 声明制：运行时仅允许更新/隐藏自己声明的项，无额外权限
-      if (method === 'update') {
-        const [itemId, patch] = args as [string, StatusItemPatch]
-        updateStatusItem(pluginId, String(itemId), patch ?? {})
-        return null
-      }
-      if (method === 'remove') {
-        removeStatusItem(pluginId, String(args[0] ?? ''))
-        return null
-      }
-      throw new Error(`未知状态栏方法: ${method}`)
-    }
-    case 'tasks': {
-      // 任务状态单一写方 = 插件 SDK（视图帧与逻辑帧同链路），无额外权限。
-      // 声明制退役为可选预置：未声明 id 首报 title 即动态创建（≤8/插件护栏在注册表）。
-      // 写穿后内转 tasks:* 事件供订阅者观察（信封归属 = 任务所属插件）。
-      if (method === 'upsert') {
-        const [taskId, patch] = args as [string, TaskPatch]
-        const id = String(taskId)
-        upsertTask(pluginId, id, patch ?? {})
-        publishEvent('tasks:upsert', pluginId, { taskId: id, patch: patch ?? {} })
-        return null
-      }
-      if (method === 'remove') {
-        const id = String(args[0] ?? '')
-        removeTask(pluginId, id)
-        publishEvent('tasks:remove', pluginId, { taskId: id })
-        return null
-      }
-      throw new Error(`未知任务方法: ${method}`)
-    }
-    case 'capsule': {
-      // 胶囊模块为 manifest 声明制：运行时仅允许更新/隐藏自己声明的模块（数据按模板白名单校验），无额外权限
-      if (method === 'update') {
-        const [moduleId, data] = args as [string, unknown]
-        updateCapsule(pluginId, String(moduleId), data)
-        return null
-      }
-      if (method === 'remove') {
-        removeCapsule(pluginId, String(args[0] ?? ''))
-        return null
-      }
-      // 插件 tab（20260925-feature-capsule-plugin-tab）：manifest tabs 声明制（每插件 ≤1），
-      // sections/rows 结构化上报，护栏与归属校验在注册表（updateCapsuleTab）
-      if (method === 'updateTab') {
-        const [tabId, payload] = args as [string, unknown]
-        updateCapsuleTab(pluginId, String(tabId), payload)
-        return null
-      }
-      if (method === 'removeTab') {
-        removeCapsuleTab(pluginId, String(args[0] ?? ''))
-        return null
-      }
-      throw new Error(`未知胶囊模块方法: ${method}`)
-    }
-    case 'events': {
-      // 事件总线：归属由宿主按帧身份盖章（调用方不可冒名），事件名强制 <pluginId>:<name>；
-      // 订阅只登记路由，实际投递经 onAnyEvent 钩子（wireHostOnce 接线）
-      if (method === 'publish') {
-        const [name, payload] = args as [string, unknown]
-        publishPluginEvent(pluginId, String(name), payload)
-        return null
-      }
-      if (method === 'subscribe') {
-        subscribePlugin(pluginId, args[0])
-        return null
-      }
-      if (method === 'unsubscribe') {
-        unsubscribePlugin(pluginId, args[0])
-        return null
-      }
-      throw new Error(`未知事件方法: ${method}`)
-    }
-    default:
-      throw new Error(`未知服务: ${String(service)}`)
-  }
 }
 
 function onFrameMessage(frame: FrameState, ev: MessageEvent): void {
