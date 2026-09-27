@@ -4,7 +4,7 @@
   "name": "20260927-style-shell-visual-consistency",
   "type": "style",
   "scope": "desktop",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "style/20260927-style-shell-visual-consistency",
   "files": [
@@ -39,18 +39,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 123,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/123",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 131,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/131"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "7eadbc8f1a6a1f68593dc687f5469cd3f64315a6",
-    "verifiedAt": "2026-09-27T10:05:12.900Z"
+    "verifiedCommit": "35d1468749d31c9452611e04e987537c02246d50",
+    "verifiedAt": "2026-09-27T15:11:04.998Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:123",
-    "planHash": "346d8d09545bb419d4d501225f2a0ddb5294f1d375779675501f1ddf5de36523",
+    "checkpoint": "merged-pr:131",
+    "planHash": "ae3c1a26d763e7f1fb3b5ef3fe82bb363c87cd1149be31edd624df280af35216",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
