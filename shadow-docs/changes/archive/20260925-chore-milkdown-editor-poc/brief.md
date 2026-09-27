@@ -4,7 +4,7 @@
   "name": "20260925-chore-milkdown-editor-poc",
   "type": "chore",
   "scope": "desktop",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "chore/20260925-chore-milkdown-editor-poc",
   "files": [
@@ -17,18 +17,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 116,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/116",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 125,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/125"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "368857ffecc75a13c1d92bd7008f4822c00797d0",
-    "verifiedAt": "2026-09-27T08:10:16.673Z"
+    "verifiedCommit": "5ee3af0a9e2f5020be0f7a945aab8e2f313d0807",
+    "verifiedAt": "2026-09-27T08:21:53.505Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:116",
-    "planHash": "36f207bd53bfb7ed7c4a9b22adc7fdccec9568d2de16180c66c312000901628b",
+    "checkpoint": "merged-pr:125",
+    "planHash": "042b16c2d4302f166c95ee5dd968f8cccd704c189dec4a9d636abcd10fe064f8",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -57,7 +57,7 @@
   "knowledge": {
     "action": "更新",
     "target": "shadow-docs/knowledge/editor.md",
-    "reason": "编辑器选型评估产生长期有效事实：字节保真判据 + milkdown 7.22.2 实测数据级损坏两例（frontmatter 毁坏/图片行丢失）+ 风格翻写一次性——已按 task-4 更新 editor.md（选型评估结论段、字节保真执行约束、验证方式、source 补本 brief 并修复 7 条 archive 死链、verified-scope 补 PoC 证据）"
+    "reason": "同前次审查结论在合并后 main HEAD 重录：字节保真判据 + milkdown 7.22.2 实测数据级损坏两例 + 风格翻写一次性；editor.md 已原位更新（选型约束/验证方式/source/verified-scope）"
   }
 }
 ---

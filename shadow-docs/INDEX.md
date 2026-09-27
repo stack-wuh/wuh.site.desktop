@@ -50,6 +50,7 @@
 | 20260924-fix-cm-selection-atomic | ✅ 完成 | shadow-docs/changes/archive/20260924-fix-cm-selection-atomic/brief.md |
 | 20260924-fix-drafts-error-visibility | ✅ 完成 | shadow-docs/changes/archive/20260924-fix-drafts-error-visibility/brief.md |
 | 20260924-fix-live-preview-toggle-rebuild | ✅ 完成 | shadow-docs/changes/archive/20260924-fix-live-preview-toggle-rebuild/brief.md |
+| 20260925-chore-milkdown-editor-poc | ✅ 完成 | shadow-docs/changes/archive/20260925-chore-milkdown-editor-poc/brief.md |
 | 20260925-feature-capsule-plugin-tab | ✅ 完成 | shadow-docs/changes/archive/20260925-feature-capsule-plugin-tab/brief.md |
 | 20260925-feature-draft-crumb-save | ✅ 完成 | shadow-docs/changes/archive/20260925-feature-draft-crumb-save/brief.md |
 | 20260925-feature-sidemenu-settings-consolidation | ✅ 完成 | shadow-docs/changes/archive/20260925-feature-sidemenu-settings-consolidation/brief.md |
