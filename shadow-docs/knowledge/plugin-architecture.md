@@ -10,13 +10,16 @@ source:
   - changes/20260921-refactor-renderer-nextjs/brief.md
   - changes/20260921-fix-plugin-frame-scheme-cors/brief.md
   - changes/20260924-feature-git-history-capsule/brief.md
-verified: 2026-09-25
+verified: 2026-09-27
+verified-depth: unit
+verified-scope: components/plugins/PluginFrameHost/frameProtocol.ts, components/plugins/PluginFrameHost/frameServices.ts, tests/frame-services.test.tsx
 ---
 
 # 插件系统架构（loader/批准/重载）
 
 ## 当前结论
 
+**帧宿主分层（20260927-refactor-frame-protocol-split）**：`components/plugins/PluginFrameHost/` 分两层——协议层 `frameProtocol.ts`（帧生命周期/握手/接线/代际与就绪信号/会话状态拓扑）与能力调用服务层 `frameServices.ts`（handleFrameInvoke 按八 service 路由：权限裁决/参数钳制/写通注册表），服务层经协议层的内部访问器（sessionOf/requirePermission/currentDocState）回读状态；协议 kind/service 词表与对外导出面（index）跨层不变。statusBar/capsule 等注册表对未声明条目按「声明制守卫」抛错（非静默）。
 插件 = 目录 + `plugin.json` manifest（经 `src/shared/plugin.ts` 的 `validateManifest` 严格校验）。主进程 loader（`src/main/plugins/loader.ts`）扫描双目录——内置 `app.getAppPath()/plugins/` 与 `userData/plugins/`（第三方），先扫到的同 id 保留，校验失败目录进 `problems`。
 
 **状态单一源**：`userData/plugin-state.json` = `{ disabled: string[], approvals: Record<插件id, 权限快照[]> }`。
