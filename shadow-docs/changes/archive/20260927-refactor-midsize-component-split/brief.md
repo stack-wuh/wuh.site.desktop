@@ -4,7 +4,7 @@
   "name": "20260927-refactor-midsize-component-split",
   "type": "refactor",
   "scope": "components,app",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "refactor/20260927-refactor-midsize-component-split",
   "files": [
@@ -19,18 +19,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 113,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/113",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 114,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/114"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "85c3fe7500d28638847710e6b6b1c0668ead580d",
-    "verifiedAt": "2026-09-27T06:31:55.402Z"
+    "verifiedCommit": "f14b407a9608cd5aafd19beec728c94c835a0b2a",
+    "verifiedAt": "2026-09-27T06:50:06.850Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:113",
-    "planHash": "8bffa65844e0682d1f12cb0c0e7ce8e3c7725e6822c109a37876b1b91d5f4bdf",
+    "checkpoint": "merged-pr:114",
+    "planHash": "06e629d3d7a6109bd4c3c0fb81075a7b4e49f5ff61204bc8cc33ba08bc302b56",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -82,7 +82,7 @@
   "knowledge": {
     "action": "更新",
     "target": "shadow-docs/knowledge/renderer-shell-routing.md",
-    "reason": "六个中型多职责组件完成域内文件夹化续拆，并落地首个「路由段 page.tsx 薄入口 + 同目录 Page 组件 + styles」变体实例；经分面回归 133 用例 + 全量 58 文件/501 用例单次全绿 + 三 tsconfig PASS 验证。卡片增补路由段变体一句（含 Heatmap/modules/ProjectsTree 单一职责不强拆的正向筛选示例），release 写入时补 verified-depth: unit 与 verified-scope"
+    "reason": "六个中型多职责组件完成域内文件夹化续拆并落地路由段薄入口变体；分面回归 133 用例 + 全量 58/501 单次全绿 + 三 tsconfig PASS 验证；知识卡增补路由段变体与正向筛选示例已随 PR #114 落地"
   }
 }
 ---

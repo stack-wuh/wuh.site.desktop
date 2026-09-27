@@ -56,3 +56,4 @@
 | 20260925-fix-page-header-sticky | ✅ 完成 | shadow-docs/changes/archive/20260925-fix-page-header-sticky/brief.md |
 | 20260925-refactor-lib-create-store | ✅ 完成 | shadow-docs/changes/archive/20260925-refactor-lib-create-store/brief.md |
 | 20260926-refactor-mega-component-split | ✅ 完成 | shadow-docs/changes/archive/20260926-refactor-mega-component-split/brief.md |
+| 20260927-refactor-midsize-component-split | ✅ 完成 | shadow-docs/changes/archive/20260927-refactor-midsize-component-split/brief.md |
