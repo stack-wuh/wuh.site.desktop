@@ -18,6 +18,7 @@
  * （20260926-refactor-mega-component-split：主题/样式拆至 ./renderTheme、./styles）
  */
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Compartment, EditorSelection, EditorState } from '@codemirror/state'
 import { EditorView, drawSelection, keymap, placeholder } from '@codemirror/view'
 import { defaultKeymap, history, historyKeymap, redo, undo } from '@codemirror/commands'
@@ -26,8 +27,8 @@ import { syntaxHighlighting } from '@codemirror/language'
 import { markdown, markdownKeymap } from '@codemirror/lang-markdown'
 import { workspaceStore, useWorkspaceStore } from '../../../lib/store'
 import { publishEditorCommand, subscribeEditorCommands, type EditorCommand } from '../../../lib/editor-commands'
-import { cmApplyFormat, cmExternalContent, cmHeadingCursor, cmInsertSnippet } from '../../../lib/editor-cm'
-import { livePreviewField } from '../decorations'
+import { cmApplyFormat, cmExternalContent, cmHeadingCursor, cmInsertSnippet, findLinkTargetAt } from '../../../lib/editor-cm'
+import { foldField, livePreviewField } from '../decorations'
 import {
   loadPersistedEditorState,
   publishEditorLiveState,
@@ -36,7 +37,7 @@ import {
 import { useLocale } from '../../../lib/i18n/context'
 import 'katex/dist/katex.min.css'
 import { editorHighlight, editorTheme } from './renderTheme'
-import { EditorMount, Notice } from './styles'
+import { EditorMount, Lightbox, LightboxCap, Notice } from './styles'
 
 /** 渲染模式偏好持久化键（与 wd.theme / wd.locale 同族命名） */
 const RENDER_STORAGE_KEY = 'wd.editorRenderMode'
@@ -123,6 +124,39 @@ export function MarkdownEditor(): React.JSX.Element {
   const renderCompRef = useRef<Compartment | null>(null)
   const [ready, setReady] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
+  /** 图片 lightbox（ImageWidget 点击经 CustomEvent 上报，portal 承载） */
+  const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null)
+  const lightboxReturnFocusRef = useRef<HTMLElement | null>(null)
+
+  // 图片点击放大：widget → window CustomEvent → 本组件 portal（Esc/点外关，焦点归还）
+  useEffect(() => {
+    const open = (event: Event): void => {
+      const detail = (event as CustomEvent<{ src?: string; alt?: string }>).detail
+      if (!detail?.src) return
+      lightboxReturnFocusRef.current = document.activeElement as HTMLElement | null
+      setLightbox({ src: detail.src, alt: detail.alt ?? '' })
+    }
+    window.addEventListener('wd-editor-lightbox', open)
+    return () => window.removeEventListener('wd-editor-lightbox', open)
+  }, [])
+
+  const closeLightbox = (): void => {
+    setLightbox(null)
+    lightboxReturnFocusRef.current?.focus?.()
+    lightboxReturnFocusRef.current = null
+  }
+
+  useEffect(() => {
+    if (!lightbox) return
+    // capture 先于浮窗层/对话框的 Esc 处理（data-dialog-overlay 判定让位双保险）
+    const onKey = (event: KeyboardEvent): void => {
+      if (event.key !== 'Escape') return
+      event.stopPropagation()
+      closeLightbox()
+    }
+    window.addEventListener('keydown', onKey, true)
+    return () => window.removeEventListener('keydown', onKey, true)
+  }, [lightbox])
 
   useEffect(() => {
     const mountEl = containerRef.current
@@ -149,6 +183,8 @@ export function MarkdownEditor(): React.JSX.Element {
       // 隐藏标记的原生选区渲染互相打架（20260924-fix-cm-selection-atomic）
       drawSelection(),
       history(),
+      // 标题折叠：独立于渲染开关（纯源码态同样可折叠/展开）
+      foldField,
       renderComp.of(renderModeRef.current === 'render' ? livePreviewField : []),
       search({
         top: true
@@ -200,6 +236,17 @@ export function MarkdownEditor(): React.JSX.Element {
         }
       }),
       EditorView.domEventHandlers({
+        // 链接 Ctrl/Cmd+点击 → 系统浏览器（仅 http/https；相对链接静默忽略）
+        mousedown(event, view) {
+          if (!(event.metaKey || event.ctrlKey)) return false
+          const pos = view.posAtCoords({ x: event.clientX, y: event.clientY })
+          if (pos == null) return false
+          const url = findLinkTargetAt(view.state.doc.toString(), pos)
+          if (!url) return false
+          event.preventDefault()
+          void window.api.openExternal(url)
+          return true
+        },
         paste(event, view) {
           const file = Array.from(event.clipboardData?.files ?? []).find((f) =>
             f.type.startsWith('image/')
@@ -336,6 +383,27 @@ export function MarkdownEditor(): React.JSX.Element {
   return (
     <EditorMount ref={containerRef} style={mountStyle} aria-label={t('editor.placeholder')} data-testid="markdown-editor">
       {notice && <Notice role="status">{notice}</Notice>}
+      {lightbox &&
+        createPortal(
+          <Lightbox
+            role="dialog"
+            aria-modal="true"
+            aria-label={lightbox.alt || 'image'}
+            data-dialog-overlay="true"
+            data-testid="editor-lightbox"
+            tabIndex={-1}
+            ref={(el) => {
+              el?.focus()
+            }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) closeLightbox()
+            }}
+          >
+            <img src={lightbox.src} alt={lightbox.alt} />
+            <LightboxCap>{t('editor.lightboxHint', { alt: lightbox.alt || 'image' })}</LightboxCap>
+          </Lightbox>,
+          document.body
+        )}
     </EditorMount>
   )
 }

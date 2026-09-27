@@ -15,9 +15,10 @@ export interface EditorTypography {
   measure: 'full' | number
 }
 
+/** 默认排版（20260927-feature-editor-interactions 提级：14/1.7 → 15/1.8，对齐壳层正文字阶与 --line-height-body） */
 export const DEFAULT_TYPOGRAPHY: EditorTypography = {
-  fontSize: 14,
-  lineHeight: 1.7,
+  fontSize: 15,
+  lineHeight: 1.8,
   measure: 'full'
 }
 

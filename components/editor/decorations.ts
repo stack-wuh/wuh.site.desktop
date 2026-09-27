@@ -13,15 +13,31 @@
  * 零长挂行首（非零长 CM 直接抛 RangeError）。
  */
 import { EditorState, StateField, type Transaction } from '@codemirror/state'
-import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view'
-import { parseBlocks, scanInlineMarks, selectionLineSet } from '../../lib/editor-cm'
+import {
+  Decoration,
+  type DecorationSet,
+  EditorView,
+  WidgetType
+} from '@codemirror/view'
+import {
+  footnoteDefPrefix,
+  headingFoldTarget,
+  parseBlocks,
+  scanInlineMarks,
+  selectionLineSet
+} from '../../lib/editor-cm'
 import { workspaceStore } from '../../lib/store'
 import {
+  CommentWidget,
   FenceHeaderWidget,
+  FoldChevronWidget,
+  FoldPlaceholderWidget,
   HrWidget,
   ImageWidget,
   MathWidget,
-  MermaidWidget
+  MermaidWidget,
+  TaskToggleWidget,
+  wdFoldEffect
 } from './widgets'
 
 const hidden = Decoration.mark({ class: 'cm-live-hidden' })
@@ -34,8 +50,12 @@ const INLINE_CLASS: Record<string, string> = {
   code: 'cm-live-code',
   del: 'cm-live-del',
   linkText: 'cm-live-linktext',
-  linkUrl: 'cm-live-linkurl'
+  linkUrl: 'cm-live-linkurl',
+  footref: 'cm-live-footref'
 }
+
+/** 任务列表行：列表标记后的 `[ ]`/`[x]`/`[X]`（改写经 toggleTaskLine，Phase 1 纯逻辑） */
+const TASK_MARK_RE = /^(\s*(?:[-*+]|\d{1,9}[.)])\s+)\[([ xX])\]/
 
 interface Deco {
   from: number
@@ -156,6 +176,27 @@ function buildDecorations(state: EditorState): DecorationSet {
       continue
     }
 
+    if (block.kind === 'comment') {
+      // HTML 注释：光标未触及时整块收成标注条（预览/导出不渲染，语义一致）；光标进入展开源码
+      if (!cursorTouches) {
+        const first = doc.line(block.fromLine + 1)
+        const last = doc.line(block.toLine + 1)
+        const text = spanLines
+          .map((n) => docLines[n] ?? '')
+          .join(' ')
+          .replace(/^\s*<!--/, '')
+          .replace(/-->\s*$/, '')
+          .trim()
+        decos.push({
+          from: first.from,
+          to: last.to,
+          value: Decoration.replace({ widget: new CommentWidget(text, first.from), block: true })
+        })
+        spanLines.forEach((n) => replacedLines.add(n))
+      }
+      continue
+    }
+
     if (block.kind === 'list') {
       for (const n of spanLines) {
         const line = doc.line(n + 1)
@@ -173,6 +214,18 @@ function buildDecorations(state: EditorState): DecorationSet {
           })
         } else {
           decos.push({ from: markFrom, to: markTo, value: markCls('cm-live-olnum') })
+        }
+        // GFM 任务标记：`[ ]`/`[x]` 替换为可点选 checkbox（改写走 toggleTaskLine 纯函数）
+        const tm = TASK_MARK_RE.exec(line.text)
+        if (tm) {
+          const boxFrom = line.from + tm[1].length
+          decos.push({
+            from: boxFrom,
+            to: boxFrom + tm[2].length + 2,
+            value: Decoration.replace({
+              widget: new TaskToggleWidget(line.number, tm[2] !== ' ')
+            })
+          })
         }
       }
       continue
@@ -205,6 +258,13 @@ function buildDecorations(state: EditorState): DecorationSet {
     const line = doc.line(n)
     const text = docLines[n - 1]
     if (!text || text.startsWith('```') || text.startsWith('~~~')) continue
+    // 脚注定义行：分节样式 + 隐藏 `[^id]:` 前缀（不做跳转，语义与预览面板一致）
+    const defPrefix = footnoteDefPrefix(text)
+    if (defPrefix != null) {
+      decos.push({ from: line.from, to: line.from, value: lineCls('cm-live-footdef') })
+      decos.push({ from: line.from, to: line.from + defPrefix, value: hidden })
+      continue
+    }
     const scan = scanInlineMarks(text, line.from)
     for (const sym of scan.symbols) {
       decos.push({ from: sym.from, to: sym.to, value: hidden })
@@ -268,6 +328,118 @@ function rebuildNeeded(tr: Transaction): boolean {
 export function atomicSubset(decos: DecorationSet): DecorationSet {
   return decos.update({ filter: (_from, _to, value) => value.spec?.widget != null })
 }
+
+/**
+ * 标题折叠状态（0 起标题行号集合）。重建契约与 livePreviewField 同源：
+ * doc/selection 事务即重算，selection 触及折叠区自动展开；docChanged 清空
+ * 折叠（v1 语义：文档结构变化后折叠目标不可信）。不持久化（v1 视图内存活）。
+ */
+function foldDecorations(state: EditorState, folded: ReadonlySet<number>): DecorationSet {
+  if (!folded.size) return Decoration.none
+  const doc = state.doc
+  const blocks = parseBlocks(doc.toString())
+  const decos: Deco[] = []
+  for (const startLine of folded) {
+    const block = blocks.find((b) => b.kind === 'heading' && b.fromLine === startLine)
+    if (!block || block.kind !== 'heading') continue
+    const target = headingFoldTarget(blocks, block.fromLine, block.level ?? 1, doc.lines)
+    if (!target) continue
+    const count = target.toLine - target.fromLine + 1
+    decos.push({
+      from: doc.line(target.fromLine + 1).from,
+      to: doc.line(target.toLine + 1).to,
+      value: Decoration.replace({
+        widget: new FoldPlaceholderWidget(block.fromLine, count),
+        block: true
+      })
+    })
+  }
+  return Decoration.set(
+    decos.map((d) => d.value.range(d.from, d.to)),
+    true
+  )
+}
+
+/** 测试/调试辅助：读取 view 当前折叠占位装饰集（foldField 的 widget replace 子集） */
+export function wdFoldRangesForTest(view: EditorView): DecorationSet {
+  return foldDecorations(view.state, view.state.field(foldField))
+}
+
+export const foldField = StateField.define<Set<number>>({
+  create: () => new Set<number>(),
+  update(folded, tr) {
+    let next = folded
+    let changed = false
+    for (const effect of tr.effects) {
+      if (effect.is(wdFoldEffect)) {
+        if (!changed) {
+          next = new Set(folded)
+          changed = true
+        }
+        if (effect.value.fold) next.add(effect.value.line)
+        else next.delete(effect.value.line)
+      }
+    }
+    if (tr.docChanged) return new Set<number>()
+    if (tr.selection && folded.size) {
+      // 光标进入折叠区 → 自动展开（selection 事务本就触发装饰重建）
+      const doc = tr.state.doc
+      const blocks = parseBlocks(doc.toString())
+      const sel = tr.selection.main
+      for (const startLine of folded) {
+        const block = blocks.find((b) => b.kind === 'heading' && b.fromLine === startLine)
+        if (!block || block.kind !== 'heading') continue
+        const target = headingFoldTarget(blocks, block.fromLine, block.level ?? 1, doc.lines)
+        if (!target) continue
+        const from = doc.line(target.fromLine + 1).from
+        const to = doc.line(target.toLine + 1).to
+        if (sel.from < to && sel.to > from) {
+          if (!changed) {
+            next = new Set(folded)
+            changed = true
+          }
+          next.delete(startLine)
+        }
+      }
+    }
+    return next
+  },
+  provide: (field) => [
+    // 折叠占位（widget replace 块级替换）+ 标题折叠箭头（每标题行首，hover 浮现）。
+    // 依赖 'doc'：文档变化即重算，避免行号漂移导致的装饰越界。
+    EditorView.decorations.compute([field, 'doc'], (state) => {
+      const folded = state.field(field)
+      const decos: Deco[] = []
+      if (folded.size) {
+        const set = foldDecorations(state, folded)
+        set.between(0, state.doc.length, (from, to, value) => {
+          decos.push({ from, to, value })
+        })
+      }
+      if (state.doc.length) {
+        const blocks = parseBlocks(state.doc.toString())
+        for (const block of blocks) {
+          if (block.kind !== 'heading') continue
+          const line = state.doc.line(block.fromLine + 1)
+          decos.push({
+            from: line.from,
+            to: line.from,
+            value: Decoration.widget({ widget: new FoldChevronWidget(line.number), side: -1 })
+          })
+        }
+      }
+      return Decoration.set(
+        decos.map((d) => d.value.range(d.from, d.to)),
+        true
+      )
+    }),
+    // 原子区：本域全部为 widget replace（占位条），契约「只供 widget 子集」天然满足
+    EditorView.atomicRanges.compute([field, 'doc'], (state) => {
+      const set = foldDecorations(state, state.field(field))
+      return () => set
+    })
+  ]
+})
 
 /**
  * L3 装饰扩展：StateField 直供装饰集与原子区（mermaid/公式块的跨行 replace

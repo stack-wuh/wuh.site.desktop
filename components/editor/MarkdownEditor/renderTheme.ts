@@ -281,6 +281,117 @@ export const editorTheme = EditorView.theme({
     transition: INK_TRANSITION
   },
 
+  /* ===== L4 交互元素（20260927-feature-editor-interactions；墨水层次 token） ===== */
+
+  /* GFM 任务列表渲染态 checkbox（点击改写源码，字节保真） */
+  '.cm-live-taskbox': {
+    display: 'inline-block',
+    width: '13px',
+    height: '13px',
+    boxSizing: 'border-box',
+    border: '1.5px solid color-mix(in oklab, var(--chrome-border) 90%, transparent)',
+    borderRadius: '4px',
+    verticalAlign: '-2px',
+    cursor: 'pointer',
+    position: 'relative',
+    transition: INK_TRANSITION
+  },
+  '.cm-live-taskbox:hover': {
+    borderColor: 'var(--primary-color)'
+  },
+  '.cm-live-taskbox.done': {
+    background: 'var(--primary-color)',
+    borderColor: 'var(--primary-color)'
+  },
+  '.cm-live-taskbox.done::after': {
+    content: "''",
+    position: 'absolute',
+    left: '3.5px',
+    top: '0.5px',
+    width: '4px',
+    height: '7px',
+    border: 'solid #fff',
+    borderWidth: '0 1.5px 1.5px 0',
+    transform: 'rotate(42deg)'
+  },
+
+  /* HTML 注释标注条 */
+  '.cm-live-comment': {
+    display: 'inline-flex',
+    alignItems: 'baseline',
+    gap: '8px',
+    maxWidth: '100%',
+    padding: '3px 12px',
+    border: '1px dashed color-mix(in oklab, var(--chrome-border) 75%, transparent)',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    transition: INK_TRANSITION
+  },
+  '.cm-live-comment-tag': {
+    flex: 'none',
+    fontSize: '10px',
+    letterSpacing: '1px',
+    color: 'var(--text-muted)',
+    border: '1px solid color-mix(in oklab, var(--chrome-border) 70%, transparent)',
+    borderRadius: '3px',
+    padding: '0 5px'
+  },
+  '.cm-live-comment-text': {
+    fontSize: '12px',
+    color: 'var(--text-muted)',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap'
+  },
+
+  /* 脚注：引用上标墨色（无跳转）；定义行分节 */
+  '.cm-live-footref': {
+    fontSize: '0.78em',
+    verticalAlign: 'super',
+    lineHeight: '0',
+    color: 'var(--primary-color)'
+  },
+  '.cm-live-footdef': {
+    borderTop: '1px solid color-mix(in oklab, var(--chrome-border) 55%, transparent)',
+    marginTop: '14px',
+    paddingTop: '6px',
+    fontSize: '13px',
+    color: 'var(--text-secondary)'
+  },
+
+  /* 标题折叠：hover 箭头（行首浮现）+ 折叠占位条 */
+  '.cm-live-foldchev': {
+    display: 'inline-block',
+    width: '14px',
+    marginLeft: '-14px',
+    color: 'var(--text-muted)',
+    opacity: '0',
+    cursor: 'pointer',
+    transition: 'opacity var(--motion-dur-quick, 150ms) var(--motion-ease-out-soft, ease-out)'
+  },
+  '.cm-line:hover .cm-live-foldchev': {
+    opacity: '1'
+  },
+  '.cm-live-foldchev:hover': {
+    color: 'var(--primary-color)'
+  },
+  '.cm-live-fold': {
+    display: 'inline-block',
+    margin: '2px 0',
+    padding: '2px 12px',
+    fontSize: '12px',
+    color: 'var(--text-muted)',
+    background: 'color-mix(in oklab, var(--chrome-raised) 55%, transparent)',
+    border: '1px solid color-mix(in oklab, var(--chrome-border) 55%, transparent)',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    transition: INK_TRANSITION
+  },
+  '.cm-live-fold:hover': {
+    color: 'var(--text-primary)',
+    borderColor: 'color-mix(in oklab, var(--primary-color) 40%, transparent)'
+  },
+
   /* 查找面板（CM 内联条）配色 */
   '.cm-panel.cm-search': {
     background: 'var(--chrome-raised)',

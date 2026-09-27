@@ -58,7 +58,7 @@ export function cmHeadingCursor(doc: Text, index: number): number | null {
 // 行级块结构 / 光标行集合 / 行内标记扫描——decorations 层（components/editor）
 // 的事实源，全部无 DOM 依赖可独立测试。
 
-export type BlockKind = 'heading' | 'quote' | 'fence' | 'list' | 'hr' | 'math' | 'table'
+export type BlockKind = 'heading' | 'quote' | 'fence' | 'list' | 'hr' | 'math' | 'table' | 'comment'
 
 export interface BlockSpan {
   kind: BlockKind
@@ -81,6 +81,10 @@ const LIST_RE = /^\s*(?:[-*+]|\d{1,9}[.)])\s/
 const HR_RE = /^\s{0,3}(?:(?:-\s*){3,}|(?:\*\s*){3,}|(?:_\s*){3,})$/
 const MATH_RE = /^\s{0,3}\$\$\s*$/
 const TABLE_RE = /^\s{0,3}\|/
+/** 单行注释（`<!-- ... -->` 同行闭合） */
+const COMMENT_ANY_RE = /^\s{0,3}<!--.*-->/
+/** 注释开标记（可能多行，闭合行以 `-->` 出现为准） */
+const COMMENT_OPEN_RE = /^\s{0,3}<!--/
 
 /**
  * 行级块结构解析（与 parseOutline 同一围栏约定：围栏内一律视为围栏内容）。
@@ -126,6 +130,21 @@ export function parseBlocks(content: string): BlockSpan[] {
       })
       i = toLine + 1
       continue
+    }
+    if (COMMENT_ANY_RE.test(line)) {
+      blocks.push({ kind: 'comment', fromLine: i, toLine: i })
+      i++
+      continue
+    }
+    if (COMMENT_OPEN_RE.test(line)) {
+      let j = i + 1
+      while (j < lines.length && !lines[j].includes('-->')) j++
+      if (j < lines.length) {
+        blocks.push({ kind: 'comment', fromLine: i, toLine: j })
+        i = j + 1
+        continue
+      }
+      // 未闭合注释：回退源码态，按普通行处理
     }
     const heading = line.match(HEADING_RE)
     if (heading) {
@@ -175,6 +194,7 @@ export type InlineStyleKind =
   | 'linkText'
   | 'linkUrl'
   | 'image'
+  | 'footref'
 
 export interface InlineScan {
   /** 语法标记符区间（绝对偏移）：光标行外隐藏、光标行内保留 */
@@ -183,9 +203,9 @@ export interface InlineScan {
   styled: { from: number; to: number; kind: InlineStyleKind }[]
 }
 
-// 交替顺序即优先级：code 原子 > image（先于 link，! 前缀整体原子）> strong > del > em > link
+// 交替顺序即优先级：code 原子 > footref > image（先于 link，! 前缀整体原子）> strong > del > em > link
 const INLINE_RE =
-  /(`[^`\n]+`)|(!\[[^\]\n]*\]\([^)\n]*\))|(\*\*(?=\S)[^\n]*?\S\*\*)|(~~(?=\S)[^\n]*?\S~~)|(\*(?=\S)[^\n]*?\S\*)|(\[[^\]\n]*\]\([^)\n]*\))/g
+  /(`[^`\n]+`)|(\[\^[^\]\n]+\])|(!\[[^\]\n]*\]\([^)\n]*\))|(\*\*(?=\S)[^\n]*?\S\*\*)|(~~(?=\S)[^\n]*?\S~~)|(\*(?=\S)[^\n]*?\S\*)|(\[[^\]\n]*\]\([^)\n]*\))/g
 
 /**
  * 行内标记扫描（装饰性扫描，非 markdown 规范解析器）：不完整/未闭合标记不产出
@@ -201,19 +221,23 @@ export function scanInlineMarks(line: string, base: number): InlineScan {
     if (m[1]) {
       scan.styled.push({ from: b, to: b + text.length, kind: 'code' })
     } else if (m[2]) {
+      // 脚注引用 [^id]：隐藏 [^ 与 ]，id 上标墨色（无跳转，语义与预览面板一致）
+      scan.symbols.push({ from: b, to: b + 2 }, { from: b + text.length - 1, to: b + text.length })
+      scan.styled.push({ from: b + 2, to: b + text.length - 1, kind: 'footref' })
+    } else if (m[3]) {
       // 图片整段原子：非光标行由 widget 整体替换，无符号区间
       scan.styled.push({ from: b, to: b + text.length, kind: 'image' })
-    } else if (m[3] || m[4]) {
+    } else if (m[4] || m[5]) {
       scan.symbols.push({ from: b, to: b + 2 }, { from: b + text.length - 2, to: b + text.length })
       scan.styled.push({
         from: b + 2,
         to: b + text.length - 2,
-        kind: m[3] ? 'strong' : 'del'
+        kind: m[4] ? 'strong' : 'del'
       })
-    } else if (m[5]) {
+    } else if (m[6]) {
       scan.symbols.push({ from: b, to: b + 1 }, { from: b + text.length - 1, to: b + text.length })
       scan.styled.push({ from: b + 1, to: b + text.length - 1, kind: 'em' })
-    } else if (m[6]) {
+    } else if (m[7]) {
       const inner = /^\[([^\]]*)\]\(([^)]*)\)$/.exec(text)
       if (!inner) continue
       const textStart = b + 1
@@ -231,4 +255,65 @@ export function scanInlineMarks(line: string, base: number): InlineScan {
     }
   }
   return scan
+}
+
+// ===== L4 交互纯逻辑（20260927-feature-editor-interactions）=====
+// 渲染态交互的位置/改写计算唯一事实源：UI 层只消费本层结果 dispatch，
+// 任何源码改写（字节保真）必须经此处的纯函数并配测试。
+
+/**
+ * 链接定位：pos 落在 `[text](url)` 整体内（含符号位）时返回 url。
+ * 仅放行 http/https（相对链接 v1 静默忽略）；图片整段原子与行内代码不算链接。
+ */
+export function findLinkTargetAt(docText: string, pos: number): string | null {
+  if (pos < 0 || pos >= docText.length) return null
+  const lineStart = docText.lastIndexOf('\n', pos - 1) + 1
+  const nl = docText.indexOf('\n', pos)
+  const line = docText.slice(lineStart, nl < 0 ? docText.length : nl)
+  for (const m of line.matchAll(INLINE_RE)) {
+    const abs = lineStart + (m.index ?? 0)
+    if (pos < abs || pos >= abs + m[0].length) continue
+    if (m[2] || m[3]) continue
+    const inner = /^\[([^\]]*)\]\(([^)]*)\)$/.exec(m[0])
+    if (!inner) continue
+    const url = inner[2].trim()
+    return /^https?:\/\//i.test(url) ? url : null
+  }
+  return null
+}
+
+/** 任务行改写：`- [ ]` ↔ `- [x]`（保留缩进/标记符/大写 X 归一）；非任务行返回 null */
+export function toggleTaskLine(lineText: string): string | null {
+  const m = /^(\s*(?:[-*+]|\d{1,9}[.)])\s+\[)([ xX])(\].*)$/.exec(lineText)
+  if (!m) return null
+  return m[1] + (m[2] === ' ' ? 'x' : ' ') + m[3]
+}
+
+/** 脚注定义行前缀（`[^id]: `）长度；非定义行返回 null */
+const FOOTDEF_RE = /^\s{0,3}\[\^[^\]\n]+\]:\s?/
+export function footnoteDefPrefix(lineText: string): number | null {
+  const m = FOOTDEF_RE.exec(lineText)
+  return m ? m[0].length : null
+}
+
+/**
+ * 标题折叠区间：从标题行下一行到下一同级/更高级标题之前（文件尾自然闭合）。
+ * 无可折叠内容返回 null。blocks 传 parseBlocks 结果。
+ */
+export function headingFoldTarget(
+  blocks: BlockSpan[],
+  headingFromLine: number,
+  level: number,
+  docLineCount: number
+): { fromLine: number; toLine: number } | null {
+  const contentStart = headingFromLine + 1
+  let toLine = docLineCount - 1
+  for (const b of blocks) {
+    if (b.kind === 'heading' && b.fromLine > headingFromLine && (b.level ?? 1) <= level) {
+      toLine = b.fromLine - 1
+      break
+    }
+  }
+  if (toLine < contentStart) return null
+  return { fromLine: contentStart, toLine }
 }
