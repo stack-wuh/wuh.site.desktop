@@ -4,7 +4,7 @@
   "name": "20260927-feature-sticky-header-drafts-projects",
   "type": "feature",
   "scope": "app",
-  "status": "reviewed",
+  "status": "published",
   "baseBranch": "main",
   "branch": null,
   "files": [
@@ -17,8 +17,8 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 120,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/120",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 128,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/128"
   },
   "review": {
     "conclusion": "passed",
@@ -27,7 +27,7 @@
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:120",
+    "checkpoint": "pr:128",
     "planHash": "5a2514aa8e05836bed62bb81b32f0a281ae37ed359b3b1c4e08b3b12ce23bd6e",
     "updatedAt": null,
     "lastError": null,
