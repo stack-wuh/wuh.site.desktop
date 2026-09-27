@@ -1,7 +1,9 @@
 'use client'
 
 /**
- * 项目页样式原子（20260927-refactor-midsize-component-split 自 page.tsx 迁入）：
+ * 项目页样式原子（20260927-refactor-midsize-component-split 自 page.tsx 迁入；
+ * 20260927-feature-sticky-header-drafts-projects 起页头吸顶：根容器无 overflow，
+ * Head 固定在滚动流之外，内容区包进独立滚动容器——对齐 PageTopbar 范式）：
  * 页壳、组卡（头部/徽标/路径/旋钮/文件行/空态/不可达）、搜索框与整页空态。
  */
 import styled, { keyframes } from 'styled-components'
@@ -15,18 +17,50 @@ const pageEnter = keyframes`
 export const PageShell = styled.section`
   flex: 1;
   min-width: 0;
-  overflow: auto;
-  padding: 20px 32px 48px;
+  display: flex;
+  flex-direction: column;
   background: var(--background-color);
   animation: ${pageEnter} 200ms ease-out;
   transition: background-color 0.3s ease;
 
-  @media (max-width: 768px) {
-    padding: 16px 16px 40px;
-  }
-
   @media (prefers-reduced-motion: reduce) {
     animation: none;
+  }
+`
+
+/** 内容滚动容器：页头（Head）在其之外固定，不随滚动 */
+export const ScrollArea = styled.div`
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 32px 48px;
+
+  @media (max-width: 768px) {
+    padding: 0 16px 40px;
+  }
+`
+
+export const Head = styled.header`
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  padding: 20px 32px 10px;
+
+  @media (max-width: 768px) {
+    padding: 16px 16px 8px;
+  }
+
+  & > h1 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-family: var(--font-sans);
   }
 `
 
@@ -36,20 +70,8 @@ export const Inner = styled.div`
   gap: 14px;
   max-width: 860px;
   margin: 0 auto;
-`
-
-export const Head = styled.header`
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-
-  & > h1 {
-    margin: 0;
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--text-primary);
-    font-family: var(--font-sans);
-  }
+  width: 100%;
+  box-sizing: border-box;
 `
 
 export const Count = styled.span`
