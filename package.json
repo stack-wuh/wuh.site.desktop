@@ -25,7 +25,6 @@
     "@codemirror/state": "^6.5.0",
     "@codemirror/view": "^6.36.0",
     "@lezer/highlight": "^1.2.0",
-    "@milkdown/kit": "^7.22.2",
     "@octokit/rest": "^21.0.0",
     "@resvg/resvg-js": "^2.6.2",
     "@testing-library/dom": "^10.4.2",
