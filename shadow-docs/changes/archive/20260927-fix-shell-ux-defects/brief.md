@@ -4,7 +4,7 @@
   "name": "20260927-fix-shell-ux-defects",
   "type": "fix",
   "scope": "desktop",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "fix/20260927-fix-shell-ux-defects",
   "files": [
@@ -32,18 +32,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 122,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/122",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 130,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/130"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "368857ffecc75a13c1d92bd7008f4822c00797d0",
-    "verifiedAt": "2026-09-27T09:12:43.192Z"
+    "verifiedCommit": "51238e2fc68ccd9aa3247e7da51fd2485c20d64b",
+    "verifiedAt": "2026-09-27T09:34:51.199Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:122",
-    "planHash": "a2ff75ed05c2b87fc57756573ca878fbdf7ef4894357e6960f66e2b24d519b54",
+    "checkpoint": "merged-pr:130",
+    "planHash": "cdf52d7f499f97f5ef740fa5f5a6214663002efdaddad14bc76b06a4e4b2321b",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
