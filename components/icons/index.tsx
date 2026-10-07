@@ -123,7 +123,8 @@ const PLUGIN_ICON_COMPONENTS: Record<PluginIconName, IconComponent> = {
   message: MessageSquare,
   eye: Eye,
   sparkles: Sparkles,
-  book: BookOpen
+  book: BookOpen,
+  image: Image
 }
 
 export function pluginIcon(name: PluginIconName): IconComponent {

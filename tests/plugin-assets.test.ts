@@ -12,9 +12,9 @@ function pluginDirs(): string[] {
 }
 
 describe('官方参考插件资产', () => {
-  it('四个参考插件齐备', () => {
+  it('五个参考插件齐备（20261007-feature-image-host-plugin 增补图床助手）', () => {
     expect([...pluginDirs()].sort()).toEqual(
-      ['frontmatter', 'git-history', 'github-issues', 'preview-markdown'].sort()
+      ['frontmatter', 'git-history', 'github-issues', 'image-host', 'preview-markdown'].sort()
     )
   })
 

@@ -35,6 +35,7 @@ import {
   useEditorLiveState
 } from '../../../lib/editor-state'
 import { useLocale } from '../../../lib/i18n/context'
+import { message } from '../../../lib/feedback'
 import 'katex/dist/katex.min.css'
 import { editorHighlight, editorTheme } from './renderTheme'
 import { EditorMount, Lightbox, LightboxCap, Notice } from './styles'
@@ -77,6 +78,7 @@ async function insertClipboardImage(
   view: EditorView,
   tipEmpty: string,
   tipNeedDoc: string,
+  tipUploadFallback: string,
   notify: (msg: string) => void
 ): Promise<void> {
   const doc = workspaceStore.get()
@@ -107,6 +109,9 @@ async function insertClipboardImage(
       changes: { from: view.state.selection.main.to, insert: `![](${saved.markdownRef})` }
     })
     view.focus()
+    if (saved.uploaded === false) {
+      void message({ text: tipUploadFallback, kind: 'warning' })
+    }
   } catch (err) {
     notify(err instanceof Error ? err.message : String(err))
   }
@@ -269,6 +274,9 @@ export function MarkdownEditor(): React.JSX.Element {
                 changes: { from: view.state.selection.main.to, insert: `![](${saved.markdownRef})` }
               })
               view.focus()
+              if (saved.uploaded === false) {
+                void message({ text: t('editor.imageUploadFallback'), kind: 'warning' })
+              }
             })
             .catch((err: unknown) => notify(err instanceof Error ? err.message : String(err)))
           return true
@@ -302,7 +310,13 @@ export function MarkdownEditor(): React.JSX.Element {
           v.focus()
           return true
         case 'insertClipboardImage':
-          void insertClipboardImage(v, t('editor.clipboardEmpty'), t('editor.imageNeedDoc'), notify)
+          void insertClipboardImage(
+            v,
+            t('editor.clipboardEmpty'),
+            t('editor.imageNeedDoc'),
+            t('editor.imageUploadFallback'),
+            notify
+          )
           return true
         case 'scrollToHeading': {
           const pos = cmHeadingCursor(v.state.doc, command.index)

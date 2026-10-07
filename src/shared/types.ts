@@ -65,6 +65,10 @@ export interface SaveDialogOptions {
 
 export type SaveDialogResult = { canceled: true; path?: undefined } | { canceled: false; path: string }
 
+/** 原生多选图片 / 目录选择结果（图床 picker 能力；选中路径登记进本会话上传白名单） */
+export type PickedPathsResult = { canceled: true; paths?: undefined } | { canceled: false; paths: string[] }
+export type PickedDirectoryResult = { canceled: true; path?: undefined } | { canceled: false; path: string }
+
 /**
  * 纯函数：绝对路径归一为相对 root 的 POSIX 相对路径；不在 root 内（含恰为 root
  * 与前缀相似目录）返回 null——saveAs 边界校验渲染层共用，主进程 writeFile 仍有 safeJoin 兜底。
@@ -81,8 +85,10 @@ export function workspaceRelativePath(root: string, absPath: string): string | n
 export interface SavedImage {
   /** 图片相对工作区根的路径 */
   relPath: string
-  /** 插入 Markdown 的相对引用，如 ./xxx.assets/img.png */
+  /** 插入 Markdown 的相对引用，如 ./xxx.assets/img.png；OSS 上传成功时为远程 URL */
   markdownRef: string
+  /** 仅当 uploadMode=oss 尝试上传失败时为 false（已回退本地引用）；本地模式与成功路径不携带 */
+  uploaded?: boolean
 }
 
 // ---------- Git ----------
@@ -201,6 +207,25 @@ export interface UploadResult {
   error?: string
 }
 
+/** 图床上传模式：local = 粘贴仅落本地 .assets（默认，现状）；oss = 阿里云 OSS 直传；command = 外部上传命令 */
+export type UploadMode = 'local' | 'oss' | 'command'
+
+/** OSS 非敏感配置（AccessKey 走 safeStorage 加密存储，不入 settings.json） */
+export interface OssSettings {
+  /** 如 oss-cn-hangzhou.aliyuncs.com（可带 https:// 前缀） */
+  endpoint: string
+  bucket: string
+  /** 自定义绑定域名（含或不含 https:// 均可）；null = 用 bucket+endpoint 拼默认外链 */
+  customDomain: string | null
+  /** key 前缀模板，支持 {yyyy} {MM} {dd}；null/空 = 桶根 */
+  prefixTemplate: string | null
+}
+
+export interface OssTestResult {
+  ok: boolean
+  error?: string
+}
+
 // ---------- Structure ----------
 export type StructureKind = 'blogPost' | 'topicPost' | 'assetDir' | 'other'
 
@@ -292,12 +317,18 @@ export interface AppSettings {
   siteBaseUrl: string | null
   /** 默认站点仓库（owner/repo，用户中心选择）；null = 未选择 */
   siteRepo: string | null
+  /** 图床上传模式；local = 仅本地 .assets（默认，兼容现状） */
+  uploadMode: UploadMode
+  /** OSS 非敏感配置；AccessKey 存独立加密文件 */
+  oss: OssSettings | null
 }
 
 export interface SettingsStatus {
   hasToken: boolean
   /** 当前凭证来源；null = 未配置 */
   tokenKind: TokenKind | null
+  /** OSS AccessKey 是否已配置（值不出主进程） */
+  hasOssCredentials: boolean
   settings: AppSettings
 }
 
@@ -351,6 +382,24 @@ export interface DesktopApi {
    */
   pickSaveLocation(opts?: SaveDialogOptions): Promise<SaveDialogResult>
   savePastedImage(docRelPath: string, originalName: string, base64: string): Promise<SavedImage>
+  /** 原生多选图片文件（宿主与 image-host 插件共用；选中路径登记上传白名单） */
+  pickImages(): Promise<PickedPathsResult>
+  /** 原生目录选择（目录登记上传白名单，其内文件可被 uploadImages 引用） */
+  pickDirectory(): Promise<PickedDirectoryResult>
+  /** 枚举目录内图片文件（扩展名白名单，按文件名排序）；目录必须在登记白名单内 */
+  listImages(dirPath: string): Promise<string[]>
+  /**
+   * 批量上传图片到图床：按设置 uploadMode 路由（oss 直传 / command 外部命令）。
+   * 路径必须来自本会话 picker 登记（防插件夹带任意路径外传文件）。
+   */
+  uploadImages(absPaths: string[], opts?: { prefix?: string }): Promise<UploadResult[]>
+  /** 剪贴板写文本（图床链接复制等；长度钳制，宿主与插件共用） */
+  clipboardWrite(text: string): Promise<boolean>
+  /** 保存 OSS AccessKey（safeStorage 加密独立存储；宿主设置页专用） */
+  setOssCredentials(accessKeyId: string, accessKeySecret: string): Promise<void>
+  clearOssCredentials(): Promise<void>
+  /** OSS 连接测试：列举 bucket 首个对象验证配置与凭证（宿主设置页专用） */
+  testOssConnection(): Promise<OssTestResult>
   gitStatus(): Promise<GitStatusSummary>
   gitStage(paths: string[]): Promise<void>
   gitCommit(message: string, paths?: string[]): Promise<{ hash: string }>

@@ -1,0 +1,19 @@
+{
+  "id": "image-host",
+  "name": "图床助手",
+  "version": "1.0.0",
+  "description": "图片批量上传图床：本地目录/文件选择、OSS 目标前缀、逐文件进度与 markdown 链接复制（OSS 配置见 设置 → 图床）",
+  "logic": "logic/upload.js",
+  "views": [
+    {
+      "id": "image-host",
+      "area": "main",
+      "title": "图床",
+      "icon": "image",
+      "entry": "view/index.html",
+      "order": 50
+    }
+  ],
+  "publishers": [],
+  "permissions": ["fs.picker.read", "net.oss.write", "ui.clipboard.write"]
+}

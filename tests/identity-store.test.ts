@@ -24,7 +24,7 @@ describe('identity store', () => {
   it('未配置 token（hasToken=false）时快照为 null（已确认无身份）', async () => {
     resetIdentityForTests()
     setIdentityApiForTests({
-      getSettings: async () => ({ hasToken: false, tokenKind: null, settings: {} as never }),
+      getSettings: async () => ({ hasToken: false, tokenKind: null, hasOssCredentials: false, settings: {} as never }),
       getGithubIdentity: async () => identity
     })
     await refreshIdentity()
@@ -34,7 +34,7 @@ describe('identity store', () => {
   it('有 token 时拉取身份写入快照', async () => {
     resetIdentityForTests()
     setIdentityApiForTests({
-      getSettings: async () => ({ hasToken: true, tokenKind: 'oauth', settings: {} as never }),
+      getSettings: async () => ({ hasToken: true, tokenKind: 'oauth', hasOssCredentials: false, settings: {} as never }),
       getGithubIdentity: async () => identity
     })
     await refreshIdentity()
@@ -44,7 +44,7 @@ describe('identity store', () => {
   it('getGithubIdentity 抛错时吞掉异常，快照回落 null', async () => {
     resetIdentityForTests()
     setIdentityApiForTests({
-      getSettings: async () => ({ hasToken: true, tokenKind: 'oauth', settings: {} as never }),
+      getSettings: async () => ({ hasToken: true, tokenKind: 'oauth', hasOssCredentials: false, settings: {} as never }),
       getGithubIdentity: async () => {
         throw new Error('network down')
       }
@@ -62,7 +62,7 @@ describe('identity store', () => {
 
     const stale: GithubIdentity = { ...identity, stale: true }
     setIdentityApiForTests({
-      getSettings: async () => ({ hasToken: true, tokenKind: 'oauth', settings: {} as never }),
+      getSettings: async () => ({ hasToken: true, tokenKind: 'oauth', hasOssCredentials: false, settings: {} as never }),
       getGithubIdentity: async () => stale
     })
     await refreshIdentity()

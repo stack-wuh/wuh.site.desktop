@@ -18,6 +18,7 @@ import { SettingRow } from '../ui/SettingRow'
 import { SettingSection } from './SettingSection'
 import { SettingsNav, type SettingsNavItem } from './SettingsNav'
 import { PluginManagerSection } from './PluginManagerSection'
+import { ImageHostSection } from './ImageHostSection'
 import { IconCheck, IconLogo } from '../icons'
 import { useLocale } from '../../lib/i18n/context'
 import { BUILD_TIME, formatBuildTime } from '../../lib/buildInfo'
@@ -147,6 +148,7 @@ export function SettingsPage(): React.JSX.Element {
   const navItems: SettingsNavItem[] = [
     { id: 'about', label: t('settings.navAbout') },
     { id: 'services', label: t('settings.navServices') },
+    { id: 'imageHost', label: t('settings.navImageHost') },
     { id: 'plugins', label: t('settings.navPlugins') }
   ]
   const [settings, setSettings] = useState<AppSettings>({
@@ -156,7 +158,9 @@ export function SettingsPage(): React.JSX.Element {
     gitUserName: null,
     gitUserEmail: null,
     siteBaseUrl: null,
-    siteRepo: null
+    siteRepo: null,
+    uploadMode: 'local',
+    oss: null
   })
   const [loadError, setLoadError] = useState<string | null>(null)
   const [savedField, setSavedField] = useState<FieldKey | null>(null)
@@ -266,6 +270,8 @@ export function SettingsPage(): React.JSX.Element {
               {fieldErrors.siteBaseUrl && <RowError role="alert">{fieldErrors.siteBaseUrl}</RowError>}
             </SettingRow>
           </SettingSection>
+
+          <ImageHostSection />
 
           <PluginManagerSection />
         </Sections>
