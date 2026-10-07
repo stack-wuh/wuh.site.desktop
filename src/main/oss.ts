@@ -1,17 +1,19 @@
 /**
  * 阿里云 OSS 图床直传（20261007-feature-image-host-plugin）：
- * - 纯逻辑层（key 生成 / 外链解析 / 配置校验）可独立测试，不触碰 electron 与网络；
+ * - key 生成等纯逻辑在 @shared/ossKey（渲染层设置页预览共用，此处转发导出保持兼容）；
  * - 传输层经 createAliOssTransport 惰性加载 ali-oss（AccessKey 只进主进程，
  *   凭证不入 settings.json，存 userData 下 safeStorage 加密文件，见 credentials.ts）；
  * - 外链默认 https://{bucket}.{endpoint}/{key}，绑定自定义域名时整体替换，
  *   签名与上传细节交 SDK，本模块只做装配与错误归一（报错文案不携带凭证）。
  */
-import { createHash } from 'node:crypto'
 import fsp from 'node:fs/promises'
 import path from 'node:path'
 import { createRequire } from 'node:module'
+import { buildObjectKey } from '@shared/ossKey'
 import type { OssSettings, UploadResult } from '@shared/types'
 import type { OssCredentials } from './credentials'
+
+export { sanitizePrefix, renderPrefixTemplate, buildObjectKey } from '@shared/ossKey'
 
 export interface OssConfig {
   endpoint: string
@@ -26,58 +28,13 @@ export function toOssConfig(oss: OssSettings | null | undefined): OssConfig | nu
   return { endpoint: oss.endpoint, bucket: oss.bucket, customDomain: oss.customDomain, prefixTemplate: oss.prefixTemplate }
 }
 
-/** 前缀清洗：去首尾斜杠、压缩连续斜杠与空白；空回退空串（桶根） */
-export function sanitizePrefix(prefix: string): string {
-  return prefix
-    .trim()
-    .replace(/\/+/g, '/')
-    .replace(/^\/+|\/+$/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-}
-
-/** 前缀模板渲染：{yyyy} {MM} {dd} 按 UTC 口径替换（确定性，测试可固定） */
-export function renderPrefixTemplate(template: string, now: Date): string {
-  const yyyy = String(now.getUTCFullYear())
-  const mm = String(now.getUTCMonth() + 1).padStart(2, '0')
-  const dd = String(now.getUTCDate()).padStart(2, '0')
-  return template.replaceAll('{yyyy}', yyyy).replaceAll('{MM}', mm).replaceAll('{dd}', dd)
-}
+/** 前缀模板渲染、前缀清洗与 key 生成见 @shared/ossKey（顶部转发导出） */
 
 const EXT_RE = /^[a-z0-9]{1,8}$/
-
-/** 内容 hash 前 8 位（sha256），同内容恒定、不同内容几乎不撞 */
-function hash8(content: Buffer | string): string {
-  return createHash('sha256').update(content).digest('hex').slice(0, 8)
-}
-
-function utcStamp(now: Date): string {
-  const p = (n: number, len = 2): string => String(n).padStart(len, '0')
-  return (
-    `${p(now.getUTCFullYear(), 4)}${p(now.getUTCMonth() + 1)}${p(now.getUTCDate())}` +
-    `-${p(now.getUTCHours())}${p(now.getUTCMinutes())}${p(now.getUTCSeconds())}`
-  )
-}
 
 function extensionFor(originalName: string): string {
   const ext = path.extname(originalName).replace(/^\./, '').toLowerCase()
   return EXT_RE.test(ext) ? ext : 'bin'
-}
-
-/** key 生成：[前缀/]yyyyMMdd-HHmmss-hash8.ext；显式 prefix 优先于模板 */
-export function buildObjectKey(input: {
-  originalName: string
-  content: Buffer | string
-  now?: Date
-  prefixTemplate?: string | null
-  prefix?: string | null
-}): string {
-  const now = input.now ?? new Date()
-  const rawPrefix = input.prefix != null && input.prefix !== '' ? input.prefix : (input.prefixTemplate ?? '')
-  const prefix = sanitizePrefix(renderPrefixTemplate(rawPrefix, now))
-  const stem = `${utcStamp(now)}-${hash8(input.content)}`
-  const ext = extensionFor(input.originalName)
-  return prefix ? `${prefix}/${stem}.${ext}` : `${stem}.${ext}`
 }
 
 function withScheme(host: string): string {
@@ -138,10 +95,18 @@ type AliOssCtor = new (opts: {
   listV2: (opts: { 'max-keys': number }) => Promise<unknown>
 }
 
-/** 惰性加载 ali-oss（CJS；测试环境不触发） */
+/** 惰性加载 ali-oss（CJS；测试环境不触发）；缺依赖给出可操作的指引而非裸 stack */
 export function loadAliOss(): AliOssCtor {
-  const req = createRequire(import.meta.url)
-  return req('ali-oss') as AliOssCtor
+  try {
+    const req = createRequire(import.meta.url)
+    return req('ali-oss') as AliOssCtor
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    if (/Cannot find module/i.test(message)) {
+      throw new Error('OSS 上传组件缺失：请在应用目录执行 pnpm install 安装依赖后重启应用')
+    }
+    throw err
+  }
 }
 
 export function createAliOssTransport(config: OssConfig, credentials: OssCredentials): OssTransport {
