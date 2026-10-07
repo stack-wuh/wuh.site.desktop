@@ -38,6 +38,8 @@ const pageEnter = keyframes`
 const Page = styled.div`
   flex: 1;
   min-width: 0;
+  /* 页根高度封顶：内容滚动交给 ScrollArea，防长页把文档撑出滚动（侧栏跟随滚动的根因） */
+  min-height: 0;
   display: flex;
   flex-direction: column;
   background: var(--background-color);
