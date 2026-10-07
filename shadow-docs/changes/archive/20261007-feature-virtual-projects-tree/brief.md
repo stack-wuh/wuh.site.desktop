@@ -4,7 +4,7 @@
   "name": "20261007-feature-virtual-projects-tree",
   "type": "feature",
   "scope": "renderer-shell",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20261007-feature-virtual-projects-tree",
   "files": [
@@ -18,18 +18,18 @@
     "repository": null,
     "issue": null,
     "issueUrl": null,
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 141,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/141"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "d3fa1ecef8030d48cc3829557c72a1dbded65231",
-    "verifiedAt": "2026-10-07T09:55:00.576Z"
+    "verifiedCommit": "c3700648a468514f6263e97c318dca2de6bc94a7",
+    "verifiedAt": "2026-10-07T10:48:57.496Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": null,
-    "planHash": "32be0c0f86526e4af4c1d455e072b511b9a6411defe7603e249c888fc2a5ed0e",
+    "checkpoint": "merged-pr:141",
+    "planHash": "d33028d1aab21aa974ce437ea9fc48b09cb8209b350164fb2462fd12c34f45a3",
     "updatedAt": null,
     "lastError": null,
     "release": {
@@ -51,7 +51,7 @@
   "knowledge": {
     "action": "新增",
     "target": "shadow-docs/knowledge/renderer-virtual-list.md",
-    "reason": "虚拟列表在新架构（Next.js 壳层）落地并接入 ProjectsTree，与 brief 决策一致：vitest 全套 595/595（含 13 个窗口数学单测 + 项目树渲染冒烟 8 例）、tsc 三配置通过。卡片沉淀跨变更约束：行高与 itemHeight 对齐；窗口数学独立 .ts（.tsx 不可被未设 jsx 的 tsconfig 测试工程导入）；styled(VirtualList) 泛型折叠需用 style prop 传样式；行交互状态提升列表层；VirtualList 根即滚动容器、禁嵌套滚动。verified-depth: unit（滚动流畅度 field 待人工确认）；verified-scope: components"
+    "reason": "PR #141 已合并（c370064）：虚拟列表在新架构落地并接入 ProjectsTree；合并前已通过 vitest 595/595 与 tsc 三配置验证。verified-depth: unit；verified-scope: components"
   }
 }
 ---
