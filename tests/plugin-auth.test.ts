@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CAPABILITY_METHODS, authorizeCapability } from '@shared/plugin'
+import { CAPABILITY_METHODS, PLUGIN_PERMISSIONS, authorizeCapability } from '@shared/plugin'
 
 describe('CAPABILITY_METHODS 映射', () => {
   it('工作区文件方法映射到 fs 权限', () => {
@@ -56,5 +56,38 @@ describe('authorizeCapability', () => {
       'deleteEverything'
     )
     expect(res.ok).toBe(false)
+  })
+})
+
+describe('图床能力映射（20261007-feature-image-host-plugin）', () => {
+  it('picker/listImages → fs.picker.read；uploadImages → net.oss.write；clipboardWrite → ui.clipboard.write', () => {
+    expect(CAPABILITY_METHODS['pickImages']).toBe('fs.picker.read')
+    expect(CAPABILITY_METHODS['pickDirectory']).toBe('fs.picker.read')
+    expect(CAPABILITY_METHODS['listImages']).toBe('fs.picker.read')
+    expect(CAPABILITY_METHODS['uploadImages']).toBe('net.oss.write')
+    expect(CAPABILITY_METHODS['clipboardWrite']).toBe('ui.clipboard.write')
+  })
+
+  it('OSS 凭证写入/清除/连接测试保持 host-only', () => {
+    for (const m of ['setOssCredentials', 'clearOssCredentials', 'testOssConnection']) {
+      expect(CAPABILITY_METHODS[m]).toBeUndefined()
+    }
+  })
+
+  it('插件声明对应权限后可调用；缺权限拒绝并回报所需权限', () => {
+    const denied = authorizeCapability([], 'uploadImages')
+    expect(denied.ok).toBe(false)
+    if (!denied.ok) expect(denied.permission).toBe('net.oss.write')
+    expect(authorizeCapability(['net.oss.write'], 'uploadImages').ok).toBe(true)
+    expect(authorizeCapability(['fs.picker.read'], 'pickImages').ok).toBe(true)
+    expect(authorizeCapability(['fs.picker.read'], 'pickDirectory').ok).toBe(true)
+    expect(authorizeCapability(['fs.picker.read'], 'listImages').ok).toBe(true)
+    expect(authorizeCapability(['ui.clipboard.write'], 'clipboardWrite').ok).toBe(true)
+  })
+
+  it('权限词表包含图床三项新权限', () => {
+    expect(PLUGIN_PERMISSIONS).toContain('fs.picker.read')
+    expect(PLUGIN_PERMISSIONS).toContain('net.oss.write')
+    expect(PLUGIN_PERMISSIONS).toContain('ui.clipboard.write')
   })
 })

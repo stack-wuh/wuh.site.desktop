@@ -1,0 +1,175 @@
+/* 图床面板样式：仅使用宿主注入的主题 token（设计同源，插件不携带色彩资源） */
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  background: transparent;
+}
+
+.image-host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.panel-section {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--chrome-border);
+}
+
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: var(--text-secondary);
+}
+
+.hint {
+  color: var(--text-muted);
+  font-size: 12px;
+  margin: 4px 0 0;
+}
+
+.action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+button {
+  font: inherit;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--chrome-border);
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+button.primary {
+  background: color-mix(in oklab, var(--primary-color) 12%, transparent);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.prefix-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.prefix-row input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--chrome-border);
+  background: transparent;
+  color: var(--text-primary);
+}
+
+.prefix-row input:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: -2px;
+}
+
+.queue {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.queue li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  border-bottom: 1px dashed color-mix(in oklab, var(--chrome-border) 60%, transparent);
+  min-width: 0;
+}
+
+.queue .name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.queue .state {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.queue .state.ok {
+  color: var(--success-color);
+}
+
+.queue .state.fail {
+  color: var(--danger-color);
+}
+
+.queue .state.uploading {
+  color: var(--primary-color);
+}
+
+.queue .copy {
+  flex-shrink: 0;
+  padding: 2px 6px;
+  font-size: 11px;
+}
+
+.progressbar {
+  height: 3px;
+  border-radius: 2px;
+  background: color-mix(in oklab, var(--chrome-border) 70%, transparent);
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.progressbar .fill {
+  height: 100%;
+  background: var(--primary-color);
+  transition: width 160ms ease;
+}
+
+.summary {
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin: 0 0 8px;
+}
+
+.summary .fail {
+  color: var(--danger-color);
+}
+
+.error-text {
+  margin: 8px 12px;
+  padding: 8px 10px;
+  border-radius: var(--border-radius-sm);
+  background: color-mix(in oklab, var(--danger-color) 10%, transparent);
+  color: var(--danger-color);
+}
+
+.empty {
+  padding: 12px;
+  color: var(--text-muted);
+}

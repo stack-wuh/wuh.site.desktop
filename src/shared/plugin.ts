@@ -9,14 +9,17 @@ import type { IpcResult } from './types'
 export const PLUGIN_PERMISSIONS = [
   'fs.workspace.read',
   'fs.workspace.write',
+  'fs.picker.read',
   'git.status.read',
   'git.history.write',
   'net.github.api',
+  'net.oss.write',
   'settings.read',
   'document.read.write',
   'render.rule.register',
   'render.execute',
-  'publish.register'
+  'publish.register',
+  'ui.clipboard.write'
 ] as const
 
 export type PluginPermission = (typeof PLUGIN_PERMISSIONS)[number]
@@ -34,7 +37,8 @@ export const PLUGIN_ICONS = [
   'message',
   'eye',
   'sparkles',
-  'book'
+  'book',
+  'image'
 ] as const
 export type PluginIconName = (typeof PLUGIN_ICONS)[number]
 
@@ -620,7 +624,12 @@ export const CAPABILITY_METHODS: Readonly<Record<string, PluginPermission>> = {
   githubDeleteLabel: 'net.github.api',
   githubUpsertIssue: 'publish.register',
   publish: 'publish.register',
-  getSettings: 'settings.read'
+  getSettings: 'settings.read',
+  pickImages: 'fs.picker.read',
+  pickDirectory: 'fs.picker.read',
+  listImages: 'fs.picker.read',
+  uploadImages: 'net.oss.write',
+  clipboardWrite: 'ui.clipboard.write'
 }
 
 export type CapabilityDecision =
