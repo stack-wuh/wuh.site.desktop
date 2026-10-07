@@ -57,6 +57,19 @@ const OssInput = styled(Input)`
   width: 260px;
 `
 
+/** AccessKey 凭证输入独立整行：两个输入框并排占满，避免塞进行式设置行的右侧控制列 */
+const CredsGrid = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px 0 10px;
+
+  & > input {
+    flex: 1;
+    min-width: 180px;
+  }
+`
+
 function errText(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
 }
@@ -217,25 +230,9 @@ export function ImageHostSection(): React.JSX.Element {
       </SettingRow>
 
       <SettingRow
-        htmlFor="settings-oss-key-id"
         label={t('settings.ossKeyId')}
         description={hasCreds ? t('settings.ossCredsConfigured') : t('settings.ossCredsMissing')}
       >
-        <OssInput
-          id="settings-oss-key-id"
-          type="password"
-          autoComplete="off"
-          placeholder="AccessKey ID"
-          value={akId}
-          onChange={(e) => setAkId(e.target.value)}
-        />
-        <OssInput
-          type="password"
-          autoComplete="new-password"
-          placeholder="AccessKey Secret"
-          value={akSecret}
-          onChange={(e) => setAkSecret(e.target.value)}
-        />
         <button type="button" onClick={() => void saveCreds()} disabled={!akId.trim() || !akSecret.trim()}>
           {t('settings.ossSaveCreds')}
         </button>
@@ -245,6 +242,24 @@ export function ImageHostSection(): React.JSX.Element {
           </button>
         )}
       </SettingRow>
+      <CredsGrid>
+        <Input
+          id="settings-oss-key-id"
+          type="password"
+          autoComplete="off"
+          placeholder="AccessKey ID"
+          value={akId}
+          onChange={(e) => setAkId(e.target.value)}
+        />
+        <Input
+          aria-label={t('settings.ossKeyId')}
+          type="password"
+          autoComplete="new-password"
+          placeholder="AccessKey Secret"
+          value={akSecret}
+          onChange={(e) => setAkSecret(e.target.value)}
+        />
+      </CredsGrid>
 
       <SettingRow label={t('settings.ossTest')}>
         <button type="button" onClick={() => void runTest()} disabled={testState === 'running'}>
