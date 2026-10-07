@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import type { FileNode, FileContent, WorkspaceInfo } from '@shared/types'
 import { LocaleProvider } from '../lib/i18n/context'
@@ -80,7 +80,25 @@ function renderTree(): ReturnType<typeof render> {
   )
 }
 
+// 虚拟列表视口 stub：happy-dom 无真实布局，clientHeight 恒 0 会让窗口计算返回空窗口；
+// 统一 stub 成大视口，使全部行进入渲染窗口（窗口数学本身由 tests/virtual-range.test.ts 覆盖）
+beforeAll(() => {
+  Object.defineProperty(HTMLElement.prototype, 'clientHeight', {
+    configurable: true,
+    get: () => 800
+  })
+})
+
+afterAll(() => {
+  delete (HTMLElement.prototype as unknown as { clientHeight?: number }).clientHeight
+})
+
 describe('左栏项目树渲染冒烟', () => {
+  it('渲染于虚拟滚动容器内（大列表虚拟化接入）', () => {
+    renderTree()
+    expect(document.querySelector('.virtual-list')).toBeTruthy()
+  })
+
   it('当前组置顶带「当前」徽标且默认展开直显文件；非当前组收起；零 React 告警', async () => {
     const console_ = captureRenderConsole()
     const { container } = renderTree()

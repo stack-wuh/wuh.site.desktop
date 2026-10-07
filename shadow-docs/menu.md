@@ -16,6 +16,7 @@
 | 插件浮窗视图 | float 浮窗 预览 preview 视图区域 FloatLayer floats | knowledge/shell-chrome-design.md, knowledge/renderer-shell-routing.md |
 | 反馈提示 | 提示 反馈 Toast Message Alert 通知 弹窗 横幅 模态 系统通知 失焦 feedback notifySystem 插件提示 确认 | knowledge/ui-feedback.md |
 | 插件系统 | 插件 manifest loader 启用 停用 批准 approvals resolveApproval reload 重载 revealDir plugin-state broker 沙箱 帧 握手 ready 协议注册 corsEnabled problems | knowledge/plugin-architecture.md |
+| 渲染层列表性能 | 虚拟列表 虚拟滚动 VirtualList 大列表 项目树 滚动卡顿 列表渲染 展开状态 行高 | knowledge/renderer-virtual-list.md |
 
 ## 查阅流程
 
