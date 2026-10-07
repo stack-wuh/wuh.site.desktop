@@ -145,19 +145,20 @@ export const Chevron = styled.span<{ $open: boolean }>`
   }
 `
 
+/** 组体即虚拟列表宿主（20261007 交互优化）：行距由固定行高承担，不再设 gap */
 export const GroupBody = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
   padding: 2px 8px 10px;
 `
 
+/** 固定行高：height 与 ProjectsPage 的 ROW_HEIGHT 严格一致（VirtualList 窗口数学前提），原上下 padding 收进 40px 行高 */
 export const FileRow = styled.button`
   display: flex;
   align-items: baseline;
   gap: 10px;
   width: 100%;
-  padding: 7px 10px;
+  height: 40px;
+  box-sizing: border-box;
+  padding: 10px 10px 0;
   border: none;
   border-radius: var(--border-radius-sm);
   background: transparent;
@@ -180,12 +181,14 @@ export const FileName = styled.span`
   flex: none;
   font-size: 13px;
   font-weight: 500;
+  line-height: 20px;
 `
 
 export const FilePath = styled.span`
   font-size: 10px;
   font-family: var(--font-mono);
   color: var(--text-muted);
+  line-height: 20px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

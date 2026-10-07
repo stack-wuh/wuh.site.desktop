@@ -31,16 +31,17 @@ source:
   - changes/20260925-feature-capsule-plugin-tab/brief.md
   - changes/20260927-fix-shell-ux-defects/brief.md
   - changes/20260927-style-shell-visual-consistency/brief.md
-verified: 2026-09-27
+  - changes/20261007-style-scrollbars-virtual-projects-list/brief.md
+verified: 2026-10-07
 verified-depth: runtime
-verified-scope: components/SideMenu/index.tsx, components/SideMenu/styles.ts, components/menu/PluginTree.tsx, components/capsule/modules.tsx, lib/capsule.ts, lib/floats.ts, components/capsule/CapsulePanel/index.tsx, src/plugin-sdk/index.ts, src/main/splash.html, plugins/git-history
+verified-scope: components/SideMenu/index.tsx, components/SideMenu/styles.ts, components/menu/PluginTree.tsx, components/capsule/modules.tsx, lib/capsule.ts, lib/floats.ts, components/capsule/CapsulePanel/index.tsx, src/plugin-sdk/index.ts, src/main/splash.html, plugins/git-history, app/globals.css（滚动条隐藏策略经源码守卫 + Electron 实机 CDP 断言全站无可见滚动条容器）
 ---
 
 # 壳层 chrome 设计与插件扩展点
 
 ## 当前结论
 
-**样式载体（2026-09-21 起）**：组件样式一律 **styled-components**（Next `compiler.styledComponents: true`，与 x.wuh.site/apps/site 同因同配）；主题 token 仍是 `:root` CSS 变量 + `data-theme-family`/`data-color-scheme` 属性路由（`components/theme/tokens.ts` 构建期注入 `<style id="wd-theme-vars">`，机制未变），styled 内直接 `var(--token)` 引用。`app/globals.css` 只保留全局地基：字体 @font-face（`app/fonts/*.woff2`）、html/body 基座、滚动条、品牌标书写动效键帧。styled 类名是哈希，**自动化/测试不得依赖类名选择器**——用 aria/role/`data-*` 稳定属性。
+**样式载体（2026-09-21 起）**：组件样式一律 **styled-components**（Next `compiler.styledComponents: true`，与 x.wuh.site/apps/site 同因同配）；主题 token 仍是 `:root` CSS 变量 + `data-theme-family`/`data-color-scheme` 属性路由（`components/theme/tokens.ts` 构建期注入 `<style id="wd-theme-vars">`，机制未变），styled 内直接 `var(--token)` 引用。`app/globals.css` 只保留全局地基：字体 @font-face（`app/fonts/*.woff2`）、html/body 基座、滚动条、品牌标书写动效键帧。**滚动条策略（20261007 交互优化起）**：全应用隐藏滚动条（`scrollbar-width: none` + `::-webkit-scrollbar { display: none }`，此前为 8px 主题色胶囊，用户裁决观感不符弃用），滚动能力保留（滚轮/触控板/键盘）；收口唯一在 globals.css，组件层不得再写 `::-webkit-scrollbar` 定制（`tests/globals-scrollbar.test.ts` 源码级守卫）。styled 类名是哈希，**自动化/测试不得依赖类名选择器**——用 aria/role/`data-*` 稳定属性。
 
 **图标体系**（对齐 x.wuh.site `packages/components/icons` 模式）：`components/icons/index.tsx` 集中注册表按 UI / Status / Plugin（manifest 图标白名单映射）/ Brand（自绘 `IconLogo`、`IconDiamond`，见 `brand.tsx`）分组导出 `Icon*`；渲染统一走 `<AppIcon>`，场景规格：chrome/面板 16px（md）、工具栏 14px（sm）、正文内联 12px（xs）、强调 20/24；描边 ≤14px 用 2、>14px 用 1.75（24 网格）。
 

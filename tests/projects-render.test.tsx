@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import type { FileNode, FileContent, WorkspaceInfo } from '@shared/types'
 import { LocaleProvider } from '../lib/i18n/context'
@@ -76,7 +76,38 @@ function renderPage(): ReturnType<typeof render> {
   return render(<LocaleProvider>{<ProjectsPage />}</LocaleProvider>)
 }
 
+// 虚拟列表视口 stub：happy-dom 无真实布局，clientHeight 恒 0 会让窗口计算返回空窗口；
+// 统一 stub 成大视口（与 projects-tree 同法，窗口数学本身由 tests/virtual-range.test.ts 覆盖）。
+// 800px @ 40px 行高 + overscan 8 → 单组窗口上限 28 行，大列表用例据此断言窗口化生效。
+beforeAll(() => {
+  Object.defineProperty(HTMLElement.prototype, 'clientHeight', {
+    configurable: true,
+    get: () => 800
+  })
+})
+
+afterAll(() => {
+  delete (HTMLElement.prototype as unknown as { clientHeight?: number }).clientHeight
+})
+
 describe('项目页渲染冒烟', () => {
+  it('文件列表虚拟化：渲染于共享 VirtualList 容器；大列表只呈窗口行，不铺全量', async () => {
+    const many: FileNode[] = Array.from({ length: 60 }, (_, i) => ({
+      name: `f${i}.md`,
+      path: `docs/f${i}.md`,
+      type: 'file' as const
+    }))
+    installApi({ readTree: vi.fn(async (root?: string) => (root === '/b' ? TREE_B : many)) })
+    renderPage()
+    const first = await screen.findByRole('button', { name: '打开 docs/f0.md' })
+    expect(first).toBeTruthy()
+    expect(document.querySelector('.virtual-list')).toBeTruthy()
+    // 窗口上限 28 行 < 全量 60：尾段文件不在 DOM 中
+    expect(screen.queryByRole('button', { name: '打开 docs/f59.md' })).toBeNull()
+    expect(screen.queryByRole('button', { name: '打开 docs/f29.md' })).toBeNull()
+    expect(screen.queryByRole('button', { name: '打开 docs/f27.md' })).toBeTruthy()
+  })
+
   it('分组：当前组置顶带「当前」徽标且默认展开，其余组收起；非 md 不入列；零 React 告警', async () => {
     const console_ = captureRenderConsole()
     const { container } = renderPage()
