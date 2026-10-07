@@ -381,7 +381,11 @@ body :is(.title-bar, .sidebar, .activity-bar, .status-bar, .editor-toolbar, .pre
 
 /* ===== 文件树 ===== */
 
+/* 虚拟滚动容器：占满侧栏剩余高度，自行滚动 */
 .file-tree {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   padding: 6px 0;
 }
 
@@ -389,7 +393,10 @@ body :is(.title-bar, .sidebar, .activity-bar, .status-bar, .editor-toolbar, .pre
   display: flex;
   align-items: center;
   gap: 2px;
-  padding: 4px 8px;
+  /* 虚拟化要求固定行高：与 VirtualList itemHeight(26) 对齐 */
+  height: 26px;
+  box-sizing: border-box;
+  padding: 0 8px;
   cursor: pointer;
   white-space: nowrap;
   overflow: hidden;
@@ -419,12 +426,10 @@ body :is(.title-bar, .sidebar, .activity-bar, .status-bar, .editor-toolbar, .pre
   margin-right: 4px;
 }
 
-.struct-section {
-  margin-bottom: 6px;
-}
-
-.struct-title {
-  padding: 8px 14px 4px;
+/* 结构化视图的分区标题行：同为固定 26px 行（压平后不再有分组包裹层） */
+.tree-row.struct-title {
+  cursor: default;
+  padding: 0 14px;
   font-size: 11px;
   font-weight: 700;
   color: var(--text-muted);

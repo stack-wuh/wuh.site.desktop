@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { IconChevronDown, IconChevronRight, IconFile, IconFolder, IconFolderOpen } from './icons'
 import { AppIcon } from './ui/AppIcon'
 import { Empty } from './ui/Empty'
+import { VirtualList } from './ui/VirtualList'
 import type { FileNode } from '@shared/types'
 import {
   BLOG_PRESET,
@@ -10,6 +11,8 @@ import {
   type StructuredSection
 } from '@shared/structure'
 import { workspaceStore } from '../store'
+
+const ROW_HEIGHT = 26
 
 function isMarkdown(name: string): boolean {
   return name.endsWith('.md') || name.endsWith('.markdown')
@@ -23,102 +26,98 @@ function collectMarkdownPaths(nodes: FileNode[], out: string[] = []): string[] {
   return out
 }
 
-function Node(props: { node: FileNode; depth: number }): React.JSX.Element {
-  const { node, depth } = props
-  const [open, setOpen] = useState(depth < 2)
+/**
+ * 两个视图统一压平后的可见行。展开状态以 key 记录在 FileTree 层：
+ * 虚拟化后滚出屏幕的行会被卸载，状态不能存在行组件里。
+ */
+type TreeRow =
+  | { kind: 'dir'; key: string; name: string; depth: number; open: boolean }
+  | { kind: 'file'; key: string; path: string; name: string; depth: number; muted?: boolean }
+  | { kind: 'title'; key: string; label: string }
 
-  if (node.type === 'dir') {
+/** 初始展开：depth < 2 的目录，与旧行内 useState(depth < 2) 的行为一致 */
+function initialOpenKeys(nodes: FileNode[], depth = 0, out: Set<string> = new Set()): Set<string> {
+  for (const n of nodes) {
+    if (n.type !== 'dir') continue
+    if (depth < 2) {
+      out.add(n.path)
+      initialOpenKeys(n.children ?? [], depth + 1, out)
+    }
+  }
+  return out
+}
+
+function flattenTree(nodes: FileNode[], openKeys: Set<string>, depth = 0, out: TreeRow[] = []): TreeRow[] {
+  for (const n of nodes) {
+    if (n.type === 'dir') {
+      const open = openKeys.has(n.path)
+      out.push({ kind: 'dir', key: n.path, name: n.name, depth, open })
+      if (open) flattenTree(n.children ?? [], openKeys, depth + 1, out)
+    } else {
+      out.push({ kind: 'file', key: n.path, path: n.path, name: n.name, depth, muted: !isMarkdown(n.name) })
+    }
+  }
+  return out
+}
+
+function flattenSections(sections: StructuredSection[], openKeys: Set<string>): TreeRow[] {
+  const out: TreeRow[] = []
+  for (const section of sections) {
+    out.push({ kind: 'title', key: `section:${section.kind}`, label: section.title })
+    if (section.kind === 'other') {
+      for (const e of section.entries ?? []) {
+        out.push({ kind: 'file', key: e.path, path: e.path, name: e.name, depth: 1 })
+      }
+      continue
+    }
+    for (const g of section.groups ?? []) {
+      const key = `${section.kind}:${g.title}`
+      // years 组保持常开（与旧 StructuredView 一致，点击不收起）
+      const open = openKeys.has(key) || section.kind === 'years'
+      out.push({ kind: 'dir', key, name: g.title, depth: 0, open })
+      if (!open) continue
+      for (const e of g.entries) {
+        out.push({
+          kind: 'file',
+          key: e.path,
+          path: e.path,
+          name: section.kind === 'years' ? `${e.month ?? ''} / ${e.name}` : e.name,
+          depth: 2
+        })
+      }
+    }
+  }
+  return out
+}
+
+function Row(props: { row: TreeRow; onToggle: (key: string) => void }): React.JSX.Element {
+  const { row, onToggle } = props
+
+  if (row.kind === 'title') {
+    return <div className="tree-row struct-title" style={{ paddingLeft: 14 }}>{row.label}</div>
+  }
+
+  if (row.kind === 'dir') {
     return (
-      <div>
-        <div
-          className="tree-row dir"
-          style={{ paddingLeft: depth * 14 + 8 }}
-          onClick={() => setOpen((v) => !v)}
-        >
-          <span className="caret"><AppIcon icon={open ? IconChevronDown : IconChevronRight} size="xs" /></span>
-          <AppIcon icon={IconFolder} size="sm" className="tree-icon" />
-          {node.name}
-        </div>
-        {open && node.children?.map((child) => <Node key={child.path} node={child} depth={depth + 1} />)}
+      <div className="tree-row dir" style={{ paddingLeft: row.depth * 14 + 8 }} onClick={() => onToggle(row.key)}>
+        <span className="caret"><AppIcon icon={row.open ? IconChevronDown : IconChevronRight} size="xs" /></span>
+        <AppIcon icon={IconFolder} size="sm" className="tree-icon" />
+        {row.name}
       </div>
     )
   }
 
   return (
     <div
-      className={`tree-row file ${isMarkdown(node.name) ? '' : 'non-md'}`}
-      style={{ paddingLeft: depth * 14 + 22 }}
+      className={`tree-row file${row.muted ? ' non-md' : ''}`}
+      style={{ paddingLeft: row.depth * 14 + 22 }}
       onClick={() => {
-        if (isMarkdown(node.name)) void workspaceStore.openFile(node.path)
+        // muted = 非 Markdown（普通树）：与旧行为一致，点击不打开
+        if (!row.muted) void workspaceStore.openFile(row.path)
       }}
     >
       <AppIcon icon={IconFile} size="sm" className="tree-icon" />
-      {node.name}
-    </div>
-  )
-}
-
-function StructuredView(props: {
-  sections: StructuredSection[]
-  roots: FileNode[]
-}): React.JSX.Element {
-  const { sections } = props
-  const [openKeys, setOpenKeys] = useState<Set<string>>(new Set())
-
-  const toggle = (key: string): void =>
-    setOpenKeys((s) => {
-      const next = new Set(s)
-      if (next.has(key)) next.delete(key)
-      else next.add(key)
-      return next
-    })
-
-  const row = (path: string, name: string, depth: number): React.JSX.Element => (
-    <div
-      key={path}
-      className="tree-row file"
-      style={{ paddingLeft: depth * 14 + 22 }}
-      onClick={() => void workspaceStore.openFile(path)}
-    >
-      <AppIcon icon={IconFile} size="sm" className="tree-icon" />
-      {name}
-    </div>
-  )
-
-  return (
-    <div className="file-tree">
-      {sections.map((section) => (
-        <div key={section.kind} className="struct-section">
-          <div className="struct-title">{section.title}</div>
-          {section.kind === 'other'
-            ? section.entries?.map((e) => row(e.path, e.name, 1))
-            : section.groups?.map((g) => {
-                const key = `${section.kind}:${g.title}`
-                const open = openKeys.has(key) || section.kind === 'years'
-                return (
-                  <div key={key}>
-                    <div
-                      className="tree-row dir"
-                      style={{ paddingLeft: 8 }}
-                      onClick={() => toggle(key)}
-                    >
-                      <span className="caret"><AppIcon icon={open ? IconChevronDown : IconChevronRight} size="xs" /></span>
-                      <AppIcon icon={IconFolder} size="sm" className="tree-icon" />
-                      {g.title}
-                    </div>
-                    {open &&
-                      g.entries.map((e) =>
-                        row(
-                          e.path,
-                          section.kind === 'years' ? `${e.month ?? ''} / ${e.name}` : e.name,
-                          2
-                        )
-                      )}
-                  </div>
-                )
-              })}
-        </div>
-      ))}
+      {row.name}
     </div>
   )
 }
@@ -126,6 +125,7 @@ function StructuredView(props: {
 export function FileTree(): React.JSX.Element {
   const [tree, setTree] = useState<FileNode[] | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [openKeys, setOpenKeys] = useState<Set<string>>(new Set())
   const root = workspaceStore.get().root
 
   useEffect(() => {
@@ -133,7 +133,9 @@ export function FileTree(): React.JSX.Element {
     window.api
       .readTree()
       .then((nodes) => {
-        if (alive) setTree(nodes)
+        if (!alive) return
+        setTree(nodes)
+        setOpenKeys(initialOpenKeys(nodes))
       })
       .catch((err: unknown) => {
         if (alive) setError(err instanceof Error ? err.message : String(err))
@@ -142,6 +144,14 @@ export function FileTree(): React.JSX.Element {
       alive = false
     }
   }, [root])
+
+  const toggle = (key: string): void =>
+    setOpenKeys((s) => {
+      const next = new Set(s)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
 
   const sections = useMemo(() => {
     if (!tree) return null
@@ -155,6 +165,12 @@ export function FileTree(): React.JSX.Element {
       : null
   }, [tree])
 
+  // 压平只依赖展开状态，不随滚动重算；滚动只移动窗口
+  const rows = useMemo(() => {
+    if (!tree) return []
+    return sections ? flattenSections(sections, openKeys) : flattenTree(tree, openKeys)
+  }, [tree, sections, openKeys])
+
   if (error) return <div className="placeholder">读取失败：{error}</div>
   if (tree === null) {
     return (
@@ -165,13 +181,14 @@ export function FileTree(): React.JSX.Element {
       />
     )
   }
-  if (sections) return <StructuredView sections={sections} roots={tree} />
 
   return (
-    <div className="file-tree">
-      {tree.map((node) => (
-        <Node key={node.path} node={node} depth={0} />
-      ))}
-    </div>
+    <VirtualList
+      className="file-tree"
+      items={rows}
+      itemHeight={ROW_HEIGHT}
+      itemKey={(row) => row.key}
+      renderItem={(row) => <Row row={row} onToggle={toggle} />}
+    />
   )
 }
