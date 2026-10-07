@@ -8,8 +8,10 @@
  * 订阅 workspaceStore.root：工作区切换后重拉分组（「当前」徽标随迁，已加载树缓存复用）。
  * 点文件 = openProjectFile（脏确认 → 按需切工作区 → readFile → openDoc）→ router.push('/editor')，
  * 与 /projects 页共享同一打开流。空态（无工作区且无最近项目）给「打开目录」入口；失败经 role="alert" 行展示。
+ * 大仓库虚拟化（20261007-feature-virtual-projects-tree）：全部行压平进固定行高 VirtualList，
+ * 只渲染可见窗口；展开态本就持有在组件层 expanded Set（虚拟化卸载行不丢状态），行交互语义与既有保持一致。
  */
-import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import styled from 'styled-components'
 import type { FileNode } from '@shared/types'
@@ -25,8 +27,20 @@ import { openProjectFile } from '../../lib/projectOpen'
 import { useWorkspaceStore } from '../../lib/store'
 import { errText } from '../workspace/PickerShell'
 import { AppIcon } from '../ui/AppIcon'
+import { VirtualList } from '../ui/VirtualList'
 import { IconChevronRight, IconFile, IconFolderOpen } from '../icons'
 import { useLocale } from '../../lib/i18n/context'
+
+/** 固定行高：与 VirtualList itemHeight 严格一致，NodeRow/NoteRow CSS 同步收敛到该值 */
+const ROW_HEIGHT = 26
+
+/** 压平后的可见行：虚拟化后滚出屏幕的行会被卸载，行内不得自持状态（展开态在组件层 expanded Set） */
+type TreeRow =
+  | { kind: 'project'; key: string; group: ProjectGroup; open: boolean }
+  | { kind: 'dir'; key: string; root: string; path: string; name: string; depth: number; open: boolean }
+  | { kind: 'file'; key: string; group: ProjectGroup; path: string; name: string; depth: number }
+  | { kind: 'note'; key: string; label: string; depth: number; tone?: 'muted' | 'warning' | 'danger'; alert?: boolean }
+  | { kind: 'action'; key: string; label: string }
 
 /** 单个项目树的加载态：loading（首拉中）/ ready（剪枝后的含 .md 分支） */
 type ProjectTreeState = { status: 'loading' } | { status: 'ready'; nodes: FileNode[] }
@@ -39,12 +53,19 @@ const Wrap = styled.div`
   font-family: var(--font-sans);
 `
 
+/* 虚拟滚动容器：与 SideMenu TreeWrap 同口径高度封顶，自滚动（TreeWrap 本体不滚动，PluginTree 无感知）。
+   styled(VirtualList) 会把泛型折叠成 unknown（itemKey 参数丢类型），故封顶经 style prop 内联传递 */
+const SCROLL_STYLE: React.CSSProperties = { maxHeight: 'min(52vh, 560px)', overflowY: 'auto' }
+
 const NodeRow = styled.button<{ $depth: number }>`
   display: flex;
   align-items: center;
   gap: 5px;
   width: 100%;
-  padding: 4px 6px 4px ${(props) => 6 + props.$depth * 12}px;
+  /* 虚拟化要求固定行高（与 ROW_HEIGHT 对齐），缩进仍由 padding-left 承担 */
+  height: 26px;
+  box-sizing: border-box;
+  padding: 0 6px 0 ${(props) => 6 + props.$depth * 12}px;
   border: none;
   border-radius: var(--border-radius-sm);
   background: transparent;
@@ -96,8 +117,13 @@ const CurrentBadge = styled.span`
 `
 
 const NoteRow = styled.p<{ $depth: number; $tone?: 'muted' | 'warning' | 'danger' }>`
-  margin: 2px 0;
-  padding: 3px 6px 3px ${(props) => 6 + props.$depth * 12}px;
+  display: flex;
+  align-items: center;
+  /* 固定行高：旧版垂直 margin 收敛为统一行距，由行高承担 */
+  height: 26px;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0 6px 0 ${(props) => 6 + props.$depth * 12}px;
   font-family: var(--font-sans);
   font-size: 11px;
   overflow: hidden;
@@ -219,86 +245,121 @@ export function ProjectsTree(): React.JSX.Element | null {
     }
   }
 
-  const renderNodes = (g: ProjectGroup, nodes: FileNode[], depth: number): React.JSX.Element[] =>
-    nodes.map((n) => {
+  const flattenNodes = (g: ProjectGroup, nodes: FileNode[], depth: number, out: TreeRow[]): void => {
+    for (const n of nodes) {
       if (n.type === 'dir') {
         const key = folderNodeKey(g.root, n.path)
         const open = expanded.has(key)
+        out.push({ kind: 'dir', key, root: g.root, path: n.path, name: n.name, depth, open })
+        if (open) flattenNodes(g, n.children ?? [], depth + 1, out)
+      } else {
+        out.push({ kind: 'file', key: folderNodeKey(g.root, n.path), group: g, path: n.path, name: n.name, depth })
+      }
+    }
+  }
+
+  // 压平只依赖展开态与树缓存，不随滚动重算；滚动只移动窗口。
+  // t 参与压平（note/action 文案），随 locale 切换重算。
+  const rows = useMemo<TreeRow[]>(() => {
+    const out: TreeRow[] = []
+    if (groups == null) return out
+    for (const g of groups) {
+      const key = projectNodeKey(g.root)
+      const open = expanded.has(key)
+      out.push({ kind: 'project', key, group: g, open })
+      if (!open) continue
+      if (failed.has(g.root)) {
+        out.push({ kind: 'note', key: `${key}:unreachable`, label: t('projects.unreachable'), depth: 1, tone: 'warning' })
+        continue
+      }
+      const tree = trees[g.root]
+      if (tree == null || tree.status === 'loading') {
+        out.push({ kind: 'note', key: `${key}:loading`, label: t('projects.loading'), depth: 1 })
+        continue
+      }
+      if (tree.nodes.length === 0) {
+        out.push({ kind: 'note', key: `${key}:empty`, label: t('projects.groupEmpty'), depth: 1 })
+        continue
+      }
+      flattenNodes(g, tree.nodes, 1, out)
+    }
+    if (groups.length === 0) {
+      out.push({ kind: 'action', key: 'open-local', label: busy ? t('project.opening') : t('project.openLocal') })
+    }
+    if (error) {
+      out.push({ kind: 'note', key: 'error', label: error, depth: 0, tone: 'danger', alert: true })
+    }
+    return out
+  }, [groups, trees, expanded, failed, error, busy, t])
+
+  const renderRow = (row: TreeRow): React.JSX.Element => {
+    switch (row.kind) {
+      case 'project': {
+        const g = row.group
         return (
-          <Fragment key={key}>
-            <NodeRow
-              type="button"
-              $depth={depth}
-              aria-expanded={open}
-              onClick={() => toggleFolder(g.root, n.path)}
-            >
-              <Twirl $open={open}>
-                <AppIcon icon={IconChevronRight} size="xs" decorative />
-              </Twirl>
-              <AppIcon icon={IconFolderOpen} size="xs" decorative />
-              <NodeLabel title={n.path}>{n.name}</NodeLabel>
-            </NodeRow>
-            {open && renderNodes(g, n.children ?? [], depth + 1)}
-          </Fragment>
+          <NodeRow type="button" $depth={0} aria-expanded={row.open} onClick={() => toggleProject(g)}>
+            <Twirl $open={row.open}>
+              <AppIcon icon={IconChevronRight} size="xs" decorative />
+            </Twirl>
+            <AppIcon icon={IconFolderOpen} size="xs" decorative />
+            <NodeLabel title={g.root}>{g.name}</NodeLabel>
+            {g.current && <CurrentBadge>{t('projects.currentBadge')}</CurrentBadge>}
+          </NodeRow>
         )
       }
-      return (
-        <NodeRow
-          key={n.path}
-          type="button"
-          $depth={depth}
-          aria-label={t('projects.openFileAria', { path: n.path })}
-          title={n.path}
-          onClick={() => void onFile(g, n.path)}
-        >
-          <AppIcon icon={IconFile} size="xs" decorative />
-          <NodeLabel>{n.name}</NodeLabel>
-        </NodeRow>
-      )
-    })
+      case 'dir':
+        return (
+          <NodeRow
+            type="button"
+            $depth={row.depth}
+            aria-expanded={row.open}
+            onClick={() => toggleFolder(row.root, row.path)}
+          >
+            <Twirl $open={row.open}>
+              <AppIcon icon={IconChevronRight} size="xs" decorative />
+            </Twirl>
+            <AppIcon icon={IconFolderOpen} size="xs" decorative />
+            <NodeLabel title={row.path}>{row.name}</NodeLabel>
+          </NodeRow>
+        )
+      case 'file':
+        return (
+          <NodeRow
+            type="button"
+            $depth={row.depth}
+            aria-label={t('projects.openFileAria', { path: row.path })}
+            title={row.path}
+            onClick={() => void onFile(row.group, row.path)}
+          >
+            <AppIcon icon={IconFile} size="xs" decorative />
+            <NodeLabel>{row.name}</NodeLabel>
+          </NodeRow>
+        )
+      case 'action':
+        return (
+          <NodeRow type="button" $depth={0} disabled={busy} onClick={() => void openLocal()}>
+            <AppIcon icon={IconFolderOpen} size="xs" decorative />
+            <NodeLabel>{row.label}</NodeLabel>
+          </NodeRow>
+        )
+      case 'note':
+        return (
+          <NoteRow $depth={row.depth} $tone={row.tone} role={row.alert ? 'alert' : undefined}>
+            {row.label}
+          </NoteRow>
+        )
+    }
+  }
 
   return (
     <Wrap>
-      {(groups ?? []).map((g) => {
-        const key = projectNodeKey(g.root)
-        const open = expanded.has(key)
-        const tree = trees[g.root]
-        return (
-          <Fragment key={key}>
-            <NodeRow type="button" $depth={0} aria-expanded={open} onClick={() => toggleProject(g)}>
-              <Twirl $open={open}>
-                <AppIcon icon={IconChevronRight} size="xs" decorative />
-              </Twirl>
-              <AppIcon icon={IconFolderOpen} size="xs" decorative />
-              <NodeLabel title={g.root}>{g.name}</NodeLabel>
-              {g.current && <CurrentBadge>{t('projects.currentBadge')}</CurrentBadge>}
-            </NodeRow>
-            {open &&
-              (failed.has(g.root) ? (
-                <NoteRow $depth={1} $tone="warning" title={g.root}>
-                  {t('projects.unreachable')}
-                </NoteRow>
-              ) : tree == null || tree.status === 'loading' ? (
-                <NoteRow $depth={1}>{t('projects.loading')}</NoteRow>
-              ) : tree.nodes.length === 0 ? (
-                <NoteRow $depth={1}>{t('projects.groupEmpty')}</NoteRow>
-              ) : (
-                renderNodes(g, tree.nodes, 1)
-              ))}
-          </Fragment>
-        )
-      })}
-      {groups != null && groups.length === 0 && (
-        <NodeRow type="button" $depth={0} disabled={busy} onClick={() => void openLocal()}>
-          <AppIcon icon={IconFolderOpen} size="xs" decorative />
-          <NodeLabel>{busy ? t('project.opening') : t('project.openLocal')}</NodeLabel>
-        </NodeRow>
-      )}
-      {error && (
-        <NoteRow $depth={0} $tone="danger" role="alert">
-          {error}
-        </NoteRow>
-      )}
+      <VirtualList
+        style={SCROLL_STYLE}
+        items={rows}
+        itemHeight={ROW_HEIGHT}
+        itemKey={(row) => row.key}
+        renderItem={renderRow}
+      />
     </Wrap>
   )
 }
