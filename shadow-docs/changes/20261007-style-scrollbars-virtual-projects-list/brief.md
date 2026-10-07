@@ -4,7 +4,7 @@
   "name": "20261007-style-scrollbars-virtual-projects-list",
   "type": "style",
   "scope": "renderer-shell",
-  "status": "branched",
+  "status": "reviewed",
   "baseBranch": "main",
   "branch": "style/20261007-style-scrollbars-virtual-projects-list",
   "files": [
@@ -18,18 +18,18 @@
     "repository": null,
     "issue": null,
     "issueUrl": null,
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 149,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/149"
   },
   "review": {
-    "conclusion": "pending",
-    "verifiedCommit": null,
-    "verifiedAt": null
+    "conclusion": "passed",
+    "verifiedCommit": "c3024590ee95f42939ad47eb710def69017ba9a2",
+    "verifiedAt": "2026-10-07T16:36:29.663Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": null,
-    "planHash": "4c3cab297c8471c9372560db228fef2d68e242843975b3513722c9b158823e79",
+    "checkpoint": "pr:149",
+    "planHash": "77e9cf16bb08ae32c39d68a85b482a89929d1529e5867056acd26bcdb5c50505",
     "updatedAt": null,
     "lastError": null,
     "commit": null,
@@ -41,6 +41,7 @@
         "shadow-docs/changes/20261007-style-scrollbars-virtual-projects-list/brief.md",
         "shadow-docs/knowledge/renderer-virtual-list.md",
         "shadow-docs/knowledge/shell-chrome-design.md",
+        "shadow-docs/signals.md",
         "tests/globals-scrollbar.test.ts",
         "tests/projects-render.test.tsx"
       ],
@@ -48,6 +49,11 @@
       "title": "style(projects): 全应用隐藏滚动条 + 项目页文件列表虚拟滚动",
       "body": ""
     }
+  },
+  "knowledge": {
+    "action": "更新",
+    "target": "shadow-docs/knowledge/renderer-virtual-list.md,shadow-docs/knowledge/shell-chrome-design.md",
+    "reason": "滚动条隐藏策略与虚拟列表第二消费方均为长期事实,已按 norms 补 verified-depth/scope 并登记本 brief 为 source;另回写 3 条机器级信号(shadow-docs/signals.md 新建)"
   }
 }
 ---
@@ -92,6 +98,7 @@
 - 实际耗时: —
 - 验证: vitest 全量 638/639（唯一失败为 icon-build 重渲染用例在并行负载下 30s 超时，单跑 13.5s 过，与本次无关）；三配置 tsc 全过；CDP 驱动真实 Electron 窗口实测——blog 组 173 文件仅 18 行入 DOM、窗口 400px=10×40 行、滚动到底可达 README.md、全页无可见滚动条
 - 实机注意: 本机 swap 近满（9.2G 用 8.7G）引发 pnpm/tsc/vitest 随机 SIGSEGV，清理失控旧 dev 实例后重试即过；`next dev` 在 stdin EOF 时会静默自杀（Next 16 防孤儿机制），托管重启需挂持久 stdin
+- 交付: PR #149；用户确认本仓库无自动部署触发，合并即交付（分发靠本地打包），无需部署链审查
 
 ## 知识评估
 - **预期影响:** 更新
