@@ -76,6 +76,35 @@ describe('parseBlocks（行级块结构解析）', () => {
   it('空内容返回空数组', () => {
     expect(parseBlocks('')).toEqual([])
   })
+
+  it('frontmatter：文档起始块识别为首个块（0 起含闭合行），正文块紧随其后', () => {
+    const blocks = parseBlocks('---\ntitle: T\nlabels: [a]\n---\n\n# 正文')
+    expect(blocks).toEqual([
+      { kind: 'frontmatter', fromLine: 0, toLine: 3 },
+      { kind: 'heading', fromLine: 5, toLine: 5, level: 1 }
+    ])
+  })
+
+  it('frontmatter：未闭合回退源码态（首行仍按 hr，不作 frontmatter）', () => {
+    expect(parseBlocks('---\ntitle: T\n# 无闭合')).toEqual([
+      { kind: 'hr', fromLine: 0, toLine: 0 },
+      { kind: 'heading', fromLine: 2, toLine: 2, level: 1 }
+    ])
+  })
+
+  it('frontmatter：文档中部 --- 一律按 hr，不识别（仅认文档起始块）', () => {
+    expect(parseBlocks('前言\n---\ntitle: T\n---\n正文')).toEqual([
+      { kind: 'hr', fromLine: 1, toLine: 1 },
+      { kind: 'hr', fromLine: 3, toLine: 3 }
+    ])
+  })
+
+  it('frontmatter：YAML 不合法不作 frontmatter 块（与隐藏口径一致）', () => {
+    expect(parseBlocks('---\ntitle: [未闭合\n---\n正文')).toEqual([
+      { kind: 'hr', fromLine: 0, toLine: 0 },
+      { kind: 'hr', fromLine: 2, toLine: 2 }
+    ])
+  })
 })
 
 describe('selectionLineSet（光标行集合）', () => {

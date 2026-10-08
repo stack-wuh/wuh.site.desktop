@@ -32,6 +32,35 @@ export function parseFrontmatter(raw: string): { data: PostMeta; body: string } 
   }
 }
 
+export interface FrontmatterRange {
+  /** 起始行（0 起，含端点；头部块恒为 0） */
+  startLine: number
+  /** 闭合 `---` 所在行 */
+  endLine: number
+}
+
+/**
+ * 文档头 `---…---` 块的行区间（编辑器渲染态隐藏的唯一事实源）。
+ * 判定口径与 parseFrontmatter 严格同源：剥 BOM、首行恰为 `---`、
+ * 闭合取首个 `\n---`；缺失/未闭合返回 null（源码态回退，同 comment 先例）。
+ */
+export function frontmatterLineRange(raw: string): FrontmatterRange | null {
+  const text = raw.replace(/^\uFEFF/, '')
+  if (!/^---\r?\n/.test(text)) return null
+  const end = text.indexOf('\n---', 3)
+  if (end === -1) return null
+  try {
+    yaml.load(text.slice(4, end))
+  } catch {
+    return null
+  }
+  let endLine = 0
+  for (let i = 0; i <= end; i++) {
+    if (text[i] === '\n') endLine++
+  }
+  return { startLine: 0, endLine }
+}
+
 /** 序列化回 `---\n yaml \n---\n\n body` 结构（面板写回用） */
 export function stringifyFrontmatter(data: PostMeta, body: string): string {
   if (!data || Object.keys(data).length === 0) {

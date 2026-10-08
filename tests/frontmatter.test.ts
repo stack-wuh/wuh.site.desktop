@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   buildIssueBody,
+  frontmatterLineRange,
   parseFrontmatter,
   stringifyFrontmatter,
   toPublishFields,
@@ -82,6 +83,37 @@ describe('stringifyFrontmatter round-trip', () => {
 
   it('空 data 时仅返回正文', () => {
     expect(stringifyFrontmatter({}, '正文')).toBe('正文')
+  })
+})
+
+describe('frontmatterLineRange（文档头块行区间，装饰层隐藏的事实源）', () => {
+  it('闭合头部块返回起止行（0 起，含端点）', () => {
+    const raw = ['---', 'title: T', 'labels: [a]', '---', '', '# 正文'].join('\n')
+    expect(frontmatterLineRange(raw)).toEqual({ startLine: 0, endLine: 3 })
+  })
+
+  it('无头部块返回 null（首行非 --- 或未在行首）', () => {
+    expect(frontmatterLineRange('# 正文\n\na')).toBeNull()
+    expect(frontmatterLineRange('前言\n---\nb\n---')).toBeNull()
+    expect(frontmatterLineRange('')).toBeNull()
+  })
+
+  it('未闭合返回 null（源码态回退，同 comment 先例）', () => {
+    expect(frontmatterLineRange(['---', 'title: T', '# 无闭合'].join('\n'))).toBeNull()
+  })
+
+  it('YAML 不合法返回 null（与 parseFrontmatter 不剥离口径一致，源码态不隐藏）', () => {
+    expect(frontmatterLineRange(['---', 'title: [未闭合', '---', '', '正文'].join('\n'))).toBeNull()
+  })
+
+  it('CRLF 与 BOM 口径与 parseFrontmatter 一致', () => {
+    const crlf = '---\r\ntitle: T\r\nclose: 1\r\n---\r\n\r\n正文'
+    expect(frontmatterLineRange(crlf)).toEqual({ startLine: 0, endLine: 3 })
+    expect(frontmatterLineRange('\uFEFF' + crlf)).toEqual({ startLine: 0, endLine: 3 })
+    expect(frontmatterLineRange(['---', 'title: T', '---'].join('\n'))).toEqual({
+      startLine: 0,
+      endLine: 2
+    })
   })
 })
 

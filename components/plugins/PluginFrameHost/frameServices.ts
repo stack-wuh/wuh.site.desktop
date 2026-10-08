@@ -15,6 +15,7 @@ import {
 } from '@shared/plugin'
 import { uiConfirm } from '../../ui/Dialog'
 import { alert, message, toast } from '../../../lib/feedback'
+import { storedLocale } from '../../../lib/i18n/locales'
 import { workspaceStore } from '../../../lib/store'
 import {
   removeStatusItem,
@@ -83,6 +84,11 @@ async function svcUi(_pluginId: string, method: string, args: unknown[]): Promis
     const url = String(args[0] ?? '')
     if (/^https?:\/\//i.test(url)) window.open(url, '_blank', 'noopener')
     return null
+  }
+  // 宿主当前语言只读（20261007-feature-frontmatter-editor-hide）：非敏感信息，
+  // 与 ui.toast 等同为免权限能力；语言切换经 documentEvents('locale') 自动广播
+  if (method === 'locale') {
+    return storedLocale()
   }
   // 反馈提示三方法（toast/message/alert）：与宿主共用 lib/feedback 总线；
   // 入参经 shared 校验器钳制，频率护栏全 kind 共享额度（防插件刷屏）

@@ -8,6 +8,7 @@
  * - 大纲跳转把 parseOutline 的行号换算为标题行行首绝对偏移。
  */
 import { EditorSelection, type EditorState, type Text, type TransactionSpec } from '@codemirror/state'
+import { frontmatterLineRange } from '@shared/frontmatter'
 import { applyMarkdownInsert, type MarkdownInsertAction } from './store'
 import { INSERT_SNIPPETS, parseOutline } from './editor-info'
 
@@ -58,7 +59,16 @@ export function cmHeadingCursor(doc: Text, index: number): number | null {
 // 行级块结构 / 光标行集合 / 行内标记扫描——decorations 层（components/editor）
 // 的事实源，全部无 DOM 依赖可独立测试。
 
-export type BlockKind = 'heading' | 'quote' | 'fence' | 'list' | 'hr' | 'math' | 'table' | 'comment'
+export type BlockKind =
+  | 'heading'
+  | 'quote'
+  | 'fence'
+  | 'list'
+  | 'hr'
+  | 'math'
+  | 'table'
+  | 'comment'
+  | 'frontmatter'
 
 export interface BlockSpan {
   kind: BlockKind
@@ -88,13 +98,21 @@ const COMMENT_OPEN_RE = /^\s{0,3}<!--/
 
 /**
  * 行级块结构解析（与 parseOutline 同一围栏约定：围栏内一律视为围栏内容）。
- * `---` 统一按 hr 装饰（不区分 setext 下划线——装饰层语义差异可忽略）。
+ * `---` 统一按 hr 装饰（不区分 setext 下划线——装饰层语义差异可忽略）；
+ * 唯一例外是文档起始的 frontmatter 块——边界以 shared/frontmatter 的
+ * frontmatterLineRange 为事实源（与 parseFrontmatter 剥离口径一致），
+ * 未闭合/YAML 不合法一律不识别、回退源码态。
  */
 export function parseBlocks(content: string): BlockSpan[] {
   if (!content) return []
   const lines = content.split(/\r?\n/)
   const blocks: BlockSpan[] = []
   let i = 0
+  const fm = frontmatterLineRange(content)
+  if (fm && fm.startLine === 0) {
+    blocks.push({ kind: 'frontmatter', fromLine: 0, toLine: fm.endLine })
+    i = fm.endLine + 1
+  }
   while (i < lines.length) {
     const line = lines[i]
     const fence = line.match(FENCE_OPEN_RE)

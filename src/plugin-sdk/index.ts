@@ -144,7 +144,8 @@ export const PLUGIN_SDK_JS = `(function () {
       openExternal: function (url) { return call('ui', 'openExternal', [url]); },
       toast: function (opts) { return call('ui', 'toast', [opts || {}]); },
       message: function (opts) { return call('ui', 'message', [opts || {}]); },
-      alert: function (opts) { return call('ui', 'alert', [opts || {}]); }
+      alert: function (opts) { return call('ui', 'alert', [opts || {}]); },
+      locale: function () { return call('ui', 'locale'); }
     },
     statusBar: {
       update: function (id, patch) { return call('statusBar', 'update', [id, patch || {}]); },
@@ -248,6 +249,11 @@ export interface WuhApi {
       buttons?: { id: string; label?: string; variant?: 'primary' | 'danger' | 'ghost' }[]
       systemNotify?: boolean
     }): Promise<string>
+    /**
+     * 宿主当前语言只读（'zh' | 'en' | 'ja'）；语言切换时帧收
+     * wuh.on('locale', cb) 事件（payload { locale }）热切换文案
+     */
+    locale(): Promise<string>
   }
   statusBar: {
     /** 更新 manifest 声明的状态项内容（未声明的 id 会被宿主拒绝） */
