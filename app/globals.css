@@ -53,41 +53,18 @@ body {
   transition: none !important;
 }
 
-/* ===== 滚动条：站点同款 8px 主题色胶囊 ===== */
+/* ===== 滚动条：全应用隐藏（20261007 交互优化） =====
+   观感裁决：可见滚动条与纸面主题不符，一律不显示；滚动能力保留
+   （滚轮/触控板/键盘照常）。唯一收口在此处，组件层不得再写::-webkit-scrollbar 样式。 */
 
 * {
-  scrollbar-width: thin;
-  scrollbar-color: var(--primary-color) transparent;
+  scrollbar-width: none;
 }
 
 *::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-*::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-*::-webkit-scrollbar-thumb {
-  background: linear-gradient(
-    180deg,
-    var(--primary-color),
-    color-mix(in oklab, var(--primary-color) 78%, var(--accent-color))
-  );
-  border-radius: 8px;
-}
-
-*::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(
-    180deg,
-    color-mix(in oklab, var(--primary-color) 88%, #fff),
-    var(--primary-color)
-  );
-}
-
-*::-webkit-scrollbar-corner {
-  background: transparent;
+  width: 0;
+  height: 0;
+  display: none;
 }
 
 /* ===== 品牌标书写动效（IconLogo animated，入场一次） =====
