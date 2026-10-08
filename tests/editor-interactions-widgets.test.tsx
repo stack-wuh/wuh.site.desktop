@@ -48,11 +48,11 @@ function classesOf(set: DecorationSet): string[] {
 }
 
 describe('任务列表点选', () => {
-  it('渲染态出现可点选 checkbox，点击改写源码且保留其余内容', () => {
+  it('渲染态出现可点选 checkbox（任务行不再叠加圆点），点击改写源码且保留其余内容', () => {
     const doc = '- [ ] 待办事项\n- [x] 已完成'
     const { view, mount } = makeView(doc)
-    // 光标在文末 → 第二行保持源码态；第一行产出圆点(0-1)与任务框(2-5)
-    expect(widgetRanges(view.state.field(livePreviewField))).toEqual(['0-1', '2-5'])
+    // 光标在文末 → 第二行保持源码态；第一行任务框替换 `[ ]`（2-5），列表标记隐藏（非 widget）
+    expect(widgetRanges(view.state.field(livePreviewField))).toEqual(['2-5'])
 
     const box = mount.querySelector<HTMLElement>('.cm-live-taskbox')
     expect(box).not.toBeNull()
@@ -65,6 +65,25 @@ describe('任务列表点选', () => {
     expect(view.state.doc.toString()).toBe('- [ ] 待办事项\n- [x] 已完成')
     view.destroy()
     mount.remove()
+  })
+
+  it('链接渲染态隐藏 url（hover title 保留），源码不变', () => {
+    // 两行文档：光标固定在第二行，让第一行保持渲染态
+    const doc = '参见[站点](https://x.wuh.site/guide)说明\n第二行'
+    const { view } = makeView(doc, doc.length)
+    const live = view.state.field(livePreviewField)
+    // 隐藏装饰：[ ] ( ) 符号 ×4 + url 整段（7-29）
+    const hiddenRanges: string[] = []
+    let title: string | undefined
+    live.between(0, Number.MAX_SAFE_INTEGER, (from, to, value) => {
+      const spec = value.spec as { class?: string; attributes?: { title?: string } }
+      if (spec.class === 'cm-live-hidden') hiddenRanges.push(`${from}-${to}`)
+      if (spec.attributes?.title) title = spec.attributes.title
+    })
+    expect(hiddenRanges).toEqual(['2-3', '5-6', '6-7', '7-31', '31-32'])
+    expect(title).toBe('https://x.wuh.site/guide')
+    expect(view.state.doc.toString()).toBe(doc)
+    view.destroy()
   })
 
   it('光标行保持源码态（checkbox 不替换）', () => {

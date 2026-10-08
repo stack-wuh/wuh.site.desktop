@@ -50,7 +50,6 @@ const INLINE_CLASS: Record<string, string> = {
   code: 'cm-live-code',
   del: 'cm-live-del',
   linkText: 'cm-live-linktext',
-  linkUrl: 'cm-live-linkurl',
   footref: 'cm-live-footref'
 }
 
@@ -243,18 +242,11 @@ function buildDecorations(state: EditorState): DecorationSet {
         if (!m) continue
         const markFrom = line.from + m[1].length
         const markTo = markFrom + m[2].length
-        if (/[-*+]/.test(m[2])) {
-          decos.push({
-            from: markFrom,
-            to: markTo,
-            value: Decoration.replace({ widget: new BulletWidget() })
-          })
-        } else {
-          decos.push({ from: markFrom, to: markTo, value: markCls('cm-live-olnum') })
-        }
-        // GFM 任务标记：`[ ]`/`[x]` 替换为可点选 checkbox（改写走 toggleTaskLine 纯函数）
+        // GFM 任务行：隐藏列表标记，仅 checkbox 替换 `[x]`（不与圆点/序号叠加）
         const tm = TASK_MARK_RE.exec(line.text)
         if (tm) {
+          // tm[1] = 缩进+标记符+空格（长度 ≥2，恒非空），整段隐藏
+          decos.push({ from: line.from, to: line.from + tm[1].length, value: hidden })
           const boxFrom = line.from + tm[1].length
           decos.push({
             from: boxFrom,
@@ -263,6 +255,16 @@ function buildDecorations(state: EditorState): DecorationSet {
               widget: new TaskToggleWidget(line.number, tm[2] !== ' ')
             })
           })
+          continue
+        }
+        if (/[-*+]/.test(m[2])) {
+          decos.push({
+            from: markFrom,
+            to: markTo,
+            value: Decoration.replace({ widget: new BulletWidget() })
+          })
+        } else {
+          decos.push({ from: markFrom, to: markTo, value: markCls('cm-live-olnum') })
         }
       }
       continue
@@ -321,6 +323,27 @@ function buildDecorations(state: EditorState): DecorationSet {
             })
           })
         }
+        continue
+      }
+      // 链接：渲染态只留墨水下划文字；URL 隐藏进 hover title（Ctrl/Cmd+点击仍取源码 url）
+      if (style.kind === 'linkText') {
+        // style.to 即 `]` 位置：其后应为 `(url)`
+        const after = doc.sliceString(style.to, Math.min(doc.length, style.to + 1024))
+        const m = /^\]\(([^)\n]*)\)/.exec(after)
+        decos.push({
+          from: style.from,
+          to: style.to,
+          value: m
+            ? Decoration.mark({
+                class: 'cm-live-linktext',
+                attributes: { title: m[1] }
+              })
+            : markCls('cm-live-linktext')
+        })
+        continue
+      }
+      if (style.kind === 'linkUrl') {
+        decos.push({ from: style.from, to: style.to, value: hidden })
         continue
       }
       const cls = INLINE_CLASS[style.kind]

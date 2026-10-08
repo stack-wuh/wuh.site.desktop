@@ -184,20 +184,24 @@ export const editorTheme = EditorView.theme({
     background: 'color-mix(in oklab, var(--primary-color) 4%, transparent)'
   },
 
-  /* 图片：自然尺寸大图内联（解除 320px 上限，随行宽收敛），hover 浮起 */
+  /* 图片：自然尺寸大图内联（解除 320px 上限，随行宽收敛），hover 浮起。
+     包裹器必须显式 width:100%——inline-block 收缩_fit + 子元素 max-width:100%
+     的循环依赖会让 img 坍缩到 2px（20260927 实测） */
   '.cm-live-img': {
     position: 'relative',
     display: 'inline-block',
+    width: '100%',
     margin: '4px 0',
-    maxWidth: '100%'
+    textAlign: 'center'
   },
   '.cm-live-img img': {
-    display: 'block',
+    display: 'inline-block',
     maxWidth: '100%',
     height: 'auto',
     borderRadius: '8px',
     border: '1px solid color-mix(in oklab, var(--chrome-border) 55%, transparent)',
     boxShadow: 'var(--elevation-soft)',
+    cursor: 'zoom-in',
     transition: INK_TRANSITION
   },
   '.cm-live-img img:hover': {
@@ -272,10 +276,7 @@ export const editorTheme = EditorView.theme({
   '.cm-live-linktext:hover': {
     textDecorationColor: 'var(--primary-color)'
   },
-  '.cm-live-linkurl': {
-    color: 'var(--text-muted)',
-    fontSize: '12px'
-  },
+  /* 链接 url 在渲染态隐藏（hover title 提示 + Ctrl/Cmd+点击打开），不再显示原文 */
   '.cm-live-table': {
     background: 'color-mix(in oklab, var(--chrome-raised) 40%, transparent)',
     transition: INK_TRANSITION
