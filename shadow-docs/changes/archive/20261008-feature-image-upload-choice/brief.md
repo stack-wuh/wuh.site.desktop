@@ -4,7 +4,7 @@
   "name": "20261008-feature-image-upload-choice",
   "type": "feature",
   "scope": "image-host",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20261008-feature-image-upload-choice",
   "files": [
@@ -35,18 +35,18 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 151,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/151",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 152,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/152"
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "5b02d6c0c93d485aecf7001452f790a66e826803",
-    "verifiedAt": "2026-10-08T13:43:46.116Z"
+    "verifiedCommit": "95f20aab904f8c8dbcefc807c50a25ccab626661",
+    "verifiedAt": "2026-10-08T14:26:41.566Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:151",
-    "planHash": "337bcb12022a3c452d4d8329a26893bba8654349fe6e1e942a0041d2248aa3b2",
+    "checkpoint": "merged-pr:152",
+    "planHash": "3c20eb41d5ca64bbd112e30e9c00747faa931241b1b8eab94ce880ded5d5dedd",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -90,9 +90,9 @@
     }
   },
   "knowledge": {
-    "action": "更新",
-    "target": "shadow-docs/knowledge/editor.md",
-    "reason": "图片粘贴段现行结论被本变更扩展改写：savePastedImage 双链回传（markdownRef 恒本地 + remoteUrl），上传成功经 Message 横幅由用户选择远程/本地链接；新增 EditorCommand 词表项 insertImageFromFile/switchImageLinkForm、lib/editor-image-mapping.ts 会话映射与 imageSwitchAvailable 纯逻辑、components/ui/MenuPopover.tsx 共享下拉件（工具条与胶囊图片入口）——均为 editor.md scope（components/editor, lib/editor-cm, lib/editor-commands, src/main/images.ts）内长期有效事实，卡片须同步（含对 20261007「成功换远程 URL」旧决策的有意反转声明）"
+    "action": "无需变更",
+    "target": null,
+    "reason": "知识闭环已在 release 阶段落实（editor.md 双链回传/选择链/MenuPopover/会话映射结论 + source/verified 更新、menu 路由补词），随 PR #152 合入 main——本次 HEAD 复核不产生新增长期事实"
   }
 }
 ---
@@ -174,8 +174,8 @@
 
 ## 结果
 
-- 实际耗时: —
-- 验证: —
+- 实际耗时: 约 14 小时挂钟（08:00–22:05 本机时区，含等待与用户验收间隙；AI 连续执行段约 2.5 小时，另有约 1 小时耗在未知晓既有 V8 绕行配方时的随机 SIGSEGV 重试上——见验证备查）
+- 验证: 完整 TDD 19 新用例全程先红后绿（composePasteResult 双链契约/`.assets` 归属守卫、picker 白名单复用、findImageAtPos/findImageOnLine/rewriteImageRef 纯逻辑、会话映射与 imageSwitchAvailable、MenuPopover 开合/Esc/点外关/焦点归还四行为、工具条菜单发布与禁用态、tasks.upsert 上报链、datalist 守卫）；`vitest run` 全量 **75 文件 / 687 用例全绿**（node 22.23.2 + `--v8-pool-size=0 --no-concurrent-marking --no-concurrent-sweeping --no-file-parallelism` 配方一次通过，命令 `mise exec -- node … node_modules/vitest/vitest.mjs run --no-file-parallelism`）；三 tsconfig `--noEmit` **EXIT=0**（node/tests 走 `--jitless --single-threaded`，next 走 `--jitless --single-threaded --v8-pool-size=0`）；`electron-vite build` 成功（main 511.64 kB + preload 4.90 kB）；`pnpm dev` 冷启动冒烟（Electron 主进程存活、无帧加载/握手错误，唯一噪声为既有主题 hydration mismatch）；用户实机走查通过（横幅两选/反切/菜单/任务胶囊/明暗，2026-10-08）。验证备查：本机默认 node 24.19 V8 随机 SIGSEGV 为已记录事实（renderer-shell-routing「Node 工具链钉定」），本次初期未命中该卡致大量重试——配方后一次通过，佐证卡片绕行有效；`next build` page-data 7-worker SIGSEGV 在配方下仍复现，属打包链环境问题（非本变更范围，见卡片历史注「dist 脚本包装缓解已丢失」），交付发布委托用户侧执行。
 
 ## 知识评估
 

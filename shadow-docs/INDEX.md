@@ -76,3 +76,4 @@
 | 20261007-fix-image-host-settings-ux | branched | shadow-docs/changes/20261007-fix-image-host-settings-ux/brief.md |
 | 20261007-fix-shell-page-scroll | branched | shadow-docs/changes/20261007-fix-shell-page-scroll/brief.md |
 | 20261007-style-scrollbars-virtual-projects-list | ✅ 完成 | shadow-docs/changes/archive/20261007-style-scrollbars-virtual-projects-list/brief.md |
+| 20261008-feature-image-upload-choice | ✅ 完成 | shadow-docs/changes/archive/20261008-feature-image-upload-choice/brief.md |
