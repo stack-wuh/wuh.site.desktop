@@ -10,8 +10,14 @@ body {
   padding: 12px;
 }
 
-.frontmatter-panel.empty {
-  opacity: 0.6;
+/* 空态提示条：虚线框次级文本（20261007-feature-frontmatter-editor-hide 空态引导；
+   替代旧的整面板 opacity 压暗——「创建」按钮需保持正常可点视觉） */
+.fm-empty-hint {
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border: 1px dashed var(--chrome-border);
+  border-radius: var(--border-radius-sm);
+  color: var(--text-secondary);
 }
 
 .fm-row {

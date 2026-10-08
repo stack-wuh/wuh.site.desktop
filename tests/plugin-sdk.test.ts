@@ -32,4 +32,8 @@ describe('PLUGIN_SDK_JS', () => {
     expect(PLUGIN_SDK_JS).toContain("call('ui', 'message'")
     expect(PLUGIN_SDK_JS).toContain("call('ui', 'alert'")
   })
+
+  it('暴露 wuh.locale()（ui.locale 帧服务只读）与 locale 事件名（20261007-feature-frontmatter-editor-hide）', () => {
+    expect(PLUGIN_SDK_JS).toContain("locale: function () { return call('ui', 'locale')")
+  })
 })

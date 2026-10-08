@@ -6,6 +6,7 @@
  * hydration mismatch；启动切换瞬间的中文闪帧由 splash 窗覆盖，运行时切换即时生效。
  */
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
+import { documentEvents } from '../store'
 import { defaultLocale, locales, type Locale } from './locales'
 
 const STORAGE_KEY = 'wd.locale'
@@ -63,6 +64,9 @@ export function LocaleProvider(props: { children: ReactNode }): React.JSX.Elemen
     } catch {
       // 忽略持久化失败（与 ThemeProvider 同语义）
     }
+    // 既有事件通道透传至插件帧（wireHostOnce 订阅 documentEvents → broadcast）：
+    // 帧经 wuh.on('locale') 热切换文案（20261007-feature-frontmatter-editor-hide）
+    documentEvents.emit('locale', { locale: next })
   }, [])
 
   const t = useCallback<Translate>((key, params) => translate(locale, key, params), [locale])

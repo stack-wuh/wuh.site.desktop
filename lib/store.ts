@@ -29,7 +29,13 @@ export interface WorkspaceState {
 
 // ---------- 文档生命周期事件（插件 documentHooks 的事件源） ----------
 
-export type DocEventName = 'doc.opened' | 'doc.saved' | 'doc.changed' | 'doc.closed' | 'workspace'
+export type DocEventName =
+  | 'doc.opened'
+  | 'doc.saved'
+  | 'doc.changed'
+  | 'doc.closed'
+  | 'workspace'
+  | 'locale'
 type DocEventListener = (name: DocEventName, payload: Record<string, unknown>) => void
 
 const docListeners = new Set<DocEventListener>()

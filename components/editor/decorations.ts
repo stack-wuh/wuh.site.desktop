@@ -57,6 +57,25 @@ const INLINE_CLASS: Record<string, string> = {
 /** 任务列表行：列表标记后的 `[ ]`/`[x]`/`[X]`（改写经 toggleTaskLine，Phase 1 纯逻辑） */
 const TASK_MARK_RE = /^(\s*(?:[-*+]|\d{1,9}[.)])\s+)\[([ xX])\]/
 
+/** 文档头 frontmatter 完全隐藏（20261007-feature-frontmatter-editor-hide）：
+ * 零尺寸块替换、无占位呈现——展示与修改由 Frontmatter 插件视图承担 */
+class FrontmatterHiddenWidget extends WidgetType {
+  eq(): boolean {
+    return true
+  }
+
+  toDOM(): HTMLElement {
+    const el = document.createElement('div')
+    el.className = 'cm-live-fm-hidden'
+    el.setAttribute('aria-hidden', 'true')
+    return el
+  }
+
+  ignoreEvent(): boolean {
+    return true
+  }
+}
+
 interface Deco {
   from: number
   to: number
@@ -172,6 +191,24 @@ function buildDecorations(state: EditorState): DecorationSet {
           const closeLine = doc.line(closeLineNo + 1)
           decos.push({ from: closeLine.from, to: closeLine.to, value: hidden })
         }
+      }
+      continue
+    }
+
+    if (block.kind === 'frontmatter') {
+      // 文档头 frontmatter：光标未触及整块完全隐藏（字节不动，展示/修改在 Frontmatter 插件）；
+      // 光标进入浮现源码（editor.md「光标触及行保持源码态」设计语义）
+      if (!cursorTouches) {
+        const first = doc.line(block.fromLine + 1)
+        const last = doc.line(block.toLine + 1)
+        // 替换须吞掉闭合行后的换行符——否则残留空 view-line（视觉空行）；
+        // 闭合行即末行时无换行可吞，钳到文档末尾
+        decos.push({
+          from: first.from,
+          to: Math.min(last.to + 1, doc.length),
+          value: Decoration.replace({ widget: new FrontmatterHiddenWidget(), block: true })
+        })
+        spanLines.forEach((n) => replacedLines.add(n))
       }
       continue
     }

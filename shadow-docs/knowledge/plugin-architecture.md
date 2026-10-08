@@ -1,8 +1,8 @@
 ---
 title: 插件系统架构（loader/批准/重载）
 domain: plugin
-keywords: [插件, plugin, manifest, loader, 启用, 停用, 批准, approvals, resolveApproval, reload, 重载, revealDir, plugin-state, broker, 沙箱, 帧, 握手, ready, corsEnabled, 协议注册]
-scope: [src/main/plugins, src/main/schemes.ts, src/shared/plugin.ts, src/plugin-sdk, src/preload/index.ts]
+keywords: [插件, plugin, manifest, loader, 启用, 停用, 批准, approvals, resolveApproval, reload, 重载, revealDir, plugin-state, broker, 沙箱, 帧, 握手, ready, corsEnabled, 协议注册, locale, ui.locale]
+scope: [src/main/plugins, src/main/schemes.ts, src/shared/plugin.ts, src/plugin-sdk, src/preload/index.ts, components/plugins/PluginFrameHost]
 status: active
 source:
   - changes/archive/20260915-feature-desktop-plugin-system/brief.md
@@ -10,9 +10,10 @@ source:
   - changes/20260921-refactor-renderer-nextjs/brief.md
   - changes/20260921-fix-plugin-frame-scheme-cors/brief.md
   - changes/20260924-feature-git-history-capsule/brief.md
-verified: 2026-09-27
+  - changes/20261007-feature-frontmatter-editor-hide/brief.md
+verified: 2026-10-08
 verified-depth: unit
-verified-scope: components/plugins/PluginFrameHost/frameProtocol.ts, components/plugins/PluginFrameHost/frameServices.ts, tests/frame-services.test.tsx
+verified-scope: components/plugins/PluginFrameHost/frameProtocol.ts, components/plugins/PluginFrameHost/frameServices.ts, tests/frame-services.test.tsx；20261007 增：ui.locale 帧服务路由用例 + LocaleProvider→documentEvents('locale') 组件测试 + SDK 源码 guard 绿（帧内 locale 热切换实机走查留用户实例）
 ---
 
 # 插件系统架构（loader/批准/重载）
@@ -21,6 +22,8 @@ verified-scope: components/plugins/PluginFrameHost/frameProtocol.ts, components/
 
 **帧宿主分层（20260927-refactor-frame-protocol-split）**：`components/plugins/PluginFrameHost/` 分两层——协议层 `frameProtocol.ts`（帧生命周期/握手/接线/代际与就绪信号/会话状态拓扑）与能力调用服务层 `frameServices.ts`（handleFrameInvoke 按八 service 路由：权限裁决/参数钳制/写通注册表），服务层经协议层的内部访问器（sessionOf/requirePermission/currentDocState）回读状态；协议 kind/service 词表与对外导出面（index）跨层不变。statusBar/capsule 等注册表对未声明条目按「声明制守卫」抛错（非静默）。
 插件 = 目录 + `plugin.json` manifest（经 `src/shared/plugin.ts` 的 `validateManifest` 严格校验）。主进程 loader（`src/main/plugins/loader.ts`）扫描双目录——内置 `app.getAppPath()/plugins/` 与 `userData/plugins/`（第三方），先扫到的同 id 保留，校验失败目录进 `problems`。
+
+**宿主语言通道（20261007-feature-frontmatter-editor-hide）**：帧服务 `ui.locale`（invoke 只读，返回渲染层 `storedLocale()`）与 `ui.toast/confirm` 同族——svcUi 层免权限能力，**不进主进程 CAPABILITY_METHODS broker 白名单**（该表白名单只管 cap 服务的 DesktopApi 方法）。语言切换广播复用 `documentEvents` 既有透传通道：`LocaleProvider.setLocale → documentEvents.emit('locale', { locale })` → wireHostOnce 自动 `broadcast` 到全部帧 → SDK `wuh.on('locale', cb)`；`DocEventName` 联合（lib/store.ts）是事件名唯一注册点，插件帧按事件名隔离消费。新增非敏感宿主只读状态一律走此 svcUi + documentEvents 模式，禁止为单插件开特例通道。
 
 **状态单一源**：`userData/plugin-state.json` = `{ disabled: string[], approvals: Record<插件id, 权限快照[]> }`。
 
@@ -43,6 +46,7 @@ verified-scope: components/plugins/PluginFrameHost/frameProtocol.ts, components/
 - 新增插件能力必须先进 `CAPABILITY_METHODS` 白名单并绑定权限词表，禁止为单插件开特例通道
 - manifest `logic` 约定为经典脚本语义（顶层 await 允许；运行于沙箱 allow-scripts 不透明源帧）
 - 消息协议 kind（hello/ready/invoke/result/event/request/response）变更须同步 shared 类型、SDK 字符串与帧宿主三方
+- 宿主只读状态类帧能力（如 ui.locale）走 svcUi 免权限通道 + documentEvents 广播（事件名先入 `DocEventName`），不进 CAPABILITY_METHODS（那是主进程 broker 专属），不为单插件开特例
 - 受特权 scheme 表（`src/main/schemes.ts`）是协议能力的唯一声明点：改特权位（尤其 `corsEnabled`）必须同步 `tests/plugin-schemes.test.ts`，并回到帧内实机验证握手是否就绪
 - `protocol.handle` 的 scheme 不得带尾冒号；插件视图 HTML 必须自带 sdk 脚本标签；逻辑帧走经典脚本对 + 绝对逻辑入口 URL；帧握手定时器随 closeFrame 取消且只关自己（2026-09-25 三层修复，见「协议注册与 SDK 下发」段）
 

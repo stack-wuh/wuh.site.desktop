@@ -113,6 +113,11 @@ describe('ui 服务与反馈护栏', () => {
     await expect(handleFrameInvoke('demo', 'ui', 'selfDestruct', [])).rejects.toThrow('未知 UI 方法')
   })
 
+  it('ui.locale 返回宿主当前语言（storedLocale 只读，免权限）（20261007-feature-frontmatter-editor-hide）', async () => {
+    await bootstrap()
+    expect(await handleFrameInvoke('demo', 'ui', 'locale', [])).toBe('zh')
+  })
+
   it('频率护栏：10s 窗口内超限的 toast 被拒（额度全 kind 共享，含本文件前序用例消耗）', async () => {
     await bootstrap()
     let rejected = false
