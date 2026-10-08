@@ -85,9 +85,12 @@ export function workspaceRelativePath(root: string, absPath: string): string | n
 export interface SavedImage {
   /** 图片相对工作区根的路径 */
   relPath: string
-  /** 插入 Markdown 的相对引用，如 ./xxx.assets/img.png；OSS 上传成功时为远程 URL */
+  /** 插入 Markdown 的引用：恒为本地相对路径（如 ./xxx.assets/img.png，所见即所存）；
+   * 远程链接只在用户经 Message 横幅选择后由渲染层替换（20261008-feature-image-upload-choice） */
   markdownRef: string
-  /** 仅当 uploadMode=oss 尝试上传失败时为 false（已回退本地引用）；本地模式与成功路径不携带 */
+  /** 上传成功得到的远程外链；缺省 = 未启用上传或失败 */
+  remoteUrl?: string
+  /** 尝试上传且失败时为 false（渲染层提示图床不可用）；本地模式与成功路径不携带 */
   uploaded?: boolean
 }
 
@@ -382,6 +385,17 @@ export interface DesktopApi {
    */
   pickSaveLocation(opts?: SaveDialogOptions): Promise<SaveDialogResult>
   savePastedImage(docRelPath: string, originalName: string, base64: string): Promise<SavedImage>
+  /**
+   * 导入本会话 picker 白名单内的图片文件到当前文档同名 `.assets/` 并按 uploadMode 尝试上传，
+   * 返回与粘贴同形的 SavedImage（markdownRef 恒本地、remoteUrl 由用户选择）。
+   * 白名单外的路径直接拒绝（宿主专用，不进 CAPABILITY_METHODS）。
+   */
+  saveImageFromPickedPath(docRelPath: string, srcAbsPath: string): Promise<SavedImage>
+  /**
+   * 上传已落盘的文档资产图片（远程链接反切本地后再次上链）：refRelPath 必须位于
+   * 当前文档同名 `<stem>.assets/` 内（isAssetsRefOfDoc 守卫），复用 uploadMode 路由。
+   */
+  uploadExistingAsset(docRelPath: string, refRelPath: string): Promise<UploadResult>
   /** 原生多选图片文件（宿主与 image-host 插件共用；选中路径登记上传白名单） */
   pickImages(): Promise<PickedPathsResult>
   /** 原生目录选择（目录登记上传白名单，其内文件可被 uploadImages 引用） */

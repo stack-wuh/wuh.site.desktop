@@ -1,11 +1,22 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { EditorSelection, EditorState } from '@codemirror/state'
 import {
   cmApplyFormat,
   cmExternalContent,
   cmHeadingCursor,
-  cmInsertSnippet
+  cmInsertSnippet,
+  findImageAtPos,
+  findImageOnLine,
+  rewriteImageRef
 } from '../lib/editor-cm'
+import {
+  entryForRemote,
+  imageSwitchAvailable,
+  rememberImageLink,
+  remoteForLocalRef,
+  resetImageLinksForTests,
+  resolveRefRelPath
+} from '../lib/editor-image-mapping'
 
 /**
  * CM6 命令适配层（20260922-refactor-codemirror-editor）：胶囊命令 → CM6
@@ -116,6 +127,95 @@ describe('cmHeadingCursor（大纲跳转定位）', () => {
   it('序号越界返回 null（调用方不消费）', () => {
     expect(cmHeadingCursor(doc, 2)).toBeNull()
     expect(cmHeadingCursor(doc, -1)).toBeNull()
+  })
+})
+
+// ---------- 图片链接反查与改写（20261008-feature-image-upload-choice） ----------
+
+const IMG_DOC = 'intro\n![cat](./p.assets/cat.png) tail\n![dog](https://cdn.example.com/dog.png)'
+
+describe('findImageAtPos / findImageOnLine / rewriteImageRef（图片定位与改写 · 纯逻辑）', () => {
+  it('T6 图片整体区间内命中：返回整段与 ref 区间（本地与远程 ref 同形）', () => {
+    const start = IMG_DOC.indexOf('![cat]')
+    const span = findImageAtPos(IMG_DOC, start + 3)
+    expect(span).not.toBeNull()
+    expect(span?.ref).toBe('./p.assets/cat.png')
+    expect(IMG_DOC.slice(span!.from, span!.to)).toBe('![cat](./p.assets/cat.png)')
+    expect(IMG_DOC.slice(span!.refFrom, span!.refTo)).toBe('./p.assets/cat.png')
+
+    const remoteStart = IMG_DOC.indexOf('![dog]')
+    expect(findImageAtPos(IMG_DOC, remoteStart)?.ref).toBe('https://cdn.example.com/dog.png')
+
+    // 行内变体（胶囊/工具条按光标行反查）
+    const line = '![cat](./p.assets/cat.png) tail'
+    const inLine = findImageOnLine(line)
+    expect(inLine).not.toBeNull()
+    expect(line.slice(inLine!.refFrom, inLine!.refTo)).toBe('./p.assets/cat.png')
+  })
+
+  it('T7 链接/普通文本/越界返回 null（图片整段原子不算链接，反之亦然）', () => {
+    const linkText = 'see [hello](https://x.dev) now'
+    expect(findImageAtPos(linkText, linkText.indexOf('hello'))).toBeNull()
+    expect(findImageAtPos(IMG_DOC, IMG_DOC.indexOf('intro'))).toBeNull()
+    expect(findImageAtPos(IMG_DOC, -1)).toBeNull()
+    expect(findImageAtPos(IMG_DOC, IMG_DOC.length)).toBeNull()
+    expect(findImageOnLine('just text')).toBeNull()
+  })
+
+  it('T8 rewriteImageRef 仅替换 ref 区间，其余字节保真', () => {
+    const doc = 'a\n![cat](./p.assets/cat.png)\nb'
+    const state = stateOf(doc, 0, 0)
+    const span = findImageAtPos(doc, doc.indexOf('![cat]'))!
+    const next = applyDoc(state, rewriteImageRef(span, 'https://cdn.example.com/cat.png'))
+    expect(next.doc.toString()).toBe('a\n![cat](https://cdn.example.com/cat.png)\nb')
+  })
+})
+
+describe('图片链接会话映射（editor-image-mapping · 远程↔本地反切事实源）', () => {
+  beforeEach(() => resetImageLinksForTests())
+
+  it('T9 登记后双向查找；跨文档同名相对引用不串台；resolveRefRelPath 口径', () => {
+    rememberImageLink({
+      docRelPath: 'docs/post.md',
+      localRef: './post.assets/a.png',
+      relPath: 'docs/post.assets/a.png',
+      remoteUrl: 'https://c/a.png'
+    })
+    expect(remoteForLocalRef('docs/post.md', './post.assets/a.png')?.remoteUrl).toBe('https://c/a.png')
+    expect(entryForRemote('https://c/a.png')?.localRef).toBe('./post.assets/a.png')
+    expect(remoteForLocalRef('other/post.md', './post.assets/a.png')).toBeNull()
+    expect(resolveRefRelPath('docs/post.md', './post.assets/a.png')).toBe('docs/post.assets/a.png')
+    expect(resolveRefRelPath('post.md', './post.assets/a.png')).toBe('post.assets/a.png')
+    expect(resolveRefRelPath('docs/post.md', 'https://c/a.png')).toBeNull()
+    expect(resolveRefRelPath('docs/post.md', '../evil/a.png')).toBeNull()
+  })
+
+  it('T10 未知查询与重置后返回 null', () => {
+    rememberImageLink({
+      docRelPath: 'docs/post.md',
+      localRef: './post.assets/a.png',
+      relPath: 'docs/post.assets/a.png',
+      remoteUrl: 'https://c/a.png'
+    })
+    expect(entryForRemote('https://nope.example.com/x.png')).toBeNull()
+    expect(remoteForLocalRef('docs/post.md', './post.assets/z.png')).toBeNull()
+    resetImageLinksForTests()
+    expect(remoteForLocalRef('docs/post.md', './post.assets/a.png')).toBeNull()
+    expect(entryForRemote('https://c/a.png')).toBeNull()
+  })
+
+  it('T19 imageSwitchAvailable：光标行本地图片恒可切远程；远程图片须有会话映射才可切回', () => {
+    expect(imageSwitchAvailable('text\n![a](./p.assets/a.png)', 1)).toBe(true)
+    expect(imageSwitchAvailable('text\n![a](https://c/a.png)', 1)).toBe(false)
+    rememberImageLink({
+      docRelPath: 'docs/p.md',
+      localRef: './p.assets/a.png',
+      relPath: 'docs/p.assets/a.png',
+      remoteUrl: 'https://c/a.png'
+    })
+    expect(imageSwitchAvailable('![a](https://c/a.png)', 0)).toBe(true)
+    expect(imageSwitchAvailable('plain line', 0)).toBe(false)
+    expect(imageSwitchAvailable('', 3)).toBe(false)
   })
 })
 

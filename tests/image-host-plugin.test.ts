@@ -40,6 +40,7 @@ interface PublishedEvent {
 interface MockWuh {
   published: PublishedEvent[]
   capCalls: { method: string; args: unknown[] }[]
+  tasks: { id: string; patch: Record<string, unknown> }[]
   dispatch: (env: { type: string; payload: unknown }) => Promise<void>
 }
 
@@ -47,6 +48,7 @@ async function runLogicSource(uploads: Array<{ ok: boolean; url?: string; error?
   const src = readFileSync(join(pluginRoot, 'logic/upload.js'), 'utf8')
   const published: PublishedEvent[] = []
   const capCalls: { method: string; args: unknown[] }[] = []
+  const tasks: { id: string; patch: Record<string, unknown> }[] = []
   let handler: ((env: { type: string; payload: unknown }) => void) | null = null
   const queue = [...uploads]
   const wuh = {
@@ -65,6 +67,12 @@ async function runLogicSource(uploads: Array<{ ok: boolean; url?: string; error?
         return next ? [next] : [{ ok: false, error: '上传能力无返回' }]
       }
     },
+    tasks: {
+      upsert: async (id: string, patch: Record<string, unknown>): Promise<void> => {
+        tasks.push({ id, patch })
+      },
+      remove: async (): Promise<void> => undefined
+    },
     on: (name: string, cb: (env: { type: string; payload: unknown }) => void): void => {
       if (name === 'event') handler = cb
     }
@@ -79,7 +87,7 @@ async function runLogicSource(uploads: Array<{ ok: boolean; url?: string; error?
       await new Promise((r) => setTimeout(r, 2))
     }
   }
-  return { published, capCalls, dispatch }
+  return { published, capCalls, tasks, dispatch }
 }
 
 describe('image-host manifest 契约', () => {
@@ -148,5 +156,38 @@ describe('image-host 逻辑帧编排（mock wuh 驱动真实源码）', () => {
     await mock.dispatch({ type: 'image-host:start', payload: { paths: [], prefix: null } })
     expect(mock.capCalls).toHaveLength(0)
     expect(mock.published.find((e) => e.name === 'finish')?.payload).toEqual({ total: 0, okCount: 0, failCount: 0 })
+    expect(mock.tasks).toHaveLength(0) // 空批次不建任务
+  })
+
+  it('T17 批量上传上报任务中心：首报 in_progress 带进度、逐文件推进、完成转 done', async () => {
+    const mock = await runLogicSource([
+      { ok: true, url: 'https://cdn.example.com/a.png' },
+      { ok: false, error: 'boom' }
+    ])
+    await mock.dispatch({ type: 'image-host:start', payload: { paths: ['/x/a.png', '/x/b.png'], prefix: null } })
+
+    expect(mock.tasks.length).toBeGreaterThanOrEqual(3)
+    const ids = new Set(mock.tasks.map((t) => t.id))
+    expect(ids.size).toBe(1) // 同批次同任务 id
+
+    const first = mock.tasks[0]
+    expect(first.patch.title).toBe('图床批量上传') // 首报创建带 title（运行时动态任务契约）
+    expect(first.patch.status).toBe('in_progress')
+    expect(first.patch.progress).toEqual({ current: 0, total: 2 })
+
+    const inProgress = mock.tasks.filter((t) => t.patch.status === 'in_progress')
+    expect(inProgress[inProgress.length - 1].patch.progress).toEqual({ current: 2, total: 2 })
+
+    const last = mock.tasks[mock.tasks.length - 1]
+    expect(last.patch.status).toBe('done')
+    expect(last.patch.progress).toEqual({ current: 2, total: 2 })
+  })
+})
+
+describe('image-host 面板前缀下拉（20261008-feature-image-upload-choice）', () => {
+  it('T18 前缀输入配常用前缀下拉（datalist，会话历史 + 自由输入不封死）', () => {
+    const src = readFileSync(join(pluginRoot, 'view/view.js'), 'utf8')
+    expect(src).toContain('datalist')
+    expect(src).toMatch(/setAttribute\(\s*['"]list['"]/)
   })
 })

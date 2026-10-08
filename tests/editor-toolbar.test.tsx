@@ -48,6 +48,21 @@ function clickAndCollect(name: string): EditorCommand[] {
   return seen
 }
 
+/** 订阅收集 → 点 role=menuitem → 退订（图片下拉菜单项） */
+function clickMenuAndCollect(name: string): EditorCommand[] {
+  const seen: EditorCommand[] = []
+  const off = subscribeEditorCommands((command) => {
+    seen.push(command)
+    return true
+  })
+  try {
+    fireEvent.click(screen.getByRole('menuitem', { name }))
+  } finally {
+    off()
+  }
+  return seen
+}
+
 describe('EditorToolbar（命令发布方）', () => {
   it('渲染冒烟：工具条分组与全部按钮就位', () => {
     const cap = captureRenderConsole()
@@ -60,7 +75,7 @@ describe('EditorToolbar（命令发布方）', () => {
       expect(screen.getByRole('toolbar', { name: 'Markdown 格式化' })).toBeTruthy()
       for (const name of [
         '一级标题', '二级标题', '加粗', '斜体', '无序列表', '有序列表', '引用', '代码', '链接',
-        '插入表格', '插入代码块', '插入分隔线', '插入图片（剪贴板）'
+        '插入表格', '插入代码块', '插入分隔线', '图片'
       ]) {
         expect(screen.getByRole('button', { name })).toBeTruthy()
       }
@@ -89,12 +104,25 @@ describe('EditorToolbar（命令发布方）', () => {
     cleanup()
   })
 
-  it('插入 3 钮发布 insert 命令，图片钮发布 insertClipboardImage', () => {
+  it('插入 3 钮发布 insert 命令', () => {
     renderToolbar()
     expect(clickAndCollect('插入表格')).toEqual([{ kind: 'insert', snippet: 'table' }])
     expect(clickAndCollect('插入代码块')).toEqual([{ kind: 'insert', snippet: 'codeBlock' }])
     expect(clickAndCollect('插入分隔线')).toEqual([{ kind: 'insert', snippet: 'hr' }])
-    expect(clickAndCollect('插入图片（剪贴板）')).toEqual([{ kind: 'insertClipboardImage' }])
+    cleanup()
+  })
+
+  it('T15/T16 图片钮为下拉触发：菜单三项分别发布图片命令；无光标图片时切换项禁用', () => {
+    renderToolbar()
+    fireEvent.click(screen.getByRole('button', { name: '图片' }))
+    expect(clickMenuAndCollect('插入图片（剪贴板）')).toEqual([{ kind: 'insertClipboardImage' }])
+
+    fireEvent.click(screen.getByRole('button', { name: '图片' }))
+    expect(clickMenuAndCollect('选择本地图片上传')).toEqual([{ kind: 'insertImageFromFile' }])
+
+    fireEvent.click(screen.getByRole('button', { name: '图片' }))
+    const sw = screen.getByRole('menuitem', { name: '切换图片链接形态' }) as HTMLButtonElement
+    expect(sw.disabled).toBe(true) // 无编辑器实时态/光标行无图片 → 禁用
     cleanup()
   })
 

@@ -2,17 +2,22 @@
 
 /**
  * 编辑区工具条（20260924-feature-editor-toolbar）：命令通道的又一个纯发布方——
- * 词表全量复用既有 EditorCommand（format×9 与胶囊 EditorSection 同一动作表、
- * insert×3、insertClipboardImage），零新增命令与 i18n 键；不接触编辑器实例。
- * 挂载于首页编辑面板上下文行之下与 /editor 页顶栏之下（knowledge/editor.md
- * 命令通道段：UI 与编辑器解耦的唯一桥梁）。
+ * 词表复用既有 EditorCommand（format×9 与胶囊 EditorSection 同一动作表、insert×3），
+ * 不接触编辑器实例。挂载于首页编辑面板上下文行之下与 /editor 页顶栏之下
+ * （knowledge/editor.md 命令通道段：UI 与编辑器解耦的唯一桥梁）。
+ * 图片钮（20261008-feature-image-upload-choice）升级为共享 MenuPopover 下拉：
+ * 粘贴剪贴板图 / 选择本地图片上传 / 切换光标行图片链接形态——可用性取自
+ * editor-state 实时总线（content+cursorLine）经 imageSwitchAvailable 纯逻辑判定。
  */
 import styled from 'styled-components'
-import type { MarkdownInsertAction } from '../../lib/store'
+import { useWorkspaceStore, type MarkdownInsertAction } from '../../lib/store'
 import type { InsertSnippetName } from '../../lib/editor-commands'
 import { publishEditorCommand } from '../../lib/editor-commands'
+import { useEditorLiveState } from '../../lib/editor-state'
+import { imageSwitchAvailable } from '../../lib/editor-image-mapping'
 import { useLocale } from '../../lib/i18n/context'
 import { AppIcon, type IconComponent } from '../ui/AppIcon'
+import { MenuPopover } from '../ui/MenuPopover'
 import {
   IconBold,
   IconCode,
@@ -93,6 +98,9 @@ const Divider = styled.span`
 
 export function EditorToolbar(): React.JSX.Element {
   const { t } = useLocale()
+  const doc = useWorkspaceStore()
+  const live = useEditorLiveState()
+  const switchAvailable = imageSwitchAvailable(doc.content ?? '', live.cursorLine)
 
   return (
     <ToolbarRow role="toolbar" aria-label={t('editor.fmtAria')}>
@@ -120,14 +128,28 @@ export function EditorToolbar(): React.JSX.Element {
         </ToolButton>
       ))}
       <Divider />
-      <ToolButton
-        type="button"
-        title={t('editor.fmtImage')}
-        aria-label={t('editor.fmtImage')}
-        onClick={() => publishEditorCommand({ kind: 'insertClipboardImage' })}
-      >
-        <AppIcon icon={IconImage} size="xs" decorative />
-      </ToolButton>
+      <MenuPopover
+        ariaLabel={t('editor.imageMenu')}
+        icon={<AppIcon icon={IconImage} size="xs" decorative />}
+        options={[
+          {
+            id: 'clipboard',
+            label: t('editor.fmtImage'),
+            onSelect: () => publishEditorCommand({ kind: 'insertClipboardImage' })
+          },
+          {
+            id: 'local',
+            label: t('editor.imagePickLocal'),
+            onSelect: () => publishEditorCommand({ kind: 'insertImageFromFile' })
+          },
+          {
+            id: 'switch',
+            label: t('editor.imageSwitch'),
+            disabled: !switchAvailable,
+            onSelect: () => publishEditorCommand({ kind: 'switchImageLinkForm' })
+          }
+        ]}
+      />
     </ToolbarRow>
   )
 }

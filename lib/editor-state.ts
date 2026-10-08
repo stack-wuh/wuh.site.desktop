@@ -27,6 +27,8 @@ const TYPOGRAPHY_STORAGE_KEY = 'wd.editorTypography'
 export interface EditorLiveState {
   /** 光标归属的标题序号（parseOutline 序列；无归属为 -1），大纲跟随高亮用 */
   activeHeading: number
+  /** 光标行（0 起；未挂载编辑器为 -1）——图片链接切换等交互可用性的判定输入（20261008-feature-image-upload-choice） */
+  cursorLine: number
   /** 即时渲染 ↔ 纯源码（L3 渲染开关的当前态，编辑器挂载与切换时回推） */
   renderMode: 'render' | 'source'
   /** 专注模式：问候/散点图淡出、编辑区沉浸 */
@@ -58,6 +60,7 @@ function loadTypography(): EditorTypography {
 
 let state: EditorLiveState = {
   activeHeading: -1,
+  cursorLine: -1,
   renderMode: 'render',
   focusMode: false,
   outlineFollow: true,
@@ -91,11 +94,15 @@ export function publishEditorLiveState(patch: {
       // 存储不可用时排版偏好仅会话内生效
     }
   }
+  if (patch.cursorLine !== undefined) {
+    next.cursorLine = patch.cursorLine
+  }
   if (patch.content !== undefined && patch.cursorLine !== undefined) {
     next.activeHeading = activeOutlineIndex(patch.content, patch.cursorLine)
   }
   if (
     next.activeHeading === state.activeHeading &&
+    next.cursorLine === state.cursorLine &&
     next.renderMode === state.renderMode &&
     next.focusMode === state.focusMode &&
     next.outlineFollow === state.outlineFollow &&
@@ -133,6 +140,7 @@ export function useEditorLiveState(): EditorLiveState {
 export function resetEditorLiveStateForTests(): void {
   state = {
     activeHeading: -1,
+    cursorLine: -1,
     renderMode: 'render',
     focusMode: false,
     outlineFollow: true,

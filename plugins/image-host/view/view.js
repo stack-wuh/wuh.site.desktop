@@ -11,6 +11,7 @@ const root = document.getElementById('root')
 const state = {
   items: [], // { path, name, status: pending|uploading|ok|fail, url, error }
   prefix: '',
+  recentPrefixes: [], // 常用前缀下拉（帧内会话历史，最新在前 ≤8；设置只读通道无特例，见 plugin-architecture 卡）
   uploading: false,
   summary: null, // { total, okCount, failCount }
   error: null
@@ -73,6 +74,10 @@ async function pickDir() {
 function startUpload() {
   const paths = state.items.filter((item) => item.status === 'pending' || item.status === 'fail').map((i) => i.path)
   if (paths.length === 0 || state.uploading) return
+  const used = state.prefix.trim()
+  if (used) {
+    state.recentPrefixes = [used, ...state.recentPrefixes.filter((p) => p !== used)].slice(0, 8)
+  }
   state.uploading = true
   state.summary = null
   state.error = null
@@ -174,7 +179,17 @@ function render() {
   prefixInput.addEventListener('input', () => {
     state.prefix = prefixInput.value
   })
+  // 常用前缀下拉（原生 datalist 组合框：可选历史、仍可自由输入）
+  const prefixList = h('datalist')
+  prefixList.id = 'image-host-prefix-presets'
+  for (const p of state.recentPrefixes) {
+    const opt = document.createElement('option')
+    opt.value = p
+    prefixList.appendChild(opt)
+  }
+  prefixInput.setAttribute('list', prefixList.id)
   prefixRow.appendChild(prefixInput)
+  prefixRow.appendChild(prefixList)
   const uploadBtn = h('button', 'primary', state.uploading ? '上传中…' : '上传')
   uploadBtn.disabled =
     state.uploading || state.items.every((item) => item.status !== 'pending' && item.status !== 'fail')

@@ -19,6 +19,22 @@ async function publish(name, payload) {
   }
 }
 
+// 任务中心上报（20261008-feature-image-upload-choice）：批量上传是跨面板的后台动作，
+// 进度经运行时动态任务聚合到壳层胶囊（首报带 title 创建；后续 patch 不再带 title）。
+const TASK_ID = 'batch-upload'
+async function reportTask(patch) {
+  try {
+    if (wuh.tasks && typeof wuh.tasks.upsert === 'function') await wuh.tasks.upsert(TASK_ID, patch)
+  } catch (err) {
+    console.warn('[image-host] 任务上报失败', err)
+  }
+}
+
+function baseName(p) {
+  const idx = Math.max(p.lastIndexOf('/'), p.lastIndexOf('\\'))
+  return idx >= 0 ? p.slice(idx + 1) : p
+}
+
 async function uploadOne(path, prefix) {
   try {
     const batch = await wuh.cap.call('uploadImages', [path], prefix ? { prefix } : undefined)
@@ -45,6 +61,12 @@ async function runUpload(payload) {
   running = true
   let okCount = 0
   let failCount = 0
+  await reportTask({
+    title: '图床批量上传',
+    status: 'in_progress',
+    progress: { current: 0, total: paths.length },
+    detail: prefix ? `前缀 ${prefix}` : null
+  })
   try {
     for (let i = 0; i < paths.length; i++) {
       const path = paths[i]
@@ -59,10 +81,20 @@ async function runUpload(payload) {
         url: typeof result.url === 'string' ? result.url : null,
         error: typeof result.error === 'string' ? result.error : null
       })
+      await reportTask({
+        status: 'in_progress',
+        progress: { current: i + 1, total: paths.length },
+        detail: result.ok ? `已传 ${baseName(path)}` : `失败 ${baseName(path)}`
+      })
     }
   } finally {
     running = false
     await publish('finish', { total: paths.length, okCount, failCount })
+    await reportTask({
+      status: 'done',
+      progress: { current: paths.length, total: paths.length },
+      detail: `成功 ${okCount} · 失败 ${failCount}`
+    })
   }
 }
 

@@ -25,9 +25,24 @@ import { defaultKeymap, history, historyKeymap, redo, undo } from '@codemirror/c
 import { closeSearchPanel, openSearchPanel, search, searchKeymap } from '@codemirror/search'
 import { syntaxHighlighting } from '@codemirror/language'
 import { markdown, markdownKeymap } from '@codemirror/lang-markdown'
+import type { SavedImage } from '@shared/types'
 import { workspaceStore, useWorkspaceStore } from '../../../lib/store'
 import { publishEditorCommand, subscribeEditorCommands, type EditorCommand } from '../../../lib/editor-commands'
-import { cmApplyFormat, cmExternalContent, cmHeadingCursor, cmInsertSnippet, findLinkTargetAt } from '../../../lib/editor-cm'
+import {
+  cmApplyFormat,
+  cmExternalContent,
+  cmHeadingCursor,
+  cmInsertSnippet,
+  findImageOnLine,
+  findLinkTargetAt,
+  rewriteImageRef
+} from '../../../lib/editor-cm'
+import {
+  entryForRemote,
+  rememberImageLink,
+  remoteForLocalRef,
+  resolveRefRelPath
+} from '../../../lib/editor-image-mapping'
 import { foldField, livePreviewField } from '../decorations'
 import {
   loadPersistedEditorState,
@@ -73,17 +88,71 @@ function blobToBase64(blob: Blob): Promise<string> {
   })
 }
 
+/** 图片链文案束（三语，t 取词典；粘贴/剪贴板/导入三入口共用） */
+interface ImageStrings {
+  empty: string
+  needDoc: string
+  fallback: string
+  remoteReady: string
+  useRemote: string
+  keepLocal: string
+}
+
+/**
+ * 替换正文首个 `![](` + localRef + `)` 的 ref 区间（用户已改动该处时静默跳过——
+ * 不猜位置，字节保真由 rewriteImageRef 保证其余内容原样）。
+ */
+function replaceLocalRefInDoc(view: EditorView, localRef: string, newRef: string): void {
+  const docText = view.state.doc.toString()
+  const idx = docText.indexOf(`![](${localRef})`)
+  if (idx < 0) return
+  view.dispatch(rewriteImageRef({ refFrom: idx + 4, refTo: idx + 4 + localRef.length }, newRef))
+}
+
+/**
+ * 保存结果落正文 + 上传后的链接选择（20261008-feature-image-upload-choice）：
+ * 恒先插本地 `.assets` 相对引用（所见即所存）；拿到 remoteUrl 才登记会话映射并弹
+ * Message 横幅「用远程链接 / 保持本地」——选择远程才替换正文，关闭横幅 = 保持本地。
+ */
+async function applySavedImage(
+  view: EditorView,
+  docRelPath: string,
+  saved: SavedImage,
+  strs: ImageStrings
+): Promise<void> {
+  const insertAt = view.state.selection.main.to
+  view.dispatch({ changes: { from: insertAt, insert: `![](${saved.markdownRef})` } })
+  view.focus()
+  if (saved.uploaded === false) {
+    void message({ text: strs.fallback, kind: 'warning' })
+  }
+  if (!saved.remoteUrl) return
+  rememberImageLink({
+    docRelPath,
+    localRef: saved.markdownRef,
+    relPath: saved.relPath,
+    remoteUrl: saved.remoteUrl
+  })
+  const choice = await message({
+    text: strs.remoteReady,
+    kind: 'info',
+    actions: [
+      { id: 'remote', label: strs.useRemote, variant: 'primary' },
+      { id: 'local', label: strs.keepLocal }
+    ]
+  })
+  if (choice === 'remote') replaceLocalRefInDoc(view, saved.markdownRef, saved.remoteUrl)
+}
+
 /** 剪贴板图片落盘并插入（blog 约定：文档同名 .assets 目录，主进程 src/main/images.ts） */
 async function insertClipboardImage(
   view: EditorView,
-  tipEmpty: string,
-  tipNeedDoc: string,
-  tipUploadFallback: string,
+  strs: ImageStrings,
   notify: (msg: string) => void
 ): Promise<void> {
   const doc = workspaceStore.get()
   if (!doc.activePath) {
-    notify(tipNeedDoc)
+    notify(strs.needDoc)
     return
   }
   let base64: string | null = null
@@ -100,18 +169,12 @@ async function insertClipboardImage(
     // 权限拒绝或读取失败按「无图片」处理
   }
   if (!base64) {
-    notify(tipEmpty)
+    notify(strs.empty)
     return
   }
   try {
     const saved = await window.api.savePastedImage(doc.activePath, 'image.png', base64)
-    view.dispatch({
-      changes: { from: view.state.selection.main.to, insert: `![](${saved.markdownRef})` }
-    })
-    view.focus()
-    if (saved.uploaded === false) {
-      void message({ text: tipUploadFallback, kind: 'warning' })
-    }
+    await applySavedImage(view, doc.activePath, saved, strs)
   } catch (err) {
     notify(err instanceof Error ? err.message : String(err))
   }
@@ -175,6 +238,16 @@ export function MarkdownEditor(): React.JSX.Element {
       if (noticeTimer) clearTimeout(noticeTimer)
       noticeTimer = setTimeout(() => setNotice(null), 2600)
     }
+
+    // 图片链文案束（挂载期 t 口径与既有 placeholder 一致）
+    const imageStrings = (): ImageStrings => ({
+      empty: t('editor.clipboardEmpty'),
+      needDoc: t('editor.imageNeedDoc'),
+      fallback: t('editor.imageUploadFallback'),
+      remoteReady: t('editor.imageRemoteReady'),
+      useRemote: t('editor.imageUseRemote'),
+      keepLocal: t('editor.imageKeepLocal')
+    })
 
     renderModeRef.current = readRenderPref()
     const renderComp = new Compartment()
@@ -269,15 +342,7 @@ export function MarkdownEditor(): React.JSX.Element {
             .then((base64) =>
               window.api.savePastedImage(docPath, file.name || 'image.png', base64)
             )
-            .then((saved) => {
-              view.dispatch({
-                changes: { from: view.state.selection.main.to, insert: `![](${saved.markdownRef})` }
-              })
-              view.focus()
-              if (saved.uploaded === false) {
-                void message({ text: t('editor.imageUploadFallback'), kind: 'warning' })
-              }
-            })
+            .then((saved) => applySavedImage(view, docPath, saved, imageStrings()))
             .catch((err: unknown) => notify(err instanceof Error ? err.message : String(err)))
           return true
         }
@@ -310,14 +375,82 @@ export function MarkdownEditor(): React.JSX.Element {
           v.focus()
           return true
         case 'insertClipboardImage':
-          void insertClipboardImage(
-            v,
-            t('editor.clipboardEmpty'),
-            t('editor.imageNeedDoc'),
-            t('editor.imageUploadFallback'),
-            notify
-          )
+          void insertClipboardImage(v, imageStrings(), notify)
           return true
+        case 'insertImageFromFile': {
+          // 原生弹窗选本地图片 → 主进程导入链（复制进 .assets + 上传路由），粘贴同形选择链
+          const docState = workspaceStore.get()
+          if (!docState.activePath) {
+            notify(t('editor.imageNeedDoc'))
+            return true
+          }
+          const docPath = docState.activePath
+          const strs = imageStrings()
+          void (async () => {
+            const picked = await window.api.pickImages()
+            if (picked.canceled || picked.paths.length === 0) return
+            for (const src of picked.paths) {
+              const saved = await window.api.saveImageFromPickedPath(docPath, src)
+              await applySavedImage(v, docPath, saved, strs)
+            }
+          })().catch((err: unknown) => notify(err instanceof Error ? err.message : String(err)))
+          return true
+        }
+        case 'switchImageLinkForm': {
+          // 光标行图片远程↔本地反切：方向与目标全部经纯层判定（editor-cm + 会话映射）
+          const docState = workspaceStore.get()
+          const line = v.state.doc.lineAt(v.state.selection.main.head)
+          const img = findImageOnLine(line.text)
+          if (!img) {
+            notify(t('editor.imageSwitchNoImage'))
+            return true
+          }
+          if (!docState.activePath) {
+            notify(t('editor.imageNeedDoc'))
+            return true
+          }
+          const docRel = docState.activePath
+          const span = { refFrom: line.from + img.refFrom, refTo: line.from + img.refTo }
+          if (/^https?:\/\//i.test(img.ref)) {
+            const entry = entryForRemote(img.ref)
+            if (!entry) {
+              notify(t('editor.imageSwitchNoMap'))
+              return true
+            }
+            v.dispatch(rewriteImageRef(span, entry.localRef))
+            v.focus()
+            return true
+          }
+          const known = remoteForLocalRef(docRel, img.ref)
+          if (known) {
+            v.dispatch(rewriteImageRef(span, known.remoteUrl))
+            v.focus()
+            return true
+          }
+          const relPath = resolveRefRelPath(docRel, img.ref)
+          if (!relPath) {
+            notify(t('editor.imageSwitchNoMap'))
+            return true
+          }
+          void window.api
+            .uploadExistingAsset(docRel, relPath)
+            .then((r) => {
+              if (r.ok && r.url) {
+                rememberImageLink({
+                  docRelPath: docRel,
+                  localRef: img.ref,
+                  relPath,
+                  remoteUrl: r.url
+                })
+                replaceLocalRefInDoc(v, img.ref, r.url)
+                v.focus()
+              } else {
+                notify(r.error ?? t('editor.imageUploadFallback'))
+              }
+            })
+            .catch((err: unknown) => notify(err instanceof Error ? err.message : String(err)))
+          return true
+        }
         case 'scrollToHeading': {
           const pos = cmHeadingCursor(v.state.doc, command.index)
           if (pos == null) return false
