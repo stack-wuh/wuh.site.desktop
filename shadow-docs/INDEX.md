@@ -68,4 +68,11 @@
 | 20260927-style-shell-visual-consistency | ✅ 完成 | shadow-docs/changes/archive/20260927-style-shell-visual-consistency/brief.md |
 | 20260927-test-net-backfill | ✅ 完成 | shadow-docs/changes/archive/20260927-test-net-backfill/brief.md |
 | 20260928-fix-editor-render-defects | published | shadow-docs/changes/20260928-fix-editor-render-defects/brief.md |
+| 20261007-chore-restore-pnpm-lockfile | branched | shadow-docs/changes/20261007-chore-restore-pnpm-lockfile/brief.md |
+| 20261007-feature-frontmatter-editor-hide | reviewed | shadow-docs/changes/20261007-feature-frontmatter-editor-hide/brief.md |
+| 20261007-feature-image-host-plugin | branched | shadow-docs/changes/20261007-feature-image-host-plugin/brief.md |
 | 20261007-feature-virtual-projects-tree | ✅ 完成 | shadow-docs/changes/archive/20261007-feature-virtual-projects-tree/brief.md |
+| 20261007-fix-image-host-settings-ui | branched | shadow-docs/changes/20261007-fix-image-host-settings-ui/brief.md |
+| 20261007-fix-image-host-settings-ux | branched | shadow-docs/changes/20261007-fix-image-host-settings-ux/brief.md |
+| 20261007-fix-shell-page-scroll | branched | shadow-docs/changes/20261007-fix-shell-page-scroll/brief.md |
+| 20261007-style-scrollbars-virtual-projects-list | ✅ 完成 | shadow-docs/changes/archive/20261007-style-scrollbars-virtual-projects-list/brief.md |

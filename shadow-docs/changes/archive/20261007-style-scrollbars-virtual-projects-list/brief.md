@@ -4,7 +4,7 @@
   "name": "20261007-style-scrollbars-virtual-projects-list",
   "type": "style",
   "scope": "renderer-shell",
-  "status": "reviewed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "style/20261007-style-scrollbars-virtual-projects-list",
   "files": [
@@ -23,13 +23,13 @@
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "c3024590ee95f42939ad47eb710def69017ba9a2",
-    "verifiedAt": "2026-10-07T16:36:29.663Z"
+    "verifiedCommit": "7744295fe3fb9f7ae16e3999a56ab8adb1451bb3",
+    "verifiedAt": "2026-10-08T00:08:35.481Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "pr:149",
-    "planHash": "77e9cf16bb08ae32c39d68a85b482a89929d1529e5867056acd26bcdb5c50505",
+    "checkpoint": "merged-pr:149",
+    "planHash": "478c6391882bdd47bbac6d656e33a151da383cc4e9ca5596d505ee393a6d4c4d",
     "updatedAt": null,
     "lastError": null,
     "commit": null,
@@ -53,7 +53,7 @@
   "knowledge": {
     "action": "更新",
     "target": "shadow-docs/knowledge/renderer-virtual-list.md,shadow-docs/knowledge/shell-chrome-design.md",
-    "reason": "滚动条隐藏策略与虚拟列表第二消费方均为长期事实,已按 norms 补 verified-depth/scope 并登记本 brief 为 source;另回写 3 条机器级信号(shadow-docs/signals.md 新建)"
+    "reason": "滚动条隐藏策略与虚拟列表第二消费方均为长期事实,已按 norms 补 verified-depth/scope 并登记本 brief 为 source;3 条机器级信号已入 shadow-docs/signals.md"
   }
 }
 ---
