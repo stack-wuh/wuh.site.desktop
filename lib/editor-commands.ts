@@ -13,6 +13,10 @@ export type EditorCommand =
   | { kind: 'insert'; snippet: InsertSnippetName }
   /** 从剪贴板取图落盘到当前文档 assets/ 并插入相对路径 */
   | { kind: 'insertClipboardImage' }
+  /** 原生弹窗选本地图片 → 导入当前文档同名 .assets 并按 uploadMode 尝试上传（20261008-feature-image-upload-choice） */
+  | { kind: 'insertImageFromFile' }
+  /** 切换光标行图片的链接形态（远程↔本地，方向由会话映射与现状判定；本地无映射时经 uploadExistingAsset 重传） */
+  | { kind: 'switchImageLinkForm' }
   /** 大纲跳转：目标为 parseOutline 序列中的序号 */
   | { kind: 'scrollToHeading'; index: number }
   /** 即时渲染 ↔ 纯源码切换（L3 渲染开关，编辑器侧持久化 wd.editorRenderMode） */

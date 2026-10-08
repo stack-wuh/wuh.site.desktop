@@ -29,6 +29,8 @@ const handlers: {
   transferDoc: () => { throw new Error('not implemented') },
   pickSaveLocation: () => { throw new Error('not implemented') },
   savePastedImage: () => { throw new Error('not implemented') },
+  saveImageFromPickedPath: () => { throw new Error('not implemented') },
+  uploadExistingAsset: () => { throw new Error('not implemented') },
   pickImages: () => { throw new Error('not implemented') },
   pickDirectory: () => { throw new Error('not implemented') },
   listImages: () => { throw new Error('not implemented') },

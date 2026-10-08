@@ -15,7 +15,7 @@ import {
   resetPickedPaths
 } from '../src/main/pickers'
 import { pickUploadRoute, uploadImagesCore, type UploadImagesDeps } from '../src/main/uploader'
-import { composePasteResult } from '../src/main/images'
+import { composePasteResult, isAssetsRefOfDoc } from '../src/main/images'
 import type { UploadMode, UploadResult } from '../src/shared/types'
 
 /**
@@ -170,25 +170,40 @@ describe('pickUploadRoute（上传模式路由）', () => {
   })
 })
 
-describe('composePasteResult（粘贴结果组装）', () => {
+describe('composePasteResult（粘贴结果组装 · 20261008-feature-image-upload-choice 双链回传契约）', () => {
   const local = { relPath: 'docs/a.assets/img.png', markdownRef: './a.assets/img.png' }
 
-  it('本地模式（upload=null）：保持本地引用，无 uploaded 标记（现状契约）', () => {
+  it('T1 本地模式（upload=null）：保持本地引用，无 uploaded/remoteUrl 标记（现状不变）', () => {
     expect(composePasteResult(local, null)).toEqual({ ...local })
   })
 
-  it('上传成功：markdownRef 换远程 URL，uploaded=true，本地 relPath 保留（.assets 契约不变）', () => {
+  it('T2 上传成功：markdownRef 恒为本地引用，远程 URL 走 remoteUrl 由用户选择插入', () => {
     const result = composePasteResult(local, { ok: true, url: 'https://cdn.example.com/x.png' })
     expect(result).toEqual({
       relPath: local.relPath,
-      markdownRef: 'https://cdn.example.com/x.png',
+      markdownRef: './a.assets/img.png',
+      remoteUrl: 'https://cdn.example.com/x.png',
       uploaded: true
     })
   })
 
-  it('上传失败：保持本地引用 + uploaded=false（渲染层据此提示回退）', () => {
+  it('T3 上传失败：保持本地引用 + uploaded=false（渲染层据此提示回退）', () => {
     const result = composePasteResult(local, { ok: false, error: 'boom' })
     expect(result).toEqual({ ...local, uploaded: false })
+  })
+})
+
+describe('isAssetsRefOfDoc（.assets 归属守卫 · uploadExistingAsset 的安全钳制）', () => {
+  it('T4 同文档同名 .assets 目录内文件放行（含根目录文档）', () => {
+    expect(isAssetsRefOfDoc('docs/post.md', 'docs/post.assets/a.png')).toBe(true)
+    expect(isAssetsRefOfDoc('post.md', 'post.assets/截图 1.png')).toBe(true)
+  })
+
+  it('T5 其他目录/前缀相近目录/目录本身拒绝', () => {
+    expect(isAssetsRefOfDoc('docs/post.md', 'docs/other.assets/a.png')).toBe(false)
+    expect(isAssetsRefOfDoc('docs/post.md', 'docs/post.assetsX/a.png')).toBe(false)
+    expect(isAssetsRefOfDoc('docs/post.md', 'docs/a.assets/a.png')).toBe(false)
+    expect(isAssetsRefOfDoc('docs/post.md', 'docs/post.assets')).toBe(false)
   })
 })
 

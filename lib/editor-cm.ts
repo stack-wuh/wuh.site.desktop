@@ -300,6 +300,64 @@ export function findLinkTargetAt(docText: string, pos: number): string | null {
   return null
 }
 
+/** 图片原子 `![alt](ref)` 区间（绝对偏移）：from/to 为整段，refFrom/refTo 为括号内 ref */
+export interface ImageSpan {
+  from: number
+  to: number
+  refFrom: number
+  refTo: number
+  ref: string
+}
+
+/**
+ * 行内图片原子反查（INLINE_RE image 分支，与 scanInlineMarks/findLinkTargetAt
+ * 同一逐行口径）：一行多图取首个；非图片返回 null。
+ */
+export function findImageOnLine(lineText: string): ImageSpan | null {
+  for (const m of lineText.matchAll(INLINE_RE)) {
+    if (!m[3]) continue
+    const inner = /^!\[([^\]]*)\]\(([^)]*)\)$/.exec(m[0])
+    if (!inner) continue
+    const b = m.index ?? 0
+    const refFrom = b + 2 + inner[1].length + 2
+    return {
+      from: b,
+      to: b + m[0].length,
+      refFrom,
+      refTo: refFrom + inner[2].length,
+      ref: inner[2]
+    }
+  }
+  return null
+}
+
+/** pos 落在所在行图片整体区间内时返回绝对偏移区间 */
+export function findImageAtPos(docText: string, pos: number): ImageSpan | null {
+  if (pos < 0 || pos >= docText.length) return null
+  const lineStart = docText.lastIndexOf('\n', pos - 1) + 1
+  const nl = docText.indexOf('\n', pos)
+  const line = docText.slice(lineStart, nl < 0 ? docText.length : nl)
+  const span = findImageOnLine(line)
+  if (!span) return null
+  const abs: ImageSpan = {
+    from: lineStart + span.from,
+    to: lineStart + span.to,
+    refFrom: lineStart + span.refFrom,
+    refTo: lineStart + span.refTo,
+    ref: span.ref
+  }
+  if (pos < abs.from || pos >= abs.to) return null
+  return abs
+}
+
+/** 只替换图片 ref 区间（远程↔本地链接切换的唯一事务构造器，其余字节保真） */
+export function rewriteImageRef(
+  span: { refFrom: number; refTo: number },
+  newRef: string
+): TransactionSpec {
+  return { changes: { from: span.refFrom, to: span.refTo, insert: newRef } }
+}
+
 /** 任务行改写：`- [ ]` ↔ `- [x]`（保留缩进/标记符/大写 X 归一）；非任务行返回 null */
 export function toggleTaskLine(lineText: string): string | null {
   const m = /^(\s*(?:[-*+]|\d{1,9}[.)])\s+\[)([ xX])(\].*)$/.exec(lineText)

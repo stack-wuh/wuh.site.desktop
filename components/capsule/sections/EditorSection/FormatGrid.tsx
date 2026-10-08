@@ -4,8 +4,13 @@
  * 格式+插入图标网格（拆分自 EditorSection/index，20260927-refactor-editor-section-cleanup）：
  * 九个格式化按钮 + 插图/表格/代码块/分割线 + 撤销重做 + 大纲/项目/文件三个面板开关；
  * 格式化/插入经 editor-commands 发布，面板开关由宿主回调切换。
+ * 图片钮（20261008-feature-image-upload-choice）为共享 MenuPopover 下拉——与编辑区
+ * 工具条同一动作集（快速操作落位胶囊），可用性经 imageSwitchAvailable 纯逻辑判定。
  */
 import { AppIcon } from '../../../ui/AppIcon'
+import { MenuPopover } from '../../../ui/MenuPopover'
+import { useEditorLiveState } from '../../../../lib/editor-state'
+import { imageSwitchAvailable } from '../../../../lib/editor-image-mapping'
 import {
   IconBold,
   IconCode,
@@ -26,7 +31,7 @@ import {
   IconUndo
 } from '../../../icons'
 import type { IconComponent } from '../../../ui/AppIcon'
-import type { MarkdownInsertAction } from '../../../../lib/store'
+import { useWorkspaceStore, type MarkdownInsertAction } from '../../../../lib/store'
 import { publishEditorCommand } from '../../../../lib/editor-commands'
 import { useLocale } from '../../../../lib/i18n/context'
 import { IconBtn, IconRow } from './styles'
@@ -50,6 +55,9 @@ export function FormatGrid(props: {
   onTogglePanel: (kind: SubPanelKind) => void
 }): React.JSX.Element {
   const { t } = useLocale()
+  const doc = useWorkspaceStore()
+  const live = useEditorLiveState()
+  const switchAvailable = imageSwitchAvailable(doc.content ?? '', live.cursorLine)
   const { panel } = props
   const togglePanel = props.onTogglePanel
   return (
@@ -66,14 +74,28 @@ export function FormatGrid(props: {
         </IconBtn>
       ))}
       <span style={{ width: 1, height: 16, background: 'var(--chrome-border)', margin: '0 3px' }} />
-      <IconBtn
-        type="button"
-        title={t('editor.fmtImage')}
-        aria-label={t('editor.fmtImage')}
-        onClick={() => publishEditorCommand({ kind: 'insertClipboardImage' })}
-      >
-        <AppIcon icon={IconImage} size="xs" decorative />
-      </IconBtn>
+      <MenuPopover
+        ariaLabel={t('editor.imageMenu')}
+        icon={<AppIcon icon={IconImage} size="xs" decorative />}
+        options={[
+          {
+            id: 'clipboard',
+            label: t('editor.fmtImage'),
+            onSelect: () => publishEditorCommand({ kind: 'insertClipboardImage' })
+          },
+          {
+            id: 'local',
+            label: t('editor.imagePickLocal'),
+            onSelect: () => publishEditorCommand({ kind: 'insertImageFromFile' })
+          },
+          {
+            id: 'switch',
+            label: t('editor.imageSwitch'),
+            disabled: !switchAvailable,
+            onSelect: () => publishEditorCommand({ kind: 'switchImageLinkForm' })
+          }
+        ]}
+      />
       <IconBtn
         type="button"
         title={t('editor.fmtTable')}
