@@ -19,6 +19,8 @@ export type EditorCommand =
   | { kind: 'switchImageLinkForm' }
   /** 大纲跳转：目标为 parseOutline 序列中的序号 */
   | { kind: 'scrollToHeading'; index: number }
+  /** 呼墨「链接笺条」：读剪贴板 http(s) URL，在光标处插入独立笺条行（素笺 20261014） */
+  | { kind: 'insertCard' }
   /** 即时渲染 ↔ 纯源码切换（L3 渲染开关，编辑器侧持久化 wd.editorRenderMode） */
   | { kind: 'toggleRender' }
   /** 查找/替换：开合 CM6 内联搜索面板（Mod-F 同款） */

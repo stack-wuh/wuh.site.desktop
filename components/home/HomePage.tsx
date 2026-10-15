@@ -6,17 +6,14 @@ import styled, { keyframes } from 'styled-components'
 import { Heatmap } from './Heatmap'
 import { buildHeatmapViewData } from './heatmapData'
 import { useAboutActivity } from './useAboutActivity'
-import { EditorPanel } from './EditorPanel'
 import { useLocale } from '../../lib/i18n/context'
 import { useGithubIdentity } from '../../lib/identity'
 import { publishEditorLiveState, useEditorLiveState } from '../../lib/editor-state'
 
 /**
- * 首页（两栏布局起为右栏默认页面；2026-09-22 升级为写作工作台）：
- * 问候语 → 综合活动热力图（节奏总览）→ 主编辑器面板（20260922 首页编辑器面板：
- * 项目/文件筛选收进面板上下文行，热力图由底部上移至问候语之下）。
- * 专注模式（20260923-feature-capsule-control-center）：问候/热力图淡出至 5%
- * 不卸载（会话态，经 editor-state 总线与胶囊开关同源），Esc 退出。
+ * 首页（两栏布局起为右栏默认页面）：问候语 → 综合活动热力图。
+ * 20261014-feature-editor-paper-rebuild 起编辑面退役（编辑收敛 /editor 沉浸页，
+ * INV-3 编辑面唯一挂载）；专注模式语义保留（editor-state 总线与胶囊开关同源）。
  * 无返回按钮/Esc/焦点归还语义，左栏 SideMenu 常驻可见，
  * 页面互斥切换由 App Router 路由段裁决。
  */
@@ -166,8 +163,6 @@ export function HomePage(): React.JSX.Element {
             )}
           </Card>
         </Dimmable>
-
-        <EditorPanel />
       </Body>
     </Page>
   )

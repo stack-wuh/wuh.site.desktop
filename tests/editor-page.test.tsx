@@ -7,12 +7,15 @@ import { resetEditorLiveStateForTests } from '../lib/editor-state'
 import { subscribeEditorCommands, type EditorCommand } from '../lib/editor-commands'
 import { captureRenderConsole, resetRenderEnv } from './helpers/dom-env'
 import { EditorPage } from '../app/(shell)/editor/page'
+import { HomePage } from '../components/home/HomePage'
 
 /**
  * 统一编辑页渲染冒烟（20260924-feature-projects-editor-page）：
  * 页面 chrome（极简顶栏/面包屑两态/保存可用性/冷启动自动新草稿）+ 零 React 告警。
  * 20260924-feature-breadcrumb-doc-ops 起面包屑可交互：完整路径渲染、目录段发
  * transferDoc、文件名段原地改名发 renameDoc、草稿态有内容「新草稿」可点发 saveAs（空内容纯文本）。
+ * 20261014-feature-editor-paper-rebuild 起顶栏收敛三件制（返回/面包屑/保存，
+ * hover 显影；「新建」退居胶囊）并新增「首页无编辑面」守卫（INV-3，编辑面唯一挂载 /editor）。
  * CM6 内核在 happy-dom 下从未挂载过（无既有先例），本页测试 mock MarkdownEditor——
  * 编辑器内核行为由 tests/editor-codemirror.test.ts（纯逻辑）与手动走查覆盖。
  */
@@ -215,18 +218,33 @@ describe('统一编辑页渲染冒烟', () => {
     vi.unstubAllGlobals()
   })
 
-  it('顶栏动作经命令通道发布（新建/保存按钮可点击不抛错）', async () => {
+  it('顶栏三件制：返回/面包屑/保存，「新建」不驻顶栏（退居胶囊）；保存可点击不抛错', async () => {
     const console_ = captureRenderConsole()
     renderPage()
     await screen.findByText('新草稿')
     console_.restore()
 
+    expect(screen.queryByRole('button', { name: '新建' })).toBeNull()
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: '新建' }))
       fireEvent.click(screen.getByRole('button', { name: '保存当前文档' }))
       await Promise.resolve()
     })
     expect(screen.getByTestId('editor-mount')).toBeTruthy()
     expect(apiMock().getWorkspace).toHaveBeenCalled()
+  })
+})
+
+describe('首页退出编辑（INV-3 编辑面唯一挂载 /editor）', () => {
+  it('HomePage 不再挂载任何编辑面（无 CM6 内容、无编辑器挂载点），问候与热力图仍在', async () => {
+    installApi({
+      getAboutActivity: vi.fn(async () => null)
+    })
+    const console_ = captureRenderConsole()
+    const { container } = render(<LocaleProvider>{<HomePage />}</LocaleProvider>)
+    await screen.findByText('综合活动热力图')
+    console_.restore()
+
+    expect(container.querySelector('.cm-content')).toBeNull()
+    expect(screen.queryByTestId('editor-mount')).toBeNull()
   })
 })

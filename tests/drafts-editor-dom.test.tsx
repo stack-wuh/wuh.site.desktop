@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render } from '@testing-library/react'
 import { act } from 'react'
 import type { ReactElement } from 'react'
-import { EditorPanel } from '../components/home/EditorPanel'
+import { MarkdownEditor } from '../components/editor/MarkdownEditor'
 import { LocaleProvider } from '../lib/i18n/context'
 import { installDraftAutosave } from '../lib/drafts'
 import { workspaceStore } from '../lib/store'
@@ -11,9 +11,10 @@ import { publishEditorCommand } from '../lib/editor-commands'
 import { resetRenderEnv } from './helpers/dom-env'
 
 /**
- * 首页编辑器 → 草稿箱端到端集成（20260924 草稿不同步 bug 复现用）：
- * 真 CM6（EditorPanel 挂载）+ 真 store + 真 installDraftAutosave + 真实计时器。
- * 命令通道 insert 驱动 CM 事务（与生产 updateListener 同路径），断言 saveDraft 落盘调用。
+ * 编辑器 → 草稿箱端到端集成（20260924 草稿不同步 bug 复现用）：
+ * 真 CM6（MarkdownEditor 直接挂载，20261014 起首页编辑面板退役）+ 真 store +
+ * 真 installDraftAutosave + 真实计时器。命令通道 insert 驱动 CM 事务
+ * （与生产 updateListener 同路径），断言 saveDraft 落盘调用。
  */
 
 beforeEach(() => {
@@ -36,11 +37,11 @@ beforeEach(() => {
 
 function renderPanel(): ReturnType<typeof render> {
   return render(
-    <LocaleProvider>{<EditorPanel />}</LocaleProvider> as unknown as ReactElement
+    <LocaleProvider>{<MarkdownEditor />}</LocaleProvider> as unknown as ReactElement
   )
 }
 
-describe('首页编辑器 → 草稿箱联动（真实组件链路）', () => {
+describe('编辑器 → 草稿箱联动（真实组件链路）', () => {
   it('CM6 挂载成功且命令插入经 updateListener 同步 store', async () => {
     const uninstall = installDraftAutosave()
     const { container } = renderPanel()

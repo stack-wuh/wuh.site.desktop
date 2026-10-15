@@ -181,6 +181,8 @@ export function buildThemeCss(): string {
     ${emitNonColorTokens()}
     --font-sans: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
     --font-mono: 'JetBrains Mono', 'Noto Sans SC', ui-monospace, SFMono-Regular, Menlo, monospace;
+    /* 素笺衬线题阶（20261014-feature-editor-paper-rebuild 提案：系统衬线栈，零捆绑资产） */
+    --font-serif: 'Noto Serif SC', 'Songti SC', 'STSong', 'SimSun', Georgia, serif;
     --line-height-body: 1.8;
     --line-height-heading: 1.35;
 }

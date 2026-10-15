@@ -94,6 +94,14 @@ export interface SavedImage {
   uploaded?: boolean
 }
 
+/** 笺条元数据（素笺 20261014）：URL 的展示信息；字段可为空串（页面未提供时） */
+export interface LinkMeta {
+  title: string
+  description: string
+  image: string
+  favicon: string
+}
+
 // ---------- Git ----------
 export type GitFileState =
   | 'added'
@@ -398,6 +406,11 @@ export interface DesktopApi {
   uploadExistingAsset(docRelPath: string, refRelPath: string): Promise<UploadResult>
   /** 原生多选图片文件（宿主与 image-host 插件共用；选中路径登记上传白名单） */
   pickImages(): Promise<PickedPathsResult>
+  /**
+   * 笺条元数据抓取（素笺 20261014）：URL → og:title/description/favicon。
+   * 仅放行 http/https（INV-6），失败抛错由渲染层回退纯文字笺；宿主专用，不进 CAPABILITY_METHODS。
+   */
+  fetchLinkMeta(url: string): Promise<LinkMeta>
   /** 原生目录选择（目录登记上传白名单，其内文件可被 uploadImages 引用） */
   pickDirectory(): Promise<PickedDirectoryResult>
   /** 枚举目录内图片文件（扩展名白名单，按文件名排序）；目录必须在登记白名单内 */

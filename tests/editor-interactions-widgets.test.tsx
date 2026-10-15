@@ -1,6 +1,6 @@
 /// <reference lib="dom" />
 // @vitest-environment happy-dom
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { EditorSelection, EditorState } from '@codemirror/state'
 import { drawSelection, EditorView, type DecorationSet } from '@codemirror/view'
 import { foldField, livePreviewField, wdFoldRangesForTest } from '../components/editor/decorations'
@@ -160,6 +160,75 @@ describe('注释标注条与脚注', () => {
     expect(classesOf(live)).toContain('cm-live-footref')
     expect(classesOf(live)).toContain('cm-live-footdef')
     expect(mount.querySelector('.cm-live-footref')).not.toBeNull()
+    expect(view.state.doc.toString()).toBe(doc)
+    view.destroy()
+    mount.remove()
+  })
+})
+
+describe('笺条卡片（素笺签名元素，20261014-feature-editor-paper-rebuild）', () => {
+  it('独立链接行整行替换为笺条 widget：元数据填充、点击外开、doc 字节不变', async () => {
+    const openExternal = vi.fn()
+    ;(window as unknown as { api: unknown }).api = {
+      fetchLinkMeta: vi.fn(async () => ({
+        title: '元数据标题',
+        description: '摘语内容',
+        image: '',
+        favicon: ''
+      })),
+      openExternal
+    }
+    const line = '[标题](https://a.b/c)'
+    const doc = `前文\n${line}\n尾行`
+    // 光标在文末（尾行）→ 第二行为非光标行，笺条呈现
+    const { view, mount } = makeView(doc, doc.length)
+    const cardFrom = '前文\n'.length
+    expect(widgetRanges(view.state.field(livePreviewField))).toEqual([
+      `${cardFrom}-${cardFrom + line.length}`
+    ])
+    expect(view.state.doc.toString()).toBe(doc)
+
+    const card = await vi.waitFor(() => {
+      const el = mount.querySelector<HTMLAnchorElement>('a.cm-live-card')
+      if (!el) throw new Error('笺条未渲染')
+      return el
+    })
+    // 元数据到达后笺题为 og:title（源码仍是链接语法——字节保真，展示与内容分离）
+    await vi.waitFor(() => {
+      expect(card.querySelector('.cm-live-card-title')?.textContent).toBe('元数据标题')
+    })
+    card.click()
+    expect(openExternal).toHaveBeenCalledWith('https://a.b/c')
+    expect(view.state.doc.toString()).toBe(doc)
+    view.destroy()
+    mount.remove()
+  })
+
+  it('裸 URL 行也是笺条；宿主 API 缺失回退虚笺（正文不丢）', () => {
+    delete (window as unknown as { api?: unknown }).api
+    const doc = 'https://x.y/page\n尾行'
+    const { view, mount } = makeView(doc, doc.length)
+    const card = mount.querySelector<HTMLAnchorElement>('a.cm-live-card')
+    expect(card).not.toBeNull()
+    expect(card?.classList.contains('cm-live-card--fallback')).toBe(true)
+    expect(card?.querySelector('.cm-live-card-title')?.textContent).toBe('https://x.y/page')
+    expect(view.state.doc.toString()).toBe(doc)
+    view.destroy()
+    mount.remove()
+  })
+
+  it('光标进入笺条行：widget 撤除回源码态（墨迹未干），字节不变', () => {
+    ;(window as unknown as { api: unknown }).api = {
+      fetchLinkMeta: vi.fn(async () => ({ title: 't', description: '', image: '', favicon: '' })),
+      openExternal: vi.fn()
+    }
+    const line = '[a](https://a.b)'
+    const doc = `前文\n${line}\n尾行`
+    const { view, mount } = makeView(doc, doc.length)
+    expect(mount.querySelector('a.cm-live-card')).not.toBeNull()
+    // 光标移入笺条行 → 该行回到源码态
+    view.dispatch({ selection: EditorSelection.cursor('前文\n'.length + 2) })
+    expect(mount.querySelector('a.cm-live-card')).toBeNull()
     expect(view.state.doc.toString()).toBe(doc)
     view.destroy()
     mount.remove()

@@ -149,6 +149,13 @@ describe('applyMarkdownInsert（Markdown 插入纯逻辑）', () => {
     expect(applyMarkdownInsert('hi', 0, 2, 'code').content).toBe('`hi`')
   })
 
+  it('del 双波浪线包裹（素笺笔帘删除线动作）', () => {
+    const r = applyMarkdownInsert('say hi now', 4, 6, 'del')
+    expect(r.content).toBe('say ~~hi~~ now')
+    expect(r.selStart).toBe(6)
+    expect(r.selEnd).toBe(8)
+  })
+
   it('link：选区变 [text]()，光标落 url 待输入位', () => {
     const r = applyMarkdownInsert('see hello now', 4, 9, 'link')
     expect(r.content).toBe('see [hello]() now')

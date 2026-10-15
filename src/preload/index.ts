@@ -44,6 +44,7 @@ const api: DesktopApi = {
   saveImageFromPickedPath: (d, src) => invoke('saveImageFromPickedPath', d, src),
   uploadExistingAsset: (d, ref) => invoke('uploadExistingAsset', d, ref),
   pickImages: () => invoke('pickImages'),
+  fetchLinkMeta: (url) => invoke('fetchLinkMeta', url),
   pickDirectory: () => invoke('pickDirectory'),
   listImages: (dir) => invoke('listImages', dir),
   uploadImages: (paths, opts) => invoke('uploadImages', paths, opts),

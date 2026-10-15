@@ -16,6 +16,7 @@ import {
 } from '../src/main/pickers'
 import { pickUploadRoute, uploadImagesCore, type UploadImagesDeps } from '../src/main/uploader'
 import { composePasteResult, isAssetsRefOfDoc } from '../src/main/images'
+import { isFetchableUrl, parseLinkMeta } from '../src/main/linkMeta'
 import type { UploadMode, UploadResult } from '../src/shared/types'
 
 /**
@@ -283,5 +284,40 @@ describe('uploadImagesCore（批量上传编排）', () => {
     const results = await uploadImagesCore(['/a.png', '/b.png'], undefined, deps)
     expect(results[0]).toEqual({ ok: false, error: 'boom' })
     expect(results[1].ok).toBe(true)
+  })
+})
+
+describe('linkMeta 纯逻辑（素笺笺条元数据抓取）', () => {
+  it('isFetchableUrl：仅放行 http/https 绝对地址', () => {
+    expect(isFetchableUrl('https://a.b/c')).toBe(true)
+    expect(isFetchableUrl('http://a.b')).toBe(true)
+    expect(isFetchableUrl('file:///etc/passwd')).toBe(false)
+    expect(isFetchableUrl('javascript:alert(1)')).toBe(false)
+    expect(isFetchableUrl('notaurl')).toBe(false)
+    expect(isFetchableUrl('')).toBe(false)
+  })
+
+  it('parseLinkMeta：og 优先、title 兜底、相对 favicon 与 description 补全', () => {
+    const html = [
+      '<html><head>',
+      '<title>兜底标题</title>',
+      '<meta property="og:title" content="OG 标题">',
+      '<meta property="og:description" content="摘语内容">',
+      '<meta property="og:image" content="https://img.a.b/cover.jpg">',
+      '<link rel="icon" href="/favicon.ico">',
+      '</head><body>正文噪音 <b>bold</b> 應被忽略</body></html>'
+    ].join('\n')
+    const meta = parseLinkMeta(html, 'https://a.b/page')
+    expect(meta.title).toBe('OG 标题')
+    expect(meta.description).toBe('摘语内容')
+    expect(meta.image).toBe('https://img.a.b/cover.jpg')
+    expect(meta.favicon).toBe('https://a.b/favicon.ico')
+  })
+
+  it('parseLinkMeta：无 og 时回落 title 与 Google favicon 服务；空文档返回空标题', () => {
+    const meta = parseLinkMeta('<html><head><title>只有标题</title></head></html>', 'https://a.b/')
+    expect(meta.title).toBe('只有标题')
+    expect(meta.favicon).toBe('https://www.google.com/s2/favicons?domain=a.b&sz=64')
+    expect(parseLinkMeta('', 'https://a.b/').title).toBe('')
   })
 })

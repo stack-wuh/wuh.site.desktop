@@ -30,12 +30,15 @@ import { workspaceStore, useWorkspaceStore } from '../../../lib/store'
 import { publishEditorCommand, subscribeEditorCommands, type EditorCommand } from '../../../lib/editor-commands'
 import {
   cmApplyFormat,
+  cmConsumeSlashLine,
   cmExternalContent,
   cmHeadingCursor,
+  cmInsertCard,
   cmInsertSnippet,
   findImageOnLine,
   findLinkTargetAt,
-  rewriteImageRef
+  rewriteImageRef,
+  selectionUrl
 } from '../../../lib/editor-cm'
 import {
   entryForRemote,
@@ -44,6 +47,8 @@ import {
   resolveRefRelPath
 } from '../../../lib/editor-image-mapping'
 import { foldField, livePreviewField } from '../decorations'
+import { SlashMenu, type SlashKind, type SlashMenuHandle } from '../SlashMenu'
+import { SelectionToolbar } from '../SelectionToolbar'
 import {
   loadPersistedEditorState,
   publishEditorLiveState,
@@ -195,6 +200,15 @@ export function MarkdownEditor(): React.JSX.Element {
   /** 图片 lightbox（ImageWidget 点击经 CustomEvent 上报，portal 承载） */
   const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null)
   const lightboxReturnFocusRef = useRef<HTMLElement | null>(null)
+  /** 呼墨：行首 `/` 查询行唤出（坐标相对挂载容器；筛选与开合经 ref 供 keymap 同步判定） */
+  const [slash, setSlash] = useState<{ x: number; y: number } | null>(null)
+  const [slashFilter, setSlashFilter] = useState('')
+  const slashOpenRef = useRef(false)
+  const slashMenuRef = useRef<SlashMenuHandle | null>(null)
+  const slashCloseRef = useRef<() => void>(() => {})
+  /** 笔帘：非空选区稳定 300ms 浮现（坐标相对挂载容器；canCard=选区恰为 http(s) URL） */
+  const [selBar, setSelBar] = useState<{ x: number; y: number; canCard: boolean } | null>(null)
+  const selOpenRef = useRef(false)
 
   // 图片点击放大：widget → window CustomEvent → 本组件 portal（Esc/点外关，焦点归还）
   useEffect(() => {
@@ -226,6 +240,36 @@ export function MarkdownEditor(): React.JSX.Element {
     return () => window.removeEventListener('keydown', onKey, true)
   }, [lightbox])
 
+  /** 呼墨落墨：收匣 → 消费 `/` 查询行（纯函数）→ 经命令通道发布动作（词表零新增） */
+  const pickSlash = (kind: SlashKind): void => {
+    const v = viewRef.current
+    slashCloseRef.current?.()
+    if (!v) return
+    const consume = cmConsumeSlashLine(v.state)
+    if (consume) v.dispatch(consume)
+    switch (kind) {
+      case 'hr':
+        publishEditorCommand({ kind: 'insert', snippet: 'hr' })
+        break
+      case 'table':
+        publishEditorCommand({ kind: 'insert', snippet: 'table' })
+        break
+      case 'codeBlock':
+        publishEditorCommand({ kind: 'insert', snippet: 'codeBlock' })
+        break
+      case 'quote':
+        publishEditorCommand({ kind: 'format', action: 'quote' })
+        break
+      case 'image':
+        publishEditorCommand({ kind: 'insertImageFromFile' })
+        break
+      case 'card':
+        publishEditorCommand({ kind: 'insertCard' })
+        break
+    }
+    v.focus()
+  }
+
   useEffect(() => {
     const mountEl = containerRef.current
     if (!mountEl) return
@@ -237,6 +281,73 @@ export function MarkdownEditor(): React.JSX.Element {
       setNotice(msg)
       if (noticeTimer) clearTimeout(noticeTimer)
       noticeTimer = setTimeout(() => setNotice(null), 2600)
+    }
+
+    // 呼墨开合：光标行恰为行首 `/` 查询行即开（键入筛选）；离开该形态即收。
+    // Esc 收匣后抑制重开，直到行不再匹配或光标离开查询行（否则 Esc 后任意键入立刻复开）
+    let slashSuppressed = false
+    const closeSlash = (): void => {
+      if (!slashOpenRef.current) return
+      slashOpenRef.current = false
+      slashSuppressed = true
+      setSlash(null)
+      setSlashFilter('')
+    }
+    slashCloseRef.current = closeSlash
+    const evalSlash = (): void => {
+      const v = viewRef.current
+      if (!v) return
+      const head = v.state.selection.main.head
+      const line = v.state.doc.lineAt(head)
+      const m = /^\/(\S*)$/.exec(line.text)
+      if (!m) {
+        slashSuppressed = false
+        closeSlash()
+        return
+      }
+      if (slashSuppressed) return
+      const coords = v.coordsAtPos(line.from)
+      if (!coords) return
+      const rect = mountEl.getBoundingClientRect()
+      slashOpenRef.current = true
+      setSlash({ x: coords.left - rect.left, y: (coords.bottom ?? coords.top) - rect.top + 6 })
+      setSlashFilter((prev) => (prev === m[1] ? prev : m[1]))
+    }
+
+    // 笔帘显隐：非空选区稳定 300ms 浮现；选区消失即收（Esc 由 keymap 分流）
+    let selTimer: ReturnType<typeof setTimeout> | null = null
+    const hideSelBar = (): void => {
+      if (selTimer) {
+        clearTimeout(selTimer)
+        selTimer = null
+      }
+      if (!selOpenRef.current) return
+      selOpenRef.current = false
+      setSelBar(null)
+    }
+    const evalSelBar = (): void => {
+      const v = viewRef.current
+      if (!v) return
+      if (v.state.selection.main.empty) {
+        hideSelBar()
+        return
+      }
+      if (selTimer) clearTimeout(selTimer)
+      selTimer = setTimeout(() => {
+        const cur = viewRef.current
+        if (!cur) return
+        const sel = cur.state.selection.main
+        if (sel.empty) return
+        const coords = cur.coordsAtPos(sel.head)
+        if (!coords) return
+        const rect = mountEl.getBoundingClientRect()
+        selOpenRef.current = true
+        setSelBar({
+          x: coords.left - rect.left + (coords.right - coords.left) / 2,
+          y: coords.top - rect.top - 44,
+          canCard: selectionUrl(cur.state.doc.sliceString(sel.from, sel.to)) != null
+        })
+      }, 300)
     }
 
     // 图片链文案束（挂载期 t 口径与既有 placeholder 一致）
@@ -289,6 +400,46 @@ export function MarkdownEditor(): React.JSX.Element {
             return true
           }
         },
+        {
+          // 呼墨键盘链：Enter 落墨 / ↑↓ 换高亮（焦点恒留编辑器，虚拟高亮）
+          key: 'Enter',
+          run: () => {
+            if (!slashOpenRef.current) return false
+            slashMenuRef.current?.choose()
+            return true
+          }
+        },
+        {
+          key: 'ArrowDown',
+          run: () => {
+            if (!slashOpenRef.current) return false
+            slashMenuRef.current?.move(1)
+            return true
+          }
+        },
+        {
+          key: 'ArrowUp',
+          run: () => {
+            if (!slashOpenRef.current) return false
+            slashMenuRef.current?.move(-1)
+            return true
+          }
+        },
+        {
+          // Esc 分治：呼墨 > 笔帘 > （其余交给既有面板让位链）
+          key: 'Escape',
+          run: () => {
+            if (slashOpenRef.current) {
+              closeSlash()
+              return true
+            }
+            if (selOpenRef.current) {
+              hideSelBar()
+              return true
+            }
+            return false
+          }
+        },
         ...searchKeymap,
         ...markdownKeymap,
         ...defaultKeymap,
@@ -311,6 +462,9 @@ export function MarkdownEditor(): React.JSX.Element {
             content: update.state.doc.toString(),
             cursorLine: line
           })
+          // 呼墨/笔帘状态机与 live state 同源驱动（doc/selection 事务）
+          evalSlash()
+          evalSelBar()
         }
       }),
       EditorView.domEventHandlers({
@@ -458,6 +612,24 @@ export function MarkdownEditor(): React.JSX.Element {
           v.focus()
           return true
         }
+        case 'insertCard': {
+          // 呼墨「链接笺条」：读剪贴板 http(s) URL → 光标处插入独立笺条行（纯函数落位）
+          void navigator.clipboard
+            .readText()
+            .then((text) => {
+              const cur = viewRef.current
+              if (!cur) return
+              const url = selectionUrl(text)
+              if (!url) {
+                notify(t('editor.cardNeedUrl'))
+                return
+              }
+              cur.dispatch(cmInsertCard(cur.state, url))
+              cur.focus()
+            })
+            .catch(() => notify(t('editor.cardNeedUrl')))
+          return true
+        }
         case 'toggleRender': {
           const next = renderModeRef.current === 'render' ? 'source' : 'render'
           renderModeRef.current = next
@@ -500,6 +672,7 @@ export function MarkdownEditor(): React.JSX.Element {
       disposed = true
       off()
       if (noticeTimer) clearTimeout(noticeTimer)
+      if (selTimer) clearTimeout(selTimer)
       view.destroy()
       viewRef.current = null
       renderCompRef.current = null
@@ -530,6 +703,20 @@ export function MarkdownEditor(): React.JSX.Element {
   return (
     <EditorMount ref={containerRef} style={mountStyle} aria-label={t('editor.placeholder')} data-testid="markdown-editor">
       {notice && <Notice role="status">{notice}</Notice>}
+      {slash && (
+        <SlashMenu ref={slashMenuRef} x={slash.x} y={slash.y} filter={slashFilter} onPick={pickSlash} />
+      )}
+      {selBar && (
+        <SelectionToolbar
+          x={selBar.x}
+          y={selBar.y}
+          canCard={selBar.canCard}
+          onAction={(action) => {
+            publishEditorCommand({ kind: 'format', action })
+            viewRef.current?.focus()
+          }}
+        />
+      )}
       {lightbox &&
         createPortal(
           <Lightbox

@@ -393,3 +393,68 @@ export function headingFoldTarget(
   if (toLine < contentStart) return null
   return { fromLine: contentStart, toLine }
 }
+
+// ===== 素笺手记（20261014-feature-editor-paper-rebuild）=====
+// 笔帘/呼墨/笺条的位置与改写计算唯一事实源；UI 只消费本层结果 dispatch。
+
+/** 独立链接行笺条区间（绝对偏移为行内偏移，装饰层加 line.from） */
+export interface CardSpan {
+  from: number
+  to: number
+  /** 链接文字（可空——裸 URL 行与 `[](url)` 皆空，笺题由元数据兜底） */
+  title: string
+  url: string
+}
+
+const STANDALONE_LINK_RE = /^\s*\[([^\]]*)\]\((https?:\/\/[^)\s]+)\)\s*$/
+const BARE_URL_RE = /^\s*(https?:\/\/[^\s)]+)\s*$/
+
+/**
+ * 笺条判定：整行恰为一个 http(s) 链接（允许首尾空白）或裸 http(s) URL。
+ * 列表/引用前缀、行内夹杂、相对链接一律不算——字节保真，判定不改内容。
+ */
+export function findCardLine(lineText: string): CardSpan | null {
+  const link = STANDALONE_LINK_RE.exec(lineText)
+  if (link) {
+    const open = lineText.indexOf('[')
+    const close = lineText.indexOf(']', open)
+    return { from: open, to: close + 1 + link[2].length + 2, title: link[1], url: link[2] }
+  }
+  const bare = BARE_URL_RE.exec(lineText)
+  if (bare) {
+    const from = lineText.indexOf(bare[1])
+    return { from, to: from + bare[1].length, title: '', url: bare[1] }
+  }
+  return null
+}
+
+/** 选区文本 trim 后恰为 http(s) URL 时返回之（笔帘「转为笺条」可用性判定） */
+export function selectionUrl(text: string): string | null {
+  const trimmed = text.trim()
+  return /^https?:\/\/\S+$/.test(trimmed) ? trimmed : null
+}
+
+/**
+ * 呼墨「链接笺条」落墨：光标处插入独立笺条行 `[url](url)` + 换行；
+ * 当前光标前有非空白内容时先补换行隔离（保证整行独立，渲染态即成笺条）。
+ */
+export function cmInsertCard(state: EditorState, url: string): TransactionSpec {
+  const at = state.selection.main.to
+  const line = state.doc.lineAt(at)
+  const before = line.text.slice(0, at - line.from)
+  const lead = before.trim().length > 0 ? '\n' : ''
+  const insert = `${lead}[${url}](${url})\n`
+  return { changes: { from: at, insert }, selection: EditorSelection.cursor(at + insert.length) }
+}
+
+/**
+ * 呼墨查询行消费：光标所在行恰为行首 `/` 查询行（`/filter`）时整行删除（含换行符，
+ * 行末则钳到文档尾）；其余情况返回 null（调用方不删除）。
+ */
+export function cmConsumeSlashLine(state: EditorState): TransactionSpec | null {
+  const head = state.selection.main.head
+  const line = state.doc.lineAt(head)
+  if (!/^\/\S*$/.test(line.text)) return null
+  const to = Math.min(line.to + 1, state.doc.length)
+  return { changes: { from: line.from, to, insert: '' }, selection: EditorSelection.cursor(line.from) }
+}

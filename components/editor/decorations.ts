@@ -20,6 +20,7 @@ import {
   WidgetType
 } from '@codemirror/view'
 import {
+  findCardLine,
   footnoteDefPrefix,
   headingFoldTarget,
   parseBlocks,
@@ -28,6 +29,7 @@ import {
 } from '../../lib/editor-cm'
 import { workspaceStore } from '../../lib/store'
 import {
+  CardWidget,
   CommentWidget,
   FenceHeaderWidget,
   FoldChevronWidget,
@@ -297,6 +299,17 @@ function buildDecorations(state: EditorState): DecorationSet {
     const line = doc.line(n)
     const text = docLines[n - 1]
     if (!text || text.startsWith('```') || text.startsWith('~~~')) continue
+    // 笺条：独立链接行/裸 URL 行整行替换为卡片 widget（光标行保持源码态；
+    // widget replace 进 atomicSubset 子集，字节保真零改写）
+    const card = findCardLine(text)
+    if (card) {
+      decos.push({
+        from: line.from,
+        to: line.to,
+        value: Decoration.replace({ widget: new CardWidget(card.url, card.title), block: true })
+      })
+      continue
+    }
     // 脚注定义行：分节样式 + 隐藏 `[^id]:` 前缀（不做跳转，语义与预览面板一致）
     const defPrefix = footnoteDefPrefix(text)
     if (defPrefix != null) {
