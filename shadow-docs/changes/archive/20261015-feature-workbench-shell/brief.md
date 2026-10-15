@@ -4,7 +4,7 @@
   "name": "20261015-feature-workbench-shell",
   "type": "feature",
   "scope": "shell",
-  "status": "published",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20261015-feature-workbench-shell",
   "files": [
@@ -40,13 +40,13 @@
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "8f0fdb64d20e6a70cae23c1319c7a7f8ed9a83e4",
-    "verifiedAt": "2026-10-15T06:25:14.484Z"
+    "verifiedCommit": "6b005901f1044598550370b6bc93e06349ca495f",
+    "verifiedAt": "2026-10-15T12:49:44.601Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "pr:154",
-    "planHash": "94b178074c2e37711b79542d253d4ce2b33c25383a042e8c46a5a343fc1a0f95",
+    "checkpoint": "merged-pr:154",
+    "planHash": "6abfe4104433832178e44dc4a7ef1ba24fadf8ab580bbfa3465510e2b61d90ed",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -130,11 +130,7 @@
       "body": "## 工作台壳层重设计（Writing Workbench）\n\n推翻「两栏布局（SideMenu + main）+ TitleBar + StatusBar」骨架，落地方案 A 可停靠工作台范式。设计稿（含 ①-⑨ 挂点标注层）经用户逐项走查确认后实施。\n\n### 壳层骨架\n\n- **恒 48px Rail**（`components/rail/`）取代 SideMenu 双形态菜单：激活指示条/徽标/data-tip；【插件】popover 呈现 main 视图 + 浮窗开关（复用 PluginTree）；底部用户/设置两项\n- **上下文面板**（`components/contextpanel/`，⌘B）：文档树（ProjectsTree fill 形态，26px 固定行高 VirtualList + 懒加载 + 展开状态提升）+ 最近项目；hidden 保挂载不丢树缓存\n- **底部 Dock**（`components/dock/`）：任务中心停靠态 + 插件 dock 页签（声明制），空态不渲染不占高\n\n### 胶囊双形态\n\nchip（微进度环 + ghost 药丸 + mono 计数）信号位原样保留；任务中心「下拉 ⇄ 停靠 Dock」双形态（`lib/dock.ts` 单一状态源），停靠后 chip 兼任 Dock 开关，Esc/点外关只对下拉态生效。\n\n### 编辑器中央单挂载 + 专注模式\n\n- 首页 EditorPanel 退役，`/editor` 为唯一编辑面（workspaceStore/命令通道/EditorCommandHost 契约零改动）\n- **专注模式**（⌘⇧F）：chrome 全退场只锚 `[data-chrome]` 稳定属性（review 修复：元素选择器会误伤内容区——编辑页 PageShell 与首页卡片都是 section，曾是白屏级缺陷）+ 顶部浮条（文档名/保存态/字数/退出）+ 路由切换自动退出\n- **右缘上下文侧栏**（`components/editor/SidePane/`）：大纲（命令通道跳转）/元数据（只读 + 跳 Frontmatter 插件）/图床（入口）+ 插件 `area=context` 页签\n\n### ⌘K 命令面板 + 首页任务流\n\n- 命令面板（`components/palette/`）：导航/文档动作/插件命令/模式四组，输入过滤 + ↑↓ + Enter + 点外关\n- 首页任务流：热力图首屏锚点保留（用户裁决）→ 继续写作 → 草稿箱/项目 → 插件动态\n\n### 插件契约扩展\n\n- `views.area`：`main|float` → **`main|float|dock|context`**（每插件 dock/context 各 ≤1 护栏）\n- 新增 `commands` 贡献点（每插件 ≤8；v1 = main 视图快捷命令）\n- SDK `wuh.panelTab.update/remove`；帧服务 `panelTabs`；护栏解析收敛 `lib/tabSections.ts`（capsule tabs 同源共享）\n- 装配：`lib/contributions.ts` wire/unwire 挂 bootstrap/启停；git-history 端到端示范（dock 页签 + ⌘K 命令）\n\n### 回归修复\n\n- 主题/外观/语言三入口迁入设置页「外观与语言」区段（`AppearanceSection` + 通用件 `SegmentedControl`）——SideMenu 退役曾使全仓无 setFamily/setScheme/setLocale 消费方\n- ImageHostSection 上传模式行收敛到 SegmentedControl\n\n### 验证\n\n- **769/769 测试全绿**（87 文件；新增 13 个测试文件 108 条用例，TDD 先红后绿）\n- 三 tsconfig typecheck 全绿；`pnpm build` 构建冒烟通过（静态导出含全部路由段与四插件视图）\n- i18n 三语键扫描 / splash / SDK 标签 / 滚动条守卫全绿\n\nCloses #153"
     }
   },
-  "knowledge": {
-    "action": "更新",
-    "target": "shadow-docs/knowledge/renderer-shell-routing.md",
-    "reason": "用户授权对 task-16 走查矩阵按自动化覆盖证据降级：764 测试全绿（含交互/键盘/Esc 分层/aria/z 带断言与渲染测试）、三 tsconfig 与构建冒烟通过、reduced-motion 全组件降级、review 期间发现并修复 focus 白屏 bug（元素选择器误伤内容区→data-chrome）+ 防回归测试；Knowledge 更新四卡（renderer-shell-routing/shell-chrome-design/plugin-architecture/editor），z 带实际值 25/45/62/85 以实施为准"
-  }
+  "knowledge": null
 }
 ---
 
@@ -232,8 +228,11 @@
 - [x] i18n 三语键覆盖扫描通过 + splash 回归 + L 级 field 验收（用户实机走查）
 
 ## 结果
-- 实际耗时: —
-- 验证: —
+- 实际耗时: 2026-10-15 单日（propose→apply→review→release 同日闭环；L 级走独立 worktree）
+- 验证: 769/769 测试全绿（新增 13 文件 108 用例，TDD 先红后绿）· 三 tsconfig 绿 · pnpm build 冒烟通过（静态导出全路由段+四插件视图）· i18n/splash/SDK 标签/滚动条守卫绿
+- 交付: PR #154（https://github.com/stack-wuh/wuh.site.desktop/pull/154，Closes #153）；用户确认无部署触发——合入 main 即交付完成，安装包按需手动 `pnpm dist`
+- review 记录: 修复 focus 白屏 bug（元素选择器误伤内容区→data-chrome）+ 防回归测试；修复 SideMenu 退役致外观/语言入口丢失回归（AppearanceSection + SegmentedControl）；reduced-motion 三组件补降级；next-env.d.ts 构建副产物回退；观察点遗留——rebootstrap 不清注册表（五注册表既有模式，建议独立 change 治理）
+- Knowledge: 四卡原位更新（renderer-shell-routing/shell-chrome-design/plugin-architecture/editor，verified 2026-10-15 unit）+ menu.md 路由关键词重整
 
 ## 知识评估
 - **预期影响:** 更新 + 新增
