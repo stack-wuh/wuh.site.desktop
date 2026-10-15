@@ -43,7 +43,7 @@
   "workflow": {
     "operation": null,
     "checkpoint": "c0e9e60654f41dd52d63f8916ec25253c9c62e15",
-    "planHash": "c5487d2515668ef7c3d9e5c3ad63188c73a932b14f366fd3b9d867521cbeab87",
+    "planHash": "a9090dae18f40b6742d08de59dea8be7821161de7e43899825ca7c012c12ad4b",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -58,44 +58,11 @@
     "worktree": "/Users/wuhong/shadow-desktop/worktrees/20261014-editor-paper-rebuild",
     "commit": {
       "files": [
-        "app/(shell)/editor/page.tsx",
-        "components/editor/MarkdownEditor/index.tsx",
-        "components/editor/MarkdownEditor/renderTheme.ts",
-        "components/editor/PreviewPane.tsx",
-        "components/editor/SelectionToolbar",
-        "components/editor/SlashMenu",
-        "components/editor/Spine",
-        "components/editor/Toolbar.tsx",
-        "components/editor/decorations.ts",
-        "components/editor/widgets.ts",
-        "components/home/EditorPanel/FilePicker.tsx",
-        "components/home/EditorPanel/WorkspacePicker.tsx",
-        "components/home/EditorPanel/index.tsx",
-        "components/home/EditorPanel/styles.ts",
-        "components/home/HomePage.tsx",
-        "components/icons/index.tsx",
-        "components/theme/tokens.ts",
-        "lib/editor-cm.ts",
-        "lib/editor-commands.ts",
-        "lib/editor-info.ts",
-        "lib/editor-state.ts",
-        "lib/i18n/locales.ts",
-        "lib/store.ts",
         "shadow-docs/changes/20261014-feature-editor-paper-rebuild",
-        "src/main/ipc.ts",
-        "src/main/linkMeta.ts",
-        "src/main/register-features.ts",
-        "src/preload/index.ts",
-        "src/shared/types.ts",
-        "tests/drafts-editor-dom.test.tsx",
         "tests/editor-codemirror.test.ts",
-        "tests/editor-interactions-widgets.test.tsx",
-        "tests/editor-page.test.tsx",
-        "tests/editor-toolbar.test.tsx",
-        "tests/home-editor-panel.test.ts",
-        "tests/oss-upload.test.ts"
+        "tests/editor-page.test.tsx"
       ],
-      "message": "feat(editor): 编辑器 2.0 素笺手记——首页退出编辑（/editor 唯一沉浸纸面、顶栏三件制 hover 显影、预览分栏与常驻工具条退役）、衬线题阶排版（--font-serif）、书口刻度（大纲跳章+bloom+密度自适应 cap24）、笔帘选区工具条（format 词表复用+del 增量）、呼墨斜杠菜单（词表增 insertCard）、笺条链接卡片（CardWidget 三态+linkMeta IPC userData 缓存+失败回退虚笺）、空文档落笔印、i18n 三语 25 键；brief 结果段记 INV-1..7 对账与打包链 139 证据缺口"
+      "message": "test(editor): 合并 workbench-shell 后的对账——顶栏五件制断言更新（侧栏开关/新建回归 hover 显影栏）、del 词表断言迁入 editor-codemirror（随 main 删除 home-editor-panel 套件）、brief 结果段记合并决议与合并后全量验证（86 套件/925 用例零失败 + 三 tsc 绿）"
     }
   }
 }
@@ -197,6 +164,7 @@
   - **证据缺口**：`electron-vite build` 本机确定性 SIGSEGV（3 次复现，vite transform 段；`--jitless` 因 undici 不可用）——归因本机打包链 V8 家族不稳（renderer-shell-routing 卡「Node 工具链钉定」与 20261008 brief 均有同类在案记录，当时同样委托用户侧交付），非代码归因（代码缺陷产生 exit 1 构建诊断而非段错误；三 tsc 已覆盖 main/preload/renderer 类型契约）。替代观察点：release 阶段 CI/用户机构建冒烟。
   - brief 契约门：本 change 过门（评级=L，INV-1..7 齐；门内另 8 个红为 20260928/20261007 未归档历史 brief 的欠账，与本 change 无关，已提示单独归档收口）
   - 实机走查（runtime 观察点）：待用户协作执行（任务 18 清单：整壳形态/书口跳章与 bloom/呼墨键盘链/笔帘显隐/笺条三态与失败回退/四主题明暗/IME 中文输入/reduced-motion/字节保真抽查）
+- **origin/main 合入（20261015-feature-workbench-shell，PR #154，merge da222a0）**：工作台壳层重设计（rail/dock/focusbar/palette/contextpanel/SidePane/lib/panelTabs 插件 context 页签）与本次变更同向（main 亦退役 EditorPanel 并中央化 /editor）。冲突 4 文件全解：编辑页取「main 的 SidePane 挂点 + 侧栏开关/新建按钮回归顶栏」∪「本次的 hover 显影/书口/落笔印/衬线题阶」（书口在侧栏展开时让位，两者互补：SidePane=深度上下文工具，书口=常驻墨口导航）；HomePage 取 main 版（任务流卡组）；drafts-editor-dom 测试取 main 版（EditorPage 挂载）；home-editor-panel 测试随 main 删除（store 插入逻辑的 del 断言迁入 editor-codemirror 套件经 cmApplyFormat 回归）。合并后重跑全部门禁：三 tsconfig 全绿 + 86 套件逐批全绿（925 用例，零失败；本机 V8 不稳以单文件小批 + 重试消化，崩波峰集中在 10-16 晨）。D3 偏差更新：顶栏从「三件制」修正为「hover 显影栏五件」（返回/面包屑/侧栏开关/新建/保存）——以已发布的工作台壳层（PR #154）为准，显影机制保证写作时安静
 - 文件清单修正案（执行必需的越清单改动，release 对账时报备）:
   - `lib/store.ts`（MarkdownInsertAction 增 `del`，笔帘删除线动作的词表落点——applyMarkdownInsert 是位置计算唯一事实源）
   - `components/icons/index.tsx`（注册表增 IconStrikethrough——「新图标先进注册表」约束要求）

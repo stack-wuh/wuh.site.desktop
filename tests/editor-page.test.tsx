@@ -218,13 +218,15 @@ describe('统一编辑页渲染冒烟', () => {
     vi.unstubAllGlobals()
   })
 
-  it('顶栏三件制：返回/面包屑/保存，「新建」不驻顶栏（退居胶囊）；保存可点击不抛错', async () => {
+  it('顶栏悬浮件：返回/面包屑/侧栏开关/新建/保存同居 hover 显影栏；保存可点击不抛错', async () => {
     const console_ = captureRenderConsole()
     renderPage()
     await screen.findByText('新草稿')
     console_.restore()
 
-    expect(screen.queryByRole('button', { name: '新建' })).toBeNull()
+    // 20261015 合并决议：工作台侧栏开关与「新建」回归顶栏（hover 显影不喧哗），保存仍是唯一主操作
+    expect(screen.getByRole('button', { name: '上下文侧栏' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: '新建' })).toBeTruthy()
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: '保存当前文档' }))
       await Promise.resolve()
@@ -237,7 +239,8 @@ describe('统一编辑页渲染冒烟', () => {
 describe('首页退出编辑（INV-3 编辑面唯一挂载 /editor）', () => {
   it('HomePage 不再挂载任何编辑面（无 CM6 内容、无编辑器挂载点），问候与热力图仍在', async () => {
     installApi({
-      getAboutActivity: vi.fn(async () => null)
+      getAboutActivity: vi.fn(async () => null),
+      listRecentWorkspaces: vi.fn(async () => [])
     })
     const console_ = captureRenderConsole()
     const { container } = render(<LocaleProvider>{<HomePage />}</LocaleProvider>)
