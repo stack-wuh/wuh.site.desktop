@@ -26,7 +26,8 @@ export type PluginPermission = (typeof PLUGIN_PERMISSIONS)[number]
 
 // ---------- manifest ----------
 
-export type ViewArea = 'main' | 'float'
+/** 视图区域（20261015 工作台扩展）：main=中央路由页 | float=浮窗 | dock=底部 Dock 页签 | context=编辑器上下文侧栏页签 */
+export type ViewArea = 'main' | 'float' | 'dock' | 'context'
 
 /** 图标白名单：host 按名称映射到同源 lucide/品牌图标，插件不携带图标资源 */
 export const PLUGIN_ICONS = [
@@ -103,6 +104,18 @@ export interface PluginCapsuleTabContribution {
   icon: PluginIconName
 }
 
+/** 命令面板插件命令贡献（20261015 工作台 task-12，声明制；每插件 ≤8）：
+ * v1 语义 = 插件 main 视图快捷命令（viewId 必填，壳层导航直达）——协议级命令
+ * 执行（HostRequest service 扩展 + 三方同步）留待 v2。 */
+export interface PluginCommandContribution {
+  /** 插件内唯一，[a-z0-9][a-z0-9._-]*；面板寻址 = <pluginId>:<commandId> */
+  id: string
+  /** 命令标题（1-40 字符，运行时不可变；不进壳层 i18n） */
+  title: string
+  /** 执行去向：须为本插件已声明的 main 视图 id */
+  viewId: string
+}
+
 export interface PluginPublisherContribution {
   id: string
   label: string
@@ -122,6 +135,7 @@ export interface PluginManifest {
   tasks?: PluginTaskContribution[]
   capsule?: PluginCapsuleContribution[]
   tabs?: PluginCapsuleTabContribution[]
+  commands?: PluginCommandContribution[]
   permissions: PluginPermission[]
 }
 
@@ -198,7 +212,7 @@ export interface PluginHostApi {
 export interface FrameInvoke {
   kind: 'invoke'
   id: number | string
-  service: 'cap' | 'doc' | 'render' | 'ui' | 'statusBar' | 'tasks' | 'capsule' | 'events'
+  service: 'cap' | 'doc' | 'render' | 'ui' | 'statusBar' | 'tasks' | 'capsule' | 'events' | 'panelTabs'
   method: string
   args: unknown[]
 }
@@ -330,11 +344,11 @@ export function validateManifest(
       } else {
         viewIds.add(v.id)
       }
-      if (v.area !== 'main' && v.area !== 'float') {
+      if (v.area !== 'main' && v.area !== 'float' && v.area !== 'dock' && v.area !== 'context') {
         errors.push(
           v.area === 'sidebar'
             ? `views[${i}].area sidebar 已废弃，请迁移为 main（右栏页面）: ${String(v.area)}`
-            : `views[${i}].area 只能是 main/float: ${String(v.area)}`
+            : `views[${i}].area 只能是 main/float/dock/context: ${String(v.area)}`
         )
         valid = false
       }
@@ -358,6 +372,13 @@ export function validateManifest(
         })
       }
     })
+  }
+
+  // 容量护栏（20261015 工作台扩展）：每插件 dock / context 页签各 ≤1（壳层一等
+  // 面板的插件贡献位，防平铺致滥——与已废弃 sidebar 的本质区别见 brief 决策 2）
+  for (const kind of ['dock', 'context'] as const) {
+    const count = views.filter((v) => v.area === kind).length
+    if (count > 1) errors.push(`views 中 area=${kind} 最多声明 1 个: ${count}`)
   }
 
   const publishers: PluginPublisherContribution[] = []
@@ -576,6 +597,50 @@ export function validateManifest(
     }
   }
 
+  // commands：可选，命令面板插件命令（声明制，每插件 ≤8）；viewId 须为本插件 main 视图
+  const commands: PluginCommandContribution[] = []
+  if (raw.commands !== undefined) {
+    if (!Array.isArray(raw.commands)) {
+      errors.push('commands 必须是数组')
+    } else {
+      if (raw.commands.length > 8) errors.push('commands 最多声明 8 个')
+      const cmdIds = new Set<string>()
+      raw.commands.forEach((c, i) => {
+        if (!isRecord(c)) {
+          errors.push(`commands[${i}] 必须是对象`)
+          return
+        }
+        let valid = true
+        if (typeof c.id !== 'string' || !ID_RE.test(c.id)) {
+          errors.push(`commands[${i}].id 非法（须匹配 ${ID_RE}）: ${String(c.id)}`)
+          valid = false
+        } else if (cmdIds.has(c.id)) {
+          errors.push(`command id 重复: ${c.id}`)
+          valid = false
+        } else {
+          cmdIds.add(c.id)
+        }
+        if (typeof c.title !== 'string' || c.title.trim().length === 0 || c.title.length > 40) {
+          errors.push(`commands[${i}].title 须为 1-40 字符: ${String(c.title)}`)
+          valid = false
+        }
+        if (typeof c.viewId !== 'string') {
+          errors.push(`commands[${i}].viewId 必填（v1 命令 = 插件 main 视图快捷方式）`)
+          valid = false
+        } else {
+          const target = views.find((v) => v.id === c.viewId)
+          if (!target || target.area !== 'main') {
+            errors.push(`commands[${i}].viewId 须指向本插件已声明的 main 视图: ${String(c.viewId)}`)
+            valid = false
+          }
+        }
+        if (valid) {
+          commands.push({ id: c.id as string, title: c.title as string, viewId: c.viewId as string })
+        }
+      })
+    }
+  }
+
   if (errors.length > 0) return { ok: false, errors }
   return {
     ok: true,
@@ -591,6 +656,7 @@ export function validateManifest(
       ...(tasks.length > 0 ? { tasks } : {}),
       ...(capsule.length > 0 ? { capsule } : {}),
       ...(tabs.length > 0 ? { tabs } : {}),
+      ...(commands.length > 0 ? { commands } : {}),
       permissions: perms
     }
   }

@@ -13,8 +13,9 @@
  * 序列化 ≤4KB，沿用 events/tasks 先例）；row.viewId 须为本插件已声明的 main 视图。
  */
 
-import { PLUGIN_ICONS, type CapsuleTemplate, type PluginManifest } from '@shared/plugin'
+import { type CapsuleTemplate, type PluginManifest } from '@shared/plugin'
 import { createStore } from './createStore'
+import { parseTabSections } from './tabSections'
 
 export type CapsuleTone = 'default' | 'primary' | 'success' | 'warning'
 
@@ -205,79 +206,14 @@ export function removeCapsule(pluginId: string, moduleId: string): void {
 
 // ---------- 插件 Tab（20260925-feature-capsule-plugin-tab） ----------
 
-const MAX_TAB_SECTIONS = 3
-const MAX_TAB_ROWS_PER_SECTION = 8
-const MAX_TAB_PAYLOAD_BYTES = 4096
-
 /** 运行时上报 tab 内容（未声明 tab 报错；update 同时恢复 removeTab 的隐藏）。
-    payload = sections[]，逐字段严格 typeof 校验（帧消息禁 Number() 宽转），护栏：
-    ≤3 sections × ≤8 rows、JSON 序列化 ≤4KB、row.icon 白名单、row.viewId 归属本插件 main 视图 */
+    护栏解析唯一事实源在 lib/tabSections.parseTabSections（capsule tabs / dock /
+    上下文侧栏页签三处共用：≤3×≤8、4KB、icon 白名单、viewId 归属） */
 export function updateCapsuleTab(pluginId: string, tabId: string, payload: unknown): void {
   const state = store.get()
   const tab = state.tabs.find((t) => t.key === tabKey(pluginId, tabId))
   if (!tab) throw new Error(`胶囊 Tab 未声明: ${pluginId}/${tabId}`)
-  let raw = ''
-  try {
-    raw = JSON.stringify(payload ?? {})
-  } catch {
-    throw new Error('tab payload 须可 JSON 序列化')
-  }
-  if (raw.length > MAX_TAB_PAYLOAD_BYTES) {
-    throw new Error(`tab payload 序列化须 ≤${MAX_TAB_PAYLOAD_BYTES} 字节: ${raw.length}`)
-  }
-  const p = (payload ?? {}) as Record<string, unknown>
-  if (!Array.isArray(p.sections)) throw new Error('sections 须为数组')
-  if (p.sections.length > MAX_TAB_SECTIONS) {
-    throw new Error(`sections 最多 ${MAX_TAB_SECTIONS} 组`)
-  }
-  const sections: CapsuleTabSection[] = p.sections.map((s, si) => {
-    if (typeof s !== 'object' || s === null || Array.isArray(s)) {
-      throw new Error(`sections[${si}] 须为对象`)
-    }
-    const sec = s as Record<string, unknown>
-    if (sec.title !== undefined && (typeof sec.title !== 'string' || sec.title.length === 0 || sec.title.length > 20)) {
-      throw new Error(`sections[${si}].title 须为 1-20 字符的字符串`)
-    }
-    if (!Array.isArray(sec.rows)) throw new Error(`sections[${si}].rows 须为数组`)
-    if (sec.rows.length > MAX_TAB_ROWS_PER_SECTION) {
-      throw new Error(`sections[${si}].rows 最多 ${MAX_TAB_ROWS_PER_SECTION} 行`)
-    }
-    const rows: CapsuleTabRow[] = sec.rows.map((r, ri) => {
-      if (typeof r !== 'object' || r === null || Array.isArray(r)) {
-        throw new Error(`sections[${si}].rows[${ri}] 须为对象`)
-      }
-      const row = r as Record<string, unknown>
-      if (typeof row.text !== 'string' || row.text.length === 0 || row.text.length > 60) {
-        throw new Error(`sections[${si}].rows[${ri}].text 须为 1-60 字符的字符串`)
-      }
-      if (row.icon !== undefined && !(PLUGIN_ICONS as readonly string[]).includes(String(row.icon))) {
-        throw new Error(`sections[${si}].rows[${ri}].icon 不在白名单: ${String(row.icon)}`)
-      }
-      if (row.detail !== undefined && (typeof row.detail !== 'string' || row.detail.length > 80)) {
-        throw new Error(`sections[${si}].rows[${ri}].detail 须为 ≤80 字符的字符串`)
-      }
-      if (row.tone !== undefined && !TONES.includes(row.tone as CapsuleTone)) {
-        throw new Error(`sections[${si}].rows[${ri}].tone 只能是 ${TONES.join('/')}: ${String(row.tone)}`)
-      }
-      if (row.viewId !== undefined) {
-        if (typeof row.viewId !== 'string' || !tab.viewIds.includes(row.viewId)) {
-          throw new Error(`sections[${si}].rows[${ri}].viewId 须指向本插件已声明的 main 视图: ${String(row.viewId)}`)
-        }
-      }
-      return {
-        ...(row.icon !== undefined ? { icon: row.icon as string } : {}),
-        text: row.text,
-        ...(row.detail !== undefined ? { detail: row.detail as string } : {}),
-        ...(row.tone !== undefined ? { tone: row.tone as CapsuleTone } : {}),
-        ...(row.viewId !== undefined ? { viewId: row.viewId as string } : {})
-      }
-    })
-    return {
-      ...(sec.title !== undefined ? { title: sec.title as string } : {}),
-      rows
-    }
-  })
-  tab.sections = sections
+  tab.sections = parseTabSections(payload, tab.viewIds)
   tab.hidden = false
   commit()
 }

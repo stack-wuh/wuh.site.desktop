@@ -1,24 +1,26 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '../ui/Button'
 import styled, { keyframes } from 'styled-components'
 import { Heatmap } from './Heatmap'
 import { buildHeatmapViewData } from './heatmapData'
 import { useAboutActivity } from './useAboutActivity'
-import { EditorPanel } from './EditorPanel'
 import { useLocale } from '../../lib/i18n/context'
 import { useGithubIdentity } from '../../lib/identity'
 import { publishEditorLiveState, useEditorLiveState } from '../../lib/editor-state'
+import { useWorkspaceStore } from '../../lib/store'
+import { refreshDrafts, useDrafts } from '../../lib/drafts'
+import { countWords } from '../../lib/editor-info'
+import { tasksStore, visibleTasks } from '../../lib/tasks'
 
 /**
- * 首页（两栏布局起为右栏默认页面；2026-09-22 升级为写作工作台）：
- * 问候语 → 综合活动热力图（节奏总览）→ 主编辑器面板（20260922 首页编辑器面板：
- * 项目/文件筛选收进面板上下文行，热力图由底部上移至问候语之下）。
- * 专注模式（20260923-feature-capsule-control-center）：问候/热力图淡出至 5%
- * 不卸载（会话态，经 editor-state 总线与胶囊开关同源），Esc 退出。
- * 无返回按钮/Esc/焦点归还语义，左栏 SideMenu 常驻可见，
- * 页面互斥切换由 App Router 路由段裁决。
+ * 首页（20261015-feature-workbench-shell task-11 任务流化）：问候语 → 综合活动
+ * 热力图（首屏视觉锚点，用户裁决保留置顶）→ 任务导向卡组——继续写作（活跃文档
+ * 一等入口）、草稿箱/项目计数卡、插件动态（tasks 聚合）。信息架构从「按功能分区」
+ * 转向「按任务流组织」；EditorPanel 已退役（编辑器中央单挂载于 /editor）。
+ * 专注模式淡出语义保留（editor-state 总线同源，Esc 退出）。
  */
 
 const pageEnter = keyframes`
@@ -89,6 +91,100 @@ const Retry = styled.div`
   margin-top: 8px;
 `
 
+/* 任务流卡组（task-11） */
+const CardRow = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+`
+
+const FlowCard = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--chrome-panel);
+  border: 1px solid var(--chrome-border);
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 150ms ease-out,
+    background-color 150ms ease-out;
+
+  &:hover {
+    border-color: var(--primary-color);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: -2px;
+  }
+`
+
+const FlowCardTitle = styled.span`
+  font-size: 13px;
+  color: var(--text-primary);
+  font-weight: 600;
+`
+
+const FlowNum = styled.span`
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  color: var(--primary-color);
+`
+
+const FlowRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+`
+
+const FlowDoc = styled.span`
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-primary);
+`
+
+const FlowMeta = styled.p`
+  margin: 8px 0 0;
+  font-size: 11.5px;
+  color: var(--text-muted);
+`
+
+const DynRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+`
+
+const DynSource = styled.span`
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-primary);
+  border: 1px solid var(--chrome-border);
+  border-radius: 999px;
+  padding: 0 7px;
+`
+
+const DynNum = styled.span`
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+`
+
 /** 专注模式淡出壳：布局占位保留（不卸载），仅视觉退场 */
 const Dimmable = styled.div<{ $dim: boolean }>`
   opacity: ${(props) => (props.$dim ? 0.05 : 1)};
@@ -114,6 +210,45 @@ export function HomePage(): React.JSX.Element {
   const identity = useGithubIdentity()
   // 专注模式：与胶囊开关同源（editor-state 总线），Esc 退出
   const live = useEditorLiveState()
+  // 任务流卡组数据（task-11）
+  const router = useRouter()
+  const doc = useWorkspaceStore()
+  const drafts = useDrafts()
+  useSyncExternalStore(tasksStore.subscribe, tasksStore.get, tasksStore.get)
+  const [recentCount, setRecentCount] = useState(0)
+
+  const hasDoc = doc.activePath != null || doc.content != null
+  const words = countWords(doc.content ?? '')
+  const pluginRows = useMemo(() => {
+    const bySource = new Map<string, { running: number; total: number }>()
+    for (const task of visibleTasks()) {
+      const row = bySource.get(task.pluginId) ?? { running: 0, total: 0 }
+      row.total += 1
+      if (task.status === 'in_progress') row.running += 1
+      bySource.set(task.pluginId, row)
+    }
+    return [...bySource.entries()].sort((a, b) => b[1].running - a[1].running || a[0].localeCompare(b[0]))
+  }, [/* tasks 快照经 store 订阅驱动重渲染 */])
+
+  // 草稿数首拉（幂等；失败保留旧快照）
+  useEffect(() => {
+    void refreshDrafts()
+  }, [])
+
+  useEffect(() => {
+    let alive = true
+    void window.api
+      .listRecentWorkspaces()
+      .then((list) => {
+        if (alive) setRecentCount(Array.isArray(list) ? list.length : 0)
+      })
+      .catch(() => {
+        if (alive) setRecentCount(0)
+      })
+    return () => {
+      alive = false
+    }
+  }, [])
 
   useEffect(() => {
     if (!live.focusMode) return
@@ -167,7 +302,51 @@ export function HomePage(): React.JSX.Element {
           </Card>
         </Dimmable>
 
-        <EditorPanel />
+        {/* 任务流卡组（task-11）：按任务流组织的信息架构 */}
+        <Dimmable $dim={live.focusMode}>
+          {hasDoc && (
+            <Card data-testid="home-continue-card" style={{ marginBottom: 12 }}>
+              <CardTitle>{t('home.flowContinue')}</CardTitle>
+              <FlowRow>
+                <FlowDoc>{doc.activePath ?? t('editor.newDraft')}</FlowDoc>
+                <Button size="sm" data-testid="home-continue-open" onClick={() => void router.push('/editor')}>
+                  {t('home.flowOpen')}
+                </Button>
+              </FlowRow>
+              <FlowMeta>
+                {t('focus.words', { n: words.words })} · {doc.dirty ? t('focus.unsaved') : t('common.saved')}
+              </FlowMeta>
+            </Card>
+          )}
+          <CardRow style={{ marginBottom: 12 }}>
+            <FlowCard type="button" data-testid="home-drafts-card" onClick={() => void router.push('/drafts')}>
+              <FlowCardTitle>{t('menu.drafts')}</FlowCardTitle>
+              <FlowNum>{drafts.loaded ? drafts.drafts.length : '…'}</FlowNum>
+            </FlowCard>
+            <FlowCard type="button" data-testid="home-recent-card" onClick={() => void router.push('/projects')}>
+              <FlowCardTitle>{t('menu.projects')}</FlowCardTitle>
+              <FlowNum>{recentCount}</FlowNum>
+            </FlowCard>
+          </CardRow>
+          <Card data-testid="home-plugins-card">
+            <CardTitle>{t('home.flowPlugins')}</CardTitle>
+            {pluginRows.length === 0 ? (
+              <FlowMeta>{t('home.flowNoTasks')}</FlowMeta>
+            ) : (
+              pluginRows.map(([pluginId, row]) => (
+                <DynRow key={pluginId}>
+                  <DynSource>{pluginId}</DynSource>
+                  <span>
+                    {row.running > 0 ? t('home.flowRunning', { n: row.running }) : t('home.flowIdle')}
+                  </span>
+                  <DynNum>
+                    {row.total} {t('home.flowTotalUnit')}
+                  </DynNum>
+                </DynRow>
+              ))
+            )}
+          </Card>
+        </Dimmable>
       </Body>
     </Page>
   )

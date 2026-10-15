@@ -1,7 +1,7 @@
 ---
-title: Renderer 壳层两栏布局与 App Router 路由约定
+title: Renderer 工作台壳层布局与 App Router 路由约定
 domain: renderer-ui
-keywords: [首页, 设置页, 项目页, 编辑页, 路由, App Router, 路由段, SideMenu, 菜单, 项目树, 两栏布局, main 容器, 浮窗, FloatLayer, 面板切换, 插件视图, 静态导出]
+keywords: [首页, 设置页, 项目页, 编辑页, 路由, App Router, 路由段, 工作台, rail, 图标列, 上下文面板, 文档树, 项目树, main 容器, 浮窗, FloatLayer, 面板切换, 插件视图, 静态导出, 专注模式, 命令面板, palette, 胶囊, Dock, 停靠, data-chrome]
 scope: [app, components, lib]
 status: active
 source:
@@ -27,16 +27,17 @@ source:
   - changes/20260927-feature-sticky-header-drafts-projects/brief.md
   - changes/20260927-style-shell-visual-consistency/brief.md
   - changes/20260925-build-pin-node22/brief.md
-verified: 2026-09-27
+  - changes/20261015-feature-workbench-shell/brief.md
+verified: 2026-10-15
 verified-depth: unit
-verified-scope: app/(shell)/layout.tsx, components/SideMenu/index.tsx, components/capsule/CapsulePanel/index.tsx, components/capsule/sections/EditorSection/index.tsx, components/account/AccountPage/index.tsx, components/plugins/PluginFrameHost/index.tsx, components/editor/MarkdownEditor/index.tsx, components/ui/FeedbackHost/index.tsx, components/FloatLayer/index.tsx, components/home/EditorPanel/index.tsx, components/settings/PluginManagerSection/index.tsx, app/(shell)/projects/ProjectsPage.tsx, app/(shell)/drafts/DraftsPage.tsx
+verified-scope: app/(shell)/layout.tsx, components/rail/index.tsx, components/contextpanel/index.tsx, components/dock/index.tsx, components/palette/index.tsx, components/focusbar/index.tsx, components/editor/SidePane/index.tsx, components/capsule/Capsule.tsx（工作台范式：764+ 用例全绿含 workbench-layout/rail/context-panel/capsule-dock-forms/dock-panel/command-palette/focus-mode/editor-center 渲染与交互套件；构建静态导出全部路由段与四插件视图）
 ---
 
 # Renderer 壳层两栏布局与 App Router 路由约定
 
 ## 当前结论
 
-渲染层为 **Next.js App Router 项目**（2026-09-21 起，从 electron-vite + React 迁移）：两栏布局（**预留通知条**（44px 空条，待更新/紧急通知）→ body（左栏 SideMenu + 右栏 main 容器）→ StatusBar）由 **`app/(shell)/layout.tsx` 持久化**，路由段互斥渲染右栏页面：
+渲染层为 **Next.js App Router 项目**（2026-09-21 起，从 electron-vite + React 迁移）。**20261015-feature-workbench-shell 起壳层为工作台范式**（有意推翻此前两栏布局；SideMenu 已退役）：TitleBar（44px = 通知预留位 + ⌘K 命令面板搜索入口 + 胶囊 chip）→ body（**恒 48px Rail 图标导航列** + **上下文面板**（224px，⌘B 收起；文档树/最近项目，`components/contextpanel/`）+ main 容器）→ **Dock**（任务中心停靠态与插件 dock 页签，条件渲染不占高）→ StatusBar，由 **`app/(shell)/layout.tsx` 持久化**，路由段互斥渲染中央页面：
 
 - `/` → HomePage（默认入口 = **「新建博客」项目入口**，2026-09-21 起：项目区块承载打开本地目录 / clone 公开 https 仓库 / 最近项目列表；活动散点图与主编辑器面板卡片依次其下）
 - `/settings` → SettingsPage（仅应用级设置；GitHub 凭证与 Git 提交身份已归拢至 `/account`）
@@ -55,25 +56,27 @@ verified-scope: app/(shell)/layout.tsx, components/SideMenu/index.tsx, component
 
 **壳层 i18n（2026-09-22 起）**：`lib/i18n/locales.ts` 三语字典（zh/en/ja flat key，`{name}` 占位符）+ `lib/i18n/context.tsx` 的 `LocaleProvider`/`useT()`，持久化键 `wd.locale`（与 `wd.theme` 同模式）。**两段式渲染**：首帧固定 zh 与导出 HTML 一致（防 hydration mismatch），mount 后切存储 locale——启动切换的中文闪帧由 splash 窗覆盖，运行时切换即时。字典 key 集合一致性由 `tests/i18n.test.ts` 锁定；**缺键会静默回落为 key 本身（UI 直接显示裸 key，如 `menu.projects`）**，故同文件另有「源码引用键 ⊆ 字典」覆盖扫描（字面量 `t()` 直调 + 按命名空间识别的字面量扫描，覆盖三元/映射表等间接传键）——新增文案键必须三语齐配，否则测试红。范围边界：仅壳层 chrome 文案；插件 manifest 标题与插件帧内容不在此机制内。
 
-`menuExpanded`（SideMenu 展开/收起）是 layout 内的客户端状态；菜单项 id 与路由段一一对应（`lib/routes.ts` 的 `pluginPanelKey` / `routeKeyFromPathname` 负责互转，`account` 为独立路由 key）。**底部系统区两项制重分工（20260925-feature-sidemenu-settings-consolidation）**：【用户】在上 = 纯导航直达 `/account`（`userActive` 高亮走 `data-active` 稳定属性，悬停不再弹任何面板）；【设置】在下 = **三态交互**——收起态图标为右箭头（`IconChevronRight`）且点击仅展开菜单（`data-tip`「设置 · 展开菜单」），展开态左 Setting 图标直达 `/settings`（`settingsActive` 高亮）+ 右缘收起旋钮（复用 TreeKnob 样式，`aria-label=pop.collapseMenu`，stopPropagation 防误触导航）收起菜单；主导航 items 数组仍不含 `settings`（底部区是 SideMenu 内硬编码 JSX）。**外观与语言快捷面板挂【设置】项**（仅展开态 hover/聚焦弹出，收起态保留 data-tip 单一职责——tooltip 与面板同锚右侧会重叠；面板仅主题/外观/语言三组，「收起/展开菜单」行已退役，⌘/Ctrl+B 全局不变）。**插件 main 视图不再平铺主导航**：统一收进【插件】单一可展开条目子树（`components/menu/PluginTree.tsx`：main 视图导航行 + 浮窗开关行 + 空态「无启用插件」；`pluginsTreeOpen` 状态在 layout，展开态点条目 = 切子树、收起态点条目 = 仅展开菜单），SideMenu 的 `toggleItems` 组已退役（浮窗开关行并入子树，`aria-pressed` 语义不变）。`FloatLayer` 常驻 main 容器叠加其上（浮窗与右栏页面**共存**，切换页面不卸载）。
+**导航结构（20261015 工作台起）**：`ctxOpen`（上下文面板开合）是 layout 内的客户端状态；菜单项 id 与路由段一一对应（`lib/routes.ts` 的 `pluginPanelKey` / `routeKeyFromPathname` 负责互转，`account` 为独立路由 key）。**Rail**（`components/rail/`，恒 48px 禁展开）——主导航项（首页/项目/草稿箱：左缘激活指示条 + 徽标 + `data-tip` tooltip）+【插件】条目（**popover** 呈现 main 视图导航行与浮窗开关行，复用 `components/menu/PluginTree.tsx`，点行导航/开关即收起；点外关 target 归属守卫 + Esc，20260924-fix-capsule-self-close 先例）+ 底部【用户/设置】两项（纯导航直达 `/account` 与 `/settings`）。主题/外观/语言三入口随 SideMenu 退役**迁入设置页「外观与语言」区段**（`components/settings/AppearanceSection.tsx`；review 修复回归：曾一度全仓无 setFamily/setScheme/setLocale 消费方）。文字导航职责整体让位 **⌘K 命令面板**（`components/palette/`）。**Dock**（`components/dock/`）渲染于 Body 与 StatusBar 之间：停靠态任务中心（胶囊 chip 兼开关）或插件 dock 页签，空态不渲染不占高。`FloatLayer` 常驻 main 容器叠加其上（浮窗与中央页面**共存**，切换页面不卸载）。
 
-**左栏【项目】条目自带项目树**（2026-09-24 起；SideMenu 条目子树槽位 `tree/treeOpen/onToggleTree` 的通用设计见 shell-chrome-design 卡）：一级 = 项目节点（当前工作区置顶带「当前」徽标，其余最近项目），二级起 = 文件夹/`.md` 递归树（`pruneMarkdownTree` 只留含 .md 分支）；项目节点懒加载（首次展开才 `readTree(root)`），失效项目呈「无法访问」且再次点击重试；**点文件与 `/projects` 页共用 `openProjectFile`**（脏确认 → 非当前项目先 `openWorkspaceByPath` 切工作区 → `readFile` → `openDoc`），随后 `router.push('/editor')`——打开流单点收口，两处 UI 不得各写一份。清单数据走 `window.api.readTree(root?)`：**显式 root 校验目录存在后按该根构树、不切换当前工作区**；缺省 = `requireRoot()` 现行为（契约见 `src/shared/types.ts`，主进程实现与测试见 workspace 域）。
+**上下文面板自带项目树**（2026-10-15 工作台起，自左栏子树迁入；`components/contextpanel/` 承载 `ProjectsTree fill` 形态）：一级 = 项目节点（当前工作区置顶带「当前」徽标，其余最近项目），二级起 = 文件夹/`.md` 递归树（`pruneMarkdownTree` 只留含 .md 分支）；项目节点懒加载（首次展开才 `readTree(root)`），失效项目呈「无法访问」且再次点击重试；**点文件与 `/projects` 页共用 `openProjectFile`**（脏确认 → 非当前项目先 `openWorkspaceByPath` 切工作区 → `readFile` → `openDoc`），随后 `router.push('/editor')`——打开流单点收口，两处 UI 不得各写一份。清单数据走 `window.api.readTree(root?)`：**显式 root 校验目录存在后按该根构树、不切换当前工作区**；缺省 = `requireRoot()` 现行为（契约见 `src/shared/types.ts`，主进程实现与测试见 workspace 域）。**大仓库虚拟化（20261007 起，工作台沿用）**：全部行压平进固定行高 `VirtualList`（26px），只渲染可见窗口；面板形态传 `fill`（根容器即滚动容器 `height:100%`，通栏撑满面板）——约束全量见 [固定行高虚拟列表卡片](renderer-virtual-list.md)。
 
-**全局身份 store（2026-09-22 起）**：`lib/identity.ts`（useSyncExternalStore 快照注册表，与 tasks/statusItems/floats 同构）是 GitHub 身份（头像/昵称/login/scopes/kind/stale）的壳层唯一数据源——壳层 layout 挂载 `refreshIdentity()` 拉取一次（未配 token / `getGithubIdentity` 抛错一律落 null），用户中心 `AccountPage.reloadIdentity` 成功分支 `syncIdentity()` 写穿（授权成功 / PAT 保存 / 断开三时机全覆盖，页面本地 loading/error/stale 三态 UI 不动）；消费方 `useGithubIdentity()`：SideMenu 用户入口（展开态用户名文本投影）与 HomePage 问候语，**均仅文本投影**（`name‖login`；同日回退了侧栏头像 img 投影——远程图片网络不可靠，**壳层禁止渲染远程头像图片**，头像待 Settings「用户设置」本地接管，见 shell-chrome-design 卡）。**回退语义：undefined（尚未拉取）/ null（无身份）/ stale 一律回落品牌标 + wuh-site + 纯问候**；问候带名走 `home.greetNamed` 三语占位（昵称 name 优先、login 兜底），store 单测 `tests/identity-store.test.ts`。
+**全局身份 store（2026-09-22 起）**：`lib/identity.ts`（useSyncExternalStore 快照注册表，与 tasks/statusItems/floats 同构）是 GitHub 身份（头像/昵称/login/scopes/kind/stale）的壳层唯一数据源——壳层 layout 挂载 `refreshIdentity()` 拉取一次（未配 token / `getGithubIdentity` 抛错一律落 null），用户中心 `AccountPage.reloadIdentity` 成功分支 `syncIdentity()` 写穿（授权成功 / PAT 保存 / 断开三时机全覆盖，页面本地 loading/error/stale 三态 UI 不动）；消费方 `useGithubIdentity()`：HomePage 问候语（Rail 底部用户入口为纯图标导航，20261015 起不再投影用户名文本），**仅文本投影**（`name‖login`；同日回退了侧栏头像 img 投影——远程图片网络不可靠，**壳层禁止渲染远程头像图片**，头像待 Settings「用户设置」本地接管，见 shell-chrome-design 卡）。**回退语义：undefined（尚未拉取）/ null（无身份）/ stale 一律回落品牌标 + wuh-site + 纯问候**；问候带名走 `home.greetNamed` 三语占位（昵称 name 优先、login 兜底），store 单测 `tests/identity-store.test.ts`。
 
-**全屏视图体系已废止**（2026-09-20）：设置页与首页都是右栏普通页面，左栏常驻。键盘语义：`Cmd/Ctrl+,` 在 settings ↔ home 间 `router.push` 切换；`Cmd/Ctrl+B` 切换左栏展开/收起（全局快捷键；指针路径 = 设置项右缘收起旋钮 / 收起态点设置项）；Esc 只关最顶层浮窗（FloatLayer 内处理，确认框打开时让位——用 `[data-dialog-overlay]` 稳定属性判定，styled 类名是哈希）。页面自身 mount 聚焦（`tabIndex={-1}`）保留。
+**全屏视图体系已废止**（2026-09-20）：设置页与首页都是右栏普通页面，左栏常驻。键盘语义（20261015 工作台）：`Cmd/Ctrl+,` 在 settings ↔ home 间 `router.push` 切换；`Cmd/Ctrl+B` 切换上下文面板显隐（原左栏展开语义退役；指针路径 = 面板头部收起旋钮）；`Cmd/Ctrl+K` 开合 ⌘K 命令面板；`Cmd/Ctrl+Shift+F` 切换专注模式；Esc 分层——确认框/胶囊面板打开时让位（`[data-dialog-overlay]` / `[data-capsule-panel]` 稳定属性判定），专注模式退出，最顶层浮窗关闭（FloatLayer 内处理），styled 类名是哈希不得依赖。页面自身 mount 聚焦（`tabIndex={-1}`）保留。**专注模式（20261015 task-8）**：chrome 退场只锚 `[data-chrome]` 稳定属性（TitleBar/Rail/上下文面板/Dock/StatusBar 五处标注 + Shell 根 `data-focus`）——**不得用元素选择器（header/section…）退场，编辑页 PageShell 与首页卡片都是 section，曾是白屏级缺陷（20261015 review 修复）**；路由切换自动退出（专注是编辑态语义）；专注浮条 `components/focusbar/`（文档名/保存态/字数/退出）。
 
-**内置编辑器已回归首页面板**（20260922-refactor-codemirror-editor 起：CodeMirror 6 源码编辑 + 分栏预览，见 [主编辑器卡片](editor.md)；2026-09-20 至 09-22 间曾有「内置编辑器已移除」窗口，其间 20260922-feature-vditor-md-editor 短暂引入 Vditor IR 后整体替换退场）。`lib/store.ts`（workspaceStore）既是首页编辑器的 content 状态源（content 双通道 + 防回环，见 editor.md 卡），也是插件 doc 服务（帧协议 `doc.get/set/save`）的宿主侧状态源。
+**内置编辑器为中央单挂载**（20260922-refactor-codemirror-editor 起：CodeMirror 6 源码编辑；**20261015 工作台起首页 EditorPanel 退役，`/editor` 是唯一编辑面**，见 [主编辑器卡片](editor.md)）。`lib/store.ts`（workspaceStore）是编辑器的 content 状态源（content 双通道 + 防回环，见 editor.md 卡），也是插件 doc 服务（帧协议 `doc.get/set/save`）的宿主侧状态源。
 
 **Node 工具链钉定（20260925-build-pin-node22；20260927 修订）**：仓库根 `mise.toml` 精确钉定 `node = "22.23.2"`（major 与父仓库 CI `ci-cd.yml` 的 `node-version: '22'` 一致），`package.json` `engines: { "node": "22" }` 供非 mise 环境提示。根因：node 24.19 的 V8（并发 GC/CodeSerializer）高负载下随机 SIGSEGV（exit 139）——20260925 实测波及 shadow-dev CLI/tsc 三 tsconfig/vitest，且 139 与真实失败混淆会污染验证结论。**20260927 修订：「22.23.2 零崩溃」不再成立**——本机（Intel Mac）在更大编译负载（tsconfig.next 全量图、tsc 长事务）下同样确定性 SIGSEGV，崩溃报告定位 `v8::internal::ConcurrentMarking`，且崩溃点随旗标漂移（禁并发标记后移向 JIT 路径），属 V8 多线程 GC/JIT 家族性不稳。**绕行配方（20260927 二次修订，实测稳定）**：根因是 V8 线程池后台 GC job 线程崩溃（Scavenger/ConcurrentMarking），`--single-threaded` 并不能关掉 node DefaultPlatform 的 job worker。稳定配方 = `node --v8-pool-size=0 --no-concurrent-marking --no-concurrent-sweeping`（保留 JIT 供 WASM，GC 全部落主线程）；fork 子进程经 `NODE_OPTIONS='--v8-pool-size=0'` 环境继承（CLI 旗标不传子进程，`--no-concurrent-*` 不在 NODE_OPTIONS 白名单）；vitest 另加 `--no-file-parallelism`。tsc 场景 `--jitless --single-threaded` 亦有效但慢，同配方可统一。所有 dev/test/typecheck/dist 命令默认应运行在钉定 node 上（历史注：82a86b1 曾以 dist 脚本包装缓解打包段，随 renderer-nextjs 丢失，本钉定以环境级方案取代）。
 
 ## 执行约束
 
 - 新增/拆分渲染层组件按**域内文件夹化**落位：`组件名/index.tsx` 对外（含原具名导出的 re-export）+ 子单元文件 + styles；**路由段页面**用变体：`page.tsx` 留薄入口 + 同目录 Page 组件 + styles；拆分必须逐字搬移仅调整 import/export，由全量绿灯测试 + 三 tsconfig typecheck 护航（vitest 运行时宽松解析不报相对路径错，tsc 门禁不可省）。职责单一的过线文件（自包含可视化/样式库/单树件）不强拆。
-- 新增右栏页面 = 新增 `app/(shell)/<segment>/page.tsx` 路由段；禁止塞回左栏（SideMenu 纯导航不承载内容）。
+- 新增中央页面 = 新增 `app/(shell)/<segment>/page.tsx` 路由段；禁止塞回 Rail/上下文面板（导航列纯导航不承载内容）。
+- 壳层 chrome 元素（TitleBar/Rail/上下文面板/Dock/StatusBar）必须带 `data-chrome` 稳定属性：专注模式退场、自动化断言都依赖它；新增 chrome 容器漏标即专注模式残留。
 - 插件视图路由统一走 `/plugin/<id>/<view>` 段；新增视图一律走 manifest `views.area` 声明（`main` 右栏页面 | `float` 浮窗），`sidebar` 已废弃（validateManifest 拒绝并指引迁移 main）。
 - 插件 main 视图动态路由若新增**运行时**来源，必须同步改 `generateStaticParams` 或在页面内退化到 client 渲染，否则静态导出缺页。
 - 浮窗开合与几何是进程内注册表状态（`lib/floats.ts`，commit() 产新引用 + useSyncExternalStore）；FloatLayer 几何视口 = main 容器。
+- Dock 开合（`lib/dock.ts`）与命令面板 UI 态（`lib/palette.ts`）同构；上下文面板 ⌘B 隐藏走 `hidden` 属性保挂载（树缓存/展开态不丢），显示层自兜底（styled `&[hidden]{display:none}`）。
 - 客户端组件一律 'use client'；服务端组件只做参数透传（`plugin/[...slug]/page.tsx` 为 async server component，接收 `params: Promise<...>`）。
 - 任何 `useSyncExternalStore` 必须传第三参 `getServerSnapshot`（静态导出预渲染要求，否则 `next build` 在预渲染阶段报错退出）。
 - 新增会首帧渲染的 CSS/主题能力时必须保持「构建期内联 + 属性路由」机制：不要把 token CSS 改回运行时注入，不要移除 layout 的 pre-paint 纠偏脚本（其键名与 ThemeProvider 的 `STORAGE_KEY` 锚点同步）。

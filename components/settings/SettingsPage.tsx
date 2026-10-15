@@ -17,6 +17,7 @@ import { ErrorText, HintText } from '../ui/Text'
 import { SettingRow } from '../ui/SettingRow'
 import { SettingSection } from './SettingSection'
 import { SettingsNav, type SettingsNavItem } from './SettingsNav'
+import { AppearanceSection } from './AppearanceSection'
 import { PluginManagerSection } from './PluginManagerSection'
 import { ImageHostSection } from './ImageHostSection'
 import { IconCheck, IconLogo } from '../icons'
@@ -148,6 +149,7 @@ export function SettingsPage(): React.JSX.Element {
   const router = useRouter()
   const { t } = useLocale()
   const navItems: SettingsNavItem[] = [
+    { id: 'appearance', label: t('settings.navAppearance') },
     { id: 'about', label: t('settings.navAbout') },
     { id: 'services', label: t('settings.navServices') },
     { id: 'imageHost', label: t('settings.navImageHost') },
@@ -232,6 +234,9 @@ export function SettingsPage(): React.JSX.Element {
           <SettingsNav items={navItems} containerRef={scrollRef} />
 
         <Sections>
+          {/* 外观与语言（20261015 review 修复）：原 SideMenu 快捷面板的三入口迁入 */}
+          <AppearanceSection />
+
           <SettingSection id="about" title={t('settings.navAbout')} description={t('settings.aboutDesc')}>
             <AboutBody aria-label={t('settings.aboutAria')}>
               <IconLogo width={96} height={48} animated />

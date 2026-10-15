@@ -24,6 +24,7 @@ import {
 } from '../../../lib/statusItems'
 import { removeTask, upsertTask, type TaskPatch } from '../../../lib/tasks'
 import { removeCapsule, removeCapsuleTab, updateCapsule, updateCapsuleTab } from '../../../lib/capsule'
+import { removePanelTab, updatePanelTab } from '../../../lib/panelTabs'
 import { publishEvent, publishPluginEvent, subscribePlugin, unsubscribePlugin } from '../../../lib/events'
 import { renderService } from '../../../lib/renderPipeline'
 import { currentDocState, requirePermission, sessionOf } from './frameProtocol'
@@ -192,9 +193,32 @@ async function svcEvents(pluginId: string, method: string, args: unknown[]): Pro
   throw new Error(`未知事件方法: ${method}`)
 }
 
+async function svcPanelTabs(pluginId: string, method: string, args: unknown[]): Promise<unknown> {
+  // Dock / 编辑器上下文侧栏页签（20261015 工作台 task-13）：manifest views.area
+  // = dock|context 声明制（每插件各 ≤1），sections/rows 上报护栏与归属校验在
+  // lib/panelTabs（parseTabSections 同 capsule tabs），无额外权限
+  if (method === 'update') {
+    const [kind, tabId, payload] = args as [string, string, unknown]
+    if (kind !== 'dock' && kind !== 'context') {
+      throw new Error(`页签区域只能是 dock/context: ${String(kind)}`)
+    }
+    updatePanelTab(pluginId, kind, String(tabId), payload)
+    return null
+  }
+  if (method === 'remove') {
+    const [kind, tabId] = args as [string, string]
+    if (kind !== 'dock' && kind !== 'context') {
+      throw new Error(`页签区域只能是 dock/context: ${String(kind)}`)
+    }
+    removePanelTab(pluginId, kind, String(tabId))
+    return null
+  }
+  throw new Error(`未知页签方法: ${method}`)
+}
+
 export async function handleFrameInvoke(
   pluginId: string,
-  service: 'cap' | 'doc' | 'render' | 'ui' | 'statusBar' | 'tasks' | 'capsule' | 'events',
+  service: 'cap' | 'doc' | 'render' | 'ui' | 'statusBar' | 'tasks' | 'capsule' | 'events' | 'panelTabs',
   method: string,
   args: unknown[]
 ): Promise<unknown> {
@@ -215,6 +239,8 @@ export async function handleFrameInvoke(
       return svcCapsule(pluginId, method, args)
     case 'events':
       return svcEvents(pluginId, method, args)
+    case 'panelTabs':
+      return svcPanelTabs(pluginId, method, args)
     default:
       throw new Error(`未知服务: ${String(service)}`)
   }

@@ -11,18 +11,14 @@ import { useState, useSyncExternalStore } from 'react'
 import { AppIcon } from '../../ui/AppIcon'
 import { pluginIcon } from '../../icons'
 import type { PluginIconName } from '@shared/plugin'
-import {
-  taskAggregate,
-  tasksStore,
-  visibleTasks,
-  removeTask
-} from '../../../lib/tasks'
+import { taskAggregate, tasksStore } from '../../../lib/tasks'
 import {
   capsuleStore,
   visibleCapsuleModules,
   visibleCapsuleTabs,
   type CapsuleModuleState
 } from '../../../lib/capsule'
+import { dockTaskCenter } from '../../../lib/dock'
 import { useLocale } from '../../../lib/i18n/context'
 import { EditorSection } from '../sections/EditorSection'
 import { CenterSection, ModuleBig, ModuleCard, ModuleGrid, ModuleHead, ModuleIcon, ModulePanel, ModuleSub, SectionHint, SectionLabel } from '../modules'
@@ -30,30 +26,22 @@ import {
   Pop,
   PopHead,
   PopCount,
+  PopFoot,
   HeadBar,
   HeadBarFill,
   TabRow,
   Tab,
   TabSection,
   TabRows,
-  FilterRow,
-  FilterChip,
-  PluginPill,
-  Timeline,
-  DoneHead,
-  DoneLabel,
-  ClearBtn,
   EmptyState,
   EmptyTitle,
-  EmptyHint,
   PluginNote,
   ToneDot
 } from './styles'
-import { TaskRow } from './TaskTimeline'
 import { PluginTabRowItem } from './PluginTabRows'
+import { TaskCenterBody } from './TaskCenterBody'
 
 type TaskTab = 'tasks' | 'modules'
-type StatusFilter = 'all' | 'active' | 'done'
 /** 插件 tab 的选中值 = lib/capsule 注册表 key（`plugin:<pid>:<tid>`）；tabs 消失时回落 tasks */
 type PanelTab = TaskTab | string
 
@@ -114,9 +102,6 @@ export function CapsulePanel(props: { onClose: () => void }): React.JSX.Element 
   useSyncExternalStore(tasksStore.subscribe, tasksStore.get, tasksStore.get)
   useSyncExternalStore(capsuleStore.subscribe, capsuleStore.get, capsuleStore.get)
   const [tab, setTab] = useState<PanelTab>('tasks')
-  const [filter, setFilter] = useState<StatusFilter>('all')
-  const [pluginFilter, setPluginFilter] = useState<string | null>(null)
-  const tasks = visibleTasks()
   const agg = taskAggregate()
   const modules = visibleCapsuleModules()
   const pluginTabs = visibleCapsuleTabs()
@@ -124,29 +109,6 @@ export function CapsulePanel(props: { onClose: () => void }): React.JSX.Element 
   const activePlugin = tab.startsWith('plugin:') ? pluginTabs.find((t) => t.key === tab) : undefined
   const effectiveTab: 'tasks' | 'modules' | string = activePlugin ? tab : tab === 'modules' ? 'modules' : 'tasks'
   const now = Date.now()
-
-  const sourceIds = [...new Set(tasks.map((task) => task.pluginId))].sort()
-  const filtered = tasks
-    .filter((task) => (pluginFilter ? task.pluginId === pluginFilter : true))
-    .filter((task) =>
-      filter === 'all' ? true : filter === 'done' ? task.status === 'done' : task.status !== 'done'
-    )
-  const running = filtered
-    .filter((task) => task.status === 'in_progress')
-    .sort((a, b) => b.updatedAt - a.updatedAt)
-  const pending = filtered
-    .filter((task) => task.status === 'pending')
-    .sort((a, b) => b.createdAt - a.createdAt)
-  const doneList = filtered
-    .filter((task) => task.status === 'done')
-    .sort((a, b) => (b.doneAt ?? b.updatedAt) - (a.doneAt ?? a.updatedAt))
-
-  // 清空已完成 = 壳层唯一允许的写操作：remove 隐藏条目，不改任务状态
-  const clearDone = (): void => {
-    for (const task of tasks) {
-      if (task.status === 'done') removeTask(task.pluginId, task.id)
-    }
-  }
 
   return (
     <Pop
@@ -218,67 +180,7 @@ export function CapsulePanel(props: { onClose: () => void }): React.JSX.Element 
 
       {effectiveTab === 'tasks' ? (
         <div id="capsule-tabpanel-tasks" role="tabpanel" aria-labelledby="capsule-tab-tasks">
-          <FilterRow>
-            <FilterChip type="button" aria-pressed={filter === 'all'} $on={filter === 'all'} onClick={() => setFilter('all')}>
-              {t('capsule.filterAll')}
-            </FilterChip>
-            <FilterChip
-              type="button"
-              aria-pressed={filter === 'active'}
-              $on={filter === 'active'}
-              onClick={() => setFilter('active')}
-            >
-              {t('capsule.filterActive')}
-            </FilterChip>
-            <FilterChip type="button" aria-pressed={filter === 'done'} $on={filter === 'done'} onClick={() => setFilter('done')}>
-              {t('capsule.filterDone')}
-            </FilterChip>
-            {sourceIds.length >= 2 &&
-              sourceIds.map((id) => (
-                <PluginPill
-                  key={id}
-                  type="button"
-                  aria-pressed={pluginFilter === id}
-                  $on={pluginFilter === id}
-                  onClick={() => setPluginFilter((cur) => (cur === id ? null : id))}
-                >
-                  {id}
-                </PluginPill>
-              ))}
-          </FilterRow>
-
-          {agg.total === 0 ? (
-            <EmptyState data-testid="capsule-empty">
-              <EmptyTitle>{t('capsule.emptyTitle')}</EmptyTitle>
-              <EmptyHint>{t('capsule.emptyHint')}</EmptyHint>
-            </EmptyState>
-          ) : filtered.length === 0 ? (
-            <EmptyState data-testid="capsule-nomatch">
-              <EmptyTitle>{t('capsule.noMatch')}</EmptyTitle>
-            </EmptyState>
-          ) : (
-            <Timeline data-testid="capsule-timeline">
-              {running.map((task) => (
-                <TaskRow key={task.key} task={task} now={now} onClose={props.onClose} />
-              ))}
-              {pending.map((task) => (
-                <TaskRow key={task.key} task={task} now={now} onClose={props.onClose} />
-              ))}
-              {doneList.length > 0 && (
-                <DoneHead>
-                  <DoneLabel>
-                    {t('capsule.recentDone')} · {doneList.length}
-                  </DoneLabel>
-                  <ClearBtn type="button" data-testid="capsule-clear-done" onClick={clearDone}>
-                    {t('capsule.clearDone')}
-                  </ClearBtn>
-                </DoneHead>
-              )}
-              {doneList.map((task) => (
-                <TaskRow key={task.key} task={task} now={now} onClose={props.onClose} />
-              ))}
-            </Timeline>
-          )}
+          <TaskCenterBody onClose={props.onClose} />
         </div>
       ) : effectiveTab === 'modules' ? (
         <div id="capsule-tabpanel-modules" role="tabpanel" aria-labelledby="capsule-tab-modules">
@@ -331,6 +233,13 @@ export function CapsulePanel(props: { onClose: () => void }): React.JSX.Element 
           </div>
         )
       )}
+
+      <PopFoot>
+        {/* 停靠到底部 Dock（task-5 双形态）：chip 兼任开关，取消停靠回退本下拉 */}
+        <button type="button" data-testid="capsule-dock-btn" onClick={dockTaskCenter}>
+          {t('dock.dockBtn')}
+        </button>
+      </PopFoot>
     </Pop>
   )
 }

@@ -17,40 +17,13 @@ import styled from 'styled-components'
 import { Input } from '../ui/Input'
 import { Button } from '../ui/Button'
 import { SettingRow } from '../ui/SettingRow'
+import { SegmentedControl } from '../ui/SegmentedControl'
 import { SettingSection } from './SettingSection'
 import { useLocale } from '../../lib/i18n/context'
 
 const EMPTY_OSS: OssSettings = { endpoint: '', bucket: '', customDomain: null, prefixTemplate: null }
 
 const MODES: UploadMode[] = ['local', 'oss', 'command']
-
-const ModeGroup = styled.div`
-  display: inline-flex;
-  gap: 0;
-  border: 1px solid var(--chrome-border);
-  border-radius: var(--border-radius-sm);
-  overflow: hidden;
-`
-
-const ModeButton = styled.button<{ $active: boolean }>`
-  font: inherit;
-  font-size: 12px;
-  padding: 5px 12px;
-  border: none;
-  cursor: pointer;
-  background: ${(props) =>
-    props.$active ? 'color-mix(in oklab, var(--primary-color) 14%, transparent)' : 'transparent'};
-  color: ${(props) => (props.$active ? 'var(--primary-color)' : 'var(--text-secondary)')};
-
-  & + & {
-    border-left: 1px solid var(--chrome-border);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--primary-color);
-    outline-offset: -2px;
-  }
-`
 
 const Feedback = styled.span<{ $kind: 'ok' | 'error' | 'muted' }>`
   font-size: 12px;
@@ -209,20 +182,12 @@ export function ImageHostSection(): React.JSX.Element {
   return (
     <SettingSection id="imageHost" title={t('settings.navImageHost')} description={t('settings.imageHostDesc')}>
       <SettingRow htmlFor="settings-upload-mode" label={t('settings.uploadMode')} description={t('settings.uploadModeDesc')}>
-        <ModeGroup role="radiogroup" aria-label={t('settings.uploadMode')}>
-          {MODES.map((mode) => (
-            <ModeButton
-              key={mode}
-              type="button"
-              $active={settings.uploadMode === mode}
-              aria-checked={settings.uploadMode === mode}
-              role="radio"
-              onClick={() => setMode(mode)}
-            >
-              {t(`settings.uploadMode_${mode}`)}
-            </ModeButton>
-          ))}
-        </ModeGroup>
+        <SegmentedControl
+          ariaLabel={t('settings.uploadMode')}
+          value={settings.uploadMode}
+          options={MODES.map((mode) => ({ value: mode, label: t(`settings.uploadMode_${mode}`) }))}
+          onChange={setMode}
+        />
       </SettingRow>
 
       <SettingRow htmlFor="settings-oss-endpoint" label={t('settings.ossEndpoint')} description={t('settings.ossEndpointHint')}>
