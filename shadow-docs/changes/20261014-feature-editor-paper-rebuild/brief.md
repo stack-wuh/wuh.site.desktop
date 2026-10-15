@@ -4,7 +4,7 @@
   "name": "20261014-feature-editor-paper-rebuild",
   "type": "feature",
   "scope": "editor",
-  "status": "committed",
+  "status": "published",
   "baseBranch": "main",
   "branch": "feature/20261014-feature-editor-paper-rebuild",
   "files": [
@@ -32,8 +32,8 @@
     "repository": null,
     "issue": null,
     "issueUrl": null,
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 156,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/156"
   },
   "review": {
     "conclusion": "pending",
@@ -42,8 +42,8 @@
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "1a5d641ab3d6a91df80ee4cdb41583d21f38d0ae",
-    "planHash": "a9090dae18f40b6742d08de59dea8be7821161de7e43899825ca7c012c12ad4b",
+    "checkpoint": "pr:156",
+    "planHash": "9b38c75e78b847c5187450b6a3c3465c104a38a192f552a535a851e30a967bdc",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
