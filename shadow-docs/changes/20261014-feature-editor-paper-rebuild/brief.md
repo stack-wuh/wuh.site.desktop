@@ -4,7 +4,7 @@
   "name": "20261014-feature-editor-paper-rebuild",
   "type": "feature",
   "scope": "editor",
-  "status": "branched",
+  "status": "committed",
   "baseBranch": "main",
   "branch": "feature/20261014-feature-editor-paper-rebuild",
   "files": [
@@ -42,7 +42,7 @@
   },
   "workflow": {
     "operation": null,
-    "checkpoint": null,
+    "checkpoint": "c0e9e60654f41dd52d63f8916ec25253c9c62e15",
     "planHash": "c5487d2515668ef7c3d9e5c3ad63188c73a932b14f366fd3b9d867521cbeab87",
     "updatedAt": null,
     "lastError": null,
