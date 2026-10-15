@@ -4,7 +4,7 @@
   "name": "20261015-chore-release-v1.0.0",
   "type": "chore",
   "scope": "distribution",
-  "status": "branched",
+  "status": "published",
   "baseBranch": "main",
   "branch": "chore/20261015-chore-release-v1.0.0",
   "files": [
@@ -15,8 +15,8 @@
     "repository": null,
     "issue": null,
     "issueUrl": null,
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 155,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/155"
   },
   "review": {
     "conclusion": "pending",
@@ -25,7 +25,7 @@
   },
   "workflow": {
     "operation": null,
-    "checkpoint": null,
+    "checkpoint": "pr:155",
     "planHash": "2313f60445ef30008f83d23c885acd3ae1e5155534fec2394de933e8aaf30abb",
     "updatedAt": null,
     "lastError": null,
