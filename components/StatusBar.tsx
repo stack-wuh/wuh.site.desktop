@@ -78,7 +78,7 @@ export function StatusBar(): React.JSX.Element {
   const items = visibleStatusItems()
 
   return (
-    <Bar>
+    <Bar data-chrome="status">
       <Zone $grow>
         {items
           .filter((s) => s.alignment === 'left')

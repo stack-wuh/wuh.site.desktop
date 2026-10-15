@@ -411,3 +411,12 @@ describe('插入片段模板（INSERT_SNIPPETS）', () => {
     expect(INSERT_SNIPPETS.hr).toMatch(/---/)
   })
 })
+
+describe('格式化 del 动作（素笺笔帘删除线，词表增量回归）', () => {
+  it('cmApplyFormat del：选区被 ~~ 包裹，选区回落原文本', () => {
+    const applied = stateOf('say hi now', 4, 6).update(cmApplyFormat(stateOf('say hi now', 4, 6), 'del'))
+    expect(applied.doc.toString()).toBe('say ~~hi~~ now')
+    expect(applied.selection.main.from).toBe(6)
+    expect(applied.selection.main.to).toBe(8)
+  })
+})

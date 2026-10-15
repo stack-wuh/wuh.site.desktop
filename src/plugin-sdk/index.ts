@@ -161,6 +161,10 @@ export const PLUGIN_SDK_JS = `(function () {
       updateTab: function (id, payload) { return call('capsule', 'updateTab', [id, payload || {}]); },
       removeTab: function (id) { return call('capsule', 'removeTab', [id]); }
     },
+    panelTab: {
+      update: function (kind, id, payload) { return call('panelTabs', 'update', [kind, id, payload || {}]); },
+      remove: function (kind, id) { return call('panelTabs', 'remove', [kind, id]); }
+    },
     publisher: {
       register: function (id, handler) { publishers[id] = handler; }
     },
@@ -314,6 +318,31 @@ export interface WuhApi {
     ): Promise<void>
     /** 隐藏 manifest 声明的胶囊插件 tab */
     removeTab(id: string): Promise<void>
+  }
+  panelTab: {
+    /**
+     * 上报 manifest 声明的 Dock / 编辑器上下文侧栏页签内容（20261015 工作台；
+     * kind = 'dock' | 'context'，页签 = 本插件 views.area 对应声明）：
+     * payload 同 capsule.updateTab（sections/rows，护栏同源）
+     */
+    update(
+      kind: 'dock' | 'context',
+      id: string,
+      payload?: {
+        sections?: {
+          title?: string
+          rows: {
+            icon?: string
+            text: string
+            detail?: string
+            tone?: 'default' | 'primary' | 'success' | 'warning'
+            viewId?: string
+          }[]
+        }[]
+      }
+    ): Promise<void>
+    /** 隐藏声明的 Dock / 上下文侧栏页签 */
+    remove(kind: 'dock' | 'context', id: string): Promise<void>
   }
   events: {
     /**

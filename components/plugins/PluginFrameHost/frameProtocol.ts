@@ -28,6 +28,8 @@ import { documentEvents, workspaceStore } from '../../../lib/store'
 import { clearPluginStatusItems, registerManifestStatusItems } from '../../../lib/statusItems'
 import { clearPluginTasks, registerManifestTasks } from '../../../lib/tasks'
 import { clearPluginCapsule, registerManifestCapsule } from '../../../lib/capsule'
+import { unwirePluginContributions, wirePluginContributions } from '../../../lib/contributions'
+import { shellNavigate } from '../../../lib/navigate'
 import { clearPluginEvents, onAnyEvent, subscribersFor } from '../../../lib/events'
 import { renderService } from '../../../lib/renderPipeline'
 import { handleFrameInvoke } from './frameServices'
@@ -315,6 +317,7 @@ async function startHost(): Promise<PluginListResult> {
       registerManifestStatusItems(record.manifest)
       registerManifestTasks(record.manifest)
       registerManifestCapsule(record.manifest)
+      wirePluginContributions(record.manifest, shellNavigate)
       if (record.manifest.logic) {
         try {
           await openFrame(id, 'logic', pluginLogicUrl(id), null)
@@ -448,6 +451,7 @@ export async function togglePlugin(
     registerManifestStatusItems(record.manifest)
     registerManifestTasks(record.manifest)
     registerManifestCapsule(record.manifest)
+    wirePluginContributions(record.manifest, shellNavigate)
     if (record.manifest.logic) {
       try {
         await openFrame(pluginId, 'logic', pluginLogicUrl(pluginId), null)
@@ -461,6 +465,7 @@ export async function togglePlugin(
     clearPluginStatusItems(pluginId)
     clearPluginTasks(pluginId)
     clearPluginCapsule(pluginId)
+    unwirePluginContributions(pluginId)
     clearPluginEvents(pluginId)
   }
   hostGeneration.bump()

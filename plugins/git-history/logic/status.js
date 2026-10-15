@@ -33,6 +33,11 @@ async function reportTab(s) {
     if (files.length > 0) sections.push({ title: '变更文件', rows: files })
     if (commits.length > 0) sections.push({ title: '最近提交', rows: commits })
     await wuh.capsule.updateTab('git', { sections })
+    // Dock 页签（20261015 工作台挂点示范）：与胶囊 Tab 同源同内容，
+    // 上报 Dock 常驻停靠（views.area=dock 声明）；失败不打扰
+    try {
+      await wuh.panelTab.update('dock', 'dock-panel', { sections })
+    } catch { /* 未声明或校验不过，保持隐藏 */ }
   } catch (err) {
     console.warn('[git-history] 胶囊 Tab 上报失败（保持隐藏）', err)
     try { await wuh.capsule.removeTab('git') } catch { /* 已隐藏或未声明，忽略 */ }
@@ -45,6 +50,7 @@ async function report() {
     if (!s || !s.branch) {
       await wuh.capsule.remove('status')
       await wuh.capsule.removeTab('git')
+      try { await wuh.panelTab.remove('dock', 'dock-panel') } catch { /* 未声明，忽略 */ }
       return
     }
     const dirty = Array.isArray(s.files) ? s.files.length : 0

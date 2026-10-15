@@ -44,7 +44,7 @@ export function FloatLayer(props: { containerRef: React.RefObject<HTMLElement | 
   const minimized = snapshot.floats.filter((f) => f.minimized)
 
   return (
-    <Layer>
+    <Layer data-float-layer="">
       {snapshot.floats.map((float) => (
         <FloatWindow key={float.key} float={float} focused={float.key === topKey} containerRef={containerRef} dragRef={dragRef} />
       ))}

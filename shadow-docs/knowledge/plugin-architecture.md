@@ -1,7 +1,7 @@
 ---
 title: 插件系统架构（loader/批准/重载）
 domain: plugin
-keywords: [插件, plugin, manifest, loader, 启用, 停用, 批准, approvals, resolveApproval, reload, 重载, revealDir, plugin-state, broker, 沙箱, 帧, 握手, ready, corsEnabled, 协议注册, locale, ui.locale]
+keywords: [插件, plugin, manifest, loader, 启用, 停用, 批准, approvals, resolveApproval, reload, 重载, revealDir, plugin-state, broker, 沙箱, 帧, 握手, ready, corsEnabled, 协议注册, locale, ui.locale, views.area, dock, context, panelTabs, commands, 命令面板, contribution, 装配]
 scope: [src/main/plugins, src/main/schemes.ts, src/shared/plugin.ts, src/plugin-sdk, src/preload/index.ts, components/plugins/PluginFrameHost]
 status: active
 source:
@@ -11,16 +11,19 @@ source:
   - changes/20260921-fix-plugin-frame-scheme-cors/brief.md
   - changes/20260924-feature-git-history-capsule/brief.md
   - changes/20261007-feature-frontmatter-editor-hide/brief.md
-verified: 2026-10-08
+  - changes/20261015-feature-workbench-shell/brief.md
+verified: 2026-10-15
 verified-depth: unit
-verified-scope: components/plugins/PluginFrameHost/frameProtocol.ts, components/plugins/PluginFrameHost/frameServices.ts, tests/frame-services.test.tsx；20261007 增：ui.locale 帧服务路由用例 + LocaleProvider→documentEvents('locale') 组件测试 + SDK 源码 guard 绿（帧内 locale 热切换实机走查留用户实例）
+verified-scope: components/plugins/PluginFrameHost/frameProtocol.ts, components/plugins/PluginFrameHost/frameServices.ts, lib/panelTabs.ts, lib/contributions.ts, src/shared/plugin.ts, src/plugin-sdk/index.ts, tests/frame-services.test.tsx, tests/plugin-manifest.test.ts, tests/plugin-extensions.test.ts（20261015 工作台扩展：views.area dock|context + commands 声明制、panelTabs 帧服务五用例、装配 wire/unwire 用例全绿）
 ---
 
 # 插件系统架构（loader/批准/重载）
 
 ## 当前结论
 
-**帧宿主分层（20260927-refactor-frame-protocol-split）**：`components/plugins/PluginFrameHost/` 分两层——协议层 `frameProtocol.ts`（帧生命周期/握手/接线/代际与就绪信号/会话状态拓扑）与能力调用服务层 `frameServices.ts`（handleFrameInvoke 按八 service 路由：权限裁决/参数钳制/写通注册表），服务层经协议层的内部访问器（sessionOf/requirePermission/currentDocState）回读状态；协议 kind/service 词表与对外导出面（index）跨层不变。statusBar/capsule 等注册表对未声明条目按「声明制守卫」抛错（非静默）。
+**帧宿主分层（20260927-refactor-frame-protocol-split）**：`components/plugins/PluginFrameHost/` 分两层——协议层 `frameProtocol.ts`（帧生命周期/握手/接线/代际与就绪信号/会话状态拓扑）与能力调用服务层 `frameServices.ts`（handleFrameInvoke 按九 service 路由：权限裁决/参数钳制/写通注册表），服务层经协议层的内部访问器（sessionOf/requirePermission/currentDocState）回读状态；协议 kind/service 词表与对外导出面（index）跨层不变。statusBar/capsule 等注册表对未声明条目按「声明制守卫」抛错（非静默）。
+
+**工作台挂点扩展（20261015-feature-workbench-shell）**：`views.area` 从 `main|float` 扩展为 **`main|float|dock|context`**（dock = 底部 Dock 页签、context = 编辑器上下文侧栏页签；**每插件各 ≤1**，容量护栏在 `validateManifest`；`sidebar` 仍拒绝）。运行时上报走**新帧服务 `panelTabs`**（host 直接服务，方法 `update/remove`，参数 `(kind, tabId, payload)`，kind 限 `dock|context`）→ 注册表 `lib/panelTabs.ts`（与 capsule/tasks 同构快照 store；section/row 护栏解析统一收敛到 `lib/tabSections.ts` 的 `parseTabSections` 纯函数——capsule tabs 与本服务**同源共享**：≤3×≤8、序列化 ≤4KB、icon 白名单、row.viewId 归属本插件 main 视图）；两端消费：`components/dock/`（收起条 ⇄ 面板）与 `components/editor/SidePane/`（页签追加）。SDK 面 `wuh.panelTab.update(kind, id, payload)/remove(kind, id)`（三方同步同既有约定：shared 类型 ↔ SDK 字符串 ↔ frameServices 裁决）。**commands 贡献点**：manifest 顶层 `commands: [{id,title,viewId}]`（每插件 ≤8，`viewId` 必填且须为本插件 main 视图——v1 语义 = 命令面板的视图快捷命令，协议级命令执行留 v2），bootstrap/启用时经 `lib/contributions.ts` 的 `wirePluginContributions(manifest, navigate)` 注册进 `lib/commands.ts`（命令面板注册表，`<pluginId>:<commandId>` 命名），停用 `unwirePluginContributions` 整组清除（panelTabs 一并）；导航经 `lib/navigate.ts` 壳层单例桥（layout 注入 router.push）。声明注册的页签**默认 hidden**（首次上报才可见——不出幽灵页签按钮）。内置示范：git-history 贡献 dock 页签（逻辑帧与胶囊 Tab 同源上报）+ commands；image-host 保持 main；preview-markdown 保持 float。
 插件 = 目录 + `plugin.json` manifest（经 `src/shared/plugin.ts` 的 `validateManifest` 严格校验）。主进程 loader（`src/main/plugins/loader.ts`）扫描双目录——内置 `app.getAppPath()/plugins/` 与 `userData/plugins/`（第三方），先扫到的同 id 保留，校验失败目录进 `problems`。
 
 **宿主语言通道（20261007-feature-frontmatter-editor-hide）**：帧服务 `ui.locale`（invoke 只读，返回渲染层 `storedLocale()`）与 `ui.toast/confirm` 同族——svcUi 层免权限能力，**不进主进程 CAPABILITY_METHODS broker 白名单**（该表白名单只管 cap 服务的 DesktopApi 方法）。语言切换广播复用 `documentEvents` 既有透传通道：`LocaleProvider.setLocale → documentEvents.emit('locale', { locale })` → wireHostOnce 自动 `broadcast` 到全部帧 → SDK `wuh.on('locale', cb)`；`DocEventName` 联合（lib/store.ts）是事件名唯一注册点，插件帧按事件名隔离消费。新增非敏感宿主只读状态一律走此 svcUi + documentEvents 模式，禁止为单插件开特例通道。
@@ -49,10 +52,12 @@ verified-scope: components/plugins/PluginFrameHost/frameProtocol.ts, components/
 - 宿主只读状态类帧能力（如 ui.locale）走 svcUi 免权限通道 + documentEvents 广播（事件名先入 `DocEventName`），不进 CAPABILITY_METHODS（那是主进程 broker 专属），不为单插件开特例
 - 受特权 scheme 表（`src/main/schemes.ts`）是协议能力的唯一声明点：改特权位（尤其 `corsEnabled`）必须同步 `tests/plugin-schemes.test.ts`，并回到帧内实机验证握手是否就绪
 - `protocol.handle` 的 scheme 不得带尾冒号；插件视图 HTML 必须自带 sdk 脚本标签；逻辑帧走经典脚本对 + 绝对逻辑入口 URL；帧握手定时器随 closeFrame 取消且只关自己（2026-09-25 三层修复，见「协议注册与 SDK 下发」段）
+- 工作台页签/命令贡献三处同步点：manifest 类型（`src/shared/plugin.ts`）↔ SDK 字符串（`src/plugin-sdk/index.ts`）↔ 帧服务/注册表（`frameServices.ts` + `lib/panelTabs.ts` + `lib/commands.ts`）——改任一必须同步其余；section/row 护栏解析唯一事实源 = `lib/tabSections.ts`，禁止在 capsule 或 panelTabs 侧各写一份
+- 插件装配（panelTabs/commands）的注册时机在 `frameProtocol` 的 bootstrap 与运行时启用两处 `wirePluginContributions`、停用处 `unwirePluginContributions`——新增贡献点必须在这三处成对出现（reload 场景的注册表清空是既有待治理项，见 20261015 review 观察点）
 
 ## 适用边界
 
-适用于桌面端插件装载/启停/批准/重载机制与其官方参考插件。渲染层壳层布局与路由（SideMenu/App Router 路由段/FloatLayer）见 renderer-shell-routing 与 shell-chrome-design 卡片；站点 web 端无关。
+适用于桌面端插件装载/启停/批准/重载机制与其官方参考插件。渲染层壳层布局与路由（工作台 Rail/上下文面板/Dock/App Router 路由段/FloatLayer）见 renderer-shell-routing 与 shell-chrome-design 卡片；站点 web 端无关。
 
 ## 验证方式
 

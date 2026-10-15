@@ -19,7 +19,8 @@ import { useRouter } from 'next/navigation'
 import styled from 'styled-components'
 import { Button } from '../../../components/ui/Button'
 import { AppIcon } from '../../../components/ui/AppIcon'
-import { IconChevronLeft, IconSave } from '../../../components/icons'
+import { IconChevronLeft, IconListTree, IconSave } from '../../../components/icons'
+import { SidePane } from '../../../components/editor/SidePane'
 import { MarkdownEditor } from '../../../components/editor/MarkdownEditor'
 import { Spine } from '../../../components/editor/Spine'
 import { useWorkspaceStore, workspaceStore } from '../../../lib/store'
@@ -207,6 +208,13 @@ const BlankHint = styled.p`
   color: var(--text-muted);
 `
 
+/* 右缘上下文侧栏行（task-9）：编辑列 + 侧栏横排 */
+const BodyRow = styled.div`
+  display: flex;
+  flex: 1;
+  min-height: 0;
+`
+
 export function EditorPage(): React.JSX.Element {
   const doc = useWorkspaceStore()
   const { t } = useLocale()
@@ -215,6 +223,8 @@ export function EditorPage(): React.JSX.Element {
   const [workspaceName, setWorkspaceName] = useState<string | null>(null)
   const [renaming, setRenaming] = useState(false)
   const [renameValue, setRenameValue] = useState('')
+  // 右缘上下文侧栏开合（task-9）：默认展开，顶栏按钮开合（专注模式由壳层整层隐藏）
+  const [paneOpen, setPaneOpen] = useState(true)
 
   // 冷启动/关闭后回到可写态：无文档（content==null）即进入新草稿会话（先写后存）
   useEffect(() => {
@@ -350,6 +360,24 @@ export function EditorPage(): React.JSX.Element {
         <TopSpacer />
         <Button
           size="sm"
+          variant="ghost"
+          aria-label={t('editor.sideAria')}
+          aria-pressed={paneOpen}
+          onClick={() => setPaneOpen((v) => !v)}
+        >
+          <AppIcon icon={IconListTree} size="xs" decorative />
+          {t('editor.sideAria')}
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          aria-label={t('editor.newBtn')}
+          onClick={() => publishEditorCommand({ kind: 'newDraft' })}
+        >
+          {t('editor.newBtn')}
+        </Button>
+        <Button
+          size="sm"
           aria-label={t('editor.saveAria')}
           disabled={!canSave || saving}
           onClick={onSave}
@@ -359,20 +387,23 @@ export function EditorPage(): React.JSX.Element {
         </Button>
       </TopBar>
 
-      <Column>
-        <EditorBody>
-          <MarkdownEditor />
-          {!doc.content && (
-            <Blank aria-hidden="true" data-testid="editor-blank-seal">
-              <BlankInner>
-                <Seal>落笔</Seal>
-                <BlankHint>{t('editor.blankHint')}</BlankHint>
-              </BlankInner>
-            </Blank>
-          )}
-        </EditorBody>
-      </Column>
-      <Spine />
+      <BodyRow>
+        <Column>
+          <EditorBody>
+            <MarkdownEditor />
+            {!doc.content && (
+              <Blank aria-hidden="true" data-testid="editor-blank-seal">
+                <BlankInner>
+                  <Seal>落笔</Seal>
+                  <BlankHint>{t('editor.blankHint')}</BlankHint>
+                </BlankInner>
+              </Blank>
+            )}
+          </EditorBody>
+        </Column>
+        {paneOpen && <SidePane />}
+      </BodyRow>
+      {!paneOpen && <Spine />}
     </PageShell>
   )
 }

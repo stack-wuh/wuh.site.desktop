@@ -10,6 +10,8 @@
 import { cleanup } from '@testing-library/react'
 import { vi } from 'vitest'
 import { resetCapsuleForTests } from '../../lib/capsule'
+import { resetDockForTests } from '../../lib/dock'
+import { resetPanelTabsForTests } from '../../lib/panelTabs'
 import { resetEditorLiveStateForTests } from '../../lib/editor-state'
 import { resetTasksForTests } from '../../lib/tasks'
 import { resetEditorCommandsForTests } from '../../lib/editor-commands'
@@ -47,6 +49,8 @@ export function installWindowApiStub(): void {
     }
   )
   ;(window as unknown as { api: unknown }).api = api
+  // 顶层 pluginApi：frameProtocol startHost 走 window.pluginApi.list()（非 window.api.pluginApi）
+  ;(window as unknown as { pluginApi: unknown }).pluginApi = pluginApi
 }
 
 export interface RenderConsole {
@@ -82,6 +86,8 @@ export function resetRenderEnv(): void {
   cleanup()
   resetTasksForTests()
   resetCapsuleForTests()
+  resetDockForTests()
+  resetPanelTabsForTests()
   resetEditorLiveStateForTests()
   resetEditorCommandsForTests()
   markActEnvironment()

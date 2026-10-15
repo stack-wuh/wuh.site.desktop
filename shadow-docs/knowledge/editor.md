@@ -20,18 +20,19 @@ source:
   - changes/20260927-feature-editor-interactions/brief.md
   - changes/20261007-feature-frontmatter-editor-hide/brief.md
   - changes/20261008-feature-image-upload-choice/brief.md
-verified: 2026-10-08
-verified-depth: runtime
-verified-scope: editor-page + i18n + saveas-flow 用例绿（草稿态 saveAs、三语 key 锁定、原生保存链共存）；20260927-style-editor-render-language：typecheck 三 tsconfig 绿 + vitest 64 文件/547 用例绿（纯样式零契约；四主题走查由原型截图验收替代，renderTheme 值与原型 1:1 映射）；20260927-feature-editor-interactions：L 级完整 TDD（先红 23 失败→绿，交互纯逻辑 26 + 组件行为用例，真实 EditorView 驱动点击）+ 全量 66 文件/581 用例 + 三 tsconfig 绿；20261007-feature-frontmatter-editor-hide：frontmatter 隐藏 11 用例（StateField+真实 EditorView DOM 断言）+ 装饰族回归 80 绿 + 全量 74 文件/672 用例 + 三 tsconfig 绿 + Electron 实机截图（渲染态文档头零残留、⌘/ 源码态完整可见、光标落头部行浮现，renderMode=render 观察点）；20261008-feature-image-upload-choice：完整 TDD（19 新用例先红后绿：双链契约/`.assets` 守卫/图片定位改写/会话映射/MenuPopover 四行为/工具条菜单发布/tasks 上报/datalist 守卫）+ 全量 75 文件/687 用例 + 三 tsconfig 绿 + electron-vite build + dev 冷启动冒烟（无帧加载/握手错误）+ 用户实机走查（横幅两选、反切、菜单、任务胶囊进度、明暗主题）
+  - changes/20261015-feature-workbench-shell/brief.md
+verified: 2026-10-15
+verified-depth: unit
+verified-scope: 20261015 工作台：editor-center/focus-mode/editor-context-sidebar/settings-appearance 套件绿（单挂载拓扑/专注 chrome 退场 data-chrome/侧栏三页签/外观三控件写穿）+ drafts-editor-dom 迁移到 /editor 页真 CM6 链路绿；历史：editor-page + i18n + saveas-flow 用例绿（草稿态 saveAs、三语 key 锁定、原生保存链共存）；20260927-style-editor-render-language：typecheck 三 tsconfig 绿 + vitest 64 文件/547 用例绿（纯样式零契约；四主题走查由原型截图验收替代，renderTheme 值与原型 1:1 映射）；20260927-feature-editor-interactions：L 级完整 TDD（先红 23 失败→绿，交互纯逻辑 26 + 组件行为用例，真实 EditorView 驱动点击）+ 全量 66 文件/581 用例 + 三 tsconfig 绿；20261007-feature-frontmatter-editor-hide：frontmatter 隐藏 11 用例（StateField+真实 EditorView DOM 断言）+ 装饰族回归 80 绿 + 全量 74 文件/672 用例 + 三 tsconfig 绿 + Electron 实机截图（渲染态文档头零残留、⌘/ 源码态完整可见、光标落头部行浮现，renderMode=render 观察点）；20261008-feature-image-upload-choice：完整 TDD（19 新用例先红后绿：双链契约/`.assets` 守卫/图片定位改写/会话映射/MenuPopover 四行为/工具条菜单发布/tasks 上报/datalist 守卫）+ 全量 75 文件/687 用例 + 三 tsconfig 绿 + electron-vite build + dev 冷启动冒烟（无帧加载/握手错误）+ 用户实机走查（横幅两选、反切、菜单、任务胶囊进度、明暗主题）
 ---
 
 # 主编辑器（CodeMirror 6）、即时渲染与分栏预览
 
 ## 当前结论
 
-主编辑器是首页编辑器面板内的 **CodeMirror 6 源码编辑器**（`components/editor/MarkdownEditor.tsx` 薄包装，20260922-refactor-codemirror-editor 起替换 Vditor IR；曾由 20260922-feature-vditor-md-editor 短暂引入 Vditor，因 11MB 资产与 IR 形态不合用整体退场）。面板中央为编辑/预览区，动作行承载文档状态 · 预览 toggle · 新建 · 保存。
+主编辑器是 **CodeMirror 6 源码编辑器**（`components/editor/MarkdownEditor.tsx` 薄包装，20260922-refactor-codemirror-editor 起替换 Vditor IR；曾由 20260922-feature-vditor-md-editor 短暂引入 Vditor，因 11MB 资产与 IR 形态不合用整体退场）。**20261015-feature-workbench-shell 起为中央单挂载**：首页 EditorPanel 已退役（同日 `tests/home-editor-panel.test.ts` 删除、`tests/drafts-editor-dom.test.tsx` 迁移到 /editor 页），`/editor` 是唯一编辑面。
 
-**第二个挂载点 `/editor`（统一编辑页，2026-09-24 起）**：窄栏沉浸布局（~760px 居中列）+ 极简顶栏（返回 · 面包屑 · 新建 · 保存）；与首页面板**共用同一 `workspaceStore` 与同一命令通道**——保存/新建经 `publishEditorCommand` 发布、由常驻壳层的 EditorCommandHost 认领，页内不直呼主进程；冷启动（无文档无草稿会话，`content == null`）自动 `startDraft()` 延续「先写后存」；页内不提供分栏预览（首页面板的预览 toggle 语义保留在首页）。两挂载点由**路由互斥**保证任一时刻仅一处挂载 CM6 实例（首页 EditorPanel 行为不变）。
+**统一编辑页 `/editor`（2026-09-24 起；20261015 起中央一等化）**：沉浸布局（~760px 居中列）+ 极简顶栏（返回 · 面包屑 · 上下文侧栏开关 · 新建 · 保存）；经 `publishEditorCommand` 走命令通道、由常驻壳层的 EditorCommandHost 认领，页内不直呼主进程；冷启动（无文档无草稿会话，`content == null`）自动 `startDraft()` 延续「先写后存」；页内不提供分栏预览。**右缘上下文侧栏（20261015 task-9）**：`components/editor/SidePane/`——大纲（点击经命令通道 `scrollToHeading`）/元数据（**只读**展示 frontmatter 键值 + 跳 Frontmatter 插件编辑，壳层不重建元数据表单）/图床（入口跳转）+ 插件 `area=context` 页签（`lib/panelTabs` 声明制，见 plugin-architecture 卡）；顶栏按钮开合（默认展开）。**单挂载守卫**：任一时刻仅一处挂载 CM6 实例（现由单挂载布局天然成立，新增编辑面必须复用 MarkdownEditor + 命令通道 + 同一 store 并维持互斥）。
 
 **面包屑文档操作（20260924-feature-breadcrumb-doc-ops）**：`/editor` 顶栏面包屑为**完整相对路径**（项目名/目录段/文件名 + 脏点）且可交互——点文件名原地变输入框（Enter/失焦提交、Esc 取消）发布 `renameDoc`；点目录段发布 `transferDoc` 唤起宿主承载的**目标文件夹选择 Dialog**（readTree 收集目录、迁移/复制双动作内嵌；复制停留原文 + Toast）。词表新增 `{ kind: 'renameDoc'; newName }` 与 `{ kind: 'transferDoc' }`，认领、校验、IPC 与 store 同步全在 EditorCommandHost。**草稿态入口（20260925-feature-draft-crumb-save）**：有内容时「新草稿」可点、发布**既有 `saveAs`** 走原生保存面板落盘（合规「凡选位置一律原生弹窗」约束，不自建位置 UI；`canSave` 复用保证与保存按钮禁用态一致），空内容纯文本；落盘后面包屑自动变完整路径交互态。**`<stem>.assets` 随迁契约**：blog 约定图片落文档同目录同名 `.assets/` 且正文相对引用——改名/迁移必须经主进程 `transferDoc(srcRel, destRel, mode)` IPC（safeJoin 守卫 + assets 目录随迁、文档落位失败回滚 + 改名场景正文引用改写）；路径校验/引用改写/目录枚举纯逻辑唯一事实源是 `src/shared/docTransfer.ts`（渲染层与主进程共用），不得各写一份。move 时脏缓冲跟随新路径并保持 dirty（引用改写同步作用于内存缓冲），copy 前「所见即所存」先落盘。
 
@@ -75,11 +76,11 @@ verified-scope: editor-page + i18n + saveas-flow 用例绿（草稿态 saveAs、
 
 ## 适用边界
 
-适用于宿主首页编辑器面板与 `/editor` 统一编辑页、其分栏预览（仅首页）、胶囊/面板到编辑器的命令链路。不适用于插件沙箱帧内部编辑器（插件自 vendor 依赖）；`workspaceStore` 作为插件 doc 服务状态源的帧协议语义见 renderer-shell-routing 卡。
+适用于 `/editor` 统一编辑页（唯一编辑面，20261015 起首页 EditorPanel 已退役）、其右缘上下文侧栏、胶囊/面板到编辑器的命令链路。不适用于插件沙箱帧内部编辑器（插件自 vendor 依赖）；`workspaceStore` 作为插件 doc 服务状态源的帧协议语义见 renderer-shell-routing 卡。
 
 ## 验证方式
 
-- `vitest run tests/editor-codemirror.test.ts tests/home-editor-panel.test.ts tests/editor-live-preview-toggle.test.tsx tests/editor-live-preview-atomic.test.tsx tests/editor-live-preview-frontmatter.test.tsx tests/editor-toolbar.test.tsx tests/editor-page.test.tsx tests/doc-transfer.test.ts tests/editor-interactions.test.ts tests/editor-interactions-widgets.test.tsx`（frontmatter 套件：渲染态整块隐藏/光标浮现/Home 落位/字节保真/reconfigure 即时/atomicSubset 含替换）（CM6 适配/双通道语义/命令契约/大纲/字数/即时渲染开关时序/原子区契约/工具条命令发布 + `/editor` 顶栏与冷启动草稿会话 + 面包屑完整路径与改名/迁移命令发布 + docTransfer 纯逻辑 + L4 交互纯逻辑与 widget 行为：任务点选改写/折叠展开/注释脚注/字节保真）；`vitest run tests/save-dialog.test.ts tests/saveas-flow.test.tsx`（原生保存面板：文件名清洗/目录记忆/saveAs 四分支流转）；`vitest run tests/oss-upload.test.ts tests/ui-menu-popover.test.tsx` + `tests/editor-codemirror.test.ts`（图片上传选择链：双链回传契约/`.assets` 归属守卫/picker 白名单、图片定位与改写纯逻辑、会话映射与切换可用性、MenuPopover 开合/Esc/点外关/焦点归还、工具条菜单发布；插件面另见 `tests/image-host-plugin.test.ts` 任务上报与 datalist 守卫）。
+- `vitest run tests/editor-codemirror.test.ts tests/editor-live-preview-toggle.test.tsx tests/editor-live-preview-atomic.test.tsx tests/editor-live-preview-frontmatter.test.tsx tests/editor-toolbar.test.tsx tests/editor-page.test.tsx tests/editor-center.test.tsx tests/editor-context-sidebar.test.tsx tests/focus-mode.test.tsx tests/doc-transfer.test.ts tests/editor-interactions.test.ts tests/editor-interactions-widgets.test.tsx`（CM6 适配/双通道语义/命令契约/大纲/字数/即时渲染开关时序/原子区契约/工具条命令发布 + `/editor` 顶栏与冷启动草稿会话 + 面包屑完整路径与改名/迁移命令发布 + docTransfer 纯逻辑 + L4 交互纯逻辑与 widget 行为；20261015 增：单挂载拓扑/专注 chrome 退场/右缘侧栏三页签与 context 页签声明制）；`vitest run tests/save-dialog.test.ts tests/saveas-flow.test.tsx tests/drafts-editor-dom.test.tsx`（原生保存面板：文件名清洗/目录记忆/saveAs 四分支流转；草稿端到端真 CM6 链路已迁 /editor 页）；`vitest run tests/oss-upload.test.ts tests/ui-menu-popover.test.tsx` + `tests/editor-codemirror.test.ts`（图片上传选择链：双链回传契约/`.assets` 归属守卫/picker 白名单、图片定位与改写纯逻辑、会话映射与切换可用性、MenuPopover 开合/Esc/点外关/焦点归还、工具条菜单发布；插件面另见 `tests/image-host-plugin.test.ts` 任务上报与 datalist 守卫）。
 - `pnpm dev` 手动路径（L4 交互走查）：渲染态点任务 checkbox（源码改写 + 明暗核对）、标题 hover 箭头折叠/点击占位条展开/光标进入自动展开、`<!-- -->` 注释收成标注条/点击展开、脚注上标与定义行分节、图片点击 lightbox（Esc 关闭且浮窗层让位、焦点归还）、Ctrl/Cmd+点击 http(s) 链接直达浏览器（相对链接无动作）。
 - `grep -rn "vditor" --include="*.ts" --include="*.tsx" --include="*.mjs" .`（排除 node_modules/out/dist/shadow-docs）应无**代码级**引用（注释性历史提及除外，如 tests/editor-codemirror.test.ts 契约回归的来源注记）。
 - `pnpm dev` 手动路径：首页面板打字（明暗四主题）、胶囊格式化/插入命令、图片粘贴落盘 `.assets/`、预览 toggle 分栏与窄容器纵堆、Cmd/Ctrl+S 保存、outline 跳转；`/editor`：左栏项目树或项目页点文件进入、脏点与保存、新建、返回、Esc 退专注、冷启动自动草稿。

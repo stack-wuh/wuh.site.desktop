@@ -324,4 +324,119 @@ describe('validateManifest', () => {
     expect(PLUGIN_PERMISSIONS.length).toBeGreaterThan(0)
     expect(new Set(PLUGIN_PERMISSIONS).size).toBe(PLUGIN_PERMISSIONS.length)
   })
+
+  // ---------- 工作台扩展（20261015-feature-workbench-shell task-12）----------
+
+  it('views.area 接受 dock/context（工作台新挂点）', () => {
+    const m = validManifest()
+    m.views = [
+      { id: 'panel', area: 'dock', title: 'Git 面板', icon: 'git-branch', entry: 'panel.html', order: 20 },
+      { id: 'ctx', area: 'context', title: 'Git 上下文', icon: 'git-branch', entry: 'ctx.html', order: 21 }
+    ]
+    const res = validateManifest(m)
+    expect(res.ok).toBe(true)
+    if (res.ok) {
+      expect(res.manifest.views.map((v) => v.area)).toEqual(['dock', 'context'])
+    }
+  })
+
+  it('views.area=sidebar 仍被拒绝并指引迁移 main', () => {
+    const m = validManifest()
+    m.views = [{ id: 'sb', area: 'sidebar', title: '侧栏', icon: 'eye', entry: 'sb.html', order: 10 }]
+    const res = validateManifest(m)
+    expect(res.ok).toBe(false)
+    if (!res.ok) expect(res.errors.some((e) => e.includes('sidebar 已废弃'))).toBe(true)
+  })
+
+  it('views.area 非法值被拒绝', () => {
+    const m = validManifest()
+    m.views = [{ id: 'x', area: 'floating', title: 'X', icon: 'eye', entry: 'x.html', order: 10 }]
+    const res = validateManifest(m)
+    expect(res.ok).toBe(false)
+    if (!res.ok) expect(res.errors.some((e) => e.includes('main/float/dock/context'))).toBe(true)
+  })
+
+  it('容量护栏：dock 页签每插件最多 1 个', () => {
+    const m = validManifest()
+    m.views = [
+      { id: 'dock-a', area: 'dock', title: 'A', icon: 'git-branch', entry: 'a.html', order: 20 },
+      { id: 'dock-b', area: 'dock', title: 'B', icon: 'git-branch', entry: 'b.html', order: 21 }
+    ]
+    const res = validateManifest(m)
+    expect(res.ok).toBe(false)
+    if (!res.ok) expect(res.errors.some((e) => e.includes('area=dock 最多声明 1 个'))).toBe(true)
+  })
+
+  it('容量护栏：context 页签每插件最多 1 个', () => {
+    const m = validManifest()
+    m.views = [
+      { id: 'ctx-a', area: 'context', title: 'A', icon: 'git-branch', entry: 'a.html', order: 20 },
+      { id: 'ctx-b', area: 'context', title: 'B', icon: 'git-branch', entry: 'b.html', order: 21 }
+    ]
+    const res = validateManifest(m)
+    expect(res.ok).toBe(false)
+    if (!res.ok) expect(res.errors.some((e) => e.includes('area=context 最多声明 1 个'))).toBe(true)
+  })
+
+  it('dock/context 页签 entry 仍须为相对 .html 路径', () => {
+    const m = validManifest()
+    m.views = [{ id: 'panel', area: 'dock', title: 'P', icon: 'git-branch', entry: '/abs.html', order: 20 }]
+    const res = validateManifest(m)
+    expect(res.ok).toBe(false)
+    if (!res.ok) expect(res.errors.some((e) => e.includes('禁止绝对路径'))).toBe(true)
+  })
+
+  it('dock/context 与 main/float 可共存声明（工作台全景 manifest）', () => {
+    const m = validManifest()
+    m.views = [
+      { id: 'git', area: 'main', title: 'Git 历史', icon: 'git-branch', entry: 'view/index.html', order: 20 },
+      { id: 'panel', area: 'dock', title: 'Git 面板', icon: 'git-branch', entry: 'panel.html', order: 21 },
+      { id: 'ctx', area: 'context', title: 'Git 上下文', icon: 'git-branch', entry: 'ctx.html', order: 22 }
+    ]
+    const res = validateManifest(m)
+    expect(res.ok).toBe(true)
+  })
+
+  it('commands 合法声明被接受（缺省不携带字段）', () => {
+    const m = validManifest()
+    m.views = [{ id: 'git', area: 'main', title: 'Git 历史', icon: 'git-branch', entry: 'v.html', order: 20 }]
+    m.commands = [{ id: 'open-history', title: 'Git · 打开历史与回退', viewId: 'git' }]
+    const res = validateManifest(m)
+    expect(res.ok).toBe(true)
+    if (res.ok) {
+      expect(res.manifest.commands).toEqual([{ id: 'open-history', title: 'Git · 打开历史与回退', viewId: 'git' }])
+    }
+  })
+
+  it('commands 每插件最多 8 个', () => {
+    const m = validManifest()
+    m.views = [{ id: 'git', area: 'main', title: 'G', icon: 'git-branch', entry: 'v.html', order: 20 }]
+    m.commands = Array.from({ length: 9 }, (_, i) => ({ id: `c${i}`, title: `命令${i}`, viewId: 'git' }))
+    const res = validateManifest(m)
+    expect(res.ok).toBe(false)
+    if (!res.ok) expect(res.errors.some((e) => e.includes('最多声明 8 个'))).toBe(true)
+  })
+
+  it('commands.viewId 须指向本插件 main 视图（v1 语义 = 视图快捷命令）', () => {
+    const m = validManifest()
+    m.views = [{ id: 'preview', area: 'float', title: '预览', icon: 'eye', entry: 'v.html', order: 10 }]
+    m.commands = [{ id: 'open', title: '打开', viewId: 'nope' }]
+    const res = validateManifest(m)
+    expect(res.ok).toBe(false)
+    if (!res.ok) expect(res.errors.some((e) => e.includes('viewId 须指向'))).toBe(true)
+  })
+
+  it('commands.title 须为 1-40 字符、id 须匹配规则', () => {
+    const m = validManifest()
+    m.views = [{ id: 'git', area: 'main', title: 'G', icon: 'git-branch', entry: 'v.html', order: 20 }]
+    m.commands = [
+      { id: 'Bad Id', title: 'x'.repeat(41), viewId: 'git' }
+    ]
+    const res = validateManifest(m)
+    expect(res.ok).toBe(false)
+    if (!res.ok) {
+      expect(res.errors.some((e) => e.includes('id 非法'))).toBe(true)
+      expect(res.errors.some((e) => e.includes('title 须为 1-40'))).toBe(true)
+    }
+  })
 })

@@ -35,6 +35,7 @@ import {
   ListOrdered,
   ListTree,
   Maximize,
+  Maximize2,
   MessageSquare,
   Minus,
   Palette,
@@ -44,6 +45,7 @@ import {
   Puzzle,
   Quote,
   Save,
+  Command,
   Search,
   Settings,
   Sparkles,
@@ -94,6 +96,7 @@ export const IconList = List
 export const IconListOrdered = ListOrdered
 export const IconListTree = ListTree
 export const IconMaximize = Maximize
+export const IconMaximize2 = Maximize2
 export const IconMinus = Minus
 export const IconPalette = Palette
 export const IconPanelCollapse = PanelLeftClose
@@ -103,6 +106,7 @@ export const IconPuzzle = Puzzle
 export const IconQuote = Quote
 export const IconRedo = Redo2
 export const IconSave = Save
+export const IconCommand = Command
 export const IconSearch = Search
 export const IconSettings = Settings
 export const IconSparkles = Sparkles
