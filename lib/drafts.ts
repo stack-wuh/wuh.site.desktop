@@ -69,7 +69,8 @@ export async function refreshDrafts(): Promise<void> {
   }
   try {
     const drafts = await apiObj.listDrafts()
-    store.commit({ loaded: true, drafts })
+    // 非数组返回一律保留旧快照（主进程契约恒为数组，此处为 stub/异常返回兜底）
+    store.commit({ loaded: true, drafts: Array.isArray(drafts) ? drafts : [] })
   } catch (err) {
     console.warn('拉取草稿列表失败，保留旧快照', err)
     store.commit((cur) => ({ loaded: true, drafts: cur.drafts }))

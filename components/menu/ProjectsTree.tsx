@@ -45,6 +45,11 @@ type TreeRow =
 /** 单个项目树的加载态：loading（首拉中）/ ready（剪枝后的含 .md 分支） */
 type ProjectTreeState = { status: 'loading' } | { status: 'ready'; nodes: FileNode[] }
 
+/** 侧栏子树形态：maxHeight 封顶自滚动（TreeWrap 同口径） */
+const SCROLL_STYLE: React.CSSProperties = { maxHeight: 'min(52vh, 560px)', overflowY: 'auto' }
+/** 上下文面板形态（task-3）：根元素即滚动容器，height:100% 撑满面板通栏 */
+const SCROLL_STYLE_FILL: React.CSSProperties = { height: '100%', overflowY: 'auto' }
+
 const Wrap = styled.div`
   display: flex;
   flex-direction: column;
@@ -53,9 +58,8 @@ const Wrap = styled.div`
   font-family: var(--font-sans);
 `
 
-/* 虚拟滚动容器：与 SideMenu TreeWrap 同口径高度封顶，自滚动（TreeWrap 本体不滚动，PluginTree 无感知）。
-   styled(VirtualList) 会把泛型折叠成 unknown（itemKey 参数丢类型），故封顶经 style prop 内联传递 */
-const SCROLL_STYLE: React.CSSProperties = { maxHeight: 'min(52vh, 560px)', overflowY: 'auto' }
+/* 虚拟滚动容器：styled(VirtualList) 会把泛型折叠成 unknown（itemKey 参数丢类型），
+   故滚动封顶/填充经 style prop 内联传递（SCROLL_STYLE / SCROLL_STYLE_FILL） */
 
 const NodeRow = styled.button<{ $depth: number }>`
   display: flex;
@@ -137,7 +141,7 @@ const NoteRow = styled.p<{ $depth: number; $tone?: 'muted' | 'warning' | 'danger
         : 'var(--text-muted)'};
 `
 
-export function ProjectsTree(): React.JSX.Element | null {
+export function ProjectsTree(props?: { fill?: boolean }): React.JSX.Element | null {
   const { t } = useLocale()
   const router = useRouter()
   const wsRoot = useWorkspaceStore().root
@@ -354,7 +358,7 @@ export function ProjectsTree(): React.JSX.Element | null {
   return (
     <Wrap>
       <VirtualList
-        style={SCROLL_STYLE}
+        style={props?.fill === true ? SCROLL_STYLE_FILL : SCROLL_STYLE}
         items={rows}
         itemHeight={ROW_HEIGHT}
         itemKey={(row) => row.key}

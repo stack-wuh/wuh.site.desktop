@@ -9,6 +9,7 @@ import styled, { keyframes } from 'styled-components'
 import type { ResizeDir } from './geometry'
 
 export const Layer = styled.div`
+  /* data-float-layer：测试与浮层判定用稳定属性（styled 类名是哈希） */
   position: absolute;
   inset: 0;
   pointer-events: none;

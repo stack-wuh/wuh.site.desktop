@@ -16,9 +16,10 @@
  * - 标签：任务态整串 mono + 语义色（进行中=primary、全完成=success）；空态
  *   「就绪」/编辑器入口常规 sans 次级色；chevron 开合旋转 180°。
  */
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { useEffect, useRef, useSyncExternalStore } from 'react'
 import styled, { css, keyframes } from 'styled-components'
 import { taskAggregate, tasksStore } from '../../lib/tasks'
+import { dockStore, setDockOpen, toggleDockOpen } from '../../lib/dock'
 import { useWorkspaceStore } from '../../lib/store'
 import { useLocale } from '../../lib/i18n/context'
 import { AppIcon } from '../ui/AppIcon'
@@ -190,7 +191,10 @@ export function Capsule(): React.JSX.Element {
   useSyncExternalStore(tasksStore.subscribe, tasksStore.get, tasksStore.get)
   const doc = useWorkspaceStore()
   const { t } = useLocale()
-  const [open, setOpen] = useState(false)
+  // 双形态开合态（task-5）：未停靠=下拉面板，停靠=Dock 面板；开合态在 lib/dock
+  const dock = useSyncExternalStore(dockStore.subscribe, dockStore.get, dockStore.get)
+  const open = dock.open
+  const docked = dock.docked
   /** 胶囊根（chip + 面板）引用：点外关时豁免胶囊内部点击 */
   const wrapRef = useRef<HTMLSpanElement | null>(null)
   const agg = taskAggregate()
@@ -209,10 +213,12 @@ export function Capsule(): React.JSX.Element {
   const labelTone: 'idle' | 'active' | 'done' =
     agg.active > 0 ? 'active' : agg.total > 0 && agg.done === agg.total ? 'done' : 'idle'
 
+  // Esc/点外关只对下拉形态生效；停靠态 Dock 是常驻面板（Esc 让位浮窗层，
+  // 点外关不收——收起走 chip 开合或 Dock 头部收起钮）
   useEffect(() => {
-    if (!open) return
+    if (!open || docked) return
     const onKey = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') setOpen(false)
+      if (e.key === 'Escape') setDockOpen(false)
     }
     // 点外关：target 在胶囊内（chip 或面板）一律忽略——不能用传播时序判断，
     // React 18 离散事件会同步刷 passive effects，打开面板的那次点击仍会
@@ -220,7 +226,7 @@ export function Capsule(): React.JSX.Element {
     const onClick = (e: MouseEvent): void => {
       const el = wrapRef.current
       if (el && e.target instanceof Node && el.contains(e.target)) return
-      setOpen(false)
+      setDockOpen(false)
     }
     window.addEventListener('keydown', onKey)
     window.addEventListener('click', onClick)
@@ -228,7 +234,7 @@ export function Capsule(): React.JSX.Element {
       window.removeEventListener('keydown', onKey)
       window.removeEventListener('click', onClick)
     }
-  }, [open])
+  }, [open, docked])
 
   return (
     <Wrap ref={wrapRef}>
@@ -239,7 +245,7 @@ export function Capsule(): React.JSX.Element {
         aria-haspopup="dialog"
         aria-expanded={open}
         $open={open}
-        onClick={() => setOpen((v) => !v)}
+        onClick={toggleDockOpen}
       >
         <ProgressRing mode={mode} ratio={agg.total > 0 ? agg.done / agg.total : 0} />
         <Label $tone={labelTone}>
@@ -253,7 +259,8 @@ export function Capsule(): React.JSX.Element {
           <AppIcon icon={IconChevronDown} size="xs" decorative />
         </Chevron>
       </CapsuleButton>
-      {open && <CapsulePanel onClose={() => setOpen(false)} />}
+      {/* 下拉形态：停靠后任务中心挂到底部 Dock（components/dock），此处不渲染 */}
+      {open && !docked && <CapsulePanel onClose={() => setDockOpen(false)} />}
     </Wrap>
   )
 }

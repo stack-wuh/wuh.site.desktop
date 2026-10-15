@@ -266,3 +266,40 @@ export const ToneDot = styled.span<{ $tone: NonNullable<CapsuleModuleState['tone
       ? 'background: var(--text-muted);'
       : ''}
 `
+
+/* 停靠按钮行（task-5 双形态）：面板底缘动作行 */
+export const PopFoot = styled.div`
+  flex: none;
+  border-top: 1px solid var(--chrome-border);
+  padding: 8px 10px;
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    width: 100%;
+    justify-content: center;
+    font-size: 12px;
+    color: var(--text-secondary);
+    background: transparent;
+    border: 1px solid var(--chrome-border);
+    border-radius: var(--border-radius-sm);
+    padding: 6px 11px;
+    cursor: pointer;
+    transition:
+      color 150ms ease-out,
+      border-color 150ms ease-out,
+      background-color 150ms ease-out;
+  }
+
+  button:hover {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+    background: color-mix(in oklab, var(--primary-color) 8%, transparent);
+  }
+
+  button:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: -2px;
+  }
+`
