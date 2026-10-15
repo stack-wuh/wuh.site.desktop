@@ -4,7 +4,7 @@
   "name": "20261015-feature-workbench-shell",
   "type": "feature",
   "scope": "shell",
-  "status": "reviewed",
+  "status": "published",
   "baseBranch": "main",
   "branch": "feature/20261015-feature-workbench-shell",
   "files": [
@@ -35,8 +35,8 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 153,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/153",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 154,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/154"
   },
   "review": {
     "conclusion": "passed",
@@ -45,7 +45,7 @@
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:153",
+    "checkpoint": "pr:154",
     "planHash": "94b178074c2e37711b79542d253d4ce2b33c25383a042e8c46a5a343fc1a0f95",
     "updatedAt": null,
     "lastError": null,
