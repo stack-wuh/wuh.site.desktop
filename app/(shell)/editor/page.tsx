@@ -4,13 +4,15 @@
  * 统一编辑页（20260924-feature-projects-editor-page）：窄栏居中的 Typora 式沉浸写面。
  * 复用 MarkdownEditor（CM6 即时渲染即预览，不放预览分栏）；与首页编辑器面板互斥挂载、
  * 共用 workspaceStore 单状态源（content 双通道/命令通道契约不变，见 knowledge/editor.md）。
- * 极简顶栏：返回 · 面包屑（完整相对路径 + 脏点）· 新建 · 保存——文档操作经
- * publishEditorCommand 与胶囊/首页面板同源；面包屑可交互（20260924-feature-breadcrumb-doc-ops）：
+ * 极简顶栏：返回 · 面包屑（完整相对路径 + 脏点）· 保存——文档操作经
+ * publishEditorCommand 与胶囊同源；面包屑可交互（20260924-feature-breadcrumb-doc-ops）：
  * 点文件名原地改名（renameDoc）、点目录段唤起目标文件夹选择（transferDoc，宿主承载
- * 迁移/复制 Dialog）；草稿态有内容时「新草稿」可点、发布 saveAs 走原生保存面板落盘
+ * 迁移/复制 Dialog）；草稿态有内容时面包屑可点、发布 saveAs 走原生保存面板落盘
  * （20260925-feature-draft-crumb-save，空内容纯文本）；撤销/重做/查找走 CM6 原生快捷键与胶囊入口。
- * 冷启动（content==null）自动 startDraft 进入新草稿会话（先写后存）；focusMode 经
- * editor-state 总线联动淡出顶栏，Esc 退出（与首页同语义）。
+ * 20261014-feature-editor-paper-rebuild（素笺手记）：编辑面唯一挂载收敛本页（首页编辑面板退役）；
+ * 顶栏收敛三件制（返回/面包屑/保存，「新建」退居胶囊）并 hover 显影（常态 0.28、
+ * hover/focus-within 1，focusMode 0.05 让位）；常驻工具条退役（格式化走笔帘/呼墨/胶囊）。
+ * 冷启动（content==null）自动 startDraft 进入新草稿会话（先写后存）。
  */
 import { Fragment, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -20,7 +22,7 @@ import { AppIcon } from '../../../components/ui/AppIcon'
 import { IconChevronLeft, IconListTree, IconSave } from '../../../components/icons'
 import { SidePane } from '../../../components/editor/SidePane'
 import { MarkdownEditor } from '../../../components/editor/MarkdownEditor'
-import { EditorToolbar } from '../../../components/editor/Toolbar'
+import { Spine } from '../../../components/editor/Spine'
 import { useWorkspaceStore, workspaceStore } from '../../../lib/store'
 import { publishEditorCommand } from '../../../lib/editor-commands'
 import { toast } from '../../../lib/feedback'
@@ -33,31 +35,43 @@ const PageShell = styled.section`
   flex: 1;
   min-width: 0;
   min-height: 0;
+  position: relative;
   background: var(--background-color);
   transition: background-color 0.3s ease;
 `
 
 const TopBar = styled.header<{ $dim: boolean }>`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
   display: flex;
   align-items: center;
   gap: 8px;
-  flex: none;
-  /* 水平 32px 对齐全局页头栅格（垂直保持编辑器密排）；窄窗 16px 同 PageTopbar */
   padding: 6px 32px;
-  border-bottom: 1px solid var(--chrome-border);
-  opacity: ${(props) => (props.$dim ? 0.05 : 1)};
+  opacity: ${(props) => (props.$dim ? 0.05 : 0.28)};
   pointer-events: ${(props) => (props.$dim ? 'none' : 'auto')};
+  background: linear-gradient(
+    to bottom,
+    color-mix(in oklab, var(--background-color) 92%, transparent),
+    transparent
+  );
   transition:
-    opacity var(--motion-dur-reveal, 600ms) var(--motion-ease-out-soft, ease-out),
-    background-color 0.3s ease,
-    border-color 0.3s ease;
+    opacity var(--motion-dur-quick, 150ms) var(--motion-ease-out-soft, ease-out),
+    background-color 0.3s ease;
+
+  &:hover,
+  &:focus-within {
+    opacity: ${(props) => (props.$dim ? 0.05 : 1)};
+  }
 
   @media (max-width: 768px) {
     padding: 6px 16px;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    transition: background-color 0.3s ease, border-color 0.3s ease;
+    transition: background-color 0.3s ease;
   }
 `
 
@@ -75,6 +89,7 @@ const Crumb = styled.span`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  max-width: 180px;
 `
 
 /** 可点击面包屑段（目录段=迁移/复制入口；文件名段=原地改名入口） */
@@ -82,6 +97,7 @@ const CrumbButton = styled.button`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  max-width: 180px;
   padding: 1px 4px;
   margin: -1px -4px;
   border: none;
@@ -140,13 +156,56 @@ const Column = styled.div`
   width: 100%;
   max-width: 760px;
   margin: 0 auto;
-  padding: 12px 16px 24px;
+  /* 素笺画芯：顶部呼吸让位悬浮顶栏（视觉稿 D2），底距保持编辑器密排 */
+  padding: clamp(72px, 10vh, 120px) 16px 24px;
 `
 
 const EditorBody = styled.div`
   display: flex;
   flex: 1;
   min-height: 0;
+  position: relative;
+`
+
+/* 空文档「落笔」印（素笺手记）：纸心朱印 + 三语引导；pointer-events 让键入直达 CM */
+const Blank = styled.div`
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  z-index: 5;
+`
+
+const BlankInner = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-base, 12px);
+`
+
+const Seal = styled.div`
+  width: 76px;
+  height: 76px;
+  border-radius: var(--border-radius-md, 12px);
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--primary-400, var(--primary-color)), var(--primary-color));
+  color: #fffdfb;
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  writing-mode: vertical-rl;
+  transform: rotate(-2deg);
+  box-shadow: 0 6px 18px color-mix(in oklab, var(--primary-color) 30%, transparent);
+`
+
+const BlankHint = styled.p`
+  margin: 0;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
 `
 
 /* 右缘上下文侧栏行（task-9）：编辑列 + 侧栏横排 */
@@ -330,13 +389,21 @@ export function EditorPage(): React.JSX.Element {
 
       <BodyRow>
         <Column>
-          <EditorToolbar />
           <EditorBody>
             <MarkdownEditor />
+            {!doc.content && (
+              <Blank aria-hidden="true" data-testid="editor-blank-seal">
+                <BlankInner>
+                  <Seal>落笔</Seal>
+                  <BlankHint>{t('editor.blankHint')}</BlankHint>
+                </BlankInner>
+              </Blank>
+            )}
           </EditorBody>
         </Column>
         {paneOpen && <SidePane />}
       </BodyRow>
+      {!paneOpen && <Spine />}
     </PageShell>
   )
 }

@@ -8,6 +8,7 @@
 import { EditorState, StateEffect } from '@codemirror/state'
 import { EditorView, WidgetType } from '@codemirror/view'
 import { isExternalRef, toFileUrl } from '@shared/url'
+import type { LinkMeta } from '@shared/types'
 import { toggleTaskLine } from '../../lib/editor-cm'
 import { storedLocale, translateText } from '../../lib/i18n/locales'
 
@@ -328,6 +329,151 @@ export class HrWidget extends WidgetType {
     el.className = 'cm-live-hr'
     el.setAttribute('aria-hidden', 'true')
     return el
+  }
+}
+
+// ===== 笺条（素笺手记 20261014-feature-editor-paper-rebuild）=====
+
+/** 笺条元数据会话缓存（渲染层内存；持久缓存在主进程 linkMeta，INV-6） */
+const cardMetaCache = new Map<string, LinkMeta>()
+
+function cardDomainOf(url: string): string {
+  try {
+    return new URL(url).host
+  } catch {
+    return url
+  }
+}
+
+const CARD_SEAL_SVG =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 19V5a2 2 0 0 1 2-2h13v18H6a2 2 0 0 1-2-2Z"/><path d="M8 7h8M8 11h8M8 15h5"/></svg>'
+
+/**
+ * 笺条卡片：独立链接行/裸 URL 行的整行替换呈现（签名元素）。
+ * 折角 + 站印 + 笺题（衬线）+ 摘语 + 域名；元数据经 fetchLinkMeta IPC 异步取
+ * （会话缓存命中即显），加载中骨架、失败回退虚笺 + 重试——正文永不因抓取失败丢失。
+ * 点击经 openExternal 外开（仅 http/https，检测层已钳制）；编辑经键盘光标进入
+ * 该行（光标行源码态，装饰层契约）。
+ */
+export class CardWidget extends WidgetType {
+  constructor(
+    readonly url: string,
+    readonly title: string
+  ) {
+    super()
+  }
+
+  eq(other: CardWidget): boolean {
+    return other.url === this.url && other.title === this.title
+  }
+
+  toDOM(): HTMLElement {
+    const a = document.createElement('a')
+    a.className = 'cm-live-card'
+    a.href = this.url
+    a.setAttribute('title', this.url)
+
+    const seal = document.createElement('span')
+    seal.className = 'cm-live-card-seal'
+    seal.innerHTML = CARD_SEAL_SVG
+    const body = document.createElement('span')
+    body.className = 'cm-live-card-body'
+    const title = document.createElement('span')
+    title.className = 'cm-live-card-title'
+    const desc = document.createElement('span')
+    desc.className = 'cm-live-card-desc'
+    const meta = document.createElement('span')
+    meta.className = 'cm-live-card-meta'
+    body.append(title, desc, meta)
+    a.append(seal, body)
+
+    const fill = (m: LinkMeta): void => {
+      title.textContent = m.title || this.title || this.url
+      title.classList.remove('cm-live-card-skeleton')
+      if (m.description) {
+        desc.textContent = m.description
+        desc.style.display = ''
+      } else {
+        desc.style.display = 'none'
+      }
+      meta.textContent = ''
+      if (m.favicon) {
+        const fav = document.createElement('img')
+        fav.className = 'cm-live-card-favicon'
+        fav.alt = ''
+        fav.loading = 'lazy'
+        fav.addEventListener('error', () => fav.remove())
+        fav.src = m.favicon
+        meta.appendChild(fav)
+      }
+      meta.appendChild(document.createTextNode(cardDomainOf(this.url)))
+    }
+
+    const showFallback = (): void => {
+      a.classList.remove('cm-live-card--loading')
+      a.classList.add('cm-live-card--fallback')
+      title.classList.remove('cm-live-card-skeleton')
+      desc.classList.remove('cm-live-card-skeleton')
+      title.textContent = this.url
+      desc.style.display = 'none'
+      meta.textContent = ''
+      const retry = document.createElement('button')
+      retry.type = 'button'
+      retry.className = 'cm-live-card-retry'
+      retry.textContent = translateText(storedLocale(), 'editor.cardRetry')
+      retry.addEventListener('click', (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        load()
+      })
+      meta.appendChild(retry)
+    }
+
+    const load = (): void => {
+      a.classList.remove('cm-live-card--fallback')
+      a.classList.add('cm-live-card--loading')
+      title.textContent = this.title || this.url
+      title.classList.add('cm-live-card-skeleton')
+      desc.style.display = ''
+      desc.textContent = ''
+      desc.classList.add('cm-live-card-skeleton')
+      meta.textContent = ''
+      const cached = cardMetaCache.get(this.url)
+      const apply = (m: LinkMeta): void => {
+        if (!a.isConnected) return
+        cardMetaCache.set(this.url, m)
+        a.classList.remove('cm-live-card--loading')
+        desc.classList.remove('cm-live-card-skeleton')
+        fill(m)
+      }
+      if (cached) {
+        apply(cached)
+        return
+      }
+      // 宿主 API 未就绪（测试/异常环境）：直接回退虚笺，正文内容不受影响
+      if (typeof window === 'undefined' || !window.api?.fetchLinkMeta) {
+        showFallback()
+        return
+      }
+      window.api
+        .fetchLinkMeta(this.url)
+        .then(apply)
+        .catch(() => {
+          if (a.isConnected) showFallback()
+        })
+    }
+    load()
+
+    a.addEventListener('click', (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      void window.api.openExternal(this.url)
+    })
+    return a
+  }
+
+  ignoreEvent(): boolean {
+    return true
   }
 }
 

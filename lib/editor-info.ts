@@ -83,3 +83,45 @@ export function estimateReadingMinutes(words: number): number {
   if (words <= 0) return 0
   return Math.max(1, Math.round(words / 400))
 }
+
+/**
+ * 书口刻度（素笺手记 20261014，/editor 右缘大纲点集）：
+ * 大纲 → 书口点集，密度自适应——≤cap 全量保留；超 cap 均匀采样（首尾必含、
+ * 升序去重）。index 恒为原 outline 序号（跳章 scrollToHeading 消费原序号）。
+ */
+export interface SpineTick {
+  /** 原 parseOutline 序列序号（scrollToHeading 的 index） */
+  index: number
+  level: number
+  text: string
+  line: number
+}
+
+export const SPINE_TICK_CAP = 24
+
+export function spineTicks(outline: OutlineItem[], cap: number = SPINE_TICK_CAP): SpineTick[] {
+  const n = outline.length
+  if (n === 0) return []
+  const width = Math.max(2, cap)
+  if (n <= width) return outline.map((o, i) => ({ index: i, ...o }))
+  const idx = new Set<number>([0, n - 1])
+  for (let k = 1; k <= width - 2; k++) {
+    idx.add(Math.round((k * (n - 1)) / (width - 1)))
+  }
+  return [...idx]
+    .sort((a, b) => a - b)
+    .map((i) => {
+      const o = outline[i]
+      return { index: i, level: o.level, text: o.text, line: o.line }
+    })
+}
+
+/**
+ * 书口距离档位（墨色层次）：0=当前章（朱竖线）、1=相邻（62% 墨）、2=更远（34% 墨）；
+ * 无当前章（activeHeading -1）全部为 2。
+ */
+export function spineDistance(active: number, index: number): 0 | 1 | 2 {
+  if (active < 0) return 2
+  const d = Math.abs(active - index)
+  return d === 0 ? 0 : d === 1 ? 1 : 2
+}

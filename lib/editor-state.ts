@@ -15,11 +15,14 @@ export interface EditorTypography {
   measure: 'full' | number
 }
 
-/** 默认排版（20260927-feature-editor-interactions 提级：14/1.7 → 15/1.8，对齐壳层正文字阶与 --line-height-body） */
+/**
+ * 默认排版（20261014-feature-editor-paper-rebuild 素笺定稿：15/1.9 + 内容测宽 690px≈46em——
+ * 纸面内呼吸留白；行距对齐视觉稿正文节奏；用户仍可经排版偏好覆盖）
+ */
 export const DEFAULT_TYPOGRAPHY: EditorTypography = {
   fontSize: 15,
-  lineHeight: 1.8,
-  measure: 'full'
+  lineHeight: 1.9,
+  measure: 690
 }
 
 const TYPOGRAPHY_STORAGE_KEY = 'wd.editorTypography'

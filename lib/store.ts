@@ -173,6 +173,7 @@ export type MarkdownInsertAction =
   | 'h2'
   | 'bold'
   | 'italic'
+  | 'del'
   | 'ul'
   | 'ol'
   | 'quote'
@@ -188,6 +189,7 @@ export interface InsertResult {
 const WRAP_MARKS: Partial<Record<MarkdownInsertAction, string>> = {
   bold: '**',
   italic: '*',
+  del: '~~',
   code: '`'
 }
 

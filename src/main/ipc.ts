@@ -32,6 +32,7 @@ const handlers: {
   saveImageFromPickedPath: () => { throw new Error('not implemented') },
   uploadExistingAsset: () => { throw new Error('not implemented') },
   pickImages: () => { throw new Error('not implemented') },
+  fetchLinkMeta: () => { throw new Error('not implemented') },
   pickDirectory: () => { throw new Error('not implemented') },
   listImages: () => { throw new Error('not implemented') },
   uploadImages: () => { throw new Error('not implemented') },

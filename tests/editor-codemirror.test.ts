@@ -2,12 +2,17 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { EditorSelection, EditorState } from '@codemirror/state'
 import {
   cmApplyFormat,
+  cmConsumeSlashLine,
   cmExternalContent,
   cmHeadingCursor,
+  cmInsertCard,
   cmInsertSnippet,
+  findCardLine,
   findImageAtPos,
   findImageOnLine,
-  rewriteImageRef
+  findLinkTargetAt,
+  rewriteImageRef,
+  selectionUrl
 } from '../lib/editor-cm'
 import {
   entryForRemote,
@@ -228,7 +233,7 @@ import {
   subscribeEditorCommands,
   type EditorCommand
 } from '../lib/editor-commands'
-import { countWords, INSERT_SNIPPETS, parseOutline } from '../lib/editor-info'
+import { countWords, INSERT_SNIPPETS, parseOutline, spineDistance, spineTicks } from '../lib/editor-info'
 
 afterEach(() => resetEditorCommandsForTests())
 
@@ -291,6 +296,102 @@ describe('大纲解析（parseOutline）', () => {
   })
 })
 
+describe('书口刻度（spineTicks 密度自适应 + spineDistance 层次）', () => {
+  const outline = (n: number): ReturnType<typeof parseOutline> =>
+    Array.from({ length: n }, (_, i) => ({ level: 2, text: `章${i}`, line: i * 3 }))
+
+  it('≤cap 全量保留，index 映射回原 outline 序号', () => {
+    const ticks = spineTicks(outline(5))
+    expect(ticks).toHaveLength(5)
+    expect(ticks.map((t) => t.index)).toEqual([0, 1, 2, 3, 4])
+    expect(ticks[3].text).toBe('章3')
+  })
+
+  it('>cap 均匀采样不超过 cap 点，首尾必含、升序去重', () => {
+    const ticks = spineTicks(outline(100))
+    expect(ticks.length).toBeLessThanOrEqual(24)
+    expect(ticks[0].index).toBe(0)
+    expect(ticks[ticks.length - 1].index).toBe(99)
+    const idx = ticks.map((t) => t.index)
+    expect([...idx].sort((a, b) => a - b)).toEqual(idx)
+    expect(new Set(idx).size).toBe(idx.length)
+  })
+
+  it('空大纲返回空点集；cap 最小 2（首尾）', () => {
+    expect(spineTicks([])).toEqual([])
+    const two = spineTicks(outline(10), 2)
+    expect(two.map((t) => t.index)).toEqual([0, 9])
+  })
+
+  it('距离档位：当前 0、相邻 1、更远 2；无当前章（-1）全部为 2', () => {
+    expect(spineDistance(3, 3)).toBe(0)
+    expect(spineDistance(3, 2)).toBe(1)
+    expect(spineDistance(3, 4)).toBe(1)
+    expect(spineDistance(3, 1)).toBe(2)
+    expect(spineDistance(-1, 0)).toBe(2)
+    expect(spineDistance(-1, 9)).toBe(2)
+  })
+})
+
+describe('笺条与呼墨纯逻辑（素笺 20261014）', () => {
+  it('findCardLine：整行恰为一个 http(s) 链接（允许首尾空白）时产出笺条区间', () => {
+    const card = findCardLine('[标题](https://a.b/c)')
+    expect(card).not.toBeNull()
+    expect(card?.url).toBe('https://a.b/c')
+    expect(card?.title).toBe('标题')
+    expect(card?.from).toBe(0)
+    expect(card?.to).toBe('[标题](https://a.b/c)'.length)
+    expect(findCardLine('  [标题](https://a.b/c)  ')?.url).toBe('https://a.b/c')
+  })
+
+  it('findCardLine：裸 http(s) URL 独占一行也是笺条（title 空）', () => {
+    const card = findCardLine('https://x.y/z?a=1')
+    expect(card?.url).toBe('https://x.y/z?a=1')
+    expect(card?.title).toBe('')
+  })
+
+  it('findCardLine：列表前缀/行内夹杂/相对链接/普通文本均不算笺条', () => {
+    expect(findCardLine('- [a](https://x.y)')).toBeNull()
+    expect(findCardLine('文字 [a](https://x.y)')).toBeNull()
+    expect(findCardLine('[a](/relative/path)')).toBeNull()
+    expect(findCardLine('[a](ftp://x.y)')).toBeNull()
+    expect(findCardLine('普通段落')).toBeNull()
+    expect(findCardLine('')).toBeNull()
+  })
+
+  it('findCardLine 偏移为行内绝对值：from=0、to=行文本长度（trim 后）', () => {
+    const card = findCardLine('  [a](https://x.y)  ')
+    expect(card?.from).toBe(2)
+    expect(card?.to).toBe(2 + '[a](https://x.y)'.length)
+  })
+
+  it('cmInsertCard：空行插入 [url](url) + 换行，光标落行尾；非空行先补换行隔离', () => {
+    const empty = EditorState.create({ doc: '' })
+    const r1 = cmInsertCard(empty, 'https://a.b')
+    expect(r1.changes).toEqual({ from: 0, insert: '[https://a.b](https://a.b)\n' })
+    const doc = EditorState.create({ doc: 'abc' })
+    const at = 3
+    const st = doc.update({ selection: EditorSelection.cursor(at) }).state
+    const r2 = cmInsertCard(st, 'https://a.b')
+    expect(r2.changes).toEqual({ from: 3, insert: '\n[https://a.b](https://a.b)\n' })
+  })
+
+  it('cmConsumeSlashLine：行首 / 查询行整行删除（吞换行）；非行首 / 返回 null', () => {
+    const st = EditorState.create({ doc: '/tabl\nnext' })
+    const r = cmConsumeSlashLine(st)
+    expect(r?.changes).toEqual({ from: 0, to: 6, insert: '' })
+    const notSlash = EditorState.create({ doc: 'abc /x' }).update({ selection: EditorSelection.cursor(5) }).state
+    expect(cmConsumeSlashLine(notSlash)).toBeNull()
+  })
+
+  it('selectionUrl：选区 trim 后恰为 http(s) URL 时返回该 URL，否则 null', () => {
+    expect(selectionUrl(' https://a.b/c ')).toBe('https://a.b/c')
+    expect(selectionUrl('hello')).toBeNull()
+    expect(selectionUrl('ftp://x.y')).toBeNull()
+    expect(selectionUrl('')).toBeNull()
+  })
+})
+
 describe('字数统计（countWords）', () => {
   it('CJK 按字符计、拉丁按词计、空白不计', () => {
     expect(countWords('你好 world')).toEqual({ words: 3, chars: 7 })
@@ -308,5 +409,16 @@ describe('插入片段模板（INSERT_SNIPPETS）', () => {
     expect(INSERT_SNIPPETS.table).toContain('| --- |')
     expect(INSERT_SNIPPETS.codeBlock).toMatch(/^```/)
     expect(INSERT_SNIPPETS.hr).toMatch(/---/)
+  })
+})
+
+describe('格式化 del 动作（素笺笔帘删除线，词表增量回归）', () => {
+  it('cmApplyFormat del：选区被 ~~ 包裹，选区回落原文本', () => {
+    const applied = stateOf('say hi now', 4, 6).update(cmApplyFormat(stateOf('say hi now', 4, 6), 'del')).state
+    expect(applied.doc.toString()).toBe('say ~~hi~~ now')
+    const sel = applied.selection
+    if (!sel) throw new Error('del 事务必须携带选区')
+    expect(sel.main.from).toBe(6)
+    expect(sel.main.to).toBe(8)
   })
 })

@@ -6,9 +6,11 @@
  *
  * 20260927-style-editor-render-language「墨水层次」重设计（原型已验收）：
  * 非光标行 = 沉淀的排版（接近成品的安静渲染），光标行 = 墨迹未干的源码（符号浮现）。
- * 链接墨水下划、引用细线墨晕、行内代码纸面凹槽、标题字阶拉开节奏（h2 渐隐发丝线）、
- * 列表几何圆点、图片自然尺寸大图内联；半 px 字号归整（12.5→13 / 10.5→10、11）；
+ * 链接墨水下划、引用细线墨晕、行内代码纸面凹槽、列表几何圆点、图片自然尺寸大图内联；
  * 交互过渡统一 var(--motion-dur-quick) + var(--motion-ease-out-soft)。
+ * 20261014-feature-editor-paper-rebuild「素笺手记」升级（视觉稿无损移植）：
+ * 衬线题阶（h1 30px 渐隐墨线 60% / h2 22px 朱线 22% / h3 18px，--font-serif 系统衬线栈）、
+ * 正文两端对齐 + 测宽 46em 呼吸、引用 2px 朱线 + 5% 墨晕渐隐、链接改墨色下划。
  */
 import { HighlightStyle } from '@codemirror/language'
 import { EditorView } from '@codemirror/view'
@@ -51,10 +53,11 @@ export const editorTheme = EditorView.theme({
   },
   '.cm-content': {
     caretColor: 'var(--primary-color)',
-    lineHeight: 'var(--editor-line-height, 1.7)',
+    lineHeight: 'var(--editor-line-height, 1.9)',
     padding: '8px 2px 12px 0',
     maxWidth: 'var(--editor-measure, none)',
-    margin: '0 auto'
+    margin: '0 auto',
+    textAlign: 'justify'
   },
   '.cm-cursor, .cm-dropCursor': {
     borderLeftColor: 'var(--primary-color)'
@@ -74,34 +77,54 @@ export const editorTheme = EditorView.theme({
     display: 'none'
   },
 
-  /* 标题：字阶拉开节奏；h2 下缘墨色渐隐发丝线（背景图实现，不用伪元素） */
+  /* 标题：衬线题阶（素笺手记）——h1 题名 30px + 渐隐墨线 60%；h2 22px 朱线 22%；
+     h3 18px；字距 0.02em；线一律背景图实现（CM 行元素禁伪元素，干扰文本测量） */
   '.cm-live-h1': {
-    fontSize: '23px',
-    fontWeight: '700',
+    fontFamily: 'var(--font-serif)',
+    fontSize: '30px',
+    fontWeight: '600',
     lineHeight: 'var(--line-height-heading, 1.35)',
-    letterSpacing: '0.01em',
-    padding: '16px 0 4px'
-  },
-  '.cm-live-h2': {
-    fontSize: '18px',
-    fontWeight: '700',
-    lineHeight: 'var(--line-height-heading, 1.35)',
-    paddingBottom: '6px',
+    letterSpacing: '0.02em',
+    padding: '16px 0 14px',
     backgroundImage:
-      'linear-gradient(90deg, color-mix(in oklab, var(--primary-color) 28%, transparent), color-mix(in oklab, var(--chrome-border) 55%, transparent) 30%, transparent 92%)',
+      'linear-gradient(90deg, color-mix(in oklab, var(--text-primary) 18%, transparent), transparent 60%)',
     backgroundSize: '100% 1px',
     backgroundPosition: '0 100%',
     backgroundRepeat: 'no-repeat'
   },
-  '.cm-live-h3': { fontSize: '15px', fontWeight: '700', padding: '8px 0 2px' },
-  '.cm-live-h4, .cm-live-h5, .cm-live-h6': { fontWeight: '700', padding: '6px 0 2px' },
-
-  /* 引用：细线 + 墨晕（去斜体；多行引用逐行贴合同一左右内边距） */
-  '.cm-live-quote': {
-    borderLeft: '2px solid color-mix(in oklab, var(--primary-color) 45%, transparent)',
-    background: 'color-mix(in oklab, var(--primary-color) 5%, transparent)',
+  '.cm-live-h2': {
+    fontFamily: 'var(--font-serif)',
+    fontSize: '22px',
+    fontWeight: '600',
+    lineHeight: 'var(--line-height-heading, 1.35)',
+    letterSpacing: '0.02em',
+    paddingBottom: '8px',
+    backgroundImage:
+      'linear-gradient(90deg, color-mix(in oklab, var(--primary-color) 22%, transparent), transparent 70%)',
+    backgroundSize: '100% 1px',
+    backgroundPosition: '0 100%',
+    backgroundRepeat: 'no-repeat'
+  },
+  '.cm-live-h3': {
+    fontFamily: 'var(--font-serif)',
+    fontSize: '18px',
+    fontWeight: '600',
+    letterSpacing: '0.02em',
+    padding: '8px 0 2px'
+  },
+  '.cm-live-h4, .cm-live-h5, .cm-live-h6': {
+    fontWeight: '600',
     color: 'var(--text-secondary)',
-    padding: '4px 0 4px 14px',
+    padding: '6px 0 2px'
+  },
+
+  /* 引用：2px 朱线 + 5% 墨晕渐隐（去斜体；多行引用逐行贴合同一左右内边距） */
+  '.cm-live-quote': {
+    borderLeft: '2px solid color-mix(in oklab, var(--primary-color) 55%, var(--text-primary))',
+    backgroundImage:
+      'linear-gradient(90deg, color-mix(in oklab, var(--primary-color) 5%, transparent), transparent 65%)',
+    color: 'var(--text-secondary)',
+    padding: '4px 0 4px 16px',
     transition: INK_TRANSITION
   },
 
@@ -226,6 +249,146 @@ export const editorTheme = EditorView.theme({
       'linear-gradient(90deg, transparent, color-mix(in oklab, var(--chrome-border) 85%, transparent) 18%, color-mix(in oklab, var(--chrome-border) 85%, transparent) 82%, transparent)'
   },
 
+  /* ===== 笺条（素笺签名元素，20261014 视觉稿无损移植）===== */
+  '.cm-live-card': {
+    position: 'relative',
+    display: 'flex',
+    gap: '16px',
+    alignItems: 'stretch',
+    maxWidth: '100%',
+    margin: '6px 0',
+    padding: '16px 16px 16px 16px',
+    background: 'var(--chrome-raised)',
+    border: '1px solid var(--chrome-border)',
+    borderRadius: '12px',
+    color: 'inherit',
+    textDecoration: 'none',
+    cursor: 'pointer',
+    transition:
+      INK_TRANSITION +
+      ', transform var(--motion-dur-quick, 150ms) var(--motion-ease-out-soft, ease-out), ' +
+      'box-shadow var(--motion-dur-quick, 150ms) var(--motion-ease-out-soft, ease-out)'
+  },
+  /* 签名细节：贴笺折角 */
+  '.cm-live-card::before': {
+    content: "''",
+    position: 'absolute',
+    top: '0',
+    right: '0',
+    width: '18px',
+    height: '18px',
+    background:
+      'linear-gradient(225deg, var(--background-color) 0 50%, color-mix(in oklab, var(--chrome-border) 70%, var(--background-color)) 50% 100%)',
+    borderLeft: '1px solid var(--chrome-border)',
+    borderBottom: '1px solid var(--chrome-border)',
+    borderBottomLeftRadius: '4px'
+  },
+  '.cm-live-card:hover': {
+    transform: 'translateY(-2px)',
+    boxShadow: 'var(--elevation-card)',
+    borderColor: 'color-mix(in oklab, var(--primary-color) 35%, var(--chrome-border))'
+  },
+  '.cm-live-card-seal': {
+    flex: 'none',
+    width: '38px',
+    height: '38px',
+    borderRadius: '8px',
+    display: 'grid',
+    placeItems: 'center',
+    background: 'color-mix(in oklab, var(--primary-color) 10%, var(--background-color))',
+    border: '1px solid color-mix(in oklab, var(--primary-color) 25%, var(--chrome-border))',
+    color: 'var(--primary-color)'
+  },
+  '.cm-live-card-seal svg': {
+    width: '18px',
+    height: '18px'
+  },
+  '.cm-live-card-body': {
+    display: 'block',
+    flex: '1',
+    minWidth: '0'
+  },
+  '.cm-live-card-title': {
+    display: '-webkit-box',
+    WebkitLineClamp: '1',
+    WebkitBoxOrient: 'vertical',
+    overflow: 'hidden',
+    fontFamily: 'var(--font-serif)',
+    fontSize: '15px',
+    fontWeight: '600',
+    lineHeight: '1.5',
+    color: 'var(--text-primary)'
+  },
+  '.cm-live-card-desc': {
+    display: '-webkit-box',
+    WebkitLineClamp: '2',
+    WebkitBoxOrient: 'vertical',
+    overflow: 'hidden',
+    fontSize: '13px',
+    lineHeight: '1.6',
+    marginTop: '3px',
+    color: 'var(--text-secondary)'
+  },
+  '.cm-live-card-meta': {
+    display: 'flex',
+    gap: '6px',
+    alignItems: 'center',
+    marginTop: '8px',
+    fontFamily: 'var(--font-mono)',
+    fontSize: '11px',
+    letterSpacing: '0.02em',
+    color: 'var(--text-muted)'
+  },
+  '.cm-live-card-favicon': {
+    width: '12px',
+    height: '12px',
+    borderRadius: '3px',
+    flex: 'none'
+  },
+  '.cm-live-card-skeleton': {
+    borderRadius: '4px',
+    display: 'inline-block',
+    backgroundImage:
+      'linear-gradient(90deg, var(--chrome-border) 25%, var(--chrome-hover) 45%, var(--chrome-border) 65%)',
+    backgroundSize: '240% 100%',
+    color: 'transparent !important'
+  },
+  '.cm-live-card--loading .cm-live-card-title': {
+    width: '70%'
+  },
+  '.cm-live-card--loading .cm-live-card-desc': {
+    width: '92%',
+    height: '12px'
+  },
+  /* 失败回退：虚笺 + 原链 + 重试（永不丢内容） */
+  '.cm-live-card--fallback': {
+    borderStyle: 'dashed'
+  },
+  '.cm-live-card--fallback:hover': {
+    transform: 'none',
+    boxShadow: 'none'
+  },
+  '.cm-live-card-retry': {
+    marginLeft: 'auto',
+    flex: 'none',
+    border: '1px solid color-mix(in oklab, var(--primary-color) 35%, transparent)',
+    background: 'transparent',
+    color: 'var(--primary-color)',
+    fontSize: '12px',
+    fontFamily: 'var(--font-sans)',
+    borderRadius: '8px',
+    padding: '3px 10px',
+    cursor: 'pointer',
+    transition: INK_TRANSITION
+  },
+  '.cm-live-card-retry:hover': {
+    background: 'color-mix(in oklab, var(--primary-color) 10%, transparent)'
+  },
+  '.cm-live-card-retry:focus-visible': {
+    outline: '2px solid var(--primary-color)',
+    outlineOffset: '-2px'
+  },
+
   /* 列表：主题色几何圆点 / mono 序号墨色淡染 */
   '.cm-live-list': {
     paddingLeft: '2px'
@@ -263,18 +426,18 @@ export const editorTheme = EditorView.theme({
     borderRadius: '4px',
     transition: INK_TRANSITION
   },
-  /* 链接：墨水下划——静止 35% 墨色细线，hover 满墨（留待交互 change 接 ⌘点击） */
+  /* 链接：墨水下划——静止 35% 墨色细线（墨色非主题色，书卷气），hover 满墨 */
   '.cm-live-linktext': {
-    color: 'var(--primary-color)',
+    color: 'var(--text-primary)',
     textDecoration: 'underline',
     textDecorationThickness: '1px',
     textUnderlineOffset: '4px',
-    textDecorationColor: 'color-mix(in oklab, var(--primary-color) 35%, transparent)',
+    textDecorationColor: 'color-mix(in oklab, var(--text-primary) 35%, transparent)',
     cursor: 'pointer',
     transition: INK_TRANSITION
   },
   '.cm-live-linktext:hover': {
-    textDecorationColor: 'var(--primary-color)'
+    textDecorationColor: 'var(--text-primary)'
   },
   /* 链接 url 在渲染态隐藏（hover title 提示 + Ctrl/Cmd+点击打开），不再显示原文 */
   '.cm-live-table': {

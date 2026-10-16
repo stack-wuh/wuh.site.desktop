@@ -49,6 +49,7 @@ import {
   Search,
   Settings,
   Sparkles,
+  Strikethrough,
   Table,
   Tag,
   Trash2,
@@ -89,6 +90,7 @@ export const IconImage = Image
 export const IconInbox = Inbox
 export const IconInfo = Info
 export const IconItalic = Italic
+export const IconStrikethrough = Strikethrough
 export const IconLink = Link2
 export const IconList = List
 export const IconListOrdered = ListOrdered
