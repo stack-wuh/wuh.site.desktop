@@ -1,6 +1,6 @@
 {
   "name": "@wuh.site/desktop",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "通用 Markdown 桌面编辑器 — GitHub 深度集成",
   "main": "./out/main/index.js",
