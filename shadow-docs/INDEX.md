@@ -77,4 +77,6 @@
 | 20261007-fix-shell-page-scroll | branched | shadow-docs/changes/20261007-fix-shell-page-scroll/brief.md |
 | 20261007-style-scrollbars-virtual-projects-list | ✅ 完成 | shadow-docs/changes/archive/20261007-style-scrollbars-virtual-projects-list/brief.md |
 | 20261008-feature-image-upload-choice | ✅ 完成 | shadow-docs/changes/archive/20261008-feature-image-upload-choice/brief.md |
+| 20261014-feature-editor-paper-rebuild | ✅ 完成 | shadow-docs/changes/archive/20261014-feature-editor-paper-rebuild/brief.md |
+| 20261015-chore-release-v1.0.0 | published | shadow-docs/changes/20261015-chore-release-v1.0.0/brief.md |
 | 20261015-feature-workbench-shell | ✅ 完成 | shadow-docs/changes/archive/20261015-feature-workbench-shell/brief.md |

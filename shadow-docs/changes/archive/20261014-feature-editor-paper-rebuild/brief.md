@@ -4,7 +4,7 @@
   "name": "20261014-feature-editor-paper-rebuild",
   "type": "feature",
   "scope": "editor",
-  "status": "published",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20261014-feature-editor-paper-rebuild",
   "files": [
@@ -36,14 +36,14 @@
     "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/156"
   },
   "review": {
-    "conclusion": "pending",
-    "verifiedCommit": null,
-    "verifiedAt": null
+    "conclusion": "passed",
+    "verifiedCommit": "73744797e059cbcf4b43719f8229a3ca02f779cc",
+    "verifiedAt": "2026-10-16T16:26:25.516Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "pr:156",
-    "planHash": "9b38c75e78b847c5187450b6a3c3465c104a38a192f552a535a851e30a967bdc",
+    "checkpoint": "merged-pr:156",
+    "planHash": "b22c8f3709cae7b7ccafc7100e0f4e059b9de81d40b34f6f6bd944dbd44f0955",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -64,7 +64,8 @@
       ],
       "message": "test(editor): 合并 workbench-shell 后的对账——顶栏五件制断言更新（侧栏开关/新建回归 hover 显影栏）、del 词表断言迁入 editor-codemirror（随 main 删除 home-editor-panel 套件）、brief 结果段记合并决议与合并后全量验证（86 套件/925 用例零失败 + 三 tsc 绿）"
     }
-  }
+  },
+  "knowledge": null
 }
 ---
 
@@ -133,7 +134,7 @@
 ### Phase 2 排版系统（衬线题阶）
 - [x] `--font-serif` 系统衬线栈入 token 层（注明提案出处与四主题核对） — `components/theme/tokens.ts`
 - [x] 编辑器 typography 与装饰样式对齐视觉稿：题名 30px 衬线 + 渐隐墨线 60%、h2 22px 朱线 22%、h3 18px、正文 15/1.9 justified、引用/行内码/链接墨水语义复核 — `lib/editor-state.ts`、`components/editor/decorations.ts`、editor styles
-- [ ] 四主题 × 明暗走查截图对照视觉稿 — 走查记录留 brief
+- [x] 四主题 × 明暗走查截图对照视觉稿 — 走查记录留 brief
 
 ### Phase 3 书口刻度
 - [x] Spine 组件：`parseOutline` 大纲 + `editor-state` 总线（scroll/cursorLine）驱动；当前章朱竖线、距离渐隐 62%/34%、cap 24 点密度自适应纯逻辑、点击跳章（复用 scrollToHeading 链）+ bloom 400ms、底端字数/读时悬停显影 — `components/editor/`（新 Spine）、`lib/editor-cm.ts`
@@ -152,8 +153,8 @@
 - [x] widget 行为测试（三态/点击 openExternal 仅 http/https/光标进入回源码态） — `tests/`
 
 ### Phase 6 验证与走查
-- [ ] vitest 全量 + 三 tsconfig typecheck + `electron-vite build`（node 22.23.2 钉定 + V8 绕行配方）
-- [ ] 实机走查（runtime 观察点）：整壳形态（首页无编辑面、/editor 素笺居中、左栏开合纸面平移）；书口跳章/bloom/密度收缩；呼墨键盘全链；笔帘显隐与动作；笺条三态 + 失败回退 + 点击外开；四主题明暗；IME 中文输入回归；reduced-motion；字节保真抽查（GitHub 渲染对照）
+- [x] vitest 全量 + 三 tsconfig typecheck + `electron-vite build`（node 22.23.2 钉定 + V8 绕行配方）
+- [x] 实机走查（runtime 观察点）：整壳形态（首页无编辑面、/editor 素笺居中、左栏开合纸面平移）；书口跳章/bloom/密度收缩；呼墨键盘全链；笔帘显隐与动作；笺条三态 + 失败回退 + 点击外开；四主题明暗；IME 中文输入回归；reduced-motion；字节保真抽查（GitHub 渲染对照）
 
 ## 结果
 
