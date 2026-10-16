@@ -4,7 +4,7 @@
   "name": "20261014-feature-editor-paper-rebuild",
   "type": "feature",
   "scope": "editor",
-  "status": "published",
+  "status": "committed",
   "baseBranch": "main",
   "branch": "feature/20261014-feature-editor-paper-rebuild",
   "files": [
@@ -42,8 +42,8 @@
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "pr:156",
-    "planHash": "9b38c75e78b847c5187450b6a3c3465c104a38a192f552a535a851e30a967bdc",
+    "checkpoint": "b9f7d82a6fab149d88323bfbc5c894a97254d5aa",
+    "planHash": "c6dbbf9110d73930456316eb8b7f7eec5094583dee36d0d68dcccca8a4d3abb0",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -58,11 +58,10 @@
     "worktree": "/Users/wuhong/shadow-desktop/worktrees/20261014-editor-paper-rebuild",
     "commit": {
       "files": [
-        "shadow-docs/changes/20261014-feature-editor-paper-rebuild",
-        "tests/editor-codemirror.test.ts",
-        "tests/editor-page.test.tsx"
+        "app/(shell)/editor/page.tsx",
+        "components/editor/MarkdownEditor/renderTheme.ts"
       ],
-      "message": "test(editor): 合并 workbench-shell 后的对账——顶栏五件制断言更新（侧栏开关/新建回归 hover 显影栏）、del 词表断言迁入 editor-codemirror（随 main 删除 home-editor-panel 套件）、brief 结果段记合并决议与合并后全量验证（86 套件/925 用例零失败 + 三 tsc 绿）"
+      "message": "fix(editor): 走查缺陷两则——悬浮顶栏收回画芯列内（不再压书耳页签，Column relative 承载）、关闭 CM6 聚焦虚线框（素笺纸面以光标为焦点指示）"
     }
   }
 }
