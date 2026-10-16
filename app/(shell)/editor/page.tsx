@@ -156,7 +156,9 @@ const Column = styled.div`
   width: 100%;
   max-width: 760px;
   margin: 0 auto;
-  /* 素笺画芯：顶部呼吸让位悬浮顶栏（视觉稿 D2），底距保持编辑器密排 */
+  /* 素笺画芯：顶部呼吸让位悬浮顶栏（视觉稿 D2），底距保持编辑器密排；
+     relative 使悬浮顶栏只跨画芯宽度、不压侧栏（20261016 走查修复） */
+  position: relative;
   padding: clamp(72px, 10vh, 120px) 16px 24px;
 `
 
@@ -308,7 +310,9 @@ export function EditorPage(): React.JSX.Element {
 
   return (
     <PageShell aria-label={t('editor.pageAria')}>
-      <TopBar $dim={live.focusMode}>
+      <BodyRow>
+        <Column>
+          <TopBar $dim={live.focusMode}>
         <Button size="sm" variant="ghost" aria-label={t('editor.back')} title={t('editor.back')} onClick={back}>
           <AppIcon icon={IconChevronLeft} size="sm" decorative />
           {t('editor.back')}
@@ -387,20 +391,18 @@ export function EditorPage(): React.JSX.Element {
         </Button>
       </TopBar>
 
-      <BodyRow>
-        <Column>
-          <EditorBody>
-            <MarkdownEditor />
-            {!doc.content && (
-              <Blank aria-hidden="true" data-testid="editor-blank-seal">
-                <BlankInner>
-                  <Seal>落笔</Seal>
-                  <BlankHint>{t('editor.blankHint')}</BlankHint>
-                </BlankInner>
-              </Blank>
-            )}
-          </EditorBody>
-        </Column>
+      <EditorBody>
+        <MarkdownEditor />
+        {!doc.content && (
+          <Blank aria-hidden="true" data-testid="editor-blank-seal">
+            <BlankInner>
+              <Seal>落笔</Seal>
+              <BlankHint>{t('editor.blankHint')}</BlankHint>
+            </BlankInner>
+          </Blank>
+        )}
+      </EditorBody>
+      </Column>
         {paneOpen && <SidePane />}
       </BodyRow>
       {!paneOpen && <Spine />}

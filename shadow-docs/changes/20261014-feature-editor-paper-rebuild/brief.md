@@ -32,8 +32,8 @@
     "repository": null,
     "issue": null,
     "issueUrl": null,
-    "pullRequest": 156,
-    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/156"
+    "pullRequest": 157,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/157"
   },
   "review": {
     "conclusion": "pending",
@@ -42,8 +42,8 @@
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "pr:156",
-    "planHash": "9b38c75e78b847c5187450b6a3c3465c104a38a192f552a535a851e30a967bdc",
+    "checkpoint": "pr:157",
+    "planHash": "fc0b594caef6c23d84fbf95a4d0060fc4829a0ae8c18f382ca34bc3b91856ec2",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -58,11 +58,10 @@
     "worktree": "/Users/wuhong/shadow-desktop/worktrees/20261014-editor-paper-rebuild",
     "commit": {
       "files": [
-        "shadow-docs/changes/20261014-feature-editor-paper-rebuild",
-        "tests/editor-codemirror.test.ts",
-        "tests/editor-page.test.tsx"
+        "app/(shell)/editor/page.tsx",
+        "components/editor/MarkdownEditor/renderTheme.ts"
       ],
-      "message": "test(editor): 合并 workbench-shell 后的对账——顶栏五件制断言更新（侧栏开关/新建回归 hover 显影栏）、del 词表断言迁入 editor-codemirror（随 main 删除 home-editor-panel 套件）、brief 结果段记合并决议与合并后全量验证（86 套件/925 用例零失败 + 三 tsc 绿）"
+      "message": "fix(editor): 走查缺陷两则——悬浮顶栏收回画芯列内（不再压书耳页签，Column relative 承载）、关闭 CM6 聚焦虚线框（素笺纸面以光标为焦点指示）"
     }
   }
 }
