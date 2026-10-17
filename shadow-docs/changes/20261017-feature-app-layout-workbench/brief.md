@@ -4,7 +4,7 @@
   "name": "20261017-feature-app-layout-workbench",
   "type": "feature",
   "scope": "shell",
-  "status": "branched",
+  "status": "committed",
   "baseBranch": "main",
   "branch": "feature/20261017-feature-app-layout-workbench",
   "files": [
@@ -71,7 +71,7 @@
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:158",
+    "checkpoint": "d8d3b7d9ac186f41e27c5046036162e46b9b40d9",
     "planHash": "3642d9f030d7129af4be208d5f34803b5eb03d322e4ce554e2d93940c2ed80c1",
     "updatedAt": null,
     "lastError": null,
