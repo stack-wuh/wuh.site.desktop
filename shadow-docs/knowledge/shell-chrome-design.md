@@ -33,7 +33,7 @@ source:
   - changes/20260927-style-shell-visual-consistency/brief.md
   - changes/20261007-style-scrollbars-virtual-projects-list/brief.md
   - changes/20261015-feature-workbench-shell/brief.md
-  - changes/20261017-feature-app-layout-workbench/brief.md
+  - changes/archive/20261017-feature-app-layout-workbench/brief.md
 verified: 2026-10-18
 verified-depth: runtime
 verified-scope: 20261017 书脊案面（整窗移植）：书脊 Rail（spine-ink 双主题恒深墨+朱砂装订线）/案面底/浮笺画芯载体（paperSurface）/控制中心（磁贴 4×2+任务 GIT 排版分区+插件 tab 追加分区）/目次书耳浮笺化/Dock 退役（views.area 去 dock 四方同步）/data-chrome 四处/专注退场/四主题实机（书脊暗色倒置被用户裁决否决→恒深墨跟随主题）；全量 86 套件 + 三 tsconfig 绿（SGN-1 小批重试）；20261015 工作台：rail 10 用例 / capsule 双形态 9（现单形态改造）/ dock 7（套件退役）/ palette 13 / 外观区段 5 全绿 + 全量 769

@@ -28,7 +28,7 @@ source:
   - changes/20260927-style-shell-visual-consistency/brief.md
   - changes/20260925-build-pin-node22/brief.md
   - changes/20261015-feature-workbench-shell/brief.md
-  - changes/20261017-feature-app-layout-workbench/brief.md
+  - changes/archive/20261017-feature-app-layout-workbench/brief.md
 verified: 2026-10-18
 verified-depth: runtime
 verified-scope: 20261017 书脊案面：书脊/案面/浮笺三层实机（目次 64px 锚点、书耳默认收起、Sheet 画芯、Shell overflow:clip 禁壳滚、rail 项目钮=目次开关互斥插件 popover、⌘B 语义）；workbench-layout/rail/context-panel/home-workbench/focus-mode/editor-page 套件绿 + 全量 86 套件；20261015 工作台范式 764+ 用例历史绿
