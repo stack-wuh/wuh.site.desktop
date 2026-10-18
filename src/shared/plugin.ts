@@ -26,8 +26,8 @@ export type PluginPermission = (typeof PLUGIN_PERMISSIONS)[number]
 
 // ---------- manifest ----------
 
-/** 视图区域（20261015 工作台扩展）：main=中央路由页 | float=浮窗 | dock=底部 Dock 页签 | context=编辑器上下文侧栏页签 */
-export type ViewArea = 'main' | 'float' | 'dock' | 'context'
+/** 视图区域（20261015 工作台扩展；20261017 D5 Dock 退役去掉 dock）：main=中央路由页 | float=浮窗 | context=编辑器上下文侧栏页签 */
+export type ViewArea = 'main' | 'float' | 'context'
 
 /** 图标白名单：host 按名称映射到同源 lucide/品牌图标，插件不携带图标资源 */
 export const PLUGIN_ICONS = [
@@ -344,11 +344,13 @@ export function validateManifest(
       } else {
         viewIds.add(v.id)
       }
-      if (v.area !== 'main' && v.area !== 'float' && v.area !== 'dock' && v.area !== 'context') {
+      if (v.area !== 'main' && v.area !== 'float' && v.area !== 'context') {
         errors.push(
           v.area === 'sidebar'
             ? `views[${i}].area sidebar 已废弃，请迁移为 main（右栏页面）: ${String(v.area)}`
-            : `views[${i}].area 只能是 main/float/dock/context: ${String(v.area)}`
+            : v.area === 'dock'
+              ? `views[${i}].area dock 已随 Dock 退役（20261017 D5），请迁移为 main（右栏页面）或 context（书耳页签）: ${String(v.area)}`
+              : `views[${i}].area 只能是 main/float/context: ${String(v.area)}`
         )
         valid = false
       }
@@ -374,9 +376,9 @@ export function validateManifest(
     })
   }
 
-  // 容量护栏（20261015 工作台扩展）：每插件 dock / context 页签各 ≤1（壳层一等
-  // 面板的插件贡献位，防平铺致滥——与已废弃 sidebar 的本质区别见 brief 决策 2）
-  for (const kind of ['dock', 'context'] as const) {
+  // 容量护栏（20261015 工作台扩展）：每插件 context 页签 ≤1（壳层一等
+  // 面板的插件贡献位，防平铺致滥；dock 槽位随 D5 Dock 退役移除）
+  for (const kind of ['context'] as const) {
     const count = views.filter((v) => v.area === kind).length
     if (count > 1) errors.push(`views 中 area=${kind} 最多声明 1 个: ${count}`)
   }

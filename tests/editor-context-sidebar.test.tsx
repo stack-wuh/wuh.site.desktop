@@ -53,9 +53,23 @@ beforeEach(() => {
 })
 
 describe('编辑器上下文侧栏（右缘停靠）', () => {
+  it('书耳浮笺默认收起（D3 假定 f），顶栏书耳钮开合并联动书口让位', () => {
+    workspaceStore.openDoc('posts/a.md', DOC)
+    renderPage()
+    const paneEl = document.querySelector('[data-editor-sidepane]')
+    expect(paneEl?.getAttribute('data-open')).toBe('false')
+    // 书口让位链：收起时 Spine 在场，展开即让位
+    expect(document.querySelector('[data-testid="editor-spine"]')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: '书耳' }))
+    expect(document.querySelector('[data-editor-sidepane]')?.getAttribute('data-open')).toBe('true')
+    expect(document.querySelector('[data-testid="editor-spine"]')).toBeNull()
+  })
+
   it('渲染三壳层页签（大纲/元数据/图床），默认展示大纲', () => {
     workspaceStore.openDoc('posts/a.md', DOC)
     renderPage()
+    // 书耳默认收起（D3 f）：内容页签断言统一在展开态进行
+    fireEvent.click(screen.getByRole('button', { name: '书耳' }))
     expect(screen.getByRole('tab', { name: '大纲' }).getAttribute('aria-selected')).toBe('true')
     expect(screen.getByRole('tab', { name: '元数据' })).toBeTruthy()
     expect(screen.getByRole('tab', { name: '图床' })).toBeTruthy()
@@ -83,6 +97,7 @@ describe('编辑器上下文侧栏（右缘停靠）', () => {
   it('元数据页签只读展示 frontmatter 键值，编辑入口跳 Frontmatter 插件视图', () => {
     workspaceStore.openDoc('posts/a.md', DOC)
     renderPage()
+    fireEvent.click(screen.getByRole('button', { name: '书耳' }))
     fireEvent.click(screen.getByRole('tab', { name: '元数据' }))
     expect(screen.getByText('重新设计工作台')).toBeTruthy()
     // 壳层不重建元数据表单（editor.md 约束）：侧栏内不得出现输入控件
@@ -96,6 +111,7 @@ describe('编辑器上下文侧栏（右缘停靠）', () => {
 
   it('图床页签给上传引导入口（跳图床插件视图）', () => {
     renderPage()
+    fireEvent.click(screen.getByRole('button', { name: '书耳' }))
     fireEvent.click(screen.getByRole('tab', { name: '图床' }))
     fireEvent.click(screen.getByTestId('sidepane-image-open'))
     expect(pushMock).toHaveBeenCalledWith('/plugin/image-host/image-host')
@@ -119,6 +135,7 @@ describe('编辑器上下文侧栏（右缘停靠）', () => {
       })
     })
     renderPage()
+    fireEvent.click(screen.getByRole('button', { name: '书耳' }))
     const tab = screen.getByRole('tab', { name: 'Git 上下文' })
     fireEvent.click(tab)
     expect(screen.getByText('main · 3 未提交')).toBeTruthy()
@@ -126,19 +143,21 @@ describe('编辑器上下文侧栏（右缘停靠）', () => {
 
   it('页签切换 aria-selected 同步', () => {
     renderPage()
+    fireEvent.click(screen.getByRole('button', { name: '书耳' }))
     fireEvent.click(screen.getByRole('tab', { name: '元数据' }))
     expect(screen.getByRole('tab', { name: '元数据' }).getAttribute('aria-selected')).toBe('true')
     expect(screen.getByRole('tab', { name: '大纲' }).getAttribute('aria-selected')).toBe('false')
   })
 
-  it('开合按钮切换侧栏显隐（aria-pressed，沉浸可退）', () => {
+  it('书耳钮开合浮笺（aria-pressed 同步；收起时页签离开可访问树）', () => {
     renderPage()
-    const toggle = screen.getByRole('button', { name: '上下文侧栏' })
+    const toggle = screen.getByRole('button', { name: '书耳' })
+    expect(toggle.getAttribute('aria-pressed')).toBe('false')
+    fireEvent.click(toggle)
     expect(toggle.getAttribute('aria-pressed')).toBe('true')
+    expect(screen.getByRole('tab', { name: '大纲' })).toBeTruthy()
     fireEvent.click(toggle)
     expect(toggle.getAttribute('aria-pressed')).toBe('false')
     expect(screen.queryByRole('tab', { name: '大纲' })).toBeNull()
-    fireEvent.click(toggle)
-    expect(screen.getByRole('tab', { name: '大纲' })).toBeTruthy()
   })
 })

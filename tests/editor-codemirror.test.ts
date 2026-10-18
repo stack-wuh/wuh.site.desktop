@@ -95,17 +95,19 @@ describe('cmInsertSnippet（插入模板）', () => {
 })
 
 describe('cmExternalContent（外部注入 → 事务，防回环）', () => {
-  it('全量替换内容，光标按原 head 保留', () => {
+  it('全量替换内容，光标锚到正文首行（frontmatter 之后，不落头块）', () => {
     const state = stateOf('old doc', 4, 4)
-    const next = applyDoc(state, cmExternalContent(state, 'new content here'))
-    expect(next.doc.toString()).toBe('new content here')
-    expect(next.selection.main.from).toBe(4)
+    const doc = '---\ntitle: t\n---\n\n正文第一行'
+    const next = applyDoc(state, cmExternalContent(state, doc))
+    expect(next.doc.toString()).toBe(doc)
+    // 锚点 = 头块闭合行之后的第一个行首（此处为空行行首 17）——不落在 0..2 行的头块内
+    expect(next.selection.main.from).toBe(17)
   })
 
-  it('原 head 超出新内容长度时收敛到末尾', () => {
+  it('无 frontmatter 时锚到文档首行行首（0）', () => {
     const state = stateOf('a long document', 15, 15)
     const next = applyDoc(state, cmExternalContent(state, 'hi'))
-    expect(next.selection.main.from).toBe(2)
+    expect(next.selection.main.from).toBe(0)
   })
 
   it('content 为 null（关文档态）清空编辑器', () => {

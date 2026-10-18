@@ -9,7 +9,7 @@
  * /settings）。点外关走 target 归属守卫（20260924-fix-capsule-self-close 先例，
  * 禁传播时序判断）；Esc 只关本组件 popover，与其他浮层分治。
  */
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { AppIcon, type IconComponent } from '../ui/AppIcon'
 import { IconLogo, IconPuzzle, IconSettings } from '../icons'
 import { useLocale } from '../../lib/i18n/context'
@@ -55,21 +55,24 @@ export function Rail(props: {
   settingsActive?: boolean
   onOpenUser: () => void
   onOpenSettings: () => void
+  /** 插件 popover 开合（受控态在壳层 layout：与目次浮笺互斥——D3 浮笺互不叠加） */
+  pluginsOpen: boolean
+  onPluginsOpenChange: (open: boolean) => void
 }): React.JSX.Element {
   const { t } = useLocale()
-  const [pluginsOpen, setPluginsOpen] = useState(false)
+  const pluginsOpen = props.pluginsOpen
   /** 根引用：点外关豁免 rail 内部点击（chip 同款 target 归属守卫） */
   const rootRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     if (!pluginsOpen) return
     const onKey = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') setPluginsOpen(false)
+      if (e.key === 'Escape') props.onPluginsOpenChange(false)
     }
     const onClick = (e: MouseEvent): void => {
       const el = rootRef.current
       if (el && e.target instanceof Node && el.contains(e.target)) return
-      setPluginsOpen(false)
+      props.onPluginsOpenChange(false)
     }
     window.addEventListener('keydown', onKey)
     window.addEventListener('click', onClick)
@@ -107,7 +110,7 @@ export function Rail(props: {
           aria-label={t('menu.plugins')}
           aria-haspopup="true"
           aria-expanded={pluginsOpen}
-          onClick={() => setPluginsOpen((v) => !v)}
+          onClick={() => props.onPluginsOpenChange(!pluginsOpen)}
         >
           <AppIcon icon={IconPuzzle} size="md" />
           {pluginCount > 0 && <Badge aria-hidden="true">{pluginCount}</Badge>}
@@ -115,7 +118,7 @@ export function Rail(props: {
         {pluginsOpen && (
           <PopCard
             aria-label={t('menu.plugins')}
-            onClickCapture={() => setPluginsOpen(false)}
+            onClickCapture={() => props.onPluginsOpenChange(false)}
           >
             <PluginTree
               mainViews={props.plugins.mainViews}

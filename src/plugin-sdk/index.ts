@@ -321,12 +321,12 @@ export interface WuhApi {
   }
   panelTab: {
     /**
-     * 上报 manifest 声明的 Dock / 编辑器上下文侧栏页签内容（20261015 工作台；
-     * kind = 'dock' | 'context'，页签 = 本插件 views.area 对应声明）：
+     * 上报 manifest 声明的编辑器上下文侧栏（书耳）页签内容（20261015 工作台；
+     * 20261017 D5 Dock 退役后 kind = 'context'，页签 = views.area='context' 声明）：
      * payload 同 capsule.updateTab（sections/rows，护栏同源）
      */
     update(
-      kind: 'dock' | 'context',
+      kind: 'context',
       id: string,
       payload?: {
         sections?: {
@@ -341,8 +341,8 @@ export interface WuhApi {
         }[]
       }
     ): Promise<void>
-    /** 隐藏声明的 Dock / 上下文侧栏页签 */
-    remove(kind: 'dock' | 'context', id: string): Promise<void>
+    /** 隐藏声明的上下文侧栏页签 */
+    remove(kind: 'context', id: string): Promise<void>
   }
   events: {
     /**

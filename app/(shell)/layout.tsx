@@ -18,11 +18,11 @@ import { FeedbackHost, MessageBannerStack } from '../../components/ui/FeedbackHo
 import { StatusBar } from '../../components/StatusBar'
 import { FloatLayer } from '../../components/FloatLayer'
 import { Capsule } from '../../components/capsule/Capsule'
-import { Dock } from '../../components/dock'
 import { FocusBar } from '../../components/focusbar'
 import { Palette } from '../../components/palette'
 import { Rail } from '../../components/rail'
 import { ContextPanel } from '../../components/contextpanel'
+import { Sheet } from '../../components/ui/Sheet'
 import { EditorCommandHost } from '../../components/capsule/sections/EditorSection'
 import ShellReady from '../../components/ShellReady'
 import { IconFolderOpen, IconHome, IconInbox, IconPuzzle } from '../../components/icons'
@@ -51,6 +51,10 @@ const Shell = styled.div<{ $focus: boolean }>`
   display: flex;
   flex-direction: column;
   height: 100vh;
+  /* 壳体禁滚（20261017 走查修复）：任何子树溢出一律硬裁剪——chrome（TitleBar/
+     Rail/StatusBar）永不随内容滚走，滚动只属于各内容滚动容器。clip 而非 hidden：
+     不产生滚动容器、程序化滚动（scrollIntoView 类）也无法位移壳体 */
+  overflow: clip;
 
   /* 专注模式（task-8）：壳层 chrome 全退场——编辑区满幅，浮条由 MainArea 承载。
      只匹配 [data-chrome] 稳定属性（20261015-review 修复：元素选择器会误伤内容区
@@ -67,6 +71,7 @@ const Shell = styled.div<{ $focus: boolean }>`
 `
 
 const TitleBar = styled.header`
+  position: relative;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -83,15 +88,25 @@ const Body = styled.div`
   display: flex;
   flex: 1;
   min-height: 0;
+  /* 目次/书耳浮笺的定位锚（absolute slip-card 贴案面两缘） */
+  position: relative;
 `
 
-/* 中央容器：页面内容（Home / 设置 / 插件 main 视图路由段互斥，FloatLayer 叠加） */
+/* 中央容器：页面内容（Home / 设置 / 插件 main 视图路由段互斥，FloatLayer 叠加）。
+   案面底（D2/task-1）：视觉稿 .window.desk 五层配方无损移植——顶部窗光扫 + 双
+   radial 暖晕 + 1.2% 纸纹竖纹，全部 token/color-mix，四主题随 normal/background
+   路由自动换色；纸笺（Sheet/书耳/目次）浮起其上 */
 const MainArea = styled.main`
   position: relative;
   display: flex;
   flex: 1;
   min-width: 0;
-  background: var(--background-color);
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--normal-100) 34%, transparent), transparent 26%),
+    radial-gradient(120% 90% at 50% 0%, color-mix(in oklab, var(--normal-100) 30%, transparent), transparent 55%),
+    radial-gradient(120% 100% at 50% 110%, color-mix(in oklab, var(--background-200) 70%, transparent), transparent 60%),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.012) 0 1px, transparent 1px 4px),
+    var(--background-color);
   transition: background-color 0.3s ease;
 `
 
@@ -105,14 +120,18 @@ const MainColumn = styled.div`
   min-height: 0;
 `
 
-/* TitleBar 命令面板入口（task-10）：居中搜索胶囊 */
+/* TitleBar 命令面板入口（task-10）：居中搜索胶囊——绝对居中（flex 弹性空间会被
+   胶囊的 margin-left:auto 分走，曾致搜索位偏心，20261017 走查修复） */
 const SearchBtn = styled.button`
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin: 0 auto;
-  min-width: 220px;
   justify-content: center;
+  min-width: 220px;
+  max-width: min(420px, 40vw);
   color: var(--text-muted);
   font-size: 12px;
   font-family: var(--font-sans);
@@ -146,8 +165,11 @@ const SearchBtn = styled.button`
 `
 
 export default function ShellLayout({ children }: { children: React.ReactNode }): React.JSX.Element {
-  // 上下文面板显隐（⌘B / 收起旋钮双入口，状态在壳层）
-  const [ctxOpen, setCtxOpen] = useState(true)
+  // 目次浮笺显隐（⌘B / rail 项目钮 / 头部旋钮三入口；D3 默认收起，
+  // 状态在壳层；浮笺保挂载，树缓存与展开态不丢）
+  const [ctxOpen, setCtxOpen] = useState(false)
+  // 插件 popover 开合（受控态收壳层：与目次浮笺互斥，D3 浮笺互不叠加）
+  const [pluginsOpen, setPluginsOpen] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
   const pluginsReady = usePluginsReady()
@@ -185,6 +207,7 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
       if ((e.metaKey || e.ctrlKey) && (e.key === 'b' || e.key === 'B')) {
         e.preventDefault()
         setCtxOpen((v) => !v)
+        setPluginsOpen(false)
         return
       }
       // ⌘/Ctrl+⇧+F 切换专注模式（task-8）
@@ -267,11 +290,15 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
       <Body>
         <Rail
           items={items}
-          active={active}
+          // ▤ 项目钮 = 目次浮笺开关（D3 假定 b）：呼出态即激活态（视觉稿 scene-b）；
+          // /projects 路由保留（⌘K / 首页可达），rail 不再直达
+          active={ctxOpen ? 'projects' : active}
           onChange={(id) => {
             if (id === 'home') router.push('/')
-            else if (id === 'projects') router.push('/projects')
-            else if (id === 'drafts') router.push('/drafts')
+            else if (id === 'projects') {
+              setCtxOpen((v) => !v)
+              setPluginsOpen(false)
+            } else if (id === 'drafts') router.push('/drafts')
             else if (id === 'settings') router.push('/settings')
           }}
           plugins={{
@@ -284,14 +311,22 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
           settingsActive={active === 'settings'}
           onOpenUser={() => router.push('/account')}
           onOpenSettings={() => router.push('/settings')}
+          pluginsOpen={pluginsOpen}
+          onPluginsOpenChange={(open) => {
+            setPluginsOpen(open)
+            if (open) setCtxOpen(false)
+          }}
         />
-        {/* 上下文面板：hidden 保挂载（⌘B 切换不丢树缓存与展开态） */}
-        <ContextPanel hidden={!ctxOpen} onCollapse={() => setCtxOpen(false)} />
+        {/* 目次浮笺（D3）：absolute slip-card 浮在案面左缘，默认收起；
+            保挂载（树缓存/展开态不丢），显隐走滑出过渡 */}
+        <ContextPanel open={ctxOpen} onCollapse={() => setCtxOpen(false)} />
         <MainArea ref={mainAreaRef}>
           <MainColumn>
             {/* Message 提示（影响用户操作的提示）：内容区顶部横幅，TitleBar 之下 */}
             <MessageBannerStack />
-            {children}
+            {/* 浮笺画芯载体（D2/task-2）：非编辑页统一包进素笺——纸浮在案上；
+                /editor 纸面即素笺本体，不套（投影对齐由编辑页样式完成） */}
+            {pathname.startsWith('/editor') ? children : <Sheet data-testid="page-sheet">{children}</Sheet>}
           </MainColumn>
           {/* 专注模式浮条：chrome 退场后的最小信令（文档名/保存态/字数/退出） */}
           {live.focusMode && <FocusBar />}
@@ -299,8 +334,6 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
           <FloatLayer containerRef={mainAreaRef} />
         </MainArea>
       </Body>
-      {/* 底部 Dock：任务中心停靠态 + 插件 dock 页签（空态不渲染，不占高） */}
-      <Dock />
       <StatusBar />
       <ConfirmHost />
       {/* ⌘K 命令面板（task-10）：全局动作入口 */}

@@ -191,10 +191,9 @@ export function Capsule(): React.JSX.Element {
   useSyncExternalStore(tasksStore.subscribe, tasksStore.get, tasksStore.get)
   const doc = useWorkspaceStore()
   const { t } = useLocale()
-  // 双形态开合态（task-5）：未停靠=下拉面板，停靠=Dock 面板；开合态在 lib/dock
+  // 开合态（D5 单形态）：lib/dock 收敛为纯开合 store——原停靠形态随 Dock 退役
   const dock = useSyncExternalStore(dockStore.subscribe, dockStore.get, dockStore.get)
   const open = dock.open
-  const docked = dock.docked
   /** 胶囊根（chip + 面板）引用：点外关时豁免胶囊内部点击 */
   const wrapRef = useRef<HTMLSpanElement | null>(null)
   const agg = taskAggregate()
@@ -213,16 +212,14 @@ export function Capsule(): React.JSX.Element {
   const labelTone: 'idle' | 'active' | 'done' =
     agg.active > 0 ? 'active' : agg.total > 0 && agg.done === agg.total ? 'done' : 'idle'
 
-  // Esc/点外关只对下拉形态生效；停靠态 Dock 是常驻面板（Esc 让位浮窗层，
-  // 点外关不收——收起走 chip 开合或 Dock 头部收起钮）
+  // Esc/点外关收面板：target 在胶囊内（chip 或面板）一律忽略——不能用传播时序判断，
+  // React 18 离散事件会同步刷 passive effects，打开面板的那次点击仍会
+  // 冒泡到 window（20260924-fix-capsule-self-close）
   useEffect(() => {
-    if (!open || docked) return
+    if (!open) return
     const onKey = (e: KeyboardEvent): void => {
       if (e.key === 'Escape') setDockOpen(false)
     }
-    // 点外关：target 在胶囊内（chip 或面板）一律忽略——不能用传播时序判断，
-    // React 18 离散事件会同步刷 passive effects，打开面板的那次点击仍会
-    // 冒泡到 window（20260924-fix-capsule-self-close）
     const onClick = (e: MouseEvent): void => {
       const el = wrapRef.current
       if (el && e.target instanceof Node && el.contains(e.target)) return
@@ -234,7 +231,7 @@ export function Capsule(): React.JSX.Element {
       window.removeEventListener('keydown', onKey)
       window.removeEventListener('click', onClick)
     }
-  }, [open, docked])
+  }, [open])
 
   return (
     <Wrap ref={wrapRef}>
@@ -259,8 +256,8 @@ export function Capsule(): React.JSX.Element {
           <AppIcon icon={IconChevronDown} size="xs" decorative />
         </Chevron>
       </CapsuleButton>
-      {/* 下拉形态：停靠后任务中心挂到底部 Dock（components/dock），此处不渲染 */}
-      {open && !docked && <CapsulePanel onClose={() => setDockOpen(false)} />}
+      {/* 控制中心下拉（D5 单形态）：随 Dock 退役，此处恒为唯一展开面 */}
+      {open && <CapsulePanel onClose={() => setDockOpen(false)} />}
     </Wrap>
   )
 }

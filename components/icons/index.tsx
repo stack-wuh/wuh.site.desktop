@@ -30,6 +30,7 @@ import {
   Inbox,
   Info,
   Italic,
+  Languages,
   Link2,
   List,
   ListOrdered,
@@ -50,6 +51,7 @@ import {
   Settings,
   Sparkles,
   Strikethrough,
+  SunMoon,
   Table,
   Tag,
   Trash2,
@@ -99,6 +101,8 @@ export const IconMaximize = Maximize
 export const IconMaximize2 = Maximize2
 export const IconMinus = Minus
 export const IconPalette = Palette
+export const IconLanguages = Languages
+export const IconSunMoon = SunMoon
 export const IconPanelCollapse = PanelLeftClose
 export const IconPanelExpand = PanelLeftOpen
 export const IconPlus = Plus

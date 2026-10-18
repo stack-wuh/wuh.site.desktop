@@ -1,5 +1,9 @@
 // @vitest-environment happy-dom
+import { readFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { useState } from 'react'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { LocaleProvider } from '../lib/i18n/context'
 import { captureRenderConsole, resetRenderEnv } from './helpers/dom-env'
@@ -41,22 +45,43 @@ function renderRail(overrides?: {
   floatViews?: PluginTreeViewRef[]
   openKeys?: Set<string>
 }): ReturnType<typeof render> {
-  return render(
-    <LocaleProvider>
+  /** 受控开合的有状态壳：点击真实翻转 pluginsOpen（D3 起开合态收壳层） */
+  function StatefulRail(props: {
+    items: typeof ITEMS
+    active: string
+    mainViews?: PluginTreeViewRef[]
+    floatViews?: PluginTreeViewRef[]
+    openKeys?: Set<string>
+  }): React.JSX.Element {
+    const [open, setOpen] = useState(false)
+    return (
       <Rail
-        items={ITEMS}
-        active={overrides?.active ?? 'home'}
+        items={props.items}
+        active={props.active}
         onChange={vi.fn()}
         plugins={{
-          mainViews: overrides?.mainViews ?? MAIN_VIEWS,
-          floatViews: overrides?.floatViews ?? FLOAT_VIEWS,
-          openKeys: overrides?.openKeys ?? new Set<string>(),
+          mainViews: props.mainViews ?? MAIN_VIEWS,
+          floatViews: props.floatViews ?? FLOAT_VIEWS,
+          openKeys: props.openKeys ?? new Set<string>(),
           onToggleFloat: vi.fn()
         }}
         userActive={false}
         settingsActive={false}
         onOpenUser={vi.fn()}
         onOpenSettings={vi.fn()}
+        pluginsOpen={open}
+        onPluginsOpenChange={setOpen}
+      />
+    )
+  }
+  return render(
+    <LocaleProvider>
+      <StatefulRail
+        items={ITEMS}
+        active={overrides?.active ?? 'home'}
+        mainViews={overrides?.mainViews}
+        floatViews={overrides?.floatViews}
+        openKeys={overrides?.openKeys}
       />
     </LocaleProvider>
   )
@@ -102,6 +127,8 @@ describe('Rail（工作台导航列）', () => {
           userActive={false}
           settingsActive={false}
           onOpenUser={vi.fn()}
+        pluginsOpen={false}
+        onPluginsOpenChange={vi.fn()}
           onOpenSettings={vi.fn()}
         />
       </LocaleProvider>
@@ -121,6 +148,8 @@ describe('Rail（工作台导航列）', () => {
           userActive={false}
           settingsActive={false}
           onOpenUser={vi.fn()}
+        pluginsOpen={false}
+        onPluginsOpenChange={vi.fn()}
           onOpenSettings={vi.fn()}
         />
       </LocaleProvider>
@@ -175,5 +204,59 @@ describe('Rail（工作台导航列）', () => {
     renderRail({ mainViews: [], floatViews: [] })
     fireEvent.click(screen.getByRole('button', { name: '插件' }))
     expect(screen.getByText('无启用插件')).toBeTruthy()
+  })
+})
+
+/**
+ * 书脊/案面/素笺样式守卫（20261017-feature-app-layout-workbench Phase 1，源码级，
+ * globals-scrollbar 同范式）：D1 书脊（布纹织理 + normal-900 墨底 + 朱砂装订线）、
+ * D2 案面（五层渐变）与素笺纸面配方（paperSurface 双投影 + 纸页叠口）是本轮定稿
+ * 语言——源码锁定防下个 change 复辟成普通 chrome-panel 栏。
+ */
+const sourceRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
+
+describe('书脊/案面/素笺样式守卫（D1/D2，源码级）', () => {
+  const read = (p: string): string => readFileSync(join(sourceRoot, p), 'utf8')
+
+  it('书脊：48px 布纹墨底 + spine-ink 双主题路由 + 朱砂装订线（D1，暗色不倒置）', () => {
+    const css = read('components/rail/styles.ts')
+    expect(css).toMatch(/width:\s*48px/)
+    expect(css).toMatch(/repeating-linear-gradient\(0deg,\s*rgba\(255,\s*255,\s*255,\s*0\.03\)/)
+    expect(css).toMatch(/repeating-linear-gradient\(90deg,\s*rgba\(0,\s*0,\s*0,\s*0\.045\)/)
+    expect(css).toMatch(/color-mix\(in oklab,\s*var\(--spine-ink\) 94%,\s*#000\)/)
+    expect(css).toMatch(/var\(--spine-paper\) 62%,\s*transparent\)/)
+    const tokens = read('components/theme/tokens.ts')
+    expect(tokens).toMatch(/--spine-ink:\s*var\(--normal-900\)/)
+    expect(tokens).toMatch(/--spine-ink:\s*color-mix\(in oklab,\s*var\(--background-color\) 86%,\s*#000 14%\)/)
+    expect(css).toMatch(/--primary-400\) 85%,\s*transparent\) 12%/)
+    expect(css).toMatch(/--primary-500\) 85%,\s*transparent\) 85%,\s*transparent\s*\)/)
+  })
+
+  it('书脊 Nav 带 data-chrome="rail"（INV-2 专注退场锚点）', () => {
+    const src = read('components/rail/index.tsx')
+    expect(src).toMatch(/data-chrome="rail"/)
+  })
+
+  it('案面：main 容器五层渐变（窗光扫/双暖晕/纸纹竖纹/底色）（D2）', () => {
+    const src = read('app/(shell)/layout.tsx')
+    expect(src).toMatch(/--normal-100\) 34%,\s*transparent\),?\s*\n?\s*transparent 26%\)/)
+    expect(src).toMatch(/--normal-100\) 30%,\s*transparent\),\s*transparent 55%\)/)
+    expect(src).toMatch(/--background-200\) 70%,\s*transparent\),\s*transparent 60%\)/)
+    expect(src).toMatch(/rgba\(0,\s*0,\s*0,\s*0\.012\) 0 1px,\s*transparent 1px 4px/)
+  })
+
+  it('浮笺画芯：非编辑页 Sheet 包裹 + /editor 不套（D2）', () => {
+    const src = read('app/(shell)/layout.tsx')
+    expect(src).toMatch(/pathname\.startsWith\('\/editor'\) \? children : <Sheet/)
+    expect(src).toMatch(/data-testid="page-sheet"/)
+  })
+
+  it('素笺纸面配方：paperSurface 双投影 + 顶部内高光 + 纸页叠口（纸只有一种）', () => {
+    const sheet = read('components/ui/Sheet.tsx')
+    expect(sheet).toMatch(/0 24px 60px rgba\(0,\s*0,\s*0,\s*0\.13\)/)
+    expect(sheet).toMatch(/inset 0 1px 0 color-mix\(in oklab,\s*var\(--normal-100\) 60%,\s*transparent\)/)
+    expect(sheet).toMatch(/5px 0 0 -3px/)
+    const editor = read('app/(shell)/editor/page.tsx')
+    expect(editor).toMatch(/\$\{paperSurface\}/)
   })
 })

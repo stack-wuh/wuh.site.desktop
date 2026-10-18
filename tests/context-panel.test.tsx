@@ -73,7 +73,7 @@ describe('ContextPanel（上下文面板）', () => {
   it('面板根：aria-label 与 data-context-panel 稳定属性，头部有收起旋钮', () => {
     const panel = render(
       <LocaleProvider>
-        <ContextPanel onCollapse={vi.fn()} />
+        <ContextPanel open onCollapse={vi.fn()} />
       </LocaleProvider>
     )
     const root = panel.container.querySelector('[data-context-panel]')
@@ -85,7 +85,7 @@ describe('ContextPanel（上下文面板）', () => {
   it('头部投影当前工作区名与「当前」徽标', async () => {
     render(
       <LocaleProvider>
-        <ContextPanel onCollapse={vi.fn()} />
+        <ContextPanel open onCollapse={vi.fn()} />
       </LocaleProvider>
     )
     await waitFor(() => expect(screen.getAllByText('proj-a').length).toBeGreaterThan(0))
@@ -96,7 +96,7 @@ describe('ContextPanel（上下文面板）', () => {
     const onCollapse = vi.fn()
     render(
       <LocaleProvider>
-        <ContextPanel onCollapse={onCollapse} />
+        <ContextPanel open onCollapse={onCollapse} />
       </LocaleProvider>
     )
     fireEvent.click(screen.getByRole('button', { name: '收起上下文面板' }))
@@ -106,7 +106,7 @@ describe('ContextPanel（上下文面板）', () => {
   it('fill 模式：VirtualList 滚动容器以 height:100% 撑满面板', async () => {
     const panel = render(
       <LocaleProvider>
-        <ContextPanel onCollapse={vi.fn()} />
+        <ContextPanel open onCollapse={vi.fn()} />
       </LocaleProvider>
     )
     await waitFor(() => expect(screen.getAllByText('proj-a').length).toBeGreaterThan(0))
@@ -119,7 +119,7 @@ describe('ContextPanel（上下文面板）', () => {
   it('渲染项目分组：当前组置顶展开、最近项目组折叠', async () => {
     render(
       <LocaleProvider>
-        <ContextPanel onCollapse={vi.fn()} />
+        <ContextPanel open onCollapse={vi.fn()} />
       </LocaleProvider>
     )
     await waitFor(() => expect(screen.getByRole('button', { name: '打开 a.md' })).toBeTruthy())
@@ -134,7 +134,7 @@ describe('ContextPanel（上下文面板）', () => {
   it('点文件经共享 openProjectFile 流转并 push /editor', async () => {
     render(
       <LocaleProvider>
-        <ContextPanel onCollapse={vi.fn()} />
+        <ContextPanel open onCollapse={vi.fn()} />
       </LocaleProvider>
     )
     await waitFor(() => expect(screen.getByRole('button', { name: '打开 a.md' })).toBeTruthy())
@@ -156,7 +156,7 @@ describe('ContextPanel（上下文面板）', () => {
     try {
       const panel = render(
         <LocaleProvider>
-          <ContextPanel onCollapse={vi.fn()} />
+          <ContextPanel open onCollapse={vi.fn()} />
         </LocaleProvider>
       )
       await waitFor(() => expect(screen.getAllByText('proj-a').length).toBeGreaterThan(0))
@@ -184,7 +184,7 @@ describe('ContextPanel（上下文面板）', () => {
     })
     render(
       <LocaleProvider>
-        <ContextPanel onCollapse={vi.fn()} />
+        <ContextPanel open onCollapse={vi.fn()} />
       </LocaleProvider>
     )
     const entry = await screen.findByRole('button', { name: '打开本地目录' })

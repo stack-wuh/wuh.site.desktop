@@ -1,54 +1,40 @@
 'use client'
 
 /**
- * 控制中心「编辑器模块区」（20260923-feature-capsule-control-center 重构）：
- * 原平铺按钮列升级为模块卡布局（设计稿 PART 2）——文档卡（路径/脏点/字数/
- * 阅读时长 + 保存组）、开关 tile（即时渲染/专注模式/大纲跟随，iOS 式开关，
- * 状态经 editor-state 总线单状态源）、查找替换 tile、格式+插入图标网格、
- * 排版设置/快捷键速查整行手风琴、导出双卡。一切编辑指令经 editor-commands
- * 发布，自身不触碰编辑器实例；排版偏好持久化 wd.editorTypography。
- * <EditorCommandHost/> 保持壳层 layout 单实例（不随胶囊开关），认领文档操作
- * 与专注模式命令（实现见 ./EditorCommandHost，经本入口具名导出保持
- * `capsule/sections/EditorSection` 旧导入路径可达）。
+ * 控制中心「编辑器分区」（20261017-feature-app-layout-workbench D4 瘦身）：
+ * 开关磁贴（即时渲染/专注/大纲跟随）与查找替换上收为控制中心磁贴网格
+ * （./ControlSections TilesGrid），本分区保留文档卡（路径/脏点/字数/阅读时长
+ * + 保存组）、格式+插入图标网格、排版/快捷键速查与导出、大纲面板。
+ * 一切编辑指令经 editor-commands 发布，自身不触碰编辑器实例；排版偏好持久化
+ * wd.editorTypography。<EditorCommandHost/> 保持壳层 layout 单实例（不随胶囊
+ * 开关），认领文档操作与专注模式命令（实现见 ./EditorCommandHost，经本入口
+ * 具名导出保持 `capsule/sections/EditorSection` 旧导入路径可达）。
  * 拆分形态（20260926 mega + 20260927-refactor-editor-section-cleanup 收尾）：
  * 格式网格见 ./FormatGrid，排版/快捷键/导出见 ./PanelsExport，样式原子见 ./styles。
  */
 import { useMemo, useState } from 'react'
 import { AppIcon } from '../../../ui/AppIcon'
-import {
-  IconClose,
-  IconFile,
-  IconFilePlus,
-  IconListTree,
-  IconMaximize,
-  IconPlus,
-  IconSave,
-  IconSearch,
-  IconSparkles
-} from '../../../icons'
+import { IconClose, IconFile, IconFilePlus, IconPlus, IconSave } from '../../../icons'
 import { useWorkspaceStore } from '../../../../lib/store'
 import { publishEditorCommand } from '../../../../lib/editor-commands'
-import { publishEditorLiveState, useEditorLiveState } from '../../../../lib/editor-state'
+import { useEditorLiveState } from '../../../../lib/editor-state'
 import { countWords, estimateReadingMinutes, parseOutline } from '../../../../lib/editor-info'
 import { useLocale } from '../../../../lib/i18n/context'
 import { FilePanelContent } from '../../../workspace/FilePicker'
 import { WorkspacePanelContent } from '../../../workspace/WorkspacePicker'
 import {
-  ModuleCard,
   ModuleGrid,
   ModuleHead,
-  ModuleIcon,
-  ModuleMore,
   ModuleHeadTitle,
+  ModuleIcon,
   ModulePanel,
   ModuleSub,
   SectionHint,
   SectionLabel,
   CenterSection,
-  SubPanel,
-  SwitchCard
+  SubPanel
 } from '../../modules'
-import { ActionMini, IconBtn, IconRow, OutlineEmpty, OutlineItem, OutlineList } from './styles'
+import { ActionMini, OutlineEmpty, OutlineItem, OutlineList } from './styles'
 import { FormatGrid, type SubPanelKind } from './FormatGrid'
 import { PanelsExport } from './PanelsExport'
 
@@ -120,37 +106,6 @@ export function EditorSection(): React.JSX.Element {
             </ActionMini>
           </div>
         </ModulePanel>
-
-        <SwitchCard
-          icon={<AppIcon icon={IconSparkles} size="xs" decorative />}
-          label={t('editor.renderLive')}
-          hint={t('editor.switchSourceHint')}
-          on={live.renderMode === 'render'}
-          onToggle={() => publishEditorCommand({ kind: 'toggleRender' })}
-        />
-        <SwitchCard
-          icon={<AppIcon icon={IconMaximize} size="xs" decorative />}
-          label={t('editor.focus')}
-          hint={t('editor.focusHint')}
-          on={live.focusMode}
-          onToggle={() => publishEditorCommand({ kind: 'toggleFocus' })}
-        />
-        <ModuleCard type="button" title={t('editor.findReplace')} onClick={() => publishEditorCommand({ kind: 'findReplace' })}>
-          <ModuleHead>
-            <ModuleIcon>
-              <AppIcon icon={IconSearch} size="xs" decorative />
-            </ModuleIcon>
-            {t('editor.findReplace')}
-            <ModuleMore>⌘F</ModuleMore>
-          </ModuleHead>
-        </ModuleCard>
-        <SwitchCard
-          icon={<AppIcon icon={IconListTree} size="xs" decorative />}
-          label={t('editor.follow')}
-          hint={t('editor.followHint')}
-          on={live.outlineFollow}
-          onToggle={() => publishEditorLiveState({ outlineFollow: !live.outlineFollow })}
-        />
       </ModuleGrid>
 
       <FormatGrid panel={panel} onTogglePanel={togglePanel} />
