@@ -7,10 +7,12 @@ import {
   cmHeadingCursor,
   cmInsertCard,
   cmInsertSnippet,
+  cmOpenAnchor,
   findCardLine,
   findImageAtPos,
   findImageOnLine,
   findLinkTargetAt,
+  parseBlocks,
   rewriteImageRef,
   selectionUrl
 } from '../lib/editor-cm'
@@ -422,5 +424,30 @@ describe('格式化 del 动作（素笺笔帘删除线，词表增量回归）',
     if (!sel) throw new Error('del 事务必须携带选区')
     expect(sel.main.from).toBe(6)
     expect(sel.main.to).toBe(8)
+  })
+})
+
+describe('GFM 表格块识别（parseBlocks · 20261018 走查补齐）', () => {
+  it('表头+分隔行+连续行识别为 table 块，正文行不受影响', () => {
+    const doc = '前言段落\n\n| 名称 | 值 |\n| --- | --- |\n| a | 1 |\n| b | 2 |\n\n结尾段落'
+    const blocks = parseBlocks(doc)
+    const table = blocks.find((b) => b.kind === 'table')
+    expect(table).toBeTruthy()
+    expect(table?.fromLine).toBe(2)
+    expect(table?.toLine).toBe(5)
+  })
+
+  it('无分隔行的伪表：宽松识别为 table 块（渲染层按分隔行分流淡底/真表）', () => {
+    const bare = parseBlocks('| 只有表头 |\n| 没有分隔 |')
+    expect(bare.some((b) => b.kind === 'table')).toBe(true)
+    const hr = parseBlocks('段落\n\n---\n\n下一段')
+    expect(hr.some((b) => b.kind === 'table')).toBe(false)
+  })
+
+  it('围栏内的表格行不识别（围栏约定优先）', () => {
+    const doc = '```md\n| a | b |\n| --- | --- |\n```\n正文'
+    const blocks = parseBlocks(doc)
+    expect(blocks.some((b) => b.kind === 'table')).toBe(false)
+    expect(blocks.some((b) => b.kind === 'fence')).toBe(true)
   })
 })

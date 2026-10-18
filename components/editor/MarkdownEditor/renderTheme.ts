@@ -212,6 +212,36 @@ export const editorTheme = EditorView.theme({
     background: 'color-mix(in oklab, var(--primary-color) 4%, transparent)'
   },
 
+  /* 表格渲染态（20261018 走查补齐）：素笺表格——chrome-border 细格线、表头
+     纸墨底、行 hover 微晕；点击回源码态（公式块先例） */
+  '.cm-live-table-wrap': {
+    margin: '1.1em 0',
+    overflowX: 'auto',
+    cursor: 'pointer'
+  },
+  '.cm-live-table': {
+    borderCollapse: 'collapse',
+    fontFamily: 'var(--font-sans)',
+    fontSize: '13px',
+    lineHeight: 1.7
+  },
+  '.cm-live-table th, .cm-live-table td': {
+    border: '1px solid color-mix(in oklab, var(--chrome-border) 80%, transparent)',
+    padding: '5px 12px',
+    textAlign: 'left'
+  },
+  '.cm-live-table th': {
+    background: 'color-mix(in oklab, var(--chrome-panel) 70%, transparent)',
+    fontWeight: 600,
+    color: 'var(--text-primary)'
+  },
+  '.cm-live-table td': {
+    color: 'var(--text-secondary)'
+  },
+  '.cm-live-table tbody tr:hover td': {
+    background: 'color-mix(in oklab, var(--chrome-hover) 60%, transparent)'
+  },
+
   /* 图片：自然尺寸大图内联（解除 320px 上限，随行宽收敛），hover 浮起。
      包裹器必须显式 width:100%——inline-block 收缩_fit + 子元素 max-width:100%
      的循环依赖会让 img 坍缩到 2px（20260927 实测） */
@@ -445,7 +475,7 @@ export const editorTheme = EditorView.theme({
     textDecorationColor: 'var(--text-primary)'
   },
   /* 链接 url 在渲染态隐藏（hover title 提示 + Ctrl/Cmd+点击打开），不再显示原文 */
-  '.cm-live-table': {
+  '.cm-live-tablerow': {
     background: 'color-mix(in oklab, var(--chrome-raised) 40%, transparent)',
     transition: INK_TRANSITION
   },
