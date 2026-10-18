@@ -4,7 +4,7 @@
   "name": "20261017-feature-app-layout-workbench",
   "type": "feature",
   "scope": "shell",
-  "status": "reviewed",
+  "status": "published",
   "baseBranch": "main",
   "branch": "feature/20261017-feature-app-layout-workbench",
   "files": [
@@ -61,8 +61,8 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 158,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/158",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 159,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/159"
   },
   "review": {
     "conclusion": "passed",
@@ -71,7 +71,7 @@
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "d8d3b7d9ac186f41e27c5046036162e46b9b40d9",
+    "checkpoint": "pr:159",
     "planHash": "e029fd314d677b1454a9d997cfd4733b8e6544b3dad9b06dc6858915f8624162",
     "updatedAt": null,
     "lastError": null,
