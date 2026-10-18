@@ -209,6 +209,11 @@ export function buildThemeCss(): string {
     --chrome-raised: color-mix(in oklab, var(--background-color) 88%, var(--text-primary) 12%);
     --chrome-border: color-mix(in oklab, var(--background-color) 80%, var(--text-primary) 20%);
     --chrome-hover: color-mix(in oklab, var(--background-color) 90%, var(--text-primary) 10%);
+    /* 书脊（20261017-feature-app-layout-workbench D1）：恒深墨竖条——亮色取墨
+       （normal-900）、暗色取更深的背景墨（normal-900 在暗色反转为浅色，会脱离
+       主题，走查裁决不倒置）；纸字对随 scheme 成对 */
+    --spine-ink: var(--normal-900);
+    --spine-paper: #fffdfb;
 }
 
 [data-color-scheme="dark"] {
@@ -222,6 +227,9 @@ export function buildThemeCss(): string {
     --chrome-raised: color-mix(in oklab, var(--background-color) 80%, #000 20%);
     --chrome-border: color-mix(in oklab, var(--background-color) 70%, #fff 14%);
     --chrome-hover: color-mix(in oklab, var(--background-color) 84%, #fff 8%);
+    /* 书脊暗色：更深的背景墨 + 纸字对（D1 走查裁决：不倒置浅脊，跟随主题色） */
+    --spine-ink: color-mix(in oklab, var(--background-color) 86%, #000 14%);
+    --spine-paper: color-mix(in oklab, var(--background-color) 35%, #fff 65%);
 }
 
 [data-theme-family="plain"] {

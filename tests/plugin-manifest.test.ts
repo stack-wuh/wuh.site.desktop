@@ -325,19 +325,26 @@ describe('validateManifest', () => {
     expect(new Set(PLUGIN_PERMISSIONS).size).toBe(PLUGIN_PERMISSIONS.length)
   })
 
-  // ---------- 工作台扩展（20261015-feature-workbench-shell task-12）----------
+  // ---------- 工作台扩展（20261015-feature-workbench-shell task-12；20261017 D5 dock 退役）----------
 
-  it('views.area 接受 dock/context（工作台新挂点）', () => {
+  it('views.area 接受 context（书耳页签；dock 已退役）', () => {
     const m = validManifest()
     m.views = [
-      { id: 'panel', area: 'dock', title: 'Git 面板', icon: 'git-branch', entry: 'panel.html', order: 20 },
       { id: 'ctx', area: 'context', title: 'Git 上下文', icon: 'git-branch', entry: 'ctx.html', order: 21 }
     ]
     const res = validateManifest(m)
     expect(res.ok).toBe(true)
     if (res.ok) {
-      expect(res.manifest.views.map((v) => v.area)).toEqual(['dock', 'context'])
+      expect(res.manifest.views.map((v) => v.area)).toEqual(['context'])
     }
+  })
+
+  it('views.area=dock 被拒绝并指引迁移 main/context（20261017 D5 Dock 退役）', () => {
+    const m = validManifest()
+    m.views = [{ id: 'panel', area: 'dock', title: 'Git 面板', icon: 'git-branch', entry: 'panel.html', order: 20 }]
+    const res = validateManifest(m)
+    expect(res.ok).toBe(false)
+    if (!res.ok) expect(res.errors.some((e) => e.includes('dock 已随 Dock 退役'))).toBe(true)
   })
 
   it('views.area=sidebar 仍被拒绝并指引迁移 main', () => {
@@ -353,18 +360,7 @@ describe('validateManifest', () => {
     m.views = [{ id: 'x', area: 'floating', title: 'X', icon: 'eye', entry: 'x.html', order: 10 }]
     const res = validateManifest(m)
     expect(res.ok).toBe(false)
-    if (!res.ok) expect(res.errors.some((e) => e.includes('main/float/dock/context'))).toBe(true)
-  })
-
-  it('容量护栏：dock 页签每插件最多 1 个', () => {
-    const m = validManifest()
-    m.views = [
-      { id: 'dock-a', area: 'dock', title: 'A', icon: 'git-branch', entry: 'a.html', order: 20 },
-      { id: 'dock-b', area: 'dock', title: 'B', icon: 'git-branch', entry: 'b.html', order: 21 }
-    ]
-    const res = validateManifest(m)
-    expect(res.ok).toBe(false)
-    if (!res.ok) expect(res.errors.some((e) => e.includes('area=dock 最多声明 1 个'))).toBe(true)
+    if (!res.ok) expect(res.errors.some((e) => e.includes('main/float/context'))).toBe(true)
   })
 
   it('容量护栏：context 页签每插件最多 1 个', () => {
@@ -378,19 +374,18 @@ describe('validateManifest', () => {
     if (!res.ok) expect(res.errors.some((e) => e.includes('area=context 最多声明 1 个'))).toBe(true)
   })
 
-  it('dock/context 页签 entry 仍须为相对 .html 路径', () => {
+  it('context 页签 entry 仍须为相对 .html 路径', () => {
     const m = validManifest()
-    m.views = [{ id: 'panel', area: 'dock', title: 'P', icon: 'git-branch', entry: '/abs.html', order: 20 }]
+    m.views = [{ id: 'panel', area: 'context', title: 'P', icon: 'git-branch', entry: '/abs.html', order: 20 }]
     const res = validateManifest(m)
     expect(res.ok).toBe(false)
     if (!res.ok) expect(res.errors.some((e) => e.includes('禁止绝对路径'))).toBe(true)
   })
 
-  it('dock/context 与 main/float 可共存声明（工作台全景 manifest）', () => {
+  it('context 与 main/float 可共存声明（工作台全景 manifest）', () => {
     const m = validManifest()
     m.views = [
       { id: 'git', area: 'main', title: 'Git 历史', icon: 'git-branch', entry: 'view/index.html', order: 20 },
-      { id: 'panel', area: 'dock', title: 'Git 面板', icon: 'git-branch', entry: 'panel.html', order: 21 },
       { id: 'ctx', area: 'context', title: 'Git 上下文', icon: 'git-branch', entry: 'ctx.html', order: 22 }
     ]
     const res = validateManifest(m)

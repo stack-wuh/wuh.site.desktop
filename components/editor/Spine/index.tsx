@@ -38,7 +38,7 @@ export function Spine(): React.JSX.Element | null {
   const minutes = estimateReadingMinutes(words.words)
 
   return (
-    <Wrap aria-label={t('editor.outline')}>
+    <Wrap aria-label={t('editor.outline')} data-testid="editor-spine">
       <Rail>
         {ticks.map((tick, i) => {
           const dist = spineDistance(live.activeHeading, tick.index)

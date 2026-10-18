@@ -61,18 +61,18 @@ describe('工作台壳层骨架', () => {
     expect(main?.querySelector('[data-float-layer]')).toBeTruthy()
   })
 
-  it('⌘B 切换上下文面板显隐', () => {
+  it('⌘B 切换目次浮笺显隐（D3：默认收起，滑出为开）', () => {
     const view = renderShell()
     const panel = view.container.querySelector('[data-context-panel]')
-    expect(panel?.hasAttribute('hidden')).toBe(false)
+    expect(panel?.getAttribute('data-open')).toBe('false')
     act(() => {
       fireEvent.keyDown(window, { key: 'b', metaKey: true })
     })
-    expect(view.container.querySelector('[data-context-panel]')?.hasAttribute('hidden')).toBe(true)
+    expect(view.container.querySelector('[data-context-panel]')?.getAttribute('data-open')).toBe('true')
     act(() => {
       fireEvent.keyDown(window, { key: 'b', ctrlKey: true })
     })
-    expect(view.container.querySelector('[data-context-panel]')?.hasAttribute('hidden')).toBe(false)
+    expect(view.container.querySelector('[data-context-panel]')?.getAttribute('data-open')).toBe('false')
   })
 
   it('⌘, 在 settings ↔ home 间推送路由', () => {
@@ -83,10 +83,12 @@ describe('工作台壳层骨架', () => {
     expect(nav.push).toHaveBeenCalledWith('/settings')
   })
 
-  it('rail 导航点击映射路由（项目/草稿箱/用户/设置）', () => {
-    renderShell()
+  it('rail 导航点击映射（D3：项目钮呼出目次浮笺，其余照旧路由）', () => {
+    const view = renderShell()
+    // 项目钮 = 目次浮笺开关（不再直达 /projects；/projects 由 ⌘K/首页可达）
     fireEvent.click(screen.getByRole('button', { name: '项目' }))
-    expect(nav.push).toHaveBeenCalledWith('/projects')
+    expect(view.container.querySelector('[data-context-panel]')?.getAttribute('data-open')).toBe('true')
+    expect(nav.push).not.toHaveBeenCalledWith('/projects')
     fireEvent.click(screen.getByRole('button', { name: '草稿箱' }))
     expect(nav.push).toHaveBeenCalledWith('/drafts')
     fireEvent.click(screen.getByRole('button', { name: '用户' }))

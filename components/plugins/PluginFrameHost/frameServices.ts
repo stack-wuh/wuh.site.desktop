@@ -194,21 +194,22 @@ async function svcEvents(pluginId: string, method: string, args: unknown[]): Pro
 }
 
 async function svcPanelTabs(pluginId: string, method: string, args: unknown[]): Promise<unknown> {
-  // Dock / 编辑器上下文侧栏页签（20261015 工作台 task-13）：manifest views.area
-  // = dock|context 声明制（每插件各 ≤1），sections/rows 上报护栏与归属校验在
-  // lib/panelTabs（parseTabSections 同 capsule tabs），无额外权限
+  // 编辑器上下文侧栏（书耳）页签（20261015 工作台 task-13；20261017 D5 Dock 退役
+  // 后 kind 收敛 'context'）：manifest views.area = context 声明制（每插件 ≤1），
+  // sections/rows 上报护栏与归属校验在 lib/panelTabs（parseTabSections 同 capsule
+  // tabs），无额外权限
   if (method === 'update') {
     const [kind, tabId, payload] = args as [string, string, unknown]
-    if (kind !== 'dock' && kind !== 'context') {
-      throw new Error(`页签区域只能是 dock/context: ${String(kind)}`)
+    if (kind !== 'context') {
+      throw new Error(`页签区域只能是 context（dock 已随 Dock 退役，请迁移 context 或 main）: ${String(kind)}`)
     }
     updatePanelTab(pluginId, kind, String(tabId), payload)
     return null
   }
   if (method === 'remove') {
     const [kind, tabId] = args as [string, string]
-    if (kind !== 'dock' && kind !== 'context') {
-      throw new Error(`页签区域只能是 dock/context: ${String(kind)}`)
+    if (kind !== 'context') {
+      throw new Error(`页签区域只能是 context（dock 已随 Dock 退役，请迁移 context 或 main）: ${String(kind)}`)
     }
     removePanelTab(pluginId, kind, String(tabId))
     return null

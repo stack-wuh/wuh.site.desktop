@@ -34,6 +34,7 @@ import {
   cmExternalContent,
   cmHeadingCursor,
   cmInsertCard,
+  cmOpenAnchor,
   cmInsertSnippet,
   findImageOnLine,
   findLinkTargetAt,
@@ -509,6 +510,9 @@ export function MarkdownEditor(): React.JSX.Element {
       state: EditorState.create({ doc: initial, extensions }),
       parent: mountEl
     })
+    // 开文档锚定：预载内容的首帧也走一次装饰构建（StateField.create 初始装饰为空，
+    // 选择事务即触发重建），同时把光标放到正文首行（不落 frontmatter 头块）
+    if (initial) view.dispatch({ selection: EditorSelection.cursor(cmOpenAnchor(initial)) })
     viewRef.current = view
     if (!disposed) {
       setReady(true)

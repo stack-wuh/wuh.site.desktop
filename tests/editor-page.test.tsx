@@ -225,7 +225,7 @@ describe('统一编辑页渲染冒烟', () => {
     console_.restore()
 
     // 20261015 合并决议：工作台侧栏开关与「新建」回归顶栏（hover 显影不喧哗），保存仍是唯一主操作
-    expect(screen.getByRole('button', { name: '上下文侧栏' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: '书耳' })).toBeTruthy()
     expect(screen.getByRole('button', { name: '新建' })).toBeTruthy()
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: '保存当前文档' }))

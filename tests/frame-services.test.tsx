@@ -137,17 +137,19 @@ describe('ui 服务与反馈护栏', () => {
 
   // ---------- 工作台挂点（20261015-feature-workbench-shell task-13）----------
 
-  it('panelTabs.update 声明制路由：dock 页签上报可见，非法 kind 拒绝', async () => {
+  it('panelTabs.update 声明制路由：context 页签上报可见，非法 kind（含已退役 dock）拒绝', async () => {
     RECORD.manifest.views = [
-      { id: 'panel', area: 'dock', title: 'Demo 面板', icon: 'file-text', entry: 'panel.html', order: 20 },
+      { id: 'panel', area: 'context', title: 'Demo 面板', icon: 'file-text', entry: 'panel.html', order: 20 },
       { id: 'main', area: 'main', title: 'Main', icon: 'file-text', entry: 'main.html', order: 10 }
     ]
     try {
       await rebootstrapPluginsHost()
-      await handleFrameInvoke('demo', 'panelTabs', 'update', ['dock', 'panel', { sections: [{ rows: [{ text: 'main · 3 未提交' }] }] }])
-      expect(visiblePanelTabs('dock').length).toBe(1)
-      expect(visiblePanelTabs('dock')[0]?.sections[0]?.rows[0]?.text).toBe('main · 3 未提交')
-      await expect(handleFrameInvoke('demo', 'panelTabs', 'update', ['float', 'panel', {}])).rejects.toThrow(/dock\/context/)
+      await handleFrameInvoke('demo', 'panelTabs', 'update', ['context', 'panel', { sections: [{ rows: [{ text: 'main · 3 未提交' }] }] }])
+      expect(visiblePanelTabs('context').length).toBe(1)
+      expect(visiblePanelTabs('context')[0]?.sections[0]?.rows[0]?.text).toBe('main · 3 未提交')
+      // 已退役 dock 与非法 float 同拒（D5：帧服务 kind 词表收窄 context）
+      await expect(handleFrameInvoke('demo', 'panelTabs', 'update', ['dock', 'panel', {}])).rejects.toThrow(/context/)
+      await expect(handleFrameInvoke('demo', 'panelTabs', 'update', ['float', 'panel', {}])).rejects.toThrow(/context/)
     } finally {
       RECORD.manifest.views = []
     }
@@ -155,17 +157,17 @@ describe('ui 服务与反馈护栏', () => {
 
   it('panelTabs.update 未声明页签报错（声明制守卫，非静默）', async () => {
     await bootstrap()
-    await expect(handleFrameInvoke('demo', 'panelTabs', 'update', ['dock', 'nope', {}])).rejects.toThrow(/未声明/)
+    await expect(handleFrameInvoke('demo', 'panelTabs', 'update', ['context', 'nope', {}])).rejects.toThrow(/未声明/)
   })
 
   it('panelTabs.update payload 护栏与归属校验同 capsule tabs', async () => {
     RECORD.manifest.views = [
-      { id: 'panel', area: 'dock', title: 'Demo 面板', icon: 'file-text', entry: 'panel.html', order: 20 }
+      { id: 'panel', area: 'context', title: 'Demo 面板', icon: 'file-text', entry: 'panel.html', order: 20 }
     ]
     try {
       await rebootstrapPluginsHost()
       await expect(
-        handleFrameInvoke('demo', 'panelTabs', 'update', ['dock', 'panel', { sections: [{ rows: [{ text: 'x', icon: 'rocket' }] }] }])
+        handleFrameInvoke('demo', 'panelTabs', 'update', ['context', 'panel', { sections: [{ rows: [{ text: 'x', icon: 'rocket' }] }] }])
       ).rejects.toThrow(/白名单/)
     } finally {
       RECORD.manifest.views = []
@@ -174,14 +176,14 @@ describe('ui 服务与反馈护栏', () => {
 
   it('panelTabs.remove 隐藏声明的页签', async () => {
     RECORD.manifest.views = [
-      { id: 'panel', area: 'dock', title: 'Demo 面板', icon: 'file-text', entry: 'panel.html', order: 20 }
+      { id: 'panel', area: 'context', title: 'Demo 面板', icon: 'file-text', entry: 'panel.html', order: 20 }
     ]
     try {
       await rebootstrapPluginsHost()
-      await handleFrameInvoke('demo', 'panelTabs', 'update', ['dock', 'panel', { sections: [{ rows: [{ text: 'x' }] }] }])
-      expect(visiblePanelTabs('dock').length).toBe(1)
-      await handleFrameInvoke('demo', 'panelTabs', 'remove', ['dock', 'panel'])
-      expect(visiblePanelTabs('dock')).toEqual([])
+      await handleFrameInvoke('demo', 'panelTabs', 'update', ['context', 'panel', { sections: [{ rows: [{ text: 'x' }] }] }])
+      expect(visiblePanelTabs('context').length).toBe(1)
+      await handleFrameInvoke('demo', 'panelTabs', 'remove', ['context', 'panel'])
+      expect(visiblePanelTabs('context')).toEqual([])
     } finally {
       RECORD.manifest.views = []
     }
@@ -203,7 +205,7 @@ describe('ui 服务与反馈护栏', () => {
           version: '1.0.0',
           views: [
             { id: 'main', area: 'main', title: 'Main', icon: 'file-text', entry: 'main.html', order: 10 },
-            { id: 'panel', area: 'dock', title: 'Demo 面板', icon: 'file-text', entry: 'panel.html', order: 20 }
+            { id: 'panel', area: 'context', title: 'Demo 面板', icon: 'file-text', entry: 'panel.html', order: 20 }
           ],
           commands: [{ id: 'open', title: 'Demo · 打开', viewId: 'main' }],
           publishers: [],
@@ -211,17 +213,17 @@ describe('ui 服务与反馈护栏', () => {
         } as never,
         (p) => navSeen.push(p)
       )
-      expect(visiblePanelTabs('dock')).toEqual([])
+      expect(visiblePanelTabs('context')).toEqual([])
       // 声明注册默认 hidden（首次 panelTabs.update 上报后才可见），注册表有声明位
       expect(panelTabsStore.get().tabs.length).toBe(1)
-      await handleFrameInvoke('demo', 'panelTabs', 'update', ['dock', 'panel', { sections: [{ rows: [{ text: 'x' }] }] }])
-      expect(visiblePanelTabs('dock').length).toBe(1)
+      await handleFrameInvoke('demo', 'panelTabs', 'update', ['context', 'panel', { sections: [{ rows: [{ text: 'x' }] }] }])
+      expect(visiblePanelTabs('context').length).toBe(1)
       const cmds = paletteCommandsStore.get().commands
       expect(cmds.length).toBe(1)
       cmds[0]?.run()
       expect(navSeen).toContain('/plugin/demo/main')
       unwirePluginContributions('demo')
-      expect(visiblePanelTabs('dock')).toEqual([])
+      expect(visiblePanelTabs('context')).toEqual([])
       expect(panelTabsStore.get().tabs).toEqual([])
       expect(paletteCommandsStore.get().commands).toEqual([])
     } finally {

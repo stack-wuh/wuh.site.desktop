@@ -1,8 +1,10 @@
 /**
- * Dock / 编辑器上下文侧栏插件页签注册表（20261015-feature-workbench-shell
- * task-6/9/13，纯逻辑快照 store，与 lib/capsule 同构）。
+ * 编辑器上下文侧栏（书耳）插件页签注册表（20261015-feature-workbench-shell
+ * task-6/9/13 引入；20261017-feature-app-layout-workbench D5 起 kind 收敛为
+ * 'context'——Dock 退役，原 dock 页签随 components/dock 一并移除；
+ * 纯逻辑快照 store，与 lib/capsule 同构）。
  *
- * 模型：manifest 声明制页签槽位（views.area = 'dock' | 'context'，bootstrap/启用
+ * 模型：manifest 声明制页签槽位（views.area = 'context'，bootstrap/启用
  * 插件时注册，默认 hidden 不出按钮），运行时插件帧经帧服务 updatePanelTab /
  * removePanelTab 以 sections/rows 结构化上报显隐——护栏与 capsule tabs 完全同源
  * （parseTabSections：≤3×≤8、4KB、icon 白名单、viewId 归属本插件 main 视图）。
@@ -13,7 +15,7 @@ import { createStore } from './createStore'
 import { parseTabSections } from './tabSections'
 import type { CapsuleTabSection } from './capsule'
 
-export type PanelTabKind = 'dock' | 'context'
+export type PanelTabKind = 'context'
 
 export interface PanelTabState {
   /** `<kind>:<pluginId>:<id>` */
@@ -45,12 +47,12 @@ function tabKey(kind: PanelTabKind, pluginId: string, id: string): string {
   return `${kind}:${pluginId}:${id}`
 }
 
-/** bootstrap/启用插件时注册 manifest 声明（views.area dock/context 各 ≤1，
+/** bootstrap/启用插件时注册 manifest 声明（views.area context ≤1，
  * validateManifest 已拦超额；此处对重复注册幂等且不覆盖运行时数据） */
 export function registerManifestPanelTabs(manifest: PluginManifest): void {
   const state = store.get()
   let changed = false
-  for (const kind of ['dock', 'context'] as const) {
+  for (const kind of ['context'] as const) {
     const view = manifest.views.find((v) => v.area === kind)
     if (!view) continue
     const key = tabKey(kind, manifest.id, view.id)

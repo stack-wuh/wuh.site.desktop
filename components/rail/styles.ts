@@ -1,10 +1,11 @@
 import styled from 'styled-components'
 
 /**
- * Rail 样式（20261015-feature-workbench-shell）：恒 48px 图标列。
- * 沿袭 SideMenu 能力：左缘 2px 激活指示条、徽标位、data-tip 自绘 tooltip、
- * 点外关/Esc 分层。Popover 锚定插件条目右侧；Nav 禁 overflow:hidden
- *（会裁剪 popover 与 tooltip，shell-chrome-design 卡约束）。
+ * Rail 样式（20261017-feature-app-layout-workbench D1 书脊化）：48px 布面深墨竖条——
+ * 双向 1px 织纹 + --spine-ink 墨底（亮=normal-900 墨、暗=更深的背景墨，跟随主题
+ * 不倒置——20261018 走查裁决）+ 右缘 1px 朱砂装订线（渐隐渐显）；激活指示条/
+ * 徽标位/tooltip/点外关/Esc 分层沿袭。Popover 锚定插件条目右侧；Nav 禁
+ * overflow:hidden（会裁剪 popover 与 tooltip，shell-chrome-design 卡约束）。
  */
 
 export const Nav = styled.nav`
@@ -14,13 +15,31 @@ export const Nav = styled.nav`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  padding: 8px 0;
-  background: var(--chrome-panel);
-  border-right: 1px solid var(--chrome-border);
-  transition:
-    background-color 0.3s ease,
-    border-color 0.3s ease;
+  gap: 4px;
+  padding: 10px 0 12px;
+  /* 书脊布面：横织纹（透白 3%）+ 纵织纹（压黑 4.5%）+ spine-ink 墨底渐变 */
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.045) 0 1px, transparent 1px 3px),
+    linear-gradient(to right, color-mix(in oklab, var(--spine-ink) 94%, #000), var(--spine-ink));
+  transition: background-color 0.3s ease;
+
+  /* 朱砂装订线：右缘 1px 渐隐渐显（视觉稿 .spine-strip::after） */
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    width: 1px;
+    background: linear-gradient(
+      to bottom,
+      transparent,
+      color-mix(in oklab, var(--primary-400) 85%, transparent) 12%,
+      color-mix(in oklab, var(--primary-500) 85%, transparent) 85%,
+      transparent
+    );
+  }
 `
 
 export const RailBtn = styled.button<{ $active: boolean }>`
@@ -29,16 +48,22 @@ export const RailBtn = styled.button<{ $active: boolean }>`
   align-items: center;
   justify-content: center;
   width: 36px;
-  height: 36px;
+  height: 34px;
   border: none;
-  border-radius: var(--border-radius-sm);
+  border-radius: 8px;
   background: transparent;
-  color: var(--text-secondary);
+  color: color-mix(in oklab, var(--spine-paper) 62%, transparent);
   cursor: pointer;
+  transition: all var(--motion-dur-quick) var(--motion-ease-out-soft);
 
   &:hover {
-    background: var(--chrome-hover);
-    color: var(--text-primary);
+    background: color-mix(in oklab, var(--spine-paper) 10%, transparent);
+    color: var(--spine-paper);
+  }
+
+  /* 按印手感（视觉稿 .sitem:active） */
+  &:active {
+    transform: scale(0.93);
   }
 
   &:focus-visible {
@@ -46,13 +71,13 @@ export const RailBtn = styled.button<{ $active: boolean }>`
     outline-offset: -2px;
   }
 
-  /* 左缘激活指示条（SideMenu 能力沿袭） */
+  /* 左缘激活指示条（SideMenu 能力沿袭；激活态朱色，视觉稿 .sitem.on::before） */
   &::before {
     content: '';
     position: absolute;
     left: -6px;
-    top: 8px;
-    bottom: 8px;
+    top: 9px;
+    bottom: 9px;
     width: 2px;
     border-radius: 2px;
     background: transparent;
@@ -61,10 +86,10 @@ export const RailBtn = styled.button<{ $active: boolean }>`
   ${({ $active }) =>
     $active
       ? `
-    color: var(--primary-color);
-    background: color-mix(in oklab, var(--primary-color) 12%, transparent);
+    color: color-mix(in oklab, var(--primary-300) 90%, #fff);
+    background: color-mix(in oklab, var(--primary-500) 26%, transparent);
     &::before {
-      background: var(--primary-color);
+      background: var(--primary-400);
     }
   `
       : ''}
@@ -109,22 +134,22 @@ export const BottomGroup = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
 `
 
 export const Badge = styled.span`
   position: absolute;
-  top: 3px;
-  right: 3px;
-  min-width: 14px;
-  height: 14px;
+  top: 1px;
+  right: 1px;
+  min-width: 13px;
+  height: 13px;
   padding: 0 3px;
-  border-radius: 999px;
-  background: var(--primary-color);
+  border-radius: 7px;
+  background: var(--primary-500);
   color: var(--background-color);
-  font-size: 9px;
+  font-size: 8.5px;
   font-weight: 600;
-  line-height: 14px;
+  line-height: 13px;
   text-align: center;
   font-family: var(--font-mono);
 `

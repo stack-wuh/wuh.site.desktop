@@ -49,8 +49,8 @@ function docCardOf(container: HTMLElement): HTMLElement | null {
   return groups.find((g) => g.querySelector('button') != null) ?? null
 }
 
-describe('任务中心渲染冒烟', () => {
-  it('空态：默认任务 tab 显示等待空态与筛选 chips，零 React 告警且无 button 嵌套', () => {
+describe('控制中心渲染冒烟（20261017-feature-app-layout-workbench D4）', () => {
+  it('空态：磁贴网格 + 任务空态 + 编辑器分区并存（无 tab 屏障），零告警且无 button 嵌套', () => {
     const console_ = captureRenderConsole()
     const { container } = renderWithLocale(<CapsulePanel onClose={() => undefined} />)
 
@@ -58,17 +58,22 @@ describe('任务中心渲染冒烟', () => {
     expect(console_.warnings).toEqual([])
     console_.restore()
 
-    // 默认任务 tab：空态可见，时间线与模块 tab 内容未渲染
+    // 任务分区：空态与筛选 chips 直接可见
     expect(screen.getByText('等待插件任务')).toBeTruthy()
     expect(container.querySelector('[data-testid="capsule-timeline"]')).toBeNull()
-    expect(screen.queryByText('保存')).toBeNull()
-    // 筛选 chips：默认「全部」按下
     expect(screen.getByRole('button', { name: '全部' }).getAttribute('aria-pressed')).toBe('true')
     expect(screen.getByRole('button', { name: '未完成' }).getAttribute('aria-pressed')).toBe('false')
+    // 磁贴 4×2：开关磁贴带 aria-pressed（即时渲染/大纲跟随默认开）
+    expect(screen.getByRole('button', { name: '即时渲染' }).getAttribute('aria-pressed')).toBe('true')
+    expect(screen.getByRole('button', { name: '大纲跟随' }).getAttribute('aria-pressed')).toBe('true')
+    expect(screen.getByRole('button', { name: '专注模式' }).getAttribute('aria-pressed')).toBe('false')
+    expect(screen.getByRole('button', { name: '查找替换' })).toBeTruthy()
+    // 编辑器分区并存：文档卡动作钮直接可达（旧模块 tab 屏障退役）
+    expect(screen.getByRole('button', { name: '保存' })).toBeTruthy()
     expect(container.querySelectorAll('button button').length).toBe(0)
   })
 
-  it('有任务与插件模块时：任务 tab 渲染时间线行，切模块 tab 渲染插件 tile，零告警', () => {
+  it('有任务与插件模块时：时间线行与插件 tile 分区并存渲染，零告警', () => {
     registerManifestTasks(MANIFEST)
     upsertTask('acme', 'publish', { status: 'in_progress', progress: { current: 1, total: 3 } })
     registerManifestCapsule(MANIFEST)
@@ -80,17 +85,14 @@ describe('任务中心渲染冒烟', () => {
     expect(console_.errors).toEqual([])
     console_.restore()
 
-    // 任务 tab：时间线（标题 + 来源徽标 + 进度计数），单插件不出现插件 pill
+    // 任务分区：时间线（标题 + 来源徽标 + 进度计数），单插件不出现插件 pill
     expect(container.querySelector('[data-testid="capsule-timeline"]')).not.toBeNull()
     expect(screen.getByText('发布 Issue')).toBeTruthy()
     expect(screen.getByText('acme')).toBeTruthy()
     expect(screen.getByText('1/3')).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'acme' })).toBeNull()
 
-    // 切到模块 tab：插件 tile 渲染（宿主白名单模板）
-    act(() => {
-      fireEvent.click(screen.getByRole('tab', { name: '模块' }))
-    })
+    // 插件模块分区并存渲染（宿主白名单模板），无需切 tab
     expect(screen.getByText('12')).toBeTruthy()
     expect(screen.getByText('个 open')).toBeTruthy()
     expect(container.querySelectorAll('button button').length).toBe(0)
@@ -138,7 +140,7 @@ describe('编辑器模块区渲染冒烟', () => {
     ])
   })
 
-  it('新草稿态：显示占位提示与开关 tile，零 React 告警', () => {
+  it('新草稿态：显示占位提示；开关磁贴上收控制中心（分区不再承载 switch），零 React 告警', () => {
     workspaceStore.startDraft()
 
     const console_ = captureRenderConsole()
@@ -148,12 +150,12 @@ describe('编辑器模块区渲染冒烟', () => {
     console_.restore()
 
     expect(screen.getByText('新草稿')).toBeTruthy()
-    expect(screen.getByRole('switch', { name: '即时渲染' })).toBeTruthy()
+    expect(screen.queryByRole('switch', { name: '即时渲染' })).toBeNull()
   })
 })
 
 
-describe('胶囊插件 tab 渲染（20260925-feature-capsule-plugin-tab）', () => {
+describe('胶囊插件 tab 追加分区渲染（20261017 D4：tabs 降为分区，契约不变）', () => {
   const TAB_MANIFEST: PluginManifest = {
     id: 'git-history',
     name: 'Git 历史',
@@ -168,12 +170,12 @@ describe('胶囊插件 tab 渲染（20260925-feature-capsule-plugin-tab）', () 
     pushMock.mockClear()
   })
 
-  it('未上报（hidden）不出 tab 按钮；运行时上报后动态 tab 出现并渲染 sections/rows，零告警', () => {
+  it('未上报（hidden）不出分区；运行时上报后追加分区渲染 sections/rows，零告警', () => {
     registerManifestCapsule(TAB_MANIFEST)
     const console_ = captureRenderConsole()
     const { container } = renderWithLocale(<CapsulePanel onClose={() => undefined} />)
 
-    expect(screen.queryByRole('tab', { name: 'Git' })).toBeNull()
+    expect(screen.queryByText('Git')).toBeNull()
 
     act(() => {
       updateCapsuleTab('git-history', 'git', {
@@ -187,10 +189,7 @@ describe('胶囊插件 tab 渲染（20260925-feature-capsule-plugin-tab）', () 
       })
     })
 
-    expect(screen.getByRole('tab', { name: 'Git' })).toBeTruthy()
-    act(() => {
-      fireEvent.click(screen.getByRole('tab', { name: 'Git' }))
-    })
+    expect(screen.getByText('Git')).toBeTruthy()
     expect(screen.getByText('变更文件')).toBeTruthy()
     expect(screen.getByText('M lib/capsule.ts')).toBeTruthy()
     expect(screen.getByText('已修改')).toBeTruthy()
@@ -209,9 +208,6 @@ describe('胶囊插件 tab 渲染（20260925-feature-capsule-plugin-tab）', () 
     const onClose = vi.fn()
     renderWithLocale(<CapsulePanel onClose={onClose} />)
 
-    act(() => {
-      fireEvent.click(screen.getByRole('tab', { name: 'Git' }))
-    })
     const row = screen.getByText('M lib/capsule.ts').closest('button')
     expect(row).toBeTruthy()
     act(() => {
@@ -221,32 +217,26 @@ describe('胶囊插件 tab 渲染（20260925-feature-capsule-plugin-tab）', () 
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 
-  it('removeTab 后 tab 按钮消失，选中态回落 tasks', () => {
+  it('removeTab 后分区消失（任务分区不受影响）', () => {
     registerManifestCapsule(TAB_MANIFEST)
     updateCapsuleTab('git-history', 'git', { sections: [{ rows: [{ text: 'x' }] }] })
     renderWithLocale(<CapsulePanel onClose={() => undefined} />)
 
-    act(() => {
-      fireEvent.click(screen.getByRole('tab', { name: 'Git' }))
-    })
     expect(screen.getByText('x')).toBeTruthy()
 
     act(() => {
       removeCapsuleTab('git-history', 'git')
     })
-    expect(screen.queryByRole('tab', { name: 'Git' })).toBeNull()
-    // 回落 tasks：空态可见
+    expect(screen.queryByText('Git')).toBeNull()
+    // 任务分区仍在：空态可见
     expect(screen.getByText('等待插件任务')).toBeTruthy()
   })
 
-  it('无 section 空数据：tab 在但显示空态文案', () => {
+  it('无 section 空数据：分区在但显示空态文案', () => {
     registerManifestCapsule(TAB_MANIFEST)
     updateCapsuleTab('git-history', 'git', { sections: [] })
     renderWithLocale(<CapsulePanel onClose={() => undefined} />)
 
-    act(() => {
-      fireEvent.click(screen.getByRole('tab', { name: 'Git' }))
-    })
     expect(screen.getByText('暂无数据')).toBeTruthy()
   })
 })

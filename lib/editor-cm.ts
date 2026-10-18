@@ -41,11 +41,23 @@ export function cmInsertSnippet(
 export function cmExternalContent(state: EditorState, content: string | null): TransactionSpec {
   const next = content ?? ''
   if (next === state.doc.toString()) return {}
-  const head = Math.min(state.selection.main.head, next.length)
   return {
     changes: { from: 0, to: state.doc.length, insert: next },
-    selection: EditorSelection.cursor(head)
+    // 开文档锚点 = 正文首行：旧光标位钳进新文档会误触「光标行源码态」揭示
+    // （20261017 走查实证：223 恰落 frontmatter 闭合栅栏，头部块常驻显形）
+    selection: EditorSelection.cursor(cmOpenAnchor(next))
   }
+}
+
+/** 开文档锚点：frontmatter 之后的正文首行行首（无头块 = 0）——打开文档从头读，
+ * 且光标绝不落在头块内（落块即触发光标行源码态，frontmatter 会常驻显形） */
+export function cmOpenAnchor(content: string): number {
+  const fm = frontmatterLineRange(content)
+  if (!fm) return 0
+  const lines = content.split('\n')
+  let at = 0
+  for (let i = 0; i <= fm.endLine && i < lines.length; i++) at += lines[i].length + 1
+  return Math.min(at, content.length)
 }
 
 /** parseOutline 序号 → 标题行行首绝对偏移；序号无效返回 null（调用方不消费） */

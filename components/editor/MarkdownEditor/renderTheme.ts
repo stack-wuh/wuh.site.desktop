@@ -47,6 +47,11 @@ export const editorTheme = EditorView.theme({
     fontFamily: 'var(--font-sans)',
     fontSize: 'var(--editor-font-size, 14px)'
   },
+  /* 写作面不需要焦点环（光标即焦点指示）——关掉 CM6 默认的聚焦虚线框
+     （D7 定稿；该修复曾随未合并的 PR #157 滞留旧分支，20261018 走查重落） */
+  '&.cm-focused': {
+    outline: 'none'
+  },
   '.cm-scroller': {
     overflow: 'auto',
     fontFamily: 'var(--font-sans)'

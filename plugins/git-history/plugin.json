@@ -2,7 +2,7 @@
   "id": "git-history",
   "name": "Git 历史与回退",
   "version": "1.2.0",
-  "description": "工作区状态、提交/推送/拉取与提交历史回退（revert-only 语义由宿主能力保证）；经逻辑帧在胶囊聚合 Git 状态并上报 Dock 页签（工作台挂点示范），视图自动跟随当前文档展示文件历史",
+  "description": "工作区状态、提交/推送/拉取与提交历史回退（revert-only 语义由宿主能力保证）；经逻辑帧在胶囊聚合 Git 状态（控制中心 GIT 分区与胶囊 Git 页签同源），视图自动跟随当前文档展示文件历史",
   "logic": "logic/status.js",
   "views": [
     {
@@ -12,14 +12,6 @@
       "icon": "git-branch",
       "entry": "view/index.html",
       "order": 20
-    },
-    {
-      "id": "dock-panel",
-      "area": "dock",
-      "title": "Git",
-      "icon": "git-branch",
-      "entry": "view/index.html",
-      "order": 21
     }
   ],
   "capsule": [

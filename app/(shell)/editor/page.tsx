@@ -23,6 +23,7 @@ import { IconChevronLeft, IconListTree, IconSave } from '../../../components/ico
 import { SidePane } from '../../../components/editor/SidePane'
 import { MarkdownEditor } from '../../../components/editor/MarkdownEditor'
 import { Spine } from '../../../components/editor/Spine'
+import { paperSurface } from '../../../components/ui/Sheet'
 import { useWorkspaceStore, workspaceStore } from '../../../lib/store'
 import { publishEditorCommand } from '../../../lib/editor-commands'
 import { toast } from '../../../lib/feedback'
@@ -36,8 +37,8 @@ const PageShell = styled.section`
   min-width: 0;
   min-height: 0;
   position: relative;
-  background: var(--background-color);
-  transition: background-color 0.3s ease;
+  /* 案面透出（D2）：编辑页纸面即素笺本体——壳不再铺底，纸浮在案上 */
+  background: transparent;
 `
 
 const TopBar = styled.header<{ $dim: boolean }>`
@@ -66,6 +67,11 @@ const TopBar = styled.header<{ $dim: boolean }>`
     opacity: ${(props) => (props.$dim ? 0.05 : 1)};
   }
 
+  /* 动作钮恒整排：禁 flex 挤压（面包屑负责让位） */
+  & > button {
+    flex: none;
+  }
+
   @media (max-width: 768px) {
     padding: 6px 16px;
   }
@@ -79,7 +85,11 @@ const Breadcrumb = styled.span`
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  /* 画芯列宽（760）下的让位契约：面包屑是唯一可压缩项——按钮恒整排、
+     不许被长路径挤成竖排（20261017 走查修复） */
+  flex: 1 1 0;
   min-width: 0;
+  overflow: hidden;
   font-size: 12px;
   font-family: var(--font-mono);
   color: var(--text-muted);
@@ -145,7 +155,8 @@ const RenameInput = styled.input`
 `
 
 const TopSpacer = styled.span`
-  flex: 1;
+  flex: none;
+  width: 8px;
 `
 
 const Column = styled.div`
@@ -155,8 +166,11 @@ const Column = styled.div`
   min-height: 0;
   width: 100%;
   max-width: 760px;
-  margin: 0 auto;
-  /* 素笺画芯：顶部呼吸让位悬浮顶栏（视觉稿 D2），底距保持编辑器密排 */
+  margin: 6px auto 14px;
+  position: relative;
+  /* 顶栏承载（D6）：悬浮顶栏 absolute 于画芯列内——按钮恒落在纸上，
+     不被右缘书耳浮笺盖住（20261017 走查修复：全宽顶栏曾被 z30 浮笺压住按钮） */
+  ${paperSurface}
   padding: clamp(72px, 10vh, 120px) 16px 24px;
 `
 
@@ -223,8 +237,9 @@ export function EditorPage(): React.JSX.Element {
   const [workspaceName, setWorkspaceName] = useState<string | null>(null)
   const [renaming, setRenaming] = useState(false)
   const [renameValue, setRenameValue] = useState('')
-  // 右缘上下文侧栏开合（task-9）：默认展开，顶栏按钮开合（专注模式由壳层整层隐藏）
-  const [paneOpen, setPaneOpen] = useState(true)
+  // 书耳浮笺开合（D3 假定 f）：默认收起，顶栏「书耳」钮开合；展开时书口让位、
+  // 收起回归（让位链见 BodyRow 后的 Spine 条件挂载）；专注模式由壳层整层隐藏
+  const [paneOpen, setPaneOpen] = useState(false)
 
   // 冷启动/关闭后回到可写态：无文档（content==null）即进入新草稿会话（先写后存）
   useEffect(() => {
@@ -308,7 +323,9 @@ export function EditorPage(): React.JSX.Element {
 
   return (
     <PageShell aria-label={t('editor.pageAria')}>
-      <TopBar $dim={live.focusMode}>
+      <BodyRow>
+        <Column>
+          <TopBar $dim={live.focusMode}>
         <Button size="sm" variant="ghost" aria-label={t('editor.back')} title={t('editor.back')} onClick={back}>
           <AppIcon icon={IconChevronLeft} size="sm" decorative />
           {t('editor.back')}
@@ -387,21 +404,20 @@ export function EditorPage(): React.JSX.Element {
         </Button>
       </TopBar>
 
-      <BodyRow>
-        <Column>
-          <EditorBody>
-            <MarkdownEditor />
-            {!doc.content && (
-              <Blank aria-hidden="true" data-testid="editor-blank-seal">
-                <BlankInner>
-                  <Seal>落笔</Seal>
-                  <BlankHint>{t('editor.blankHint')}</BlankHint>
-                </BlankInner>
-              </Blank>
-            )}
-          </EditorBody>
-        </Column>
-        {paneOpen && <SidePane />}
+      <EditorBody>
+        <MarkdownEditor />
+        {!doc.content && (
+          <Blank aria-hidden="true" data-testid="editor-blank-seal">
+            <BlankInner>
+              <Seal>落笔</Seal>
+              <BlankHint>{t('editor.blankHint')}</BlankHint>
+            </BlankInner>
+          </Blank>
+        )}
+      </EditorBody>
+      </Column>
+      {/* 书耳浮笺：保挂载（滑出过渡），开合经 open prop */}
+      <SidePane open={paneOpen} />
       </BodyRow>
       {!paneOpen && <Spine />}
     </PageShell>

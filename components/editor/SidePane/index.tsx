@@ -1,12 +1,13 @@
 'use client'
 
 /**
- * 编辑器右缘上下文侧栏（20261015-feature-workbench-shell task-9）：与当前文档
- * 相关的上下文工具停靠区——大纲（点击经命令通道 scrollToHeading 跳转）、
- * 元数据（**只读**快照：editor.md 约束「结构化信息的展示与修改入口在 Frontmatter
- * 插件视图，不得在编辑器内重建元数据表单」，此处仅展示 + 跳转入口）、图床（同
- * 入口跳转）+ 插件 area=context 页签（manifest 声明制，lib/panelTabs，sections/
- * rows 结构化渲染复用胶囊插件 tab 行渲染器）。开合由编辑页顶栏按钮承载。
+ * 书耳浮笺（20261017-feature-app-layout-workbench D3，原贴边上下文侧栏 20261015）：
+ * 与当前文档相关的上下文工具浮在案面右缘——大纲（点击经命令通道 scrollToHeading
+ * 跳转）、元数据（**只读**快照：editor.md 约束「结构化信息的展示与修改入口在
+ * Frontmatter 插件视图，不得在编辑器内重建元数据表单」，此处仅展示 + 跳转入口）、
+ * 图床（同入口跳转）+ 插件 area=context 页签（manifest 声明制，lib/panelTabs）。
+ * 默认收起（D3 假定 f），编辑页顶栏「书耳」钮开合；展开时书口让位、收起回归
+ * （让位链在编辑页 `{!paneOpen && <Spine />}`）。保挂载：显隐走滑出过渡。
  */
 import { useMemo, useState, useSyncExternalStore } from 'react'
 import { useRouter } from 'next/navigation'
@@ -38,7 +39,7 @@ import {
 
 type ShellTab = 'outline' | 'meta' | 'image'
 
-export function SidePane(): React.JSX.Element {
+export function SidePane(props: { open?: boolean }): React.JSX.Element {
   const { t } = useLocale()
   const router = useRouter()
   const doc = useWorkspaceStore()
@@ -60,7 +61,12 @@ export function SidePane(): React.JSX.Element {
   const effective = ctxTabs.some((tb) => tb.key === tab) ? tab : (tab as ShellTab)
 
   return (
-    <Pane data-editor-sidepane="" aria-label={t('editor.sideAria')}>
+    <Pane
+      data-editor-sidepane=""
+      data-open={props.open === true ? 'true' : 'false'}
+      aria-label={t('editor.sideAria')}
+      $open={props.open === true}
+    >
       <Tabs role="tablist" aria-label={t('editor.sideAria')}>
         <TabBtn type="button" role="tab" aria-selected={effective === 'outline'} $active={effective === 'outline'} onClick={() => setTab('outline')}>
           {t('editor.outline')}

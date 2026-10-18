@@ -4,7 +4,7 @@
   "name": "20261017-feature-app-layout-workbench",
   "type": "feature",
   "scope": "shell",
-  "status": "committed",
+  "status": "reviewed",
   "baseBranch": "main",
   "branch": "feature/20261017-feature-app-layout-workbench",
   "files": [
@@ -65,14 +65,14 @@
     "pullRequestUrl": null
   },
   "review": {
-    "conclusion": "pending",
-    "verifiedCommit": null,
-    "verifiedAt": null
+    "conclusion": "passed",
+    "verifiedCommit": "cfe7f651c567d0033a7b85b93d86bfa41a6ef115",
+    "verifiedAt": "2026-10-18T07:38:11.097Z"
   },
   "workflow": {
     "operation": null,
     "checkpoint": "d8d3b7d9ac186f41e27c5046036162e46b9b40d9",
-    "planHash": "3642d9f030d7129af4be208d5f34803b5eb03d322e4ce554e2d93940c2ed80c1",
+    "planHash": "e029fd314d677b1454a9d997cfd4733b8e6544b3dad9b06dc6858915f8624162",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -90,7 +90,67 @@
         "shadow-docs/changes/20261017-feature-app-layout-workbench/brief.md"
       ],
       "message": "docs(shadow): brief 立项——整窗「书脊案面」落地（书脊化 Rail/案面底/控制中心/浮笺化目次书耳/Dock 退役），issue 已建，worktree 已派生"
+    },
+    "release": {
+      "files": [
+        "app/(shell)/editor/page.tsx",
+        "app/(shell)/layout.tsx",
+        "components/capsule/Capsule.tsx",
+        "components/capsule/CapsulePanel/ControlSections.tsx",
+        "components/capsule/CapsulePanel/index.tsx",
+        "components/capsule/CapsulePanel/styles.ts",
+        "components/capsule/sections/EditorSection/index.tsx",
+        "components/contextpanel/index.tsx",
+        "components/contextpanel/styles.ts",
+        "components/dock/index.tsx",
+        "components/dock/styles.ts",
+        "components/editor/MarkdownEditor/index.tsx",
+        "components/editor/MarkdownEditor/renderTheme.ts",
+        "components/editor/SidePane/index.tsx",
+        "components/editor/SidePane/styles.ts",
+        "components/editor/Spine/index.tsx",
+        "components/icons/index.tsx",
+        "components/plugins/PluginFrameHost/frameServices.ts",
+        "components/rail/index.tsx",
+        "components/rail/styles.ts",
+        "components/theme/tokens.ts",
+        "components/ui/Sheet.tsx",
+        "lib/dock.ts",
+        "lib/editor-cm.ts",
+        "lib/i18n/locales.ts",
+        "lib/panelTabs.ts",
+        "plugins/git-history/logic/status.js",
+        "plugins/git-history/plugin.json",
+        "shadow-docs/changes/20261017-feature-app-layout-workbench/brief.md",
+        "shadow-docs/knowledge/editor.md",
+        "shadow-docs/knowledge/plugin-architecture.md",
+        "shadow-docs/knowledge/renderer-shell-routing.md",
+        "shadow-docs/knowledge/shell-chrome-design.md",
+        "shadow-docs/menu.md",
+        "src/plugin-sdk/index.ts",
+        "src/shared/plugin.ts",
+        "tests/capsule-dock-forms.test.tsx",
+        "tests/capsule-render.test.tsx",
+        "tests/context-panel.test.tsx",
+        "tests/dock-panel.test.tsx",
+        "tests/editor-codemirror.test.ts",
+        "tests/editor-context-sidebar.test.tsx",
+        "tests/editor-page.test.tsx",
+        "tests/frame-services.test.tsx",
+        "tests/plugin-extensions.test.ts",
+        "tests/plugin-manifest.test.ts",
+        "tests/workbench-layout.test.tsx",
+        "tests/workbench-rail.test.tsx"
+      ],
+      "message": "feat(shell): 整窗「书脊案面」落地——书脊化 Rail（spine-ink 恒深墨+朱砂装订线）、案面底+浮笺画芯载体（paperSurface）、胶囊升格控制中心（磁贴 4×2+任务/GIT/排版分区+插件 tab 追加分区）、目次/书耳浮笺化（滑出 220ms+默认收起）、Dock 退役（views.area 去 dock 四方同步+git-history manifest 迁移）；走查修复：开文档光标锚点 cmOpenAnchor（frontmatter 常驻显形根因）、D6 顶栏收画芯列、D7 焦点环重落、书脊暗色倒置否决改恒深墨；Shell overflow:clip 禁壳滚；全量 86 套件+三 tsconfig 绿（Closes #158）",
+      "title": "整窗「书脊案面」落地——壳层工作台 2.0",
+      "body": "Closes #158\n\n完整 brief：shadow-docs/changes/20261017-feature-app-layout-workbench/brief.md"
     }
+  },
+  "knowledge": {
+    "action": "更新",
+    "target": "shadow-docs/knowledge/shell-chrome-design.md, shadow-docs/knowledge/renderer-shell-routing.md, shadow-docs/knowledge/plugin-architecture.md, shadow-docs/knowledge/editor.md, shadow-docs/menu.md",
+    "reason": "壳层形态与插件挂点契约双双换代：书脊化 Rail（spine-ink 双主题恒深墨）/案面/浮笺画芯载体/控制中心（磁贴+分区，胶囊双形态退役）/目次书耳浮笺化/Dock 退役（views.area 去 dock 四方同步+git-history manifest 迁移）/data-chrome 四处/z 带修订；实机走查修复一并记录（书脊暗色倒置被用户裁决否决、D6/D7 系 PR #157 滞留修复重落、frontmatter 开文档光标锚点 cmOpenAnchor）"
   }
 }
 ---
@@ -165,30 +225,30 @@
 ## 任务
 
 ### Phase 1 书脊 + 案面
-- [ ] task 1 案面底 — `app/(shell)/layout.tsx` — main 容器三重渐变案面底（顶部窗光扫 + 双 radial 暖晕 + 1.2% 纸纹竖纹），颜色只走主题 token/color-mix
-- [ ] task 2 浮笺画芯载体 — `components/ui/Sheet.tsx`（新）+ 各路由页容器 — 素笺载体件（radius 6、双投影 + 顶部内高光、右缘纸页叠口两层）接入 home/projects/drafts/settings/account/plugin 页；/editor 页纸面即素笺本体（仅对齐投影层级）
-- [ ] task 3 书脊化 Rail — `components/rail/` — 48px 布纹织理深墨竖条（双向 repeating-linear-gradient）+ 右缘 1px 朱砂装订线 + 激活指示条/hover 浮起/徽标位对齐稿；底部 W 印（用户项，品牌标导航 /account 语义不变）+ ⚙ 保留
-- [ ] task 4 Phase 1 回归 — `tests/workbench-rail.test.tsx` `tests/workbench-layout.test.tsx` `tests/home-workbench.test.tsx` — 书脊样式守卫（48px/朱线/data-chrome）+ 案面接入零回归
+- [x] task 1 案面底 — `app/(shell)/layout.tsx` — main 容器三重渐变案面底（顶部窗光扫 + 双 radial 暖晕 + 1.2% 纸纹竖纹），颜色只走主题 token/color-mix
+- [x] task 2 浮笺画芯载体 — `components/ui/Sheet.tsx`（新）+ 各路由页容器 — 素笺载体件（radius 6、双投影 + 顶部内高光、右缘纸页叠口两层）接入 home/projects/drafts/settings/account/plugin 页；/editor 页纸面即素笺本体（仅对齐投影层级）
+- [x] task 3 书脊化 Rail — `components/rail/` — 48px 布纹织理深墨竖条（双向 repeating-linear-gradient）+ 右缘 1px 朱砂装订线 + 激活指示条/hover 浮起/徽标位对齐稿；底部 W 印（用户项，品牌标导航 /account 语义不变）+ ⚙ 保留
+- [x] task 4 Phase 1 回归 — `tests/workbench-rail.test.tsx` `tests/workbench-layout.test.tsx` `tests/home-workbench.test.tsx` — 书脊样式守卫（48px/朱线/data-chrome）+ 案面接入零回归
 
 ### Phase 2 控制中心
-- [ ] task 5 控制中心容器 — `components/capsule/CapsulePanel/` — 470px 浮笺卡重构（头部 = 「控制中心」+ 工作区·分支 mono；挂点契约 INV-3 不变）
-- [ ] task 6 磁贴网格 — `components/capsule/CapsulePanel/` `lib/editor-state.ts` `lib/editor-commands.ts` `components/editor/MarkdownEditor/index.tsx` — 4×2 磁贴渲染器 + 八磁贴接线：即时渲染（既有 toggleRender 词表）/大纲跟随（总线新标志 c）/专注模式（既有链）/图床·oss（上传模式切换）/主题/外观/语言（ThemeProvider·LocaleProvider 写穿）/查找替换（新词表 `find` → `openSearchPanel`）
-- [ ] task 7 功能分区 — `components/capsule/` — 任务时间线（复用既有时间线行渲染）/ GIT（`gitStatus/gitCommit/gitPush` IPC + 行内提交输入 e）/ 排版（字号步进，DEFAULT_TYPOGRAPHY 链）/ 插件 capsule tabs 追加分区（a，`parseTabSections` 复用）
-- [ ] task 8 EditorSection 收编 — `components/capsule/sections/` — 编辑器分区工具迁移入磁贴/排版分区后瘦身；EditorCommandHost 常驻单实例挂载保持
-- [ ] task 9 i18n + 回归 — `lib/i18n/locales.ts` `tests/capsule-render.test.tsx` `tests/capsule-nesting.test.ts` `tests/plugin-capsule.test.ts` `tests/i18n.test.ts` — 三语新键（磁贴/分区/控制中心）+ 磁贴激活态断言 + 插件 tab 追加分区用例
+- [x] task 5 控制中心容器 — `components/capsule/CapsulePanel/` — 470px 浮笺卡重构（头部 = 「控制中心」+ 工作区·分支 mono；挂点契约 INV-3 不变）
+- [x] task 6 磁贴网格 — `components/capsule/CapsulePanel/` `lib/editor-state.ts` `lib/editor-commands.ts` `components/editor/MarkdownEditor/index.tsx` — 4×2 磁贴渲染器 + 八磁贴接线：即时渲染（既有 toggleRender 词表）/大纲跟随（总线新标志 c）/专注模式（既有链）/图床·oss（上传模式切换）/主题/外观/语言（ThemeProvider·LocaleProvider 写穿）/查找替换（新词表 `find` → `openSearchPanel`）
+- [x] task 7 功能分区 — `components/capsule/` — 任务时间线（复用既有时间线行渲染）/ GIT（`gitStatus/gitCommit/gitPush` IPC + 行内提交输入 e）/ 排版（字号步进，DEFAULT_TYPOGRAPHY 链）/ 插件 capsule tabs 追加分区（a，`parseTabSections` 复用）
+- [x] task 8 EditorSection 收编 — `components/capsule/sections/` — 编辑器分区工具迁移入磁贴/排版分区后瘦身；EditorCommandHost 常驻单实例挂载保持
+- [x] task 9 i18n + 回归 — `lib/i18n/locales.ts` `tests/capsule-render.test.tsx` `tests/capsule-nesting.test.ts` `tests/plugin-capsule.test.ts` `tests/i18n.test.ts` — 三语新键（磁贴/分区/控制中心）+ 磁贴激活态断言 + 插件 tab 追加分区用例
 
 ### Phase 3 浮笺 + Dock 退役
-- [ ] task 10 目次浮笺 — `components/contextpanel/` `components/rail/index.tsx` — 贴边栏改浮笺 slip-card（absolute + 滑出 220ms ease-out-soft + reduced-motion 瞬切；默认收起；rail 项目钮呼出 b + ⌘B 保持 + 头部旋钮收起）；树/VirtualList/`openProjectFile` 打开流零改动
-- [ ] task 11 书耳浮笺 — `components/editor/SidePane/` `app/(shell)/editor/page.tsx` — 右缘贴边侧栏改浮笺（默认收起翻转 f；书耳钮/书口让位链已有）；插件 `area=context` 页签契约不动
-- [ ] task 12 Dock 退役 — `components/dock/`（删）`app/(shell)/layout.tsx` `lib/dock.ts` `components/capsule/Capsule.tsx` — 停靠态与 dock 页签退役、`lib/dock.ts` 单形态开合、胶囊回归纯下拉态、data-chrome 清单更新（INV-2）
-- [ ] task 13 插件 dock 契约退役 — `src/shared/plugin.ts` `src/plugin-sdk/index.ts` `components/plugins/PluginFrameHost/frameServices.ts` `lib/panelTabs.ts` `plugins/git-history/plugin.json` — `views.area` 去 `dock`（validateManifest 拒绝并指引迁移）、panelTabs kind 词表收窄、三方同步（INV-5）、git-history dock-panel 视图退役（胶囊 Git tab + main 视图承接）
-- [ ] task 14 Phase 3 回归 — `tests/capsule-dock-forms.test.tsx`（改单形态）`tests/dock-panel.test.tsx`（退役）`tests/plugin-manifest.test.ts` `tests/plugin-extensions.test.ts` `tests/context-panel.test.tsx` `tests/editor-context-sidebar.test.tsx` `tests/focus-mode.test.tsx` — 值域用例 + 浮笺滑出/reduced-motion 断言 + data-chrome 残留扫描 + dock 引用 grep 清零
+- [x] task 10 目次浮笺 — `components/contextpanel/` `components/rail/index.tsx` — 贴边栏改浮笺 slip-card（absolute + 滑出 220ms ease-out-soft + reduced-motion 瞬切；默认收起；rail 项目钮呼出 b + ⌘B 保持 + 头部旋钮收起）；树/VirtualList/`openProjectFile` 打开流零改动
+- [x] task 11 书耳浮笺 — `components/editor/SidePane/` `app/(shell)/editor/page.tsx` — 右缘贴边侧栏改浮笺（默认收起翻转 f；书耳钮/书口让位链已有）；插件 `area=context` 页签契约不动
+- [x] task 12 Dock 退役 — `components/dock/`（删）`app/(shell)/layout.tsx` `lib/dock.ts` `components/capsule/Capsule.tsx` — 停靠态与 dock 页签退役、`lib/dock.ts` 单形态开合、胶囊回归纯下拉态、data-chrome 清单更新（INV-2）
+- [x] task 13 插件 dock 契约退役 — `src/shared/plugin.ts` `src/plugin-sdk/index.ts` `components/plugins/PluginFrameHost/frameServices.ts` `lib/panelTabs.ts` `plugins/git-history/plugin.json` — `views.area` 去 `dock`（validateManifest 拒绝并指引迁移）、panelTabs kind 词表收窄、三方同步（INV-5）、git-history dock-panel 视图退役（胶囊 Git tab + main 视图承接）
+- [x] task 14 Phase 3 回归 — `tests/capsule-dock-forms.test.tsx`（改单形态）`tests/dock-panel.test.tsx`（退役）`tests/plugin-manifest.test.ts` `tests/plugin-extensions.test.ts` `tests/context-panel.test.tsx` `tests/editor-context-sidebar.test.tsx` `tests/focus-mode.test.tsx` — 值域用例 + 浮笺滑出/reduced-motion 断言 + data-chrome 残留扫描 + dock 引用 grep 清零
 
 ### Phase 4 核对 + 走查
-- [ ] task 15 四主题 × 亮暗核对 — `components/theme/tokens.ts`（如需）— 书脊暗色倒置（normal-900 反转浅脊，倒置书效果）实机核对 + 浮笺/案面/控制中心四主题过一遍
-- [ ] task 16 全量回归 — `tests/` — 全量 vitest 小批 + 重试（SGN-1 配方）+ 三 tsconfig typecheck
-- [ ] task 17 实机走查 — `pnpm dev` — 用户走查：整窗三层（书脊/案面/浮笺）、控制中心磁贴全动作、目次/书耳开合与书口让位、专注模式 chrome 退场、插件三挂点（main/float/context）、四主题、reduced-motion、键盘全链（⌘B/⌘K/⌘⇧F/Esc 分治）；缺陷当轮修复
-- [ ] task 18 知识回写 — `shadow-docs/` — shell-chrome-design 大段换代（书脊/控制中心/Dock 退役/z 带）+ renderer-shell-routing 布局段 + plugin-architecture 值域 + editor.md 书耳段 + menu.md 词表
+- [x] task 15 四主题 × 亮暗核对 — `components/theme/tokens.ts`（如需）— 书脊暗色倒置（normal-900 反转浅脊，倒置书效果）实机核对 + 浮笺/案面/控制中心四主题过一遍
+- [x] task 16 全量回归 — `tests/` — 全量 vitest 小批 + 重试（SGN-1 配方）+ 三 tsconfig typecheck
+- [x] task 17 实机走查 — `pnpm dev` — 用户走查：整窗三层（书脊/案面/浮笺）、控制中心磁贴全动作、目次/书耳开合与书口让位、专注模式 chrome 退场、插件三挂点（main/float/context）、四主题、reduced-motion、键盘全链（⌘B/⌘K/⌘⇧F/Esc 分治）；缺陷当轮修复
+- [x] task 18 知识回写 — `shadow-docs/` — shell-chrome-design 大段换代（书脊/控制中心/Dock 退役/z 带）+ renderer-shell-routing 布局段 + plugin-architecture 值域 + editor.md 书耳段 + menu.md 词表
 
 ## 结果
 

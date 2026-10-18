@@ -1,49 +1,30 @@
 'use client'
 
 /**
- * 任务中心面板壳（拆分自 CapsulePanel 单文件，20260926-refactor-mega-component-split）：
- * 面板骨架 + 双 tab 切换 + 任务筛选/时间线编排 + 模块 tab tiles；时间线行见
- * ./TaskTimeline，插件 tab 行见 ./PluginTabRows，面板级样式原子见 ./styles。
+ * 控制中心面板（20261017-feature-app-layout-workbench D4 重构，原任务中心面板壳
+ * 20260926 拆分）：胶囊展开态 = 470px 浮笺卡——磁贴网格 4×2（即时渲染/大纲跟随/
+ * 专注/图床/主题/外观/语言/查找替换，见 ./ControlSections）+ 功能分区（任务时间线
+ * / GIT / 排版 / 编辑器 / 插件模块 / 插件 tab 追加分区）。挂点契约不变：贴 chip
+ * 下缘向下弹出、z70、data-capsule-panel 稳定判定；Esc/点外关归 Capsule.tsx。
+ * 一切编辑指令经 editor-commands/editor-state 总线发布，本面板不触碰编辑器实例；
+ * 插件 capsule 贡献契约不变（modules tiles + tabs 渲染为追加分区）。
  * 对外契约不变：`components/capsule/CapsulePanel` 具名导出 CapsulePanel。
  */
+import { useEffect, useState, useSyncExternalStore } from 'react'
 import { useRouter } from 'next/navigation'
-import { useState, useSyncExternalStore } from 'react'
 import { AppIcon } from '../../ui/AppIcon'
 import { pluginIcon } from '../../icons'
 import type { PluginIconName } from '@shared/plugin'
 import { taskAggregate, tasksStore } from '../../../lib/tasks'
-import {
-  capsuleStore,
-  visibleCapsuleModules,
-  visibleCapsuleTabs,
-  type CapsuleModuleState
-} from '../../../lib/capsule'
-import { dockTaskCenter } from '../../../lib/dock'
+import { capsuleStore, visibleCapsuleModules, visibleCapsuleTabs, type CapsuleModuleState } from '../../../lib/capsule'
 import { useLocale } from '../../../lib/i18n/context'
 import { EditorSection } from '../sections/EditorSection'
-import { CenterSection, ModuleBig, ModuleCard, ModuleGrid, ModuleHead, ModuleIcon, ModulePanel, ModuleSub, SectionHint, SectionLabel } from '../modules'
-import {
-  Pop,
-  PopHead,
-  PopCount,
-  PopFoot,
-  HeadBar,
-  HeadBarFill,
-  TabRow,
-  Tab,
-  TabSection,
-  TabRows,
-  EmptyState,
-  EmptyTitle,
-  PluginNote,
-  ToneDot
-} from './styles'
+import { SectionLabel } from '../modules'
+import { ModuleBig, ModuleCard, ModuleGrid, ModuleHead, ModuleIcon, ModulePanel, ModuleSub } from '../modules'
+import { GitSection, TilesGrid, TypesetSection } from './ControlSections'
+import { Pop, PopHead, PopCount, Sections, Sect, SectHead, MonoMeta, TabRows, PluginNote, ToneDot } from './styles'
 import { PluginTabRowItem } from './PluginTabRows'
 import { TaskCenterBody } from './TaskCenterBody'
-
-type TaskTab = 'tasks' | 'modules'
-/** 插件 tab 的选中值 = lib/capsule 注册表 key（`plugin:<pid>:<tid>`）；tabs 消失时回落 tasks */
-type PanelTab = TaskTab | string
 
 /** 插件贡献模块 tile：宿主按模板白名单渲染，数据全部来自单向上报快照 */
 function CapsuleModuleTile(props: { mod: CapsuleModuleState; onNavigate: () => void }): React.JSX.Element {
@@ -101,145 +82,108 @@ export function CapsulePanel(props: { onClose: () => void }): React.JSX.Element 
   const { t } = useLocale()
   useSyncExternalStore(tasksStore.subscribe, tasksStore.get, tasksStore.get)
   useSyncExternalStore(capsuleStore.subscribe, capsuleStore.get, capsuleStore.get)
-  const [tab, setTab] = useState<PanelTab>('tasks')
   const agg = taskAggregate()
   const modules = visibleCapsuleModules()
   const pluginTabs = visibleCapsuleTabs()
-  // 插件 tab key = 注册表 key；被移除/停用时回落 tasks（派生兜底，无需 effect）
-  const activePlugin = tab.startsWith('plugin:') ? pluginTabs.find((t) => t.key === tab) : undefined
-  const effectiveTab: 'tasks' | 'modules' | string = activePlugin ? tab : tab === 'modules' ? 'modules' : 'tasks'
-  const now = Date.now()
+  // 头部右侧 mono：工作区 · 分支（面板随开合挂载，每次打开拉取一次）
+  const [headMeta, setHeadMeta] = useState<{ ws: string | null; branch: string | null }>({ ws: null, branch: null })
+
+  useEffect(() => {
+    let alive = true
+    void window.api
+      ?.getWorkspace()
+      ?.then((ws) => {
+        if (alive) setHeadMeta((m) => ({ ...m, ws: ws?.name ?? null }))
+      })
+      .catch(() => {})
+    void window.api
+      ?.gitStatus()
+      ?.then((g) => {
+        if (alive) setHeadMeta((m) => ({ ...m, branch: g.branch }))
+      })
+      .catch(() => {})
+    return () => {
+      alive = false
+    }
+  }, [])
 
   return (
     <Pop
       role="dialog"
-      aria-label={t('capsule.title')}
+      aria-label={t('capsule.ccTitle')}
       data-testid="capsule-panel"
       /* 稳定 data 属性：浮窗层 Esc 让位判定（对齐 data-dialog-overlay 先例） */
       data-capsule-panel="true"
       onClick={(e) => e.stopPropagation()}
     >
       <PopHead>
-        <strong>{t('capsule.title')}</strong>
+        <strong>{t('capsule.ccTitle')}</strong>
         <PopCount>
-          {agg.done}/{agg.total}
+          {headMeta.ws ?? '—'}
+          {headMeta.branch ? ` · ${headMeta.branch}` : ''}
         </PopCount>
       </PopHead>
-      <HeadBar
-        role="progressbar"
-        aria-label={t('capsule.tasks', { done: agg.done, total: agg.total })}
-        aria-valuemin={0}
-        aria-valuemax={agg.total}
-        aria-valuenow={agg.done}
-      >
-        <HeadBarFill $pct={agg.total > 0 ? (agg.done / agg.total) * 100 : 0} $allDone={agg.total > 0 && agg.done === agg.total} />
-      </HeadBar>
 
-      <TabRow role="tablist" aria-label={t('capsule.title')}>
-        <Tab
-          type="button"
-          role="tab"
-          id="capsule-tab-tasks"
-          aria-selected={effectiveTab === 'tasks'}
-          aria-controls="capsule-tabpanel-tasks"
-          $active={effectiveTab === 'tasks'}
-          onClick={() => setTab('tasks')}
-        >
-          {t('capsule.tabTasks')}
-        </Tab>
-        <Tab
-          type="button"
-          role="tab"
-          id="capsule-tab-modules"
-          aria-selected={effectiveTab === 'modules'}
-          aria-controls="capsule-tabpanel-modules"
-          $active={effectiveTab === 'modules'}
-          onClick={() => setTab('modules')}
-        >
-          {t('capsule.tabModules')}
-        </Tab>
-        {pluginTabs.map((pt) => {
-          const Icon = pluginIcon(pt.icon as PluginIconName)
-          return (
-            <Tab
-              key={pt.key}
-              type="button"
-              role="tab"
-              id={`capsule-tab-${pt.key}`}
-              aria-selected={effectiveTab === pt.key}
-              aria-controls={`capsule-tabpanel-${pt.key}`}
-              $active={effectiveTab === pt.key}
-              onClick={() => setTab(pt.key)}
-            >
-              <AppIcon icon={Icon} size="xs" decorative />
-              {pt.title}
-            </Tab>
-          )
-        })}
-      </TabRow>
+      <TilesGrid />
 
-      {effectiveTab === 'tasks' ? (
-        <div id="capsule-tabpanel-tasks" role="tabpanel" aria-labelledby="capsule-tab-tasks">
+      <Sections>
+        <Sect aria-label={t('capsule.sectTasks')}>
+          <SectHead>
+            {t('capsule.sectTasks')}
+            <MonoMeta>
+              {agg.done}/{agg.total}
+            </MonoMeta>
+          </SectHead>
           <TaskCenterBody onClose={props.onClose} />
-        </div>
-      ) : effectiveTab === 'modules' ? (
-        <div id="capsule-tabpanel-modules" role="tabpanel" aria-labelledby="capsule-tab-modules">
-          <EditorSection />
-          <CenterSection aria-label={t('capsule.pluginsSection')}>
-            <SectionLabel>
-              {t('capsule.pluginsSection')}
-              <SectionHint>CAPSULE</SectionHint>
-            </SectionLabel>
-            {modules.length === 0 ? (
-              <PluginNote>{t('capsule.noPlugins')}</PluginNote>
+        </Sect>
+
+        <GitSection />
+
+        <TypesetSection />
+
+        <EditorSection />
+
+        <Sect aria-label={t('capsule.pluginsSection')}>
+          <SectHead>
+            {t('capsule.pluginsSection')}
+            <MonoMeta>CAPSULE</MonoMeta>
+          </SectHead>
+          {modules.length === 0 ? (
+            <PluginNote>{t('capsule.noPlugins')}</PluginNote>
+          ) : (
+            <ModuleGrid>
+              {modules.map((mod) => (
+                <CapsuleModuleTile key={mod.key} mod={mod} onNavigate={props.onClose} />
+              ))}
+            </ModuleGrid>
+          )}
+          <PluginNote>{t('capsule.pluginNote')}</PluginNote>
+        </Sect>
+
+        {/* 插件 capsule tabs → 追加分区（D4 假定 a：声明制贡献契约不变，仅渲染形态） */}
+        {pluginTabs.map((pt) => (
+          <Sect key={pt.key} aria-label={pt.title}>
+            <SectHead>
+              {pt.title}
+              <MonoMeta>{pt.pluginId}</MonoMeta>
+            </SectHead>
+            {pt.sections.length === 0 ? (
+              <PluginNote>{t('capsule.tabEmpty')}</PluginNote>
             ) : (
-              <ModuleGrid>
-                {modules.map((mod) => (
-                  <CapsuleModuleTile key={mod.key} mod={mod} onNavigate={props.onClose} />
-                ))}
-              </ModuleGrid>
-            )}
-            <PluginNote>{t('capsule.pluginNote')}</PluginNote>
-          </CenterSection>
-        </div>
-      ) : (
-        activePlugin && (
-          <div
-            id={`capsule-tabpanel-${activePlugin.key}`}
-            role="tabpanel"
-            aria-labelledby={`capsule-tab-${activePlugin.key}`}
-          >
-            {activePlugin.sections.length === 0 ? (
-              <EmptyState data-testid="capsule-tab-empty">
-                <EmptyTitle>{t('capsule.tabEmpty')}</EmptyTitle>
-              </EmptyState>
-            ) : (
-              activePlugin.sections.map((sec, i) => (
-                <TabSection key={`${activePlugin.key}:${i}`} aria-label={sec.title}>
-                  {sec.title && (
-                    <SectionLabel>
-                      {sec.title}
-                      <SectionHint>{activePlugin.title.toUpperCase()}</SectionHint>
-                    </SectionLabel>
-                  )}
+              pt.sections.map((sec, i) => (
+                <div key={`${pt.key}:${i}`} aria-label={sec.title}>
+                  {sec.title && <SectionLabel>{sec.title}</SectionLabel>}
                   <TabRows>
                     {sec.rows.map((row, j) => (
-                      <PluginTabRowItem key={j} row={row} pluginId={activePlugin.pluginId} onNavigate={props.onClose} />
+                      <PluginTabRowItem key={j} row={row} pluginId={pt.pluginId} onNavigate={props.onClose} />
                     ))}
                   </TabRows>
-                </TabSection>
+                </div>
               ))
             )}
-          </div>
-        )
-      )}
-
-      <PopFoot>
-        {/* 停靠到底部 Dock（task-5 双形态）：chip 兼任开关，取消停靠回退本下拉 */}
-        <button type="button" data-testid="capsule-dock-btn" onClick={dockTaskCenter}>
-          {t('dock.dockBtn')}
-        </button>
-      </PopFoot>
+          </Sect>
+        ))}
+      </Sections>
     </Pop>
   )
 }

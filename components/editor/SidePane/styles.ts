@@ -1,26 +1,79 @@
 import styled from 'styled-components'
 
-/** 编辑器右缘上下文侧栏样式（20261015-feature-workbench-shell task-9） */
+/**
+ * 书耳浮笺样式（20261017-feature-app-layout-workbench D3，原贴边侧栏 20261015）：
+ * absolute slip-card 浮在案面右缘——radius 14 双投影 + 折角，自右缘平移滑出
+ * 220ms ease-out-soft，reduced-motion 瞬切；保挂载（显隐 opacity/visibility）。
+ * 页签内容样式不变。
+ */
 
-export const Pane = styled.aside`
+export const Pane = styled.aside<{ $open: boolean }>`
+  position: absolute;
+  right: 16px;
+  top: 12px;
+  bottom: 16px;
+  width: 248px;
+  z-index: 30;
   display: flex;
   flex-direction: column;
-  width: 248px;
-  flex: none;
   min-height: 0;
-  background: var(--chrome-panel);
-  border-left: 1px solid var(--chrome-border);
+  background: var(--background-color);
+  border: 1px solid color-mix(in oklab, var(--chrome-border) 60%, transparent);
+  border-radius: 14px;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.08),
+    0 12px 32px rgba(0, 0, 0, 0.14);
+  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(14px);
+  transition:
+    opacity 220ms var(--motion-ease-out-soft),
+    transform 220ms var(--motion-ease-out-soft),
+    visibility 0s linear 220ms;
 
-  &[hidden] {
-    display: none;
+  ${({ $open }) =>
+    $open
+      ? `
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    transition:
+      opacity 220ms var(--motion-ease-out-soft),
+      transform 220ms var(--motion-ease-out-soft);
+  `
+      : ''}
+
+  /* 折角：浮笺左上小三角（右缘浮笺的镜像折角） */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 18px;
+    height: 18px;
+    z-index: 2;
+    background: linear-gradient(
+      135deg,
+      color-mix(in oklab, var(--background-color) 96%, #000) 0 50%,
+      color-mix(in oklab, var(--chrome-border) 70%, var(--background-color)) 50% 100%
+    );
+    border-right: 1px solid var(--chrome-border);
+    border-bottom: 1px solid var(--chrome-border);
+    border-radius: 0 0 5px 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
   }
 `
 
 export const Tabs = styled.div`
   display: flex;
   gap: 2px;
-  padding: 8px 8px 0;
+  padding: 10px 10px 0;
   flex: none;
+  border-bottom: 1px solid var(--chrome-border);
 `
 
 export const TabBtn = styled.button<{ $active?: boolean }>`
@@ -33,6 +86,7 @@ export const TabBtn = styled.button<{ $active?: boolean }>`
   border-radius: var(--border-radius-sm) var(--border-radius-sm) 0 0;
   padding: 5px 0 7px;
   border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
   cursor: pointer;
 
   &:hover {
