@@ -108,6 +108,15 @@ const COMMENT_ANY_RE = /^\s{0,3}<!--.*-->/
 /** 注释开标记（可能多行，闭合行以 `-->` 出现为准） */
 const COMMENT_OPEN_RE = /^\s{0,3}<!--/
 
+/** GFM 表格分隔行（`---|:--:|---` 形态）：仅由 `|` `-` `:` 与空白构成且各含其物——
+ * 渲染层据此把宽松识别的 table 块分流为「真表 widget / 行淡底源码态」（20261018） */
+const TABLE_DELIM_RE = /^\|?[\s:|-]+\|?$/
+
+export function isTableDelim(line: string): boolean {
+  const t = line.trim()
+  return t.length > 0 && TABLE_DELIM_RE.test(t) && t.includes('|') && t.includes('-')
+}
+
 /**
  * 行级块结构解析（与 parseOutline 同一围栏约定：围栏内一律视为围栏内容）。
  * `---` 统一按 hr 装饰（不区分 setext 下划线——装饰层语义差异可忽略）；

@@ -263,6 +263,74 @@ export class MathWidget extends WidgetType {
   }
 }
 
+/** GFM 管道行 → 单元格数组（剥首尾围管后按 | 切分；`\|` 转义 v1 不支持） */
+function splitTableRow(line: string): string[] {
+  return line
+    .trim()
+    .replace(/^\|/, '')
+    .replace(/\|$/, '')
+    .split('|')
+    .map((c) => c.trim())
+}
+
+/** 表格渲染态：GFM 管道表 → 真 <table>（素笺表格样式见 renderTheme）。点击回源码态（公式块先例） */
+export class TableWidget extends WidgetType {
+  constructor(
+    readonly source: string,
+    /** 点击时把光标送回的位置（表格块首行行首绝对偏移） */
+    readonly at: number
+  ) {
+    super()
+  }
+
+  eq(other: TableWidget): boolean {
+    return other.source === this.source && other.at === this.at
+  }
+
+  toDOM(): HTMLElement {
+    const wrap = document.createElement('div')
+    wrap.className = 'cm-live-table-wrap'
+    const rows = this.source.split('\n').map(splitTableRow)
+    const table = document.createElement('table')
+    table.className = 'cm-live-table'
+    const thead = document.createElement('thead')
+    const headRow = document.createElement('tr')
+    for (const cell of rows[0] ?? []) {
+      const th = document.createElement('th')
+      th.textContent = cell
+      headRow.appendChild(th)
+    }
+    thead.appendChild(headRow)
+    table.appendChild(thead)
+    const tbody = document.createElement('tbody')
+    for (const row of rows.slice(2)) {
+      if (row.length === 1 && row[0] === '') continue
+      const tr = document.createElement('tr')
+      const width = rows[0]?.length ?? 0
+      for (let c = 0; c < width; c++) {
+        const td = document.createElement('td')
+        td.textContent = row[c] ?? ''
+        tr.appendChild(td)
+      }
+      tbody.appendChild(tr)
+    }
+    table.appendChild(tbody)
+    wrap.appendChild(table)
+    wrap.title = '点击编辑'
+    wrap.addEventListener('click', () => {
+      const view = EditorView.findFromDOM(wrap)
+      if (!view) return
+      view.dispatch({ selection: { anchor: this.at }, scrollIntoView: true })
+      view.focus()
+    })
+    return wrap
+  }
+
+  ignoreEvent(): boolean {
+    return false
+  }
+}
+
 type MermaidLike = {
   initialize(opts: Record<string, unknown>): void
   render(id: string, text: string): Promise<{ svg: string }>

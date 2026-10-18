@@ -38,9 +38,11 @@ import {
   ImageWidget,
   MathWidget,
   MermaidWidget,
+  TableWidget,
   TaskToggleWidget,
   wdFoldEffect
 } from './widgets'
+import { isTableDelim } from '../../lib/editor-cm'
 
 const hidden = Decoration.mark({ class: 'cm-live-hidden' })
 const lineCls = (cls: string): Decoration => Decoration.line({ class: cls })
@@ -285,9 +287,28 @@ function buildDecorations(state: EditorState): DecorationSet {
     }
 
     if (block.kind === 'table') {
+      // GFM 表格双态（20261018 走查补齐）：块含分隔行（---|:--: 形态）且光标未触及
+      // → 整块替换为真 <table>（点击回源码态，公式块先例）；无分隔行（宽松识别的
+      // 伪表）或光标触及 → 维持行淡底源码态（原有契约）
+      const delimLine = docLines[block.fromLine + 1] ?? ''
+      if (isTableDelim(delimLine) && !cursorTouches) {
+        const first = doc.line(block.fromLine + 1)
+        const last = doc.line(block.toLine + 1)
+        const source = spanLines.map((n) => docLines[n]).join('\n')
+        decos.push({
+          from: first.from,
+          to: last.to,
+          value: Decoration.replace({
+            widget: new TableWidget(source, first.from),
+            block: true
+          })
+        })
+        spanLines.forEach((n) => replacedLines.add(n))
+        continue
+      }
       for (const n of spanLines) {
         const line = doc.line(n + 1)
-        decos.push({ from: line.from, to: line.from, value: lineCls('cm-live-table') })
+        decos.push({ from: line.from, to: line.from, value: lineCls('cm-live-tablerow') })
       }
       continue
     }

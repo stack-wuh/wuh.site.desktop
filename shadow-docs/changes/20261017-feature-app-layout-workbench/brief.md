@@ -72,7 +72,7 @@
   "workflow": {
     "operation": null,
     "checkpoint": "pr:159",
-    "planHash": "e029fd314d677b1454a9d997cfd4733b8e6544b3dad9b06dc6858915f8624162",
+    "planHash": "4d2ecf556b11cf0b419d88f2724bbd4f4677cf84af99fdad59c65e310a25bc69",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -87,9 +87,10 @@
     "worktree": "/Users/wuhong/shadow-desktop/worktrees/20261017-feature-app-layout-workbench",
     "commit": {
       "files": [
+        "components/plugins/PluginMainView.tsx",
         "shadow-docs/changes/20261017-feature-app-layout-workbench/brief.md"
       ],
-      "message": "docs(shadow): brief 立项——整窗「书脊案面」落地（书脊化 Rail/案面底/控制中心/浮笺化目次书耳/Dock 退役），issue 已建，worktree 已派生"
+      "message": "fix(shell): 走查追加修复——插件 main 视图补标准页脚手架（PageTopbar 返回+视图标题）：书耳/图床等入口跳进插件页后此前无任何返回编辑页的路径（/editor 为菜单外路由）；返回 = router.back()，冷启无历史回落首页"
     },
     "release": {
       "files": [
@@ -111,6 +112,7 @@
         "components/editor/Spine/index.tsx",
         "components/icons/index.tsx",
         "components/plugins/PluginFrameHost/frameServices.ts",
+        "components/plugins/PluginMainView.tsx",
         "components/rail/index.tsx",
         "components/rail/styles.ts",
         "components/theme/tokens.ts",
@@ -142,7 +144,7 @@
         "tests/workbench-layout.test.tsx",
         "tests/workbench-rail.test.tsx"
       ],
-      "message": "feat(shell): 整窗「书脊案面」落地——书脊化 Rail（spine-ink 恒深墨+朱砂装订线）、案面底+浮笺画芯载体（paperSurface）、胶囊升格控制中心（磁贴 4×2+任务/GIT/排版分区+插件 tab 追加分区）、目次/书耳浮笺化（滑出 220ms+默认收起）、Dock 退役（views.area 去 dock 四方同步+git-history manifest 迁移）；走查修复：开文档光标锚点 cmOpenAnchor（frontmatter 常驻显形根因）、D6 顶栏收画芯列、D7 焦点环重落、书脊暗色倒置否决改恒深墨；Shell overflow:clip 禁壳滚；全量 86 套件+三 tsconfig 绿（Closes #158）",
+      "message": "fix(shell): 走查追加修复——插件 main 视图补标准页脚手架（PageTopbar 返回+视图标题）：书耳/图床等入口跳进插件页后此前无任何返回编辑页的路径（/editor 为菜单外路由）；返回 = router.back()，冷启无历史回落首页",
       "title": "整窗「书脊案面」落地——壳层工作台 2.0",
       "body": "Closes #158\n\n完整 brief：shadow-docs/changes/20261017-feature-app-layout-workbench/brief.md"
     }
