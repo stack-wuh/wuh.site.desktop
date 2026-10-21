@@ -4,7 +4,7 @@
   "name": "20261020-feature-publish-interaction",
   "type": "feature",
   "scope": "publish",
-  "status": "reviewed",
+  "status": "published",
   "baseBranch": "main",
   "branch": "feature/20261020-feature-publish-interaction",
   "files": [
@@ -37,8 +37,8 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 162,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/162",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 163,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/163"
   },
   "review": {
     "conclusion": "passed",
@@ -47,7 +47,7 @@
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:162",
+    "checkpoint": "pr:163",
     "planHash": "9787eca7e0510d6170dfaf3a465ef00ec02954917d396e574a9749ddc982b913",
     "updatedAt": null,
     "lastError": null,
