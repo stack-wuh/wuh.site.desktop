@@ -251,3 +251,19 @@ describe('首页退出编辑（INV-3 编辑面唯一挂载 /editor）', () => {
     expect(screen.queryByTestId('editor-mount')).toBeNull()
   })
 })
+
+describe('已发布骑缝（20261021-style-published-seal）', () => {
+  it('frontmatter issue 存在：纸面载体标记 data-published（页缘叠口染朱的宿主锚点）', async () => {
+    workspaceStore.openDoc('posts/pub.md', '---\ntitle: 已刊\nissue: 7\n---\n\n正文')
+    renderPage()
+    await screen.findByText('pub.md')
+    expect(document.querySelector('[data-published]')?.getAttribute('data-published')).toBe('true')
+  })
+
+  it('无 issue / 非法号：不标记（叠口保持中性、零字节改写）', async () => {
+    workspaceStore.openDoc('posts/draft.md', '---\ntitle: 未刊\nissue: abc\n---\n\n正文')
+    renderPage()
+    await screen.findByText('draft.md')
+    expect(document.querySelector('[data-published]')?.getAttribute('data-published')).toBe('false')
+  })
+})

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { LocaleProvider } from '../lib/i18n/context'
 import { workspaceStore } from '../lib/store'
-import { resetEditorLiveStateForTests } from '../lib/editor-state'
+import { resetEditorLiveStateForTests, publishEditorLiveState } from '../lib/editor-state'
 import { subscribeEditorCommands, type EditorCommand } from '../lib/editor-commands'
 import {
   registerManifestPanelTabs,
@@ -159,5 +159,25 @@ describe('编辑器上下文侧栏（右缘停靠）', () => {
     fireEvent.click(toggle)
     expect(toggle.getAttribute('aria-pressed')).toBe('false')
     expect(screen.queryByRole('tab', { name: '大纲' })).toBeNull()
+  })
+})
+
+describe('书耳大纲 = 文档题阶（20261021-style-published-seal）', () => {
+  it('无 H 标签、按级 data-level；当前章随 activeHeading 高亮（aria-current）', () => {
+    workspaceStore.openDoc('posts/a.md', DOC)
+    renderPage()
+    fireEvent.click(screen.getByRole('button', { name: '书耳' }))
+    const pane = document.querySelector('[data-editor-sidepane]') as HTMLElement
+    const items = Array.from(pane.querySelectorAll<HTMLElement>('button[data-level]'))
+    expect(items.map((el) => el.getAttribute('data-level'))).toEqual(['1', '2'])
+    // 与文档题阶统一：书耳不再出现 mono H 标签
+    expect(pane.textContent).not.toContain('H1')
+    expect(pane.textContent).not.toContain('H2')
+    // 光标到第二个标题（行 9）→ 第二条标记为当前章
+    act(() => {
+      publishEditorLiveState({ content: DOC, cursorLine: 9 })
+    })
+    expect(items[1].getAttribute('aria-current')).toBe('true')
+    expect(items[0].getAttribute('aria-current')).toBeNull()
   })
 })

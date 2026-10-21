@@ -14,7 +14,7 @@
  * hover/focus-within 1，focusMode 0.05 让位）；常驻工具条退役（格式化走笔帘/呼墨/胶囊）。
  * 冷启动（content==null）自动 startDraft 进入新草稿会话（先写后存）。
  */
-import { Fragment, useEffect, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import styled from 'styled-components'
 import { Button } from '../../../components/ui/Button'
@@ -24,6 +24,7 @@ import { SidePane } from '../../../components/editor/SidePane'
 import { MarkdownEditor } from '../../../components/editor/MarkdownEditor'
 import { Spine } from '../../../components/editor/Spine'
 import { paperSurface } from '../../../components/ui/Sheet'
+import { parseFrontmatter } from '@shared/frontmatter'
 import { useWorkspaceStore, workspaceStore } from '../../../lib/store'
 import { publishEditorCommand } from '../../../lib/editor-commands'
 import { toast } from '../../../lib/feedback'
@@ -172,6 +173,41 @@ const Column = styled.div`
      不被右缘书耳浮笺盖住（20261017 走查修复：全宽顶栏曾被 z30 浮笺压住按钮） */
   ${paperSurface}
   padding: clamp(72px, 10vh, 120px) 16px 24px;
+
+  /* 已发布骑缝（20261021-style-published-seal，视觉稿 design-mockups/20261021-published-trace）：
+     纸页叠口本身染朱——页缘被「盖过」；态驱动走 data 属性（styled 动态类有翻转失灵先例） */
+  &[data-published='true']::before {
+    top: 16px;
+    bottom: 16px;
+    width: 7px;
+    background: color-mix(in oklab, var(--primary-500) 34%, var(--background-color));
+    border-color: color-mix(in oklab, var(--primary-500) 58%, transparent);
+    box-shadow:
+      5px 0 0 -3px color-mix(in oklab, var(--primary-500) 28%, var(--background-color)),
+      5px 0 0 -2px color-mix(in oklab, var(--primary-500) 60%, transparent);
+  }
+
+  /* 发布瞬间：朱色从叠口中段向两端晕开一次（仅同文档首次发布） */
+  &[data-stamped='true']::before {
+    animation: stack-ink 220ms var(--motion-ease-out-soft);
+  }
+
+  @keyframes stack-ink {
+    from {
+      clip-path: inset(50% 0 50% 0);
+      opacity: 0.4;
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &::before {
+      animation: none;
+    }
+  }
 `
 
 const EditorBody = styled.div`
@@ -234,6 +270,24 @@ export function EditorPage(): React.JSX.Element {
   const { t } = useLocale()
   const router = useRouter()
   const live = useEditorLiveState()
+  // 刊印（20261021-style-published-seal）：frontmatter issue 存在即显形（纯显示、零字节改写）
+  const publishedIssue = useMemo(() => {
+    const raw = parseFrontmatter(doc.content ?? '').data.issue
+    const n = Number(String(raw ?? '').trim())
+    return Number.isInteger(n) && n > 0 ? n : null
+  }, [doc.content])
+  // 落色动效只在「同一文档 issue 由无到有」的瞬间演一次；切换文档/加载已发布文档不重演
+  const prevPublishRef = useRef<{ path: string | null; issue: number | null }>({ path: null, issue: null })
+  const [stackStamp, setStackStamp] = useState(false)
+  useEffect(() => {
+    const prev = prevPublishRef.current
+    const becamePublished = prev.path === doc.activePath && prev.issue == null && publishedIssue != null
+    prevPublishRef.current = { path: doc.activePath, issue: publishedIssue }
+    if (!becamePublished) return
+    setStackStamp(true)
+    const timer = setTimeout(() => setStackStamp(false), 260)
+    return () => clearTimeout(timer)
+  }, [doc.activePath, publishedIssue])
   const [workspaceName, setWorkspaceName] = useState<string | null>(null)
   const [renaming, setRenaming] = useState(false)
   const [renameValue, setRenameValue] = useState('')
@@ -324,7 +378,10 @@ export function EditorPage(): React.JSX.Element {
   return (
     <PageShell aria-label={t('editor.pageAria')}>
       <BodyRow>
-        <Column>
+        <Column
+          data-published={publishedIssue != null ? 'true' : 'false'}
+          data-stamped={stackStamp ? 'true' : 'false'}
+        >
           <TopBar $dim={live.focusMode}>
         <Button size="sm" variant="ghost" aria-label={t('editor.back')} title={t('editor.back')} onClick={back}>
           <AppIcon icon={IconChevronLeft} size="sm" decorative />

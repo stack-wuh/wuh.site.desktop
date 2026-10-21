@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>已发布痕迹 · 多构原型（20261021）</title>
+<style>
+/* ============================================================
+   真 token（抄自 components/theme/tokens.ts，wine 家族）：
+   wineLight  primary-500 #C94A44 · normal-100 #F8F3EE · normal-700 #8A6E5C · normal-900 #2A1E16 · background-900 #F5F0EC
+   wineDark   primary-500 #E36A64 · normal-900 #F8F8F8 · background-900 #2F2A2A
+   paperSurface / 纸页叠口 抄自 components/ui/Sheet.tsx:10-35
+   衬线栈 --font-serif 抄自 tokens（系统衬线栈）
+   ============================================================ */
+:root {
+  --primary-500: #C94A44;
+  --normal-100: #F8F3EE;
+  --normal-700: #8A6E5C;
+  --normal-900: #2A1E16;
+  --background-color: #F5F0EC;
+  --chrome-border: color-mix(in oklab, var(--background-color) 80%, var(--text-primary) 20%);
+  --text-primary: var(--normal-900);
+  --text-secondary: var(--normal-700);
+  --font-serif: 'Noto Serif SC', 'Songti SC', 'STSong', 'SimSun', Georgia, serif;
+  --font-sans: -apple-system, 'PingFang SC', 'Helvetica Neue', sans-serif;
+  --font-mono: 'SF Mono', ui-monospace, Menlo, monospace;
+  --motion-dur-quick: 150ms;
+  --motion-dur-base: 220ms;
+  --motion-ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+html[data-scheme="dark"] {
+  --primary-500: #E36A64;
+  --normal-100: #3a3a3a;
+  --normal-700: #dcdcdc;
+  --normal-900: #f8f8f8;
+  --background-color: #2F2A2A;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  /* 案面：五层渐变的简化——窗光 + 暖晕 + 纸纹 */
+  background:
+    radial-gradient(120% 60% at 18% -10%, color-mix(in oklab, var(--background-color) 88%, #fff) 0%, transparent 55%),
+    radial-gradient(80% 50% at 85% 8%, color-mix(in oklab, var(--primary-500) 4%, var(--background-color)) 0%, transparent 60%),
+    var(--background-color);
+  min-height: 100vh;
+}
+
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; gap: 4px; align-items: center;
+  padding: 10px 16px;
+  background: color-mix(in oklab, var(--background-color) 86%, transparent);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid color-mix(in oklab, var(--chrome-border) 50%, transparent);
+  font-size: 12px;
+}
+nav a {
+  color: var(--text-secondary); text-decoration: none;
+  padding: 4px 10px; border-radius: 6px;
+}
+nav a:hover { background: color-mix(in oklab, var(--background-color) 90%, var(--text-primary) 10%); }
+nav a.on { color: var(--primary-500); background: color-mix(in oklab, var(--primary-500) 8%, transparent); }
+nav .spacer { flex: 1; }
+nav button {
+  font: inherit; color: var(--text-secondary); background: transparent;
+  border: 1px solid color-mix(in oklab, var(--chrome-border) 70%, transparent);
+  border-radius: 999px; padding: 4px 12px; cursor: pointer;
+}
+
+main { padding: 76px 32px 48px; }
+.scene { display: none; }
+.scene.on { display: block; }
+
+.row { display: flex; gap: 64px; justify-content: center; align-items: flex-start; flex-wrap: wrap; }
+.cell { display: flex; flex-direction: column; gap: 14px; align-items: center; }
+.cell > .tag {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em;
+  color: var(--text-secondary);
+}
+.note { text-align: center; margin-top: 40px; font-size: 12px; color: var(--text-secondary); }
+.title { text-align: center; font-family: var(--font-serif); font-size: 17px; margin: 0 0 10px; }
+.sub { text-align: center; font-size: 12px; color: var(--text-secondary); margin: 0 0 36px; }
+
+/* ---------- 素笺纸面（paperSurface 配方 + 纸页叠口） ---------- */
+.paper {
+  position: relative;
+  width: 400px;
+  min-height: 520px;
+  padding: 64px 48px;
+  background: var(--background-color);
+  border: 1px solid color-mix(in oklab, var(--chrome-border) 60%, transparent);
+  border-radius: 6px;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.07),
+    0 24px 60px rgba(0, 0, 0, 0.13),
+    inset 0 1px 0 color-mix(in oklab, var(--normal-100) 60%, transparent);
+}
+/* 纸页叠口：右缘两层纸口（Sheet.tsx 同款） */
+.paper::before {
+  content: '';
+  position: absolute;
+  top: 12px; bottom: 12px; right: -7px;
+  width: 6px;
+  background: color-mix(in oklab, var(--background-color) 92%, var(--chrome-border));
+  border: 1px solid color-mix(in oklab, var(--chrome-border) 75%, transparent);
+  border-left: none;
+  border-radius: 0 4px 4px 0;
+  box-shadow:
+    5px 0 0 -3px color-mix(in oklab, var(--background-color) 92%, var(--chrome-border)),
+    5px 0 0 -2px color-mix(in oklab, var(--chrome-border) 55%, transparent);
+}
+.paper h1 {
+  font-family: var(--font-serif);
+  font-size: 30px; font-weight: 600; letter-spacing: 0.02em;
+  margin: 0 0 26px;
+  padding-bottom: 14px;
+  /* 渐隐墨线（h1 题阶） */
+  background-image: linear-gradient(to right, color-mix(in oklab, var(--text-primary) 18%, transparent), transparent 60%);
+  background-repeat: no-repeat;
+  background-position: left bottom;
+  background-size: 100% 1px;
+}
+.paper h1.h2like {
+  font-size: 22px; margin-top: 34px;
+  background-image: linear-gradient(to right, color-mix(in oklab, var(--primary-500) 22%, transparent), transparent 70%);
+}
+.paper p {
+  font-size: 15px; line-height: 1.9; text-align: justify;
+  color: var(--text-primary);
+  margin: 0 0 18px;
+}
+
+/* ---------- 构 1 · 折角（dog-ear）：纸角向下折，折缝一道朱 ---------- */
+.paper.p1 { clip-path: polygon(0 0, calc(100% - 48px) 0, 100% 48px, 100% 100%, 0 100%); }
+.paper.p1 .fold {
+  position: absolute; top: 0; right: 0; width: 48px; height: 48px;
+  background: linear-gradient(225deg,
+    var(--paper-underside, color-mix(in oklab, var(--background-color) 86%, var(--primary-500))) 0 50%,
+    transparent 50%);
+  filter: drop-shadow(-2px 2px 3px rgba(0,0,0,0.16));
+}
+.paper.p1 .fold::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(225deg, transparent 0 49%, color-mix(in oklab, var(--primary-500) 55%, transparent) 49% 51%, transparent 51%);
+}
+.paper.p1 .fold::before {
+  content: '';
+  position: absolute; top: 0; right: 0; width: 48px; height: 48px;
+  background: linear-gradient(225deg, transparent 0 50%, color-mix(in oklab, var(--background-color) 70%, #000) 50% 53%, transparent 53%);
+  opacity: 0.35;
+}
+.paper.plain-corner { clip-path: polygon(0 0, calc(100% - 48px) 0, 100% 48px, 100% 100%, 0 100%); }
+
+/* ---------- 构 2 · 书口：右缘一道朱色书口条（挂在纸页叠口外缘） ---------- */
+.paper.p2::after {
+  content: '';
+  position: absolute; top: 12px; bottom: 12px; right: -10px;
+  width: 3px; border-radius: 2px;
+  background: linear-gradient(to bottom,
+    transparent 0,
+    color-mix(in oklab, var(--primary-500) 78%, transparent) 14%,
+    color-mix(in oklab, var(--primary-500) 78%, transparent) 86%,
+    transparent 100%);
+}
+
+/* ---------- 构 3 · 纸色：整纸微暖 + 顶部一线暖晕（无形） ---------- */
+.paper.p3 {
+  background:
+    radial-gradient(140% 22% at 50% 0%, color-mix(in oklab, var(--primary-500) 7%, transparent) 0%, transparent 70%),
+    color-mix(in oklab, var(--background-color) 96%, var(--primary-500));
+}
+
+/* ---------- 构 4 · 骑缝叠口：纸页叠口本身染朱（页缘被「用过」） ---------- */
+.paper.p4::before {
+  top: 16px; bottom: 16px;
+  width: 7px;
+  background: color-mix(in oklab, var(--primary-500) 34%, var(--background-color));
+  border-color: color-mix(in oklab, var(--primary-500) 58%, transparent);
+  box-shadow:
+    5px 0 0 -3px color-mix(in oklab, var(--primary-500) 28%, var(--background-color)),
+    5px 0 0 -2px color-mix(in oklab, var(--primary-500) 60%, transparent);
+}
+/* 发布瞬间：朱色从叠口中段向两端晕开一次（演示按钮触发） */
+.paper.p4.stamp::before {
+  animation: stack-ink 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes stack-ink {
+  from { clip-path: inset(50% 0 50% 0); opacity: 0.4; }
+  to { clip-path: inset(0 0 0 0); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .paper.p4.stamp::before { animation: none; }
+}
+
+/* ---------- 磁贴（现行设计参照：未发布中性 / 已发布朱底激活） ---------- */
+.tile {
+  position: relative;
+  display: flex; align-items: center; gap: 10px;
+  width: 430px; padding: 10px 12px;
+  background: var(--chrome-panel, color-mix(in oklab, var(--background-color) 94%, var(--text-primary) 6%));
+  border: 1px solid var(--chrome-border);
+  border-radius: 10px;
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+.tile .icon {
+  display: grid; place-items: center;
+  width: 28px; height: 28px; border-radius: 7px;
+  border: 1.5px solid color-mix(in oklab, var(--text-secondary) 55%, transparent);
+  font-size: 13px; color: var(--text-secondary);
+}
+.tile .meta { margin-left: auto; font-family: var(--font-mono); font-size: 10.5px; color: var(--text-secondary); }
+.tile .tag { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; color: var(--text-secondary); opacity: 0.7; }
+.tile.on {
+  border-width: 1.5px;
+  border-color: color-mix(in oklab, var(--primary-500) 55%, transparent);
+  background: color-mix(in oklab, var(--primary-500) 7%, transparent);
+  color: var(--primary-500);
+}
+.tile.on .icon { background: var(--primary-500); border-color: var(--primary-500); color: #FFFDFB; }
+.tile.on::after {
+  content: ''; position: absolute; top: 5px; right: 5px;
+  width: 5px; height: 5px; border-radius: 50%; background: var(--primary-500);
+}
+.tile.on .meta { color: var(--primary-500); }
+</style>
+</head>
+<body>
+<nav>
+  <a href="?scene=p1" data-s="p1">构 1 · 折角</a>
+  <a href="?scene=p2" data-s="p2">构 2 · 书口</a>
+  <a href="?scene=p3" data-s="p3">构 3 · 纸色</a>
+  <a href="?scene=p4" data-s="p4">构 4 · 骑缝</a>
+  <a href="?scene=tile" data-s="tile">磁贴（参照）</a>
+  <span class="spacer"></span>
+  <button id="schemeBtn">切换暗色</button>
+</nav>
+
+<main>
+  <!-- 构 1 · 折角 -->
+  <section class="scene" id="p1">
+    <h2 class="title">构 1 · 折角</h2>
+    <p class="sub">已发布 = 纸角被折过：折缝一道朱色，右上角成为可辨认的书页痕迹</p>
+    <div class="row">
+      <div class="cell"><span class="tag">未发布</span>
+        <div class="paper plain-corner"></div>
+      </div>
+      <div class="cell"><span class="tag">已发布</span>
+        <div class="paper p1"><div class="fold"></div></div>
+      </div>
+    </div>
+    <p class="note">位置固定在纸右上角；折角尺寸 48px；折缝朱线 55% 透明度；无文字、无交互。</p>
+  </section>
+
+  <!-- 构 2 · 书口 -->
+  <section class="scene" id="p2">
+    <h2 class="title">构 2 · 书口</h2>
+    <p class="sub">已发布 = 纸的右缘装订成书口：一道朱色书口条，与书脊的朱砂装订线同语言</p>
+    <div class="row">
+      <div class="cell"><span class="tag">未发布</span>
+        <div class="paper"></div>
+      </div>
+      <div class="cell"><span class="tag">已发布</span>
+        <div class="paper p2"></div>
+      </div>
+    </div>
+    <p class="note">书口条 3px × 全高（上下 12px 收口渐隐），挂在纸页叠口外缘；暗色下同样生效。</p>
+  </section>
+
+  <!-- 构 3 · 纸色 -->
+  <section class="scene" id="p3">
+    <h2 class="title">构 3 · 纸色</h2>
+    <p class="sub">已发布 = 这张纸被使用过：整纸微暖（+4% 朱）+ 顶部一线暖晕，没有形状只有温度</p>
+    <div class="row">
+      <div class="cell"><span class="tag">未发布</span>
+        <div class="paper"></div>
+      </div>
+      <div class="cell"><span class="tag">已发布</span>
+        <div class="paper p3"></div>
+      </div>
+    </div>
+    <p class="note">最空灵的一构；风险是“不够显眼”——适合与题名区或磁贴配合使用。</p>
+  </section>
+
+  <!-- 构 4 · 骑缝叠口 -->
+  <section class="scene" id="p4">
+    <h2 class="title">构 4 · 骑缝</h2>
+    <p class="sub">已发布 = 页缘被染：纸页叠口本身变成朱色，纸的侧脸被“盖过”</p>
+    <div class="row">
+      <div class="cell"><span class="tag">未发布</span>
+        <div class="paper"></div>
+      </div>
+      <div class="cell"><span class="tag">已发布</span>
+        <div class="paper p4" id="p4paper"></div>
+      </div>
+    </div>
+    <p class="note">叠口 34% 朱 + 双层朱缘（58% / 60%），上下 16px 收口；<button id="replay" style="font:inherit;font-size:12px;border:1px solid var(--chrome-border);background:transparent;border-radius:999px;padding:2px 12px;cursor:pointer;color:var(--text-secondary)">再演一次落色</button></p>
+  </section>
+
+  <!-- 磁贴参照 -->
+  <section class="scene" id="tile">
+    <h2 class="title">磁贴（参照 · 现行设计）</h2>
+    <p class="sub">已发布态 = 朱底方印激活（与开关磁贴同语言）；此场景只做对比参照</p>
+    <div class="row">
+      <div class="cell"><span class="tag">未发布</span>
+        <div class="tile"><span class="icon">↗</span>发布<span class="meta">未发布 · 点击发布</span><span class="tag">GITHUB</span></div>
+      </div>
+      <div class="cell"><span class="tag">已发布</span>
+        <div class="tile on"><span class="icon">↗</span>发布<span class="meta">已发布 #174 · 点击更新</span><span class="tag">GITHUB</span></div>
+      </div>
+    </div>
+    <p class="note">磁贴不动；纸面痕迹选定后与其呼应。</p>
+  </section>
+</main>
+
+<script>
+  const scenes = ['p1','p2','p3','p4','tile'];
+  const params = new URLSearchParams(location.search);
+  const scene = scenes.includes(params.get('scene')) ? params.get('scene') : 'p1';
+  document.getElementById(scene).classList.add('on');
+  document.querySelectorAll('nav a').forEach(a => {
+    if (a.dataset.s === scene) a.classList.add('on');
+  });
+  const replay = document.getElementById('replay');
+  if (replay) {
+    replay.addEventListener('click', () => {
+      const el = document.getElementById('p4paper');
+      el.classList.remove('stamp');
+      void el.offsetWidth;
+      el.classList.add('stamp');
+    });
+  }
+  const btn = document.getElementById('schemeBtn');
+  btn.addEventListener('click', () => {
+    const dark = document.documentElement.getAttribute('data-scheme') === 'dark';
+    document.documentElement.setAttribute('data-scheme', dark ? 'light' : 'dark');
+    btn.textContent = dark ? '切换暗色' : '切换亮色';
+  });
+</script>
+</body>
+</html>

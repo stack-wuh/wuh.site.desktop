@@ -312,10 +312,12 @@ export function PublishTile(): React.JSX.Element {
     <Tiles role="group" aria-label={t('capsule.publishAria')}>
       <Tile
         $wide
+        $on={state.issueNumber != null}
         type="button"
         data-testid="publish-tile"
         disabled={!pre.ok || busy}
         aria-busy={busy || undefined}
+        aria-pressed={state.issueNumber != null}
         title={status}
         onClick={() => publishEditorCommand({ kind: 'publishDoc' })}
       >
