@@ -4,7 +4,7 @@
   "name": "20261021-fix-workbench-entry-return",
   "type": "fix",
   "scope": "app/(shell),lib/store,lib/routes,lib/i18n,tests",
-  "status": "reviewed",
+  "status": "published",
   "baseBranch": "main",
   "branch": "fix/20261021-fix-workbench-entry-return",
   "files": [
@@ -19,8 +19,8 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 165,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/165",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 169,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/169"
   },
   "review": {
     "conclusion": "passed",
@@ -29,7 +29,7 @@
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:165",
+    "checkpoint": "pr:169",
     "planHash": "c26d09bde1b152270944df54eb8b961a29e5cef85d537e5934c248b7f36da664",
     "updatedAt": null,
     "lastError": null,
