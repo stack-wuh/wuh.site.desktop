@@ -1,0 +1,795 @@
+<!doctype html>
+<html lang="zh-CN" data-theme-family="wine" data-color-scheme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>整窗书房案面 — 构图提案</title>
+<style>
+/* ============================================================
+   真 token 层 —— 值抄自 apps/desktop/components/theme/tokens.ts
+   （与编辑器视觉稿 20261014-editor-paper 同源；出处见该稿头注）
+   ============================================================ */
+:root{
+  --_wl-primary-100:#FCEDEC;--_wl-primary-300:#F2BEBB;--_wl-primary-400:#E2928D;--_wl-primary-500:#C94A44;--_wl-primary-600:#A13531;--_wl-primary-700:#8A2A26;
+  --_wl-normal-100:#FFFDFB;--_wl-normal-300:#EBE2D8;--_wl-normal-500:#B9A998;--_wl-normal-700:#8A6E5C;--_wl-normal-800:#5A4438;--_wl-normal-900:#2A1E16;
+  --_wl-background-100:#FDF3EC;--_wl-background-200:#FAE5D8;--_wl-background-500:#EBB89E;--_wl-background-900:#F5F0EC;
+  --_wd-primary-300:#F6A09B;--_wd-primary-400:#F07A73;--_wd-primary-500:#E36A64;--_wd-primary-600:#F07A73;
+  --_wd-normal-300:#5b5b5b;--_wd-normal-500:#adadad;--_wd-normal-600:#dcdcdc;--_wd-normal-700:#e8e8e8;--_wd-normal-800:#f3f3f3;--_wd-normal-900:#f8f8f8;
+  --_wd-background-800:#231a1a;--_wd-background-900:#2f2a2a;
+  --_pl-primary-300:#EBC9AE;--_pl-primary-400:#DBA87E;--_pl-primary-500:#C89060;--_pl-primary-600:#A87348;--_pl-primary-700:#8C5A35;
+  --_pl-normal-300:#E8E2D6;--_pl-normal-500:#B8AC98;--_pl-normal-700:#6B5E4E;--_pl-normal-900:#2A2218;
+  --_pl-background-100:#F8F3EC;--_pl-background-200:#F0E8DC;--_pl-background-900:#F2EDE4;
+  --_pd-primary-300:#e8ccb4;--_pd-primary-400:#deb896;--_pd-primary-500:#D4A478;--_pd-primary-600:#deb896;
+  --_pd-normal-300:rgba(255,255,255,0.10);--_pd-normal-500:rgba(255,255,255,0.20);--_pd-normal-600:rgba(255,255,255,0.30);--_pd-normal-700:rgba(255,255,255,0.42);--_pd-normal-800:rgba(255,255,255,0.58);--_pd-normal-900:rgba(255,255,255,0.72);
+  --_pd-background-800:#5c4a3a;--_pd-background-900:#0b0908;
+}
+:root{
+  --primary-300:var(--_wl-primary-300);--primary-400:var(--_wl-primary-400);--primary-500:var(--_wl-primary-500);--primary-600:var(--_wl-primary-600);
+  --normal-100:var(--_wl-normal-100);--normal-300:var(--_wl-normal-300);--normal-500:var(--_wl-normal-500);--normal-700:var(--_wl-normal-700);--normal-900:var(--_wl-normal-900);
+  --background-100:var(--_wl-background-100);--background-200:var(--_wl-background-200);--background-500:var(--_wl-background-500);--background-900:var(--_wl-background-900);
+}
+[data-theme-family="plain"]{
+  --primary-300:var(--_pl-primary-300);--primary-400:var(--_pl-primary-400);--primary-500:var(--_pl-primary-500);--primary-600:var(--_pl-primary-600);
+  --normal-100:var(--_pl-normal-100);--normal-300:var(--_pl-normal-300);--normal-500:var(--_pl-normal-500);--normal-700:var(--_pl-normal-700);--normal-900:var(--_pl-normal-900);
+  --background-100:var(--_pl-background-100);--background-200:var(--_pl-background-200);--background-900:var(--_pl-background-900);
+}
+[data-color-scheme="dark"]{
+  --primary-300:var(--_wd-primary-300);--primary-400:var(--_wd-primary-400);--primary-500:var(--_wd-primary-500);--primary-600:var(--_wd-primary-600);
+  --normal-100:var(--_wd-normal-300);--normal-300:var(--_wd-normal-500);--normal-500:var(--_wd-normal-500);--normal-700:var(--_wd-normal-700);--normal-900:var(--_wd-normal-900);
+  --background-100:var(--_wd-background-800);--background-200:var(--_wd-background-800);--background-500:var(--_wd-background-800);--background-900:var(--_wd-background-900);
+}
+[data-theme-family="plain"][data-color-scheme="dark"]{
+  --primary-300:var(--_pd-primary-300);--primary-400:var(--_pd-primary-400);--primary-500:var(--_pd-primary-500);--primary-600:var(--_pd-primary-600);
+  --normal-100:var(--_pd-normal-300);--normal-300:var(--_pd-normal-500);--normal-500:var(--_pd-normal-500);--normal-700:var(--_pd-normal-700);--normal-900:var(--_pd-normal-900);
+  --background-100:var(--_pd-background-800);--background-200:var(--_pd-background-800);--background-900:var(--_pd-background-900);
+}
+:root{
+  --motion-ease-out-soft:cubic-bezier(0.22,1,0.36,1);
+  --motion-dur-quick:150ms;--motion-dur-write:400ms;
+  --font-sans:'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
+  --font-mono:'JetBrains Mono','Noto Sans SC',ui-monospace,Menlo,monospace;
+  --font-serif:'Noto Serif SC','Songti SC','STSong','SimSun',Georgia,serif;
+}
+:root{
+  --primary-color:var(--primary-500);
+  --text-primary:var(--normal-900);--text-secondary:var(--normal-700);--text-muted:var(--normal-500);
+  --background-color:var(--background-900);
+  --elevation-soft:0 4px 14px rgba(0,0,0,.06);--elevation-card:0 20px 40px rgba(0,0,0,0.08);
+  --chrome-panel:color-mix(in oklab,var(--background-color) 94%,var(--text-primary) 6%);
+  --chrome-raised:color-mix(in oklab,var(--background-color) 88%,var(--text-primary) 12%);
+  --chrome-border:color-mix(in oklab,var(--background-color) 80%,var(--text-primary) 20%);
+  --chrome-hover:color-mix(in oklab,var(--background-color) 90%,var(--text-primary) 10%);
+}
+[data-color-scheme="dark"]{
+  --text-primary:var(--normal-500);--text-secondary:var(--normal-600);--text-muted:var(--normal-700);
+  --elevation-soft:0 4px 14px rgba(0,0,0,.25);--elevation-card:0 18px 36px rgba(0,0,0,0.45);
+  --chrome-panel:color-mix(in oklab,var(--background-color) 88%,#000 12%);
+  --chrome-raised:color-mix(in oklab,var(--background-color) 80%,#000 20%);
+  --chrome-border:color-mix(in oklab,var(--background-color) 70%,#fff 14%);
+  --chrome-hover:color-mix(in oklab,var(--background-color) 84%,#fff 8%);
+}
+[data-theme-family="plain"]{--primary-color:var(--primary-600);--text-primary:var(--normal-900);--text-secondary:var(--normal-700);--text-muted:var(--normal-500)}
+
+/* ============ 底座 ============ */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:var(--font-sans);color:var(--text-primary);background:var(--background-color);font-size:14px;line-height:1.8;-webkit-font-smoothing:antialiased;overflow:hidden}
+.scene{display:none;height:100vh}
+.scene.on{display:block}
+svg{display:block}
+
+/* ============ 签名元素：笺缘（所有面板与画芯的交界 = 同材质折边） ============ */
+/* 折痕：渐隐发丝线（两端淡出）；外缘折角：一枚小三角 */
+.slip-edge-r{position:relative;border-right:none}
+.slip-edge-r::before{content:"";position:absolute;top:0;bottom:0;right:0;width:1px;
+  background:linear-gradient(to bottom,transparent,var(--chrome-border) 10%,var(--chrome-border) 86%,transparent)}
+.slip-edge-r::after{content:"";position:absolute;top:0;right:0;width:14px;height:14px;z-index:1;
+  background:linear-gradient(225deg,var(--background-color) 0 50%,color-mix(in oklab,var(--chrome-border) 60%,var(--background-color)) 50% 100%);
+  border-bottom:1px solid color-mix(in oklab,var(--chrome-border) 55%,transparent)}
+.slip-edge-l{position:relative;border-left:none}
+.slip-edge-l::before{content:"";position:absolute;top:0;bottom:0;left:0;width:1px;
+  background:linear-gradient(to bottom,transparent,var(--chrome-border) 10%,var(--chrome-border) 86%,transparent)}
+.slip-edge-l::after{content:"";position:absolute;top:0;left:0;width:14px;height:14px;z-index:1;
+  background:linear-gradient(135deg,var(--background-color) 0 50%,color-mix(in oklab,var(--chrome-border) 60%,var(--background-color)) 50% 100%);
+  border-bottom:1px solid color-mix(in oklab,var(--chrome-border) 55%,transparent)}
+.slip-edge-b{border-top:1px solid var(--chrome-border)}
+/* 内折痕：面板与面板之间（无折角，只留渐隐线） */
+.crease-r{position:relative;border-right:none}
+.crease-r::after{content:"";position:absolute;top:0;bottom:0;right:0;width:1px;
+  background:linear-gradient(to bottom,transparent,var(--chrome-border) 12%,var(--chrome-border) 84%,transparent)}
+
+/* ============ 窗体公共件 ============ */
+.window{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.titlebar{flex:none;height:40px;display:flex;align-items:center;gap:12px;padding:0 14px;position:relative;z-index:40}
+.titlebar .traffic{width:52px;flex:none}
+.pal-trigger{
+  flex:none;margin:0 auto;display:flex;align-items:center;gap:8px;
+  width:min(420px,40vw);height:30px;padding:0 12px;
+  border:1px solid transparent;border-radius:999px;
+  background:transparent;color:color-mix(in oklab,var(--text-muted) 55%,transparent);font-size:12px;cursor:pointer;
+  transition:all var(--motion-dur-quick) var(--motion-ease-out-soft);
+}
+.pal-trigger:hover{background:var(--chrome-panel);border-color:var(--chrome-border);color:var(--text-secondary)}
+.pal-trigger .kbd{margin-left:auto;font-family:var(--font-mono);font-size:10px;border:1px solid var(--chrome-border);border-radius:4px;padding:1px 5px}
+.capsule{
+  flex:none;display:flex;align-items:center;gap:6px;height:26px;padding:0 10px;
+  border-radius:999px;color:var(--text-muted);font-size:11.5px;border:1px solid transparent;
+}
+.capsule:hover{background:var(--chrome-raised);border-color:var(--chrome-border);color:var(--text-secondary)}
+.capsule .ring{width:13px;height:13px;border-radius:50%;border:1.5px solid var(--chrome-border);position:relative}
+.capsule .ring i{position:absolute;inset:-1.5px;border-radius:50%;border:1.5px solid transparent;border-top-color:var(--primary-400)}
+
+.statusbar{flex:none;height:26px;display:flex;align-items:center;gap:12px;padding:0 12px;font-size:10.5px;color:var(--text-muted);border-top:1px solid var(--chrome-border);background:var(--chrome-panel);position:relative}
+.statusbar .grow{flex:1}
+.statusbar .mono{font-family:var(--font-mono)}
+.statusbar .dock-toggle{border:none;background:transparent;color:var(--text-muted);font-size:10.5px;cursor:pointer;display:flex;gap:4px;align-items:center;padding:2px 6px;border-radius:6px}
+.statusbar .dock-toggle:hover{background:var(--chrome-hover);color:var(--text-secondary)}
+.dock-fly{position:absolute;right:8px;bottom:30px;width:380px;max-height:220px;background:var(--chrome-raised);border:1px solid var(--chrome-border);border-radius:12px;box-shadow:var(--elevation-card);z-index:80;display:none;overflow:hidden}
+.dock-fly.open{display:block}
+.dock-fly .dhead{font-size:10.5px;letter-spacing:.16em;color:var(--text-muted);padding:10px 14px 4px}
+.dock-fly .dbody{padding:4px 14px 12px;font-size:12px;color:var(--text-secondary)}
+.dock-fly .trow{display:flex;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid color-mix(in oklab,var(--chrome-border) 45%,transparent)}
+.dock-fly .trow .st{width:6px;height:6px;border-radius:50%;background:var(--primary-400);flex:none}
+.dock-fly .trow .mono{font-family:var(--font-mono);font-size:10.5px;color:var(--text-muted);margin-left:auto}
+
+.body-row{flex:1;display:flex;min-height:0;position:relative}
+
+/* Rail 签条柱 */
+.rail{flex:none;width:48px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 8px;background:var(--chrome-panel)}
+.rail .ritem{width:34px;height:34px;border:none;border-radius:8px;background:transparent;color:var(--text-muted);display:grid;place-items:center;cursor:pointer;position:relative}
+.rail .ritem:hover{background:var(--chrome-hover);color:var(--text-primary)}
+.rail .ritem.on{background:color-mix(in oklab,var(--primary-500) 12%,transparent);color:var(--primary-500)}
+.rail .ritem.on::before{content:"";position:absolute;left:-7px;top:8px;bottom:8px;width:2px;border-radius:2px;background:var(--primary-500)}
+.rail .badge{position:absolute;top:2px;right:2px;min-width:14px;height:14px;border-radius:7px;background:var(--primary-500);color:#FFFDFB;font-size:9px;line-height:14px;padding:0 3px}
+.rail .grow{flex:1}
+
+/* ContextPanel 目次笺 */
+.ctx{flex:none;width:216px;display:flex;flex-direction:column;background:var(--chrome-panel);min-height:0}
+.ctx .head{flex:none;padding:12px 12px 8px;border-bottom:1px solid color-mix(in oklab,var(--chrome-border) 45%,transparent);margin-bottom:6px}
+.ctx .head .wsname{font-family:var(--font-serif);font-size:14px;font-weight:600;color:var(--text-primary);display:flex;align-items:center;gap:6px}
+.ctx .head .knob{margin-left:auto;width:18px;height:18px;border-radius:50%;border:1px solid var(--chrome-border);color:var(--text-muted);font-size:9px;display:grid;place-items:center;cursor:pointer;background:transparent}
+.ctx .tree{flex:1;overflow:auto;padding:0 6px 12px;font-size:12.5px;color:var(--text-secondary);min-height:0}
+.ctx .tree .row{display:flex;align-items:center;gap:6px;padding:3px 8px;border-radius:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.ctx .tree .row .arrow{color:var(--text-muted);font-size:9px;flex:none}
+.ctx .tree .row:hover{background:var(--chrome-hover)}
+.ctx .tree .row.cur{color:var(--primary-500);background:color-mix(in oklab,var(--primary-500) 7%,transparent)}
+.ctx .tree .ind1{padding-left:22px}.ctx .tree .ind2{padding-left:36px}
+
+/* SidePane 书耳 */
+.sidepane{flex:none;width:240px;display:flex;flex-direction:column;background:var(--chrome-panel);min-height:0}
+.sidepane .tabs{flex:none;display:flex;gap:2px;padding:8px 10px 0;border-bottom:1px solid var(--chrome-border)}
+.sidepane .tab{border:none;background:transparent;color:color-mix(in oklab,var(--text-muted) 60%,transparent);font-size:12px;padding:5px 10px 7px;cursor:pointer;border-bottom:2px solid transparent;display:flex;gap:5px;align-items:center;transition:color var(--motion-dur-quick) var(--motion-ease-out-soft)}
+.sidepane .tab:hover{color:var(--text-secondary)}
+.sidepane .tab.on{color:var(--primary-500);border-bottom-color:var(--primary-500)}
+.sidepane .body{flex:1;overflow:auto;padding:12px 14px;min-height:0}
+.sidepane .sec{font-size:10.5px;letter-spacing:.16em;color:var(--text-muted);margin:10px 0 6px}
+.sidepane .toc a{display:block;font-size:12.5px;color:var(--text-secondary);padding:4px 8px;border-radius:6px;border-left:2px solid transparent;text-decoration:none;cursor:pointer}
+.sidepane .toc a.cur{color:var(--primary-500);border-left-color:var(--primary-500)}
+.sidepane .meta .kv{display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);padding:3px 0}
+.sidepane .meta .kv b{font-family:var(--font-mono);font-weight:400;color:var(--text-secondary)}
+
+/* 编辑画芯（素笺，已定稿语言压缩版） */
+.paper-wrap{flex:1;min-width:0;display:flex;justify-content:center;position:relative;overflow:auto;
+  /* 案面落差：画芯比笺板提亮半档——纸浮在案上，而非印在案上 */
+  background:linear-gradient(color-mix(in oklab,var(--normal-100) 55%,var(--background-color)),color-mix(in oklab,var(--normal-100) 55%,var(--background-color)))}
+.paper-wrap::after{content:"";position:sticky;bottom:0;display:block;height:0;
+  box-shadow:none}
+.paper-col{width:min(46em,88%);padding:clamp(64px,9vh,104px) 16px 140px;position:relative}
+.paper-col::after{content:"";position:fixed;left:0;right:0;bottom:0;height:26vh;pointer-events:none;
+  background:radial-gradient(60% 100% at 50% 100%,color-mix(in oklab,var(--primary-500) 7%,transparent),transparent 70%);filter:blur(6px)}
+.doc-title{font-family:var(--font-serif);font-size:30px;font-weight:600;line-height:1.4;letter-spacing:.02em;margin-bottom:26px;position:relative}
+.doc-title::after{content:"";position:absolute;left:0;right:0;bottom:-12px;height:1px;background:linear-gradient(90deg,color-mix(in oklab,var(--text-primary) 18%,transparent),transparent 60%)}
+.doc h2{font-family:var(--font-serif);font-size:22px;font-weight:600;margin:1.9em 0 .8em;padding-bottom:8px;position:relative}
+.doc h2::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:linear-gradient(90deg,color-mix(in oklab,var(--primary-500) 22%,transparent),transparent 70%)}
+.doc p{margin-bottom:1.2em;text-align:justify;line-height:1.9}
+.doc strong{font-weight:600}
+.doc blockquote{margin:1.2em 0;padding:2px 0 2px 16px;border-left:2px solid color-mix(in oklab,var(--primary-500) 55%,var(--text-primary));background-image:linear-gradient(90deg,color-mix(in oklab,var(--primary-500) 5%,transparent),transparent 65%);color:var(--text-secondary)}
+.slip{display:flex;gap:14px;max-width:540px;margin:1.4em 0;background:var(--chrome-raised);border:1px solid var(--chrome-border);border-radius:12px;padding:14px 16px 14px 14px;position:relative;text-decoration:none;color:inherit;cursor:pointer;transition:all var(--motion-dur-quick) var(--motion-ease-out-soft)}
+.slip:hover{transform:translateY(-2px);box-shadow:var(--elevation-card);border-color:color-mix(in oklab,var(--primary-500) 35%,var(--chrome-border))}
+.slip::before{content:"";position:absolute;top:0;right:0;width:16px;height:16px;background:linear-gradient(225deg,var(--background-color) 0 50%,color-mix(in oklab,var(--chrome-border) 70%,var(--background-color)) 50% 100%);border-left:1px solid var(--chrome-border);border-bottom:1px solid var(--chrome-border);border-radius:0 0 0 4px}
+.slip .seal{flex:none;width:36px;height:36px;border-radius:8px;display:grid;place-items:center;background:color-mix(in oklab,var(--primary-500) 10%,var(--background-color));border:1px solid color-mix(in oklab,var(--primary-500) 25%,var(--chrome-border));color:var(--primary-500);font-size:16px}
+.slip .t{font-family:var(--font-serif);font-size:14.5px;font-weight:600;line-height:1.5}
+.slip .d{font-size:12.5px;color:var(--text-secondary);margin-top:3px;line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.slip .m{font-family:var(--font-mono);font-size:10.5px;color:var(--text-muted);margin-top:7px}
+
+/* 书口（编辑器右缘；侧栏让位） */
+.spine{position:absolute;right:14px;top:12vh;height:66vh;z-index:8}
+.spine .railbar{position:relative;height:100%;width:1px;margin-left:auto;background:var(--chrome-border)}
+.spine .tick{position:absolute;right:-2px;transform:translateY(-50%);display:flex;align-items:center;gap:8px;cursor:pointer}
+.spine .tick .lb{font-size:11px;color:var(--text-muted);white-space:nowrap;opacity:0;transition:opacity var(--motion-dur-quick) var(--motion-ease-out-soft)}
+.spine .tick:hover .lb{opacity:1}
+.spine .tick .pt{width:5px;height:5px;border-radius:50%;background:var(--text-primary);opacity:.7}
+.spine .tick:hover .pt{opacity:1;background:var(--primary-400)}
+.spine .tick.cur .pt{background:var(--primary-500);height:18px;border-radius:3px;opacity:1}
+
+/* 顶栏（hover 显影，画芯列内） */
+.hoverbar{position:absolute;top:0;left:0;right:0;z-index:9;display:flex;align-items:center;gap:8px;padding:6px 12px;opacity:.28;transition:opacity var(--motion-dur-quick) var(--motion-ease-out-soft);border-radius:6px 6px 0 0;
+  background:linear-gradient(to bottom,color-mix(in oklab,var(--background-color) 94%,transparent),transparent)}
+.hoverbar:hover{opacity:1}
+.hoverbar .crumb{font-size:12px;font-family:var(--font-mono);color:var(--text-muted);display:flex;gap:6px;align-items:center}
+.hoverbar .grow{flex:1}
+.hoverbar .hbtn{border:none;background:transparent;color:var(--text-muted);font-size:12px;padding:4px 9px;border-radius:6px;cursor:pointer;display:flex;gap:5px;align-items:center}
+.hoverbar .hbtn:hover{background:var(--chrome-hover);color:var(--text-primary)}
+
+/* Dock 案头 */
+.dockbar{flex:none;height:22px;display:flex;align-items:center;justify-content:center;gap:10px;border-top:1px solid var(--chrome-border);background:var(--chrome-panel);color:var(--text-muted);font-size:10.5px;cursor:pointer}
+.dockbar:hover{color:var(--text-secondary)}
+.dock-panel{flex:none;height:180px;display:flex;border-top:1px solid var(--chrome-border);background:var(--chrome-panel)}
+.dock-panel .dtabs{flex:none;width:120px;border-right:1px solid var(--chrome-border);padding:8px 6px;display:flex;flex-direction:column;gap:2px}
+.dock-panel .dtab{border:none;background:transparent;color:var(--text-muted);font-size:12px;text-align:left;padding:6px 10px;border-radius:6px;cursor:pointer;display:flex;gap:6px;align-items:center}
+.dock-panel .dtab.on{background:color-mix(in oklab,var(--primary-500) 10%,transparent);color:var(--primary-500)}
+.dock-panel .dbody{flex:1;padding:12px 16px;font-size:12px;color:var(--text-secondary);overflow:auto}
+.dock-panel .dbody .trow{display:flex;gap:10px;align-items:center;padding:5px 0;border-bottom:1px solid color-mix(in oklab,var(--chrome-border) 45%,transparent)}
+.dock-panel .dbody .trow .st{width:6px;height:6px;border-radius:50%;background:var(--primary-400);flex:none}
+.dock-panel .dbody .trow .mono{font-family:var(--font-mono);font-size:10.5px;color:var(--text-muted);margin-left:auto}
+
+/* Palette 检字浮层 */
+.palette-overlay{position:fixed;inset:0;z-index:90;background:color-mix(in oklab,var(--background-color) 55%,transparent);backdrop-filter:blur(3px);display:flex;justify-content:center;padding-top:12vh}
+.palette{width:min(560px,86vw);height:fit-content;background:var(--chrome-raised);border:1px solid var(--chrome-border);border-radius:16px;box-shadow:var(--elevation-card);overflow:hidden}
+.palette .pin{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--chrome-border)}
+.palette .pin input{flex:1;border:none;background:transparent;color:var(--text-primary);font-size:15px;outline:none;font-family:inherit}
+.palette .pin input::placeholder{color:var(--text-muted)}
+.palette .pgroup{padding:6px 8px 8px}
+.palette .phead{font-size:10.5px;letter-spacing:.16em;color:var(--text-muted);padding:6px 10px 3px}
+.palette .pitem{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:13px;color:var(--text-primary);cursor:pointer}
+.palette .pitem.hot{background:color-mix(in oklab,var(--primary-500) 9%,transparent)}
+.palette .pitem .ic{width:24px;height:24px;border-radius:6px;display:grid;place-items:center;background:color-mix(in oklab,var(--normal-300) 40%,transparent);color:var(--text-secondary);font-size:11px}
+.palette .pitem .sc{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--text-muted);border:1px solid var(--chrome-border);border-radius:4px;padding:1px 5px}
+
+/* FocusBar 静写 */
+.focusbar{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:20;display:flex;gap:10px;align-items:center;font-size:11.5px;color:var(--text-muted);background:var(--chrome-panel);border:1px solid var(--chrome-border);border-radius:999px;padding:4px 14px;opacity:.6}
+.focusbar:hover{opacity:1}
+.focusbar .fname{font-family:var(--font-mono)}
+.focusbar .exit{border:none;background:transparent;color:var(--primary-500);font-size:11px;cursor:pointer}
+
+/* ═══ 「书脊与笺」——有剪影、有颜色时刻、有深度的整窗 ═══ */
+.window.desk{background:
+  linear-gradient(180deg,color-mix(in oklab,var(--normal-100) 34%,transparent),transparent 26%),
+  radial-gradient(120% 90% at 50% 0%,color-mix(in oklab,var(--normal-100) 30%,transparent),transparent 55%),
+  radial-gradient(120% 100% at 50% 110%,color-mix(in oklab,var(--background-200) 70%,transparent),transparent 60%),
+  repeating-linear-gradient(90deg,rgba(0,0,0,.012) 0 1px,transparent 1px 4px),
+  var(--background-color)}
+.window.desk .titlebar{background:transparent;border:none}
+.window.desk .statusbar{background:transparent;border-top:none}
+
+/* 书脊：通高布面竖条——细密织纹 + 竖排题名烫印微光 + 朱砂装订线 */
+.spine-strip{flex:none;width:48px;align-self:stretch;display:flex;flex-direction:column;align-items:center;
+  padding:10px 0 12px;position:relative;gap:4px;
+  background:
+    repeating-linear-gradient(0deg,rgba(255,255,255,.03) 0 1px,transparent 1px 3px),
+    repeating-linear-gradient(90deg,rgba(0,0,0,.045) 0 1px,transparent 1px 3px),
+    linear-gradient(to right,color-mix(in oklab,var(--normal-900) 94%,#000),var(--normal-900))}
+.spine-strip::after{content:"";position:absolute;top:0;bottom:0;right:0;width:1px;
+  background:linear-gradient(to bottom,transparent,color-mix(in oklab,var(--primary-400) 85%,transparent) 12%,color-mix(in oklab,var(--primary-500) 85%,transparent) 85%,transparent)}
+.spine-strip .sitem{width:36px;height:34px;border:none;border-radius:8px;background:transparent;
+  color:color-mix(in oklab,var(--normal-100) 62%,transparent);display:grid;place-items:center;cursor:pointer;position:relative;
+  transition:all var(--motion-dur-quick) var(--motion-ease-out-soft)}
+.spine-strip .sitem:hover{background:color-mix(in oklab,var(--normal-100) 10%,transparent);color:var(--normal-100)}
+.spine-strip .sitem:active{transform:scale(.93)}
+.spine .tick.cur .pt{animation:inkbreath 1.6s var(--motion-ease-in-out-soft,ease-in-out) infinite alternate}
+@keyframes inkbreath{from{opacity:.72}to{opacity:1}}
+.spine-strip .sitem.on{background:color-mix(in oklab,var(--primary-500) 26%,transparent);color:color-mix(in oklab,var(--primary-300) 90%,#fff)}
+.spine-strip .sitem.on::before{content:"";position:absolute;left:-6px;top:9px;bottom:9px;width:2px;border-radius:2px;background:var(--primary-400)}
+.spine-strip .badge{position:absolute;top:1px;right:1px;min-width:13px;height:13px;border-radius:7px;background:var(--primary-500);color:#fff;font-size:8.5px;line-height:13px;padding:0 3px}
+.spine-strip .grow{flex:1}
+.spine-strip .wlogo{width:20px;height:20px;border-radius:5px;display:grid;place-items:center;color:color-mix(in oklab,var(--normal-100) 80%,transparent);font-family:var(--font-serif);font-size:11px;border:1px solid color-mix(in oklab,var(--normal-100) 22%,transparent);margin-bottom:6px}
+
+/* 浮笺：浮在案面上的纸笺（投影 + 折角 + 滑出仪式），非贴边栏 */
+.slip-card{position:absolute;z-index:30;background:var(--background-color);border-radius:14px;
+  box-shadow:0 1px 2px rgba(0,0,0,.08),0 12px 32px rgba(0,0,0,.14);
+  min-height:0;overflow:hidden;border:1px solid color-mix(in oklab,var(--chrome-border) 60%,transparent);
+  opacity:0;visibility:hidden;transform:translateX(var(--slide-from,-14px));
+  transition:opacity 220ms var(--motion-ease-out-soft),transform 220ms var(--motion-ease-out-soft),visibility 0s linear 220ms}
+.slip-card.open{opacity:1;visibility:visible;transform:none;transition:opacity 220ms var(--motion-ease-out-soft),transform 220ms var(--motion-ease-out-soft)}
+.slip-card.from-right{--slide-from:14px}
+.slip-card::before{content:"";position:absolute;top:0;right:0;width:18px;height:18px;z-index:2;
+  background:linear-gradient(225deg,color-mix(in oklab,var(--background-color) 96%,#000) 0 50%,color-mix(in oklab,var(--chrome-border) 70%,var(--background-color)) 50% 100%);
+  border-left:1px solid var(--chrome-border);border-bottom:1px solid var(--chrome-border);border-radius:0 0 0 5px}
+/* 素笺本体浮起：投影让它离开案面 */
+.paper-float{width:min(44em,66vw);margin:4vh auto 12vh;background:var(--background-color);border-radius:6px;
+  box-shadow:0 1px 3px rgba(0,0,0,.07),0 24px 60px rgba(0,0,0,.13),inset 0 1px 0 color-mix(in oklab,var(--normal-100) 60%,transparent);position:relative}
+.paper-float .paper-inner-pad{padding:clamp(72px,10vh,120px) clamp(28px,4vw,64px) 140px}
+/* 纸页叠口：右缘两层纸口——一叠纸的侧脸 */
+.paper-float::before{content:"";position:absolute;top:12px;bottom:12px;right:-7px;width:6px;
+  background:color-mix(in oklab,var(--background-color) 92%,var(--chrome-border));
+  border:1px solid color-mix(in oklab,var(--chrome-border) 75%,transparent);border-left:none;border-radius:0 4px 4px 0;
+  box-shadow:5px 0 0 -3px color-mix(in oklab,var(--background-color) 92%,var(--chrome-border)),5px 0 0 -2px color-mix(in oklab,var(--chrome-border) 55%,transparent)}
+.paper-float .paper-col{padding-top:clamp(48px,7vh,80px)}
+
+/* 控制中心：胶囊展开态——磁贴网格 + 功能分区（iOS 控制中心的书房转译） */
+.cc{position:absolute;top:46px;right:12px;width:470px;z-index:85;background:var(--background-color);
+  border-radius:16px;box-shadow:0 1px 2px rgba(0,0,0,.08),0 24px 60px rgba(0,0,0,.18);
+  border:1px solid color-mix(in oklab,var(--chrome-border) 60%,transparent);overflow:hidden;
+  opacity:0;visibility:hidden;transform:translateY(-8px);
+  transition:opacity 200ms var(--motion-ease-out-soft),transform 200ms var(--motion-ease-out-soft),visibility 0s linear 200ms}
+.cc.open{opacity:1;visibility:visible;transform:none;transition:opacity 200ms var(--motion-ease-out-soft),transform 200ms var(--motion-ease-out-soft)}
+.cc::before{content:"";position:absolute;top:0;right:0;width:18px;height:18px;z-index:2;
+  background:linear-gradient(225deg,color-mix(in oklab,var(--background-color) 96%,#000) 0 50%,color-mix(in oklab,var(--chrome-border) 70%,var(--background-color)) 50% 100%);
+  border-left:1px solid var(--chrome-border);border-bottom:1px solid var(--chrome-border);border-radius:0 0 0 5px}
+.cc .cchead{display:flex;align-items:center;gap:8px;padding:11px 16px;border-bottom:1px solid color-mix(in oklab,var(--chrome-border) 45%,transparent);font-size:10.5px;letter-spacing:.16em;color:var(--text-muted)}
+.cc .cchead .mono{margin-left:auto;font-family:var(--font-mono);letter-spacing:0;color:var(--text-secondary)}
+.cc .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px 14px}
+.cc .tile{position:relative;border:1px solid var(--chrome-border);border-radius:10px;background:var(--chrome-panel);padding:10px 4px 8px;
+  display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--text-secondary);cursor:pointer;
+  transition:all var(--motion-dur-quick) var(--motion-ease-out-soft)}
+.cc .tile:hover{background:var(--chrome-hover)}
+.cc .tile .tic{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;background:transparent;
+  border:1.5px solid color-mix(in oklab,var(--text-muted) 55%,transparent);color:var(--text-secondary);font-size:12px}
+.cc .tile.on{border-color:color-mix(in oklab,var(--primary-500) 55%,transparent);border-width:1.5px;background:color-mix(in oklab,var(--primary-500) 7%,transparent);color:var(--primary-500)}
+.cc .tile.on .tic{background:var(--primary-500);border-color:var(--primary-500);color:#FFFDFB}
+.cc .tile.on::after{content:"";position:absolute;top:5px;right:5px;width:5px;height:5px;border-radius:50%;background:var(--primary-500)}
+.cc .sections{border-top:1px solid color-mix(in oklab,var(--chrome-border) 45%,transparent);max-height:280px;overflow:auto}
+.cc .sect{padding:10px 16px 12px}
+.cc .sect + .sect{border-top:1px solid color-mix(in oklab,var(--chrome-border) 30%,transparent)}
+.cc .shead{font-size:10.5px;letter-spacing:.16em;color:var(--text-muted);margin-bottom:7px}
+.cc .gitrow{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--text-secondary)}
+.cc .gitrow .mono{font-family:var(--font-mono);font-size:11px}
+.cc .gitrow .grow{flex:1}
+.cc .gbtn{border:1px solid var(--chrome-border);border-radius:8px;background:transparent;font-size:11.5px;padding:3px 10px;cursor:pointer;color:var(--text-secondary)}
+.cc .gbtn:hover{background:var(--chrome-hover);color:var(--text-primary)}
+.cc .trow{display:flex;gap:10px;align-items:center;padding:5px 0;font-size:12px;color:var(--text-secondary)}
+.cc .trow .st{width:6px;height:6px;border-radius:50%;background:var(--primary-400);flex:none}
+.cc .trow .mono{font-family:var(--font-mono);font-size:10.5px;color:var(--text-muted);margin-left:auto}
+
+/* 案头浮层改浮笺态 */
+.dock-fly{border-radius:14px}
+.home-body{flex:1;overflow:auto;min-width:0;background:linear-gradient(color-mix(in oklab,var(--normal-100) 55%,var(--background-color)),color-mix(in oklab,var(--normal-100) 55%,var(--background-color)))}
+.home-inner{max-width:900px;margin:0 auto;padding:28px 20px 60px}
+.home-inner h1{font-family:var(--font-serif);font-size:24px;font-weight:600;letter-spacing:.02em;margin-bottom:4px}
+.home-inner .sub{font-size:12.5px;color:var(--text-muted);margin-bottom:20px}
+.hcard{position:relative;background:var(--chrome-panel);border:1px solid var(--chrome-border);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+.hcard::after{content:"";position:absolute;top:0;right:0;width:14px;height:14px;background:linear-gradient(225deg,var(--background-color) 0 50%,color-mix(in oklab,var(--chrome-border) 60%,var(--background-color)) 50% 100%);border-left:1px solid color-mix(in oklab,var(--chrome-border) 55%,transparent);border-bottom:1px solid color-mix(in oklab,var(--chrome-border) 55%,transparent);border-radius:0 0 0 4px}
+.hcard .ht{font-size:10.5px;letter-spacing:.16em;color:var(--text-muted);margin-bottom:10px}
+.flowrow{display:flex;align-items:center;gap:12px}
+.flowrow .fdoc{font-family:var(--font-serif);font-size:15px;font-weight:600}
+.flowrow .fbtn{margin-left:auto;border:1px solid color-mix(in oklab,var(--primary-500) 40%,transparent);background:transparent;color:var(--primary-500);font-size:12px;padding:4px 12px;border-radius:8px;cursor:pointer;transition:all var(--motion-dur-quick) var(--motion-ease-out-soft)}
+.flowrow .fbtn:hover{background:color-mix(in oklab,var(--primary-500) 10%,transparent)}
+.flowrow .fmeta{font-size:11.5px;color:var(--text-muted)}
+.cardrow{display:flex;gap:14px}
+.fcard{flex:1;border:1px solid var(--chrome-border);background:var(--chrome-panel);border-radius:12px;padding:12px 14px;text-align:left;cursor:pointer;font:inherit;color:inherit;transition:all var(--motion-dur-quick) var(--motion-ease-out-soft)}
+.fcard:hover{background:var(--chrome-hover);transform:translateY(-1px)}
+.fcard .n{font-family:var(--font-mono);font-size:22px;color:var(--text-primary)}
+.fcard .l{font-size:12px;color:var(--text-muted)}
+
+/* 场景/主题坞 */
+.dock-ui{position:fixed;bottom:12px;z-index:99;display:flex;gap:4px;padding:5px;background:var(--chrome-panel);border:1px solid var(--chrome-border);border-radius:12px;box-shadow:var(--elevation-soft)}
+#theme-dock{left:12px}
+#scene-dock{right:12px}
+.dock-ui button{border:none;background:transparent;color:var(--text-secondary);font:inherit;font-size:11px;padding:4px 9px;border-radius:6px;cursor:pointer}
+.dock-ui button:hover{background:var(--chrome-hover);color:var(--text-primary)}
+.dock-ui button.on{background:color-mix(in oklab,var(--primary-500) 16%,transparent);color:var(--primary-500)}
+.dock-ui .dl{font-size:10px;color:var(--text-muted);align-self:center;padding:0 3px;letter-spacing:.1em}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ═══ 构 A · 素笺全幅：chrome 全退场，整窗即纸 ═══ -->
+<section class="scene on" id="scene-a">
+  <div class="window">
+    <div class="titlebar">
+      <div class="traffic"></div>
+      <div class="pal-trigger">⌕ 搜索或跳转…<span class="kbd">⌘K</span></div>
+      <div class="capsule"><span class="ring"><i></i></span>任务 0/1</div>
+    </div>
+    <div class="body-row">
+      <!-- Rail 收成 4px 呼吸线，hover 浮出 -->
+      <div class="rail" style="width:10px;padding:10px 0;overflow:hidden" title="hover 浮出签条柱">
+        <div class="ritem on" style="width:2px;height:26px;border-radius:1px;background:var(--primary-500);opacity:.7"></div>
+      </div>
+      <div class="paper-wrap">
+        <article class="paper-col">
+          <div class="hoverbar">
+            <span class="hbtn">‹ 返回</span>
+            <span class="crumb">wuh-site / blog / 靠框.md</span>
+            <span class="grow"></span>
+            <span class="hbtn">上下文侧栏</span>
+            <span class="hbtn">新建</span>
+            <span class="hbtn">保存</span>
+          </div>
+          <div class="doc-title">京都秋日手记</div>
+          <div class="doc">
+            <p>十月的京都，光线是<strong>琥珀色</strong>的。chrome 全部退场——rail 收成左缘一线呼吸，目次与书耳都成了 ⌘ 呼出的浮笺。</p>
+            <blockquote><p>秋天总是这样，先给你看一颗变红的果子，再给你看整座山。</p></blockquote>
+            <a class="slip" href="#"><span class="seal">📄</span><span><span class="t">红叶前线 2026：从北海道一路红到京都要多久</span><span class="d">每年秋天，红叶以每天 2.7 公里的速度自北向南推进。</span><span class="m">momiji-journal.example.jp</span></span></a>
+            <h2>一 · 岚山的午后</h2>
+            <p>整窗 95% 是纸。书口在右缘独舞，检字浮笺 ⌘K 落在纸心。</p>
+          </div>
+          <div class="spine">
+            <div class="railbar">
+              <div class="tick cur" style="top:18%"><span class="lb">一 · 岚山的午后</span><span class="pt"></span></div>
+              <div class="tick" style="top:62%"><span class="lb">二 · 鸭川的夜</span><span class="pt"></span></div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+    <div class="statusbar"><span class="mono">main</span><span>京都秋日手记.md</span><span class="grow"></span><span>预览就绪</span></div>
+  </div>
+</section>
+
+<!-- ═══ 构 B · 书脊案面：深墨书脊 + 朱线 + 浮笺（重做版） ═══ -->
+<section class="scene" id="scene-b">
+  <div class="window desk">
+    <div class="titlebar">
+      <div class="traffic"></div>
+      <div class="pal-trigger">⌕ 搜索或跳转…<span class="kbd">⌘K</span></div>
+      <div class="capsule" title="控制中心" style="cursor:pointer" onclick="document.getElementById('cc').classList.toggle('open')"><span class="ring"><i></i></span><span>任务 0/1</span></div>
+    </div>
+    <div class="body-row">
+      <div class="spine-strip">
+        <button class="sitem">⌂</button>
+        <button class="sitem on">▤</button>
+        <button class="sitem">✉<span class="badge">2</span></button>
+        <button class="sitem">⌗<span class="badge">5</span></button>
+        <div class="grow"></div>
+        <div class="wlogo">W</div>
+        <button class="sitem">⚙</button>
+      </div>
+      <div class="paper-wrap">
+        <div class="slip-card ctx" style="left:16px;top:12px;bottom:16px;width:214px;background:var(--background-color)">
+          <div class="head"><span class="wsname">wuh-site</span><button class="knob" onclick="toggleEar()">‹</button></div>
+          <div class="tree">
+            <div class="row ind1 cur">京都秋日手记.md</div>
+            <div class="row ind1">编辑器 2.0 设计.md</div>
+            <div class="row"><span class="arrow">▾</span>blog</div>
+            <div class="row ind1">靠框.md</div>
+            <div class="row"><span class="arrow">▸</span>posts</div>
+            <div class="row"><span class="arrow">▸</span>shadow-dev-cli</div>
+          </div>
+        </div>
+        <article class="paper-float">
+          <div class="paper-inner-pad">
+          <div class="hoverbar">
+            <span class="hbtn">‹ 返回</span>
+            <span class="crumb">blog / 靠框.md</span>
+            <span class="grow"></span>
+            <span class="hbtn" style="cursor:pointer" onclick="toggleEar()">书耳</span>
+            <span class="hbtn">新建</span>
+            <span class="hbtn">保存</span>
+          </div>
+          <div class="doc-title">京都秋日手记</div>
+          <div class="doc">
+            <p><strong>书脊</strong>立在案左——布纹深墨、一道朱砂装订线，图标即导航；<strong>目次与书耳</strong>是浮在案上的两张纸笺，随唤随收；<strong>素笺</strong>带影浮起——纸、笺、案，三层。</p>
+            <blockquote><p>秋天总是这样，先给你看一颗变红的果子，再给你看整座山。</p></blockquote>
+            <a class="slip" href="#"><span class="seal">📄</span><span><span class="t">红叶前线 2026：从北海道一路红到京都要多久</span><span class="d">每年秋天，红叶以每天 2.7 公里的速度自北向南推进。</span><span class="m">momiji-journal.example.jp</span></span></a>
+            <h2>一 · 岚山的午后</h2>
+            <p>点右上「书耳」试开合——书耳收起时，书口在纸缘独舞。</p>
+          </div>
+          <div class="spine" id="spine-b">
+            <div class="railbar"><div class="tick cur" style="top:30%"><span class="lb">一 · 岚山的午后</span><span class="pt"></span></div></div>
+          </div>
+          </div>
+        </article>
+      </div>
+      <div class="slip-card sidepane from-right" id="ear-pane" style="right:16px;top:12px;bottom:16px;width:238px;background:var(--background-color)">
+        <div class="tabs">
+          <button class="tab on" data-t="outline">☰ 大纲</button>
+          <button class="tab" data-t="meta">元数据</button>
+          <button class="tab" data-t="image">图床</button>
+        </div>
+        <div class="body">
+          <div class="tbody" data-b="outline">
+            <div class="toc">
+              <a class="cur">序 · 琥珀色的光</a>
+              <a>一 · 岚山的午后</a>
+              <a>二 · 鸭川的夜</a>
+            </div>
+            <div class="sec" style="margin-top:18px">笺 条 · 1</div>
+            <div class="meta"><div class="kv"><span>momiji-journal</span><b>1</b></div></div>
+          </div>
+          <div class="tbody" data-b="meta" style="display:none">
+            <div class="meta">
+              <div class="kv"><span>title</span><b>京都秋日手记</b></div>
+              <div class="kv"><span>tags</span><b>随笔 · 旅行</b></div>
+              <div class="kv"><span>date</span><b>2026-10-14</b></div>
+            </div>
+            <div style="margin-top:12px;font-size:11px;color:var(--text-muted)">只读快照 · 修改请到 Frontmatter 助手</div>
+          </div>
+          <div class="tbody" data-b="image" style="display:none">
+            <div class="meta">
+              <div class="kv"><span>模式</span><b>oss</b></div>
+              <div class="kv"><span>前缀</span><b>blog/2026/10/</b></div>
+            </div>
+            <div style="margin-top:12px"><button class="fbtn" style="width:100%">打开图床面板</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="statusbar">
+      <span class="mono">main · 2 未提交</span><span>京都秋日手记.md</span><span class="grow"></span>
+      <span style="color:var(--primary-500)">图床 2/5</span>
+      <span>预览就绪</span>
+    </div>
+    <!-- 控制中心：胶囊展开态（磁贴 + 分区） -->
+    <div class="cc" id="cc">
+      <div class="cchead"><span>控 制 中 心</span><span class="mono">wuh-site · main</span></div>
+      <div class="tiles">
+        <div class="tile on"><span class="tic">墨</span>即时渲染</div>
+        <div class="tile on"><span class="tic">☰</span>大纲跟随</div>
+        <div class="tile"><span class="tic">静</span>专注模式</div>
+        <div class="tile on"><span class="tic">图</span>图床·oss</div>
+        <div class="tile"><span class="tic">红</span>主题·酒红</div>
+        <div class="tile"><span class="tic">明</span>外观·跟随</div>
+        <div class="tile"><span class="ic" style="font-size:11px">中</span>语言·中文</div>
+        <div class="tile"><span class="tic">⌕</span>查找替换</div>
+      </div>
+      <div class="sections">
+        <div class="sect">
+          <div class="shead">任 务</div>
+          <div class="trow"><span class="st"></span>图床上传 pic-03.png<span class="mono">2/5 · 34%</span></div>
+          <div class="trow"><span class="st" style="background:var(--chrome-border)"></span>git-history 分支扫描<span class="mono">done</span></div>
+        </div>
+        <div class="sect">
+          <div class="shead">G I T</div>
+          <div class="gitrow"><span class="mono">main</span>· 2 未提交<span class="grow"></span><button class="gbtn">提交</button><button class="gbtn">推送</button></div>
+        </div>
+        <div class="sect">
+          <div class="shead">排 版</div>
+          <div class="gitrow">字号 15px · 行距 1.9 · 测宽 690<span class="grow"></span><button class="gbtn">−</button><button class="gbtn">+</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 构 C · 横卷甲板：通栏上下甲板（自我否决候补，留档对比） ═══ -->
+<section class="scene" id="scene-c">
+  <div class="window">
+    <div class="titlebar slip-edge-b" style="gap:16px">
+      <div class="traffic"></div>
+      <div class="pal-trigger" style="margin:0;width:300px">⌕ 搜索或跳转…<span class="kbd">⌘K</span></div>
+      <span style="font-size:12px;color:var(--text-muted);font-family:var(--font-mono)">blog / 靠框.md ●</span>
+      <span class="grow" style="flex:1"></span>
+      <button class="hbtn" style="border:none;background:transparent;color:var(--text-muted);font-size:12px;cursor:pointer">书耳</button>
+      <button class="hbtn" style="border:none;background:transparent;color:var(--text-muted);font-size:12px;cursor:pointer">新建</button>
+      <button class="hbtn" style="border:none;background:transparent;color:var(--primary-500);font-size:12px;cursor:pointer">保存</button>
+      <div class="capsule"><span class="ring"><i></i></span>任务 0/1</div>
+    </div>
+    <div class="paper-wrap">
+      <article class="paper-col" style="max-width:720px">
+        <div class="doc-title">京都秋日手记</div>
+        <div class="doc">
+          <p>chrome 全部横排上下甲板——最像 IDE 的一个：<em>效率高，但书卷气全无</em>。此构预登记为自我否决候补：顶部通栏压纸、左右呼吸尽失。</p>
+          <blockquote><p>留此一构做对照：如果你反而喜欢这种密度，告诉我。</p></blockquote>
+        </div>
+      </article>
+    </div>
+    <div class="dock-panel">
+      <div class="dtabs">
+        <button class="dtab on">◎ 任务中心</button>
+        <button class="dtab">▦ 插件动态</button>
+      </div>
+      <div class="dbody">
+        <div class="trow"><span class="st"></span>图床上传 pic-03.png<span class="mono">2/5 · 34%</span></div>
+        <div class="trow"><span class="st" style="background:var(--chrome-border)"></span>git-history 分支扫描<span class="mono">done</span></div>
+      </div>
+    </div>
+    <div class="statusbar"><span class="mono">main</span><span class="grow"></span><span>预览就绪</span></div>
+  </div>
+</section>
+
+<!-- ═══ 构 D · 立轴双柱：左题签柱 + 右题跋柱 ═══ -->
+<section class="scene" id="scene-d">
+  <div class="window">
+    <div class="titlebar">
+      <div class="traffic"></div>
+      <div class="pal-trigger">⌕ 搜索或跳转…<span class="kbd">⌘K</span></div>
+      <div class="capsule"><span class="ring"><i></i></span>任务 0/1</div>
+    </div>
+    <div class="body-row">
+      <!-- 左题签柱：rail 48 + hover 滑出目次 240（覆盖式，不挤画芯） -->
+      <div class="rail crease-r" style="position:relative;z-index:20">
+        <button class="ritem on">⌂</button>
+        <button class="ritem">▤</button>
+        <button class="ritem">✉<span class="badge">2</span></button>
+        <button class="ritem">⌗<span class="badge">5</span></button>
+        <div class="grow"></div>
+        <button class="ritem">W</button>
+        <button class="ritem">⚙</button>
+        <div style="position:absolute;left:48px;top:0;bottom:0;width:236px;background:var(--chrome-panel);border-right:1px solid var(--chrome-border);box-shadow:var(--elevation-soft);display:none" class="ctx-flyout">
+          <div style="padding:10px 12px;font-size:12.5px;font-weight:600">wuh-site</div>
+          <div style="padding:0 6px;font-size:12.5px;color:var(--text-secondary)">
+            <div class="row" style="padding:3px 8px;border-radius:6px;color:var(--primary-500)">京都秋日手记.md</div>
+            <div class="row" style="padding:3px 8px;border-radius:6px">编辑器 2.0 设计.md</div>
+          </div>
+        </div>
+      </div>
+      <div class="paper-wrap">
+        <article class="paper-col">
+          <div class="hoverbar">
+            <span class="hbtn">‹ 返回</span>
+            <span class="crumb">blog / 靠框.md</span>
+            <span class="grow"></span>
+            <span class="hbtn">题跋</span>
+            <span class="hbtn">保存</span>
+          </div>
+          <div class="doc-title">京都秋日手记</div>
+          <div class="doc">
+            <p>左右两柱：<strong>左题签柱</strong>（导航恒驻 48，目次 hover 滑出覆盖、不挤画芯），<strong>右题跋柱</strong>（窄柱图标页签，点击展开成浮层书耳）。画芯永远居中，柱只是案面两缘的题字。</p>
+            <blockquote><p>最文人的一构：柱上题字，纸上行文。</p></blockquote>
+            <a class="slip" href="#"><span class="seal">📄</span><span><span class="t">红叶前线 2026</span><span class="d">每年秋天，红叶以每天 2.7 公里的速度自北向南推进。</span><span class="m">momiji-journal.example.jp</span></span></a>
+          </div>
+          <div class="spine">
+            <div class="railbar"><div class="tick cur" style="top:24%"><span class="lb">一 · 岚山的午后</span><span class="pt"></span></div></div>
+          </div>
+        </article>
+      </div>
+      <!-- 右题跋柱：56px 窄柱 -->
+      <div class="sidepane" style="width:56px;align-items:center;padding-top:10px;gap:6px">
+        <button class="tab on" style="border:none;border-radius:8px;width:38px;height:34px;display:grid;place-items:center">☰</button>
+        <button class="tab" style="border:none;border-radius:8px;width:38px;height:34px;display:grid;place-items:center">文</button>
+        <button class="tab" style="border:none;border-radius:8px;width:38px;height:34px;display:grid;place-items:center">图</button>
+      </div>
+    </div>
+    <div class="statusbar"><span class="mono">main</span><span>京都秋日手记.md</span><span class="grow"></span><span>预览就绪</span></div>
+  </div>
+</section>
+
+<!-- ═══ 场景 · 检字浮层（叠在构 B 上） ═══ -->
+<section class="scene" id="scene-palette">
+  <div class="window desk">
+    <div class="titlebar"><div class="traffic"></div><div class="capsule"><span class="ring"><i></i></span>任务 0/1</div></div>
+    <div class="body-row">
+      <div class="spine-strip">
+        <button class="sitem">⌂</button>
+        <button class="sitem on">▤</button>
+        <button class="sitem">✉<span class="badge">2</span></button>
+        <button class="sitem">⌗<span class="badge">5</span></button>
+        <div class="grow"></div>
+        <div class="wlogo">W</div>
+        <button class="sitem">⚙</button>
+      </div>
+      <div class="paper-wrap"><article class="paper-col" style="opacity:.45"><div class="doc-title">京都秋日手记</div></article></div>
+    </div>
+    <div class="palette-overlay">
+      <div class="palette">
+        <div class="pin"><span style="color:var(--text-muted)">⌕</span><input placeholder="键入命令或跳转目标…" autofocus></div>
+        <div class="pgroup">
+          <div class="phead">导航</div>
+          <div class="pitem hot"><span class="ic">⌂</span>首页<span class="sc">⌘1</span></div>
+          <div class="pitem"><span class="ic">▤</span>项目<span class="sc">⌘2</span></div>
+          <div class="pitem"><span class="ic">✉</span>草稿箱<span class="sc">⌘3</span></div>
+        </div>
+        <div class="pgroup">
+          <div class="phead">文档动作</div>
+          <div class="pitem"><span class="ic">新</span>新建草稿</div>
+          <div class="pitem"><span class="ic">存</span>保存当前文档<span class="sc">⌘S</span></div>
+          <div class="pitem"><span class="ic">墨</span>切换即时渲染 / 纯源码<span class="sc">⌘/</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="statusbar"><span class="grow"></span><span>检字 · Esc 收笺</span></div>
+  </div>
+</section>
+
+<!-- ═══ 场景 · 静写（专注模式，chrome 全退） ═══ -->
+<section class="scene" id="scene-focus">
+  <div class="window desk">
+    <div class="body-row">
+      <div class="paper-wrap">
+        <article class="paper-col">
+          <div class="focusbar">
+            <span class="fname">靠框.md</span><span>486 字</span><span>已保存</span>
+            <button class="exit">退出专注 ⎋</button>
+          </div>
+          <div class="doc-title">京都秋日手记</div>
+          <div class="doc">
+            <p>专注模式：TitleBar、Rail、Dock、状态栏全部退场，只剩<strong>静写条</strong>一行小字浮在纸缘。</p>
+            <p>一切随专注运动的东西都停——纸面上只有墨与光标。</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 场景 · 首页任务流（构 B 框架） ═══ -->
+<section class="scene" id="scene-home">
+  <div class="window desk">
+    <div class="titlebar">
+      <div class="traffic"></div>
+      <div class="pal-trigger">⌕ 搜索或跳转…<span class="kbd">⌘K</span></div>
+      <div class="capsule" title="任务 0/1"><span class="ring"><i></i></span></div>
+    </div>
+    <div class="body-row">
+      <div class="spine-strip">
+        <button class="sitem on">⌂</button>
+        <button class="sitem">▤</button>
+        <button class="sitem">✉</button>
+        <button class="sitem">⌗<span class="badge">5</span></button>
+        <div class="grow"></div>
+        <div class="wlogo">W</div>
+        <button class="sitem">⚙</button>
+      </div>
+      <div class="home-body">
+        <div class="home-inner">
+          <h1>晚上好，wuh</h1>
+          <div class="sub">今天写了 486 字 · 上次写到《京都秋日手记》</div>
+          <div class="hcard">
+            <div class="ht">继续写作</div>
+            <div class="flowrow">
+              <span class="fdoc">京都秋日手记</span>
+              <button class="fbtn">打开</button>
+            </div>
+            <div class="fmeta" style="margin-top:6px">486 字 · 有未保存更改</div>
+          </div>
+          <div class="cardrow">
+            <button class="fcard"><div class="n">3</div><div class="l">草稿箱</div></button>
+            <button class="fcard"><div class="n">7</div><div class="l">最近项目</div></button>
+          </div>
+          <div class="hcard">
+            <div class="ht">插件动态</div>
+            <div class="fmeta">图床上传 2/5 · git-history 就绪</div>
+          </div>
+          <div class="hcard" style="padding:0;overflow:hidden">
+            <div class="ht" style="padding:12px 16px 0">综合活动热力图</div>
+            <div style="height:90px;margin:10px 16px 14px;border-radius:8px;background:radial-gradient(120% 100% at 20% 10%,color-mix(in oklab,var(--primary-300) 40%,transparent),transparent 60%),color-mix(in oklab,var(--normal-300) 40%,var(--background-color))"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="statusbar"><span class="mono">main</span><span class="grow"></span><span>就绪</span></div>
+  </div>
+</section>
+
+<div class="dock-ui" id="theme-dock">
+  <span class="dl">主题</span>
+  <button data-tf="wine" data-cs="light" class="on">酒红·明</button>
+  <button data-tf="wine" data-cs="dark">酒红·暗</button>
+  <button data-tf="plain" data-cs="light">素雅·明</button>
+  <button data-tf="plain" data-cs="dark">素雅·暗</button>
+</div>
+<div class="dock-ui" id="scene-dock">
+  <span class="dl">构图</span>
+  <button data-scene="a" class="on">A 素笺全幅</button>
+  <button data-scene="b">B 书案三叠</button>
+  <button data-scene="c">C 横卷甲板</button>
+  <button data-scene="d">D 立轴双柱</button>
+  <span class="dl">场景</span>
+  <button data-scene="palette">检字</button>
+  <button data-scene="focus">静写</button>
+  <button data-scene="home">首页</button>
+</div>
+
+<script>
+  const params = new URLSearchParams(location.search)
+  const want = params.get('scene')
+  if (want) {
+    document.querySelectorAll('.scene').forEach(s => s.classList.remove('on'))
+    const el = document.getElementById('scene-' + want)
+    if (el) el.classList.add('on')
+    document.querySelectorAll('#scene-dock button').forEach(b => b.classList.toggle('on', b.dataset.scene === want))
+  }
+  document.querySelectorAll('#scene-dock button').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('.scene').forEach(s => s.classList.remove('on'))
+    document.getElementById('scene-' + b.dataset.scene).classList.add('on')
+    document.querySelectorAll('#scene-dock button').forEach(x => x.classList.remove('on'))
+    b.classList.add('on')
+  }))
+  document.querySelectorAll('#theme-dock button').forEach(b => b.addEventListener('click', () => {
+    document.documentElement.dataset.themeFamily = b.dataset.tf
+    document.documentElement.dataset.colorScheme = b.dataset.cs
+    document.querySelectorAll('#theme-dock button').forEach(x => x.classList.remove('on'))
+    b.classList.add('on')
+  }))
+  document.querySelectorAll('.sidepane .tab[data-t]').forEach(t => t.addEventListener('click', () => {
+    const pane = t.closest('.sidepane')
+    pane.querySelectorAll('.tab').forEach(x => x.classList.remove('on'))
+    t.classList.add('on')
+    pane.querySelectorAll('.tbody').forEach(b => { b.style.display = b.dataset.b === t.dataset.t ? '' : 'none' })
+  }))
+  function toggleEar(){
+    const pane = document.getElementById('ear-pane')
+    const spine = document.getElementById('spine-b')
+    const ctx = document.querySelector('#scene-b .slip-card.ctx')
+    if (!pane) return
+    const opening = !pane.classList.contains('open')
+    pane.classList.toggle('open', opening)
+    if (ctx) ctx.classList.toggle('open', opening)
+    if (spine) spine.style.display = opening ? 'none' : ''
+  }
+</script>
+</body>
+</html>
