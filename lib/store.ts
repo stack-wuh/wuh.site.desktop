@@ -143,6 +143,13 @@ export function useWorkspaceStore(): WorkspaceState {
   return useSyncExternalStore(workspaceStore.subscribe, workspaceStore.get, workspaceStore.get)
 }
 
+/** 壳层写作入口用「有无文档会话」布尔快照：键入不改布尔值，避免整壳重渲染 */
+const hasActiveDocSnapshot = (): boolean => workspaceStore.get().content !== null
+
+export function useHasActiveDoc(): boolean {
+  return useSyncExternalStore(workspaceStore.subscribe, hasActiveDocSnapshot, () => false)
+}
+
 // ---------- 首页编辑器面板的纯逻辑（可独立测试） ----------
 
 /** 递归按 DFS 顺序收集工作区 .md 文件（相对路径） */

@@ -25,7 +25,7 @@ import { ContextPanel } from '../../components/contextpanel'
 import { Sheet } from '../../components/ui/Sheet'
 import { EditorCommandHost } from '../../components/capsule/sections/EditorSection'
 import ShellReady from '../../components/ShellReady'
-import { IconFolderOpen, IconHome, IconInbox, IconPuzzle } from '../../components/icons'
+import { IconFile, IconFolderOpen, IconHome, IconInbox, IconPuzzle } from '../../components/icons'
 import {
   bootstrapPluginsHost,
   broadcastTheme,
@@ -38,7 +38,8 @@ import {
 import { floatsStore, toggleFloat } from '../../lib/floats'
 import { installDraftAutosave, useDrafts } from '../../lib/drafts'
 import { refreshIdentity } from '../../lib/identity'
-import { pluginPanelKey, routeKeyFromPathname } from '../../lib/routes'
+import { pluginPanelKey, routeKeyFromPathname, workbenchEntryTarget } from '../../lib/routes'
+import { useHasActiveDoc } from '../../lib/store'
 import { useTheme } from '../../components/theme/ThemeProvider'
 import { useLocale } from '../../lib/i18n/context'
 import { getEditorLiveState, publishEditorLiveState, useEditorLiveState } from '../../lib/editor-state'
@@ -178,6 +179,8 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
   // 专注模式（task-8）：复用 editor-state focusMode 总线（编辑页顶栏淡出已用），
   // 壳层据此整体退场 chrome
   const live = useEditorLiveState()
+  // 写作入口布尔快照：只随「有无文档会话」变化，键入不触发壳层重渲染
+  const hasActiveDoc = useHasActiveDoc()
 
   useEffect(() => {
     // 工作区信息仅供插件 doc 服务解析根路径（壳层不再展示工作区 UI）
@@ -261,9 +264,20 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
     )
   }
 
+  const active = routeKeyFromPathname(pathname)
+  const workbenchTarget = workbenchEntryTarget(pathname, hasActiveDoc)
+  const workbenchToEditor = workbenchTarget === '/editor'
+  // 首项在“回到编辑”态不冒充首页激活：目标是 /editor 时取消 home 高亮
+  const railActive = workbenchToEditor && active === 'home' ? '' : active
+
   const items = [
-    // 首页 = 「新建博客」项目入口（路由 key 仍为 home / 路径 /）
-    { id: 'home', icon: IconHome, title: t('menu.home') },
+    // 首项 = 写作入口（上下文切换）：有活动文档且不在编辑页 → 回到上次文档；
+    // 已在编辑页或无文档 → 首页（新建博客）。/editor 仍为菜单外路由。
+    {
+      id: 'home',
+      icon: workbenchToEditor ? IconFile : IconHome,
+      title: workbenchToEditor ? t('menu.backToEditor') : t('menu.home')
+    },
     // 项目：行本体进 /projects 总览；文档树迁入上下文面板（⌘B）
     { id: 'projects', icon: IconFolderOpen, title: t('menu.projects') },
     // 草稿箱（徽标 = 暂存草稿数；首拉完成前不显示数字）
@@ -271,8 +285,6 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
       ? [{ id: 'drafts', icon: IconInbox, title: t('menu.drafts'), badge: { count: drafts.drafts.length } }]
       : [{ id: 'drafts', icon: IconInbox, title: t('menu.drafts') }])
   ]
-
-  const active = routeKeyFromPathname(pathname)
 
   return (
     <Shell $focus={live.focusMode} data-focus={live.focusMode ? 'true' : undefined}>
@@ -292,9 +304,9 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
           items={items}
           // ▤ 项目钮 = 目次浮笺开关（D3 假定 b）：呼出态即激活态（视觉稿 scene-b）；
           // /projects 路由保留（⌘K / 首页可达），rail 不再直达
-          active={ctxOpen ? 'projects' : active}
+          active={ctxOpen ? 'projects' : railActive}
           onChange={(id) => {
-            if (id === 'home') router.push('/')
+            if (id === 'home') router.push(workbenchTarget)
             else if (id === 'projects') {
               setCtxOpen((v) => !v)
               setPluginsOpen(false)

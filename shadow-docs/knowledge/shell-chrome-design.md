@@ -1,7 +1,7 @@
 ---
 title: 壳层 chrome 设计与插件扩展点
 domain: renderer-ui
-keywords: [图标注册表, AppIcon, Icon, Rail, 导航列, 工作台, 上下文面板, StatusBar, 状态栏, statusItems, 徽标, 插件贡献点, 主题 token, 品牌标, IconLogo, Dock 图标, 应用图标, ico, 任务栏, 浮窗, FloatLayer, float, main, toggle, styled-components, 任务胶囊, 壳层胶囊, 胶囊, 任务贡献点, Capsule, CapsulePanel, tasks, 待办, 进度, Dock, 停靠, 命令面板, 专注模式, data-chrome, 外观与语言, AppearanceSection, panelTabs, 发布磁贴, publish]
+keywords: [图标注册表, AppIcon, Icon, Rail, 导航列, 工作台, 上下文面板, StatusBar, 状态栏, statusItems, 徽标, 插件贡献点, 主题 token, 品牌标, IconLogo, Dock 图标, 应用图标, ico, 任务栏, 浮窗, FloatLayer, float, main, toggle, styled-components, 任务胶囊, 壳层胶囊, 胶囊, 任务贡献点, Capsule, CapsulePanel, tasks, 待办, 进度, Dock, 停靠, 命令面板, 专注模式, data-chrome, 外观与语言, AppearanceSection, panelTabs, 发布磁贴, publish, 回到编辑, 写作入口, 首项, 上下文切换]
 scope: [app, components, lib, src/shared/plugin.ts, src/plugin-sdk, build, scripts]
 status: active
 source:
@@ -35,9 +35,10 @@ source:
   - changes/20261015-feature-workbench-shell/brief.md
   - changes/archive/20261017-feature-app-layout-workbench/brief.md
   - changes/archive/20261020-feature-publish-interaction/brief.md
-verified: 2026-10-21
+  - changes/20261021-fix-workbench-entry-return/brief.md
+verified: 2026-10-22
 verified-depth: runtime
-verified-scope: 20261020 发布磁贴（通栏 Tile $wide + 状态机；capsule-render 5 用例 + 真机走查）；20261017 书脊案面（整窗移植）：书脊 Rail（spine-ink 双主题恒深墨+朱砂装订线）/案面底/浮笺画芯载体（paperSurface）/控制中心（磁贴 4×2+任务 GIT 排版分区+插件 tab 追加分区）/目次书耳浮笺化/Dock 退役（views.area 去 dock 四方同步）/data-chrome 四处/专注退场/四主题实机（书脊暗色倒置被用户裁决否决→恒深墨跟随主题）；全量 86 套件 + 三 tsconfig 绿（SGN-1 小批重试）；20261015 工作台：rail 10 用例 / capsule 双形态 9（现单形态改造）/ dock 7（套件退役）/ palette 13 / 外观区段 5 全绿 + 全量 769
+verified-scope: 20261021 书脊首项上下文切换（首项双态：文档图标+「回到编辑」/房子图标+「新建博客」，目标 editor 时取消 home 激活；workbench-layout 集成用例 + 用户实机走查）；20261020 发布磁贴（通栏 Tile $wide + 状态机；capsule-render 5 用例 + 真机走查）；20261017 书脊案面（整窗移植）：书脊 Rail（spine-ink 双主题恒深墨+朱砂装订线）/案面底/浮笺画芯载体（paperSurface）/控制中心（磁贴 4×2+任务 GIT 排版分区+插件 tab 追加分区）/目次书耳浮笺化/Dock 退役（views.area 去 dock 四方同步）/data-chrome 四处/专注退场/四主题实机（书脊暗色倒置被用户裁决否决→恒深墨跟随主题）；全量 86 套件 + 三 tsconfig 绿（SGN-1 小批重试）；20261015 工作台：rail 10 用例 / capsule 双形态 9（现单形态改造）/ dock 7（套件退役）/ palette 13 / 外观区段 5 全绿 + 全量 769
 ---
 
 # 壳层 chrome 设计与插件扩展点
@@ -50,7 +51,7 @@ verified-scope: 20261020 发布磁贴（通栏 Tile $wide + 状态机；capsule-
 
 **品牌标（2026-09 重绘）**：`IconLogo` = W 字母标（两个圆头 V，120 网格几何 `M12 16 L27 44 L42 16` + `M42 16 L57 44 L72 16`，stroke 6）+ primary 双条点缀（x84 起 w24/w15）；`build/icon.svg` 为 Dock 图标 master（1024 网格、824/185 圆角方底，同一几何 ×7 平移映射），两者几何参数互相注释锚定，**改动任一处必须同步另一处**。`src/main/splash.html`（启动 Loading 页，2026-09-22 起）内联同几何品牌标 SVG，构成**第三同步锚点**（brand.tsx ↔ build/icon.svg ↔ splash.html），由 `tests/splash.test.ts` 从 brand.tsx 源码提取 `d`/rect 几何自动锁定。**splash Loading 动效（20260927-fix-shell-ux-defects 起）**：W 双笔 `stroke-dasharray/offset` 生长（640ms、次笔延迟 160ms）+ accent 块 1.8s 呼吸——纯 CSS、零脚本、零标记改动（选择器 `#splash path/rect:nth-of-type`，不触碰三方互锚几何）；**基态即终态**（dashoffset 0 / opacity 1），`prefers-reduced-motion` 关停动画即静态成品。`scripts/build-icon.mjs`（npm script `build:icon`，devDep `@resvg/resvg-js`）从 master 栅格化 `build/icon.png`（1024）+ `icon-light.png`（`--variant light`，按 svg 头部注释的 token 整串替换）+ macOS `iconutil` 合成 `build/icon.icns` + **`build/icon.ico`（Windows，2026-09-21 起）**：`buildIco` 组包 ICONDIR+ICONDIRENTRY，16–256 七档 PNG 压缩条目（Vista+ 全支持，256 记 0），随 dark 变体产出。electron-builder 直接取 `build/icon.icns`（mac）；win 段 `win.icon: build/icon.ico`——显式 icon 路径按 roots=[buildResourcesDir, projectDir] 双根依次解析，`build/icon.ico` 命中项目根。生成产物（png/ico/icns）随仓库提交，保证干净克隆可打包。**dev 窗口/任务栏图标**：`BrowserWindow` 设 `icon = app.getAppPath()/build/icon.png` + `existsSync` 守卫（打包后 build/ 不进 asar，窗口/任务栏图标由 exe 资源 win.icon/icns 承担）。壳内展示落点：**左栏 SideMenu 底部用户占位区**（静态小尺寸）与设置页「关于」区块（`animated` prop 开启书写动效 + `NEXT_PUBLIC_APP_VERSION` 构建期内联版本）。
 
-**Rail = 书脊（20261017-feature-app-layout-workbench D1 书脊化）**：恒 48px 布面深墨竖条——双向 1px 织纹（透白 3%/压黑 4.5%）+ `--spine-ink` 墨底渐变（**亮色=normal-900 墨、暗色=背景色加深的同族深墨**——normal-900 暗色反转为浅色会脱离主题，走查裁决**不倒置**；配套 `--spine-paper` 纸字对，tokens.ts 双 scheme 成对路由）+ 右缘 1px 朱砂装订线（primary 渐隐渐显，`::after`）。能力沿袭：左缘 2px 激活指示条、徽标位（13px 方角 7px）、`data-tip` 自绘 tooltip + `aria-current`；**Nav 禁 `overflow: hidden`**。结构：顶部导航项（首页/**项目钮=目次浮笺开关**（D3 假定 b：呼出即激活，/projects 路由保留经 ⌘K/首页）/草稿箱）+【插件】条目 = popover（`PluginsWrap` 相对锚定，开合态**受控于壳层 layout**——与目次浮笺互斥，开一方关另一方）+ `margin-top:auto` 底部【用户（品牌标导航 /account）/设置】。主题/外观/语言入口在**控制中心磁贴**（ AppearanceSection 仍为设置页区段）。
+**Rail = 书脊（20261017-feature-app-layout-workbench D1 书脊化）**：恒 48px 布面深墨竖条——双向 1px 织纹（透白 3%/压黑 4.5%）+ `--spine-ink` 墨底渐变（**亮色=normal-900 墨、暗色=背景色加深的同族深墨**——normal-900 暗色反转为浅色会脱离主题，走查裁决**不倒置**；配套 `--spine-paper` 纸字对，tokens.ts 双 scheme 成对路由）+ 右缘 1px 朱砂装订线（primary 渐隐渐显，`::after`）。能力沿袭：左缘 2px 激活指示条、徽标位（13px 方角 7px）、`data-tip` 自绘 tooltip + `aria-current`；**Nav 禁 `overflow: hidden`**。结构：顶部导航项（**首项=写作入口**（上下文切换：有活动文档且不在 `/editor` 时文档图标 +「回到编辑」→ `/editor`；已在编辑页或无文档时房子图标 +「新建博客」→ `/`；目标为 `/editor` 时取消 home 激活）/**项目钮=目次浮笺开关**（D3 假定 b：呼出即激活，/projects 路由保留经 ⌘K/首页）/草稿箱）+【插件】条目 = popover（`PluginsWrap` 相对锚定，开合态**受控于壳层 layout**——与目次浮笺互斥，开一方关另一方）+ `margin-top:auto` 底部【用户（品牌标导航 /account）/设置】。主题/外观/语言入口在**控制中心磁贴**（ AppearanceSection 仍为设置页区段）。
 
 **案面与浮笺载体（D2/D3，同 change）**：main 容器 = 暖案面底（五层渐变：窗光扫 + 双 radial 暖晕 + 1.2% 纸纹竖纹，全 token/color-mix）；非 /editor 路由页由 layout 统一包进 `components/ui/Sheet`（浮起素笺：radius 6、双投影+顶部内高光、右缘纸页叠口——纸面配方 `paperSurface` 与编辑页素笺本体同源，纸只有一种）；目次（ContextPanel）与书耳（SidePane）为 **absolute slip-card 浮笺**（radius 14 双投影+折角，滑出 220ms ease-out-soft、reduced-motion 瞬切，保挂载 opacity/visibility 显隐 + `data-open` 稳定属性），锚点 = Body（书脊右侧 64px / 右缘 16px），**默认收起**。壳体 `Shell` 带 `overflow: clip`——任何子树溢出硬裁剪，chrome 永不随内容滚走（scrollIntoView 类程序化滚动也无法位移壳体）。
 
@@ -85,6 +86,7 @@ verified-scope: 20261020 发布磁贴（通栏 Tile $wide + 状态机；capsule-
 - `statusItems.ts` 变更后必须 `commit()` 产出新 state 引用（快照订阅依赖引用变化）；`floats.ts`、`tasks.ts`、`events.ts` 同构同理。
 - 胶囊动效（旋转亮弧/旋转环/时间线脊线脉动）属**持续状态指示**，不适用 150-300ms 过渡规则；`prefers-reduced-motion: reduce` 下必须静态降级。壳层不得反向修改任务状态（单一写方 = 插件 SDK）；**唯一例外 = 任务中心「清空已完成」**（remove 隐藏条目，不改状态）。壳层胶囊挂点契约（TitleBar 右侧垂直居中、面板贴 chip 下缘弹出、层叠等价换算、单形态开合）见壳层胶囊段——移动挂点或调整层级必须整段同步。
 - **z 分带实际值（20261018 书脊案面修订，实施为准）**：浮窗 ≤58 / rail tooltip 60 / rail popover 62 / 胶囊面板（控制中心）70 / **目次·书耳浮笺 30（Body 内 absolute slip-card）** / **命令面板 palette 85（Toast 90 下、Dialog 100 下）** / Toast 90 / Dialog 100。Dock 带（25）随 Dock 退役移除。新增浮层先归带再实现，禁止无限递增（浮窗 floatZIndex 钳制先例）。
+- 书脊首项 = 写作入口：目标唯一事实源 `lib/routes.ts` 的 `workbenchEntryTarget`；图标/标题随目标切换（文档+「回到编辑」/房子+「新建博客」）；目标为 `/editor` 时取消 home 激活；不改 Rail 宽度/织纹/装订线，不新增第二导航入口。
 - **壳层 chrome 元素必须带 `data-chrome` 稳定属性**（TitleBar/Rail/目次浮笺（ContextPanel）/StatusBar 四处——Dock 随 D5 退役移出清单；专注模式退场与自动化断言唯一锚点，禁用元素选择器——编辑页 PageShell 与首页卡片都是 `section`，曾是白屏级缺陷，20261015 review 修复）。
 - 主区禁止硬编码插件视图容器；新增视图区域一律走 manifest `views.area` 声明（`main` | `float` | `dock` | `context`，20261015 扩展；dock/context 每插件各 ≤1 容量护栏在 `validateManifest`，运行时上报经帧服务 `panelTabs` + `lib/panelTabs` 注册表——声明制，见 [插件系统架构卡片](plugin-architecture.md)）。
 - 任何 `useSyncExternalStore` 必须传第三参 `getServerSnapshot`（Next 静态导出预渲染硬要求）；插件帧的 `PluginView` 与浮窗层均在客户端组件内（'use client'）。
@@ -97,6 +99,7 @@ verified-scope: 20261020 发布磁贴（通栏 Tile $wide + 状态机；capsule-
 ## 验证方式
 
 - `grep -rn "from 'lucide-react'" components app` 排除 `components/icons` 应为空。
+- 书脊首项：`vitest run tests/workbench-layout.test.tsx tests/projects.test.ts tests/i18n.test.ts`（上下文切换、会话字段不变、三语 key）+ `pnpm dev` 走查（插件页 → 首项回文档 → 再点回首页；无文档 → 首页）。
 - `pnpm test`（含 `tests/plugin-manifest.test.ts`、`tests/plugin-statusitems.test.ts`、`tests/plugin-tasks.test.ts`、`tests/plugin-assets.test.ts`、`tests/icon-build.test.ts`、`tests/theme.test.ts`）；icon 用例覆盖设计源几何、PNG 尺寸、ico 容器结构与脚本重跑字节可复现（需 devDep `@resvg/resvg-js` 已安装）。
 - `pnpm dev` 四主题 × 亮暗走查：左栏展开/收起（瞬时 + label 淡入 + tail 组吸附左下）、指示条/徽标/tooltip（仅收起态）、右栏 Home ↔ 设置 ↔ 插件 main 切换、浮窗 toggle/拖拽/缩放/最小化 chip/Esc/多开与页面切换后共存、状态项声明与运行时增删、壳层胶囊 header 右侧常驻（ghost 态/hover 浮起、微进度环空态「就绪」/进度弧/满环、面板贴 chip 向下弹出、逐页遮挡检查、浮窗拖至 header 下方与面板层叠、Esc/点外关/reduced-motion）、键盘遍历、设置页「关于」区块动效与 reduced-motion 降级。
 - `pnpm dist` 产物应由 `app://` 协议加载（Windows `dist/win-unpacked` 可验）；`pnpm dist:mac` 产物 .app 图标应为品牌 icns（mac 上 builder 优先取 `build/icon.icns`）。
