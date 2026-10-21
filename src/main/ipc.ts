@@ -58,6 +58,7 @@ const handlers: {
   githubDeleteLabel: () => { throw new Error('not implemented') },
   githubUpsertIssue: () => { throw new Error('not implemented') },
   publish: () => { throw new Error('not implemented') },
+  publishViaCli: () => { throw new Error('not implemented') },
   uploadImage: () => { throw new Error('not implemented') },
   getAboutActivity: () => { throw new Error('not implemented') },
   getSettings: () => { throw new Error('not implemented') },

@@ -7,7 +7,7 @@
  * 单状态源，持久化 wd.editorTypography）。一切编辑指令经词表/总线发布，
  * 本文件不触碰编辑器实例；颜色只写语义 token。
  */
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState, useSyncExternalStore, type ReactNode } from 'react'
 import { AppIcon } from '../../ui/AppIcon'
 import {
   IconImage,
@@ -16,17 +16,20 @@ import {
   IconMaximize,
   IconPalette,
   IconSearch,
+  IconSend,
   IconSparkles,
   IconSunMoon
 } from '../../icons'
 import type { UploadMode } from '@shared/types'
 import { publishEditorCommand } from '../../../lib/editor-commands'
 import { publishEditorLiveState, useEditorLiveState } from '../../../lib/editor-state'
+import { publishBusy, publishPreflight, publishStateOf } from '../../../lib/publish'
+import { useWorkspaceStore } from '../../../lib/store'
 import { useLocale } from '../../../lib/i18n/context'
 import type { Locale } from '../../../lib/i18n/locales'
 import { useTheme, type SchemeSetting } from '../../theme/ThemeProvider'
 import { toast } from '../../../lib/feedback'
-import { GitGrow, GitMono, GitMsgInput, GBtn, GitRow, Sect, SectHead, Tile, TileIcon, Tiles } from './styles'
+import { GitGrow, GitMono, GitMsgInput, GBtn, GitRow, Sect, SectHead, Tile, TileIcon, TileMeta, TileTag, Tiles } from './styles'
 
 /** 磁贴：方印图标 + 标签；on 传值即带激活态（朱底方印 + 状态点 + 朱边 + aria-pressed） */
 function TileB(props: { label: string; children: ReactNode; on?: boolean; title?: string; onClick: () => void }): React.JSX.Element {
@@ -278,5 +281,51 @@ export function TypesetSection(): React.JSX.Element {
         </GBtn>
       </GitRow>
     </Sect>
+  )
+}
+
+/**
+ * 通栏发布磁贴（20261020-feature-publish-interaction）：状态推导只读 store
+ * 与 frontmatter（issue 号 = 发布身份），发布动作一律经命令通道下发——
+ * CLI 优先 / 内置降级的编排在 EditorCommandHost，本组件不触碰 IPC。
+ */
+export function PublishTile(): React.JSX.Element {
+  const { t } = useLocale()
+  const doc = useWorkspaceStore()
+  const busy = useSyncExternalStore(publishBusy.subscribe, publishBusy.get, publishBusy.get)
+  const state = publishStateOf(doc.content)
+  const pre = publishPreflight({ activePath: doc.activePath, content: doc.content })
+  const status = busy
+    ? t('capsule.publishBusy')
+    : !pre.ok
+      ? t(
+          pre.reason === 'no-doc'
+            ? 'capsule.publishNoDoc'
+            : pre.reason === 'no-path'
+              ? 'capsule.publishNoPath'
+              : 'capsule.publishNoTitle'
+        )
+      : state.issueNumber
+        ? t('capsule.publishPublished', { n: state.issueNumber })
+        : t('capsule.publishReady')
+  return (
+    <Tiles role="group" aria-label={t('capsule.publishAria')}>
+      <Tile
+        $wide
+        type="button"
+        data-testid="publish-tile"
+        disabled={!pre.ok || busy}
+        aria-busy={busy || undefined}
+        title={status}
+        onClick={() => publishEditorCommand({ kind: 'publishDoc' })}
+      >
+        <TileIcon>
+          <AppIcon icon={IconSend} size="xs" decorative />
+        </TileIcon>
+        {t('capsule.publishTile')}
+        <TileMeta>{status}</TileMeta>
+        <TileTag>GITHUB</TileTag>
+      </Tile>
+    </Tiles>
   )
 }

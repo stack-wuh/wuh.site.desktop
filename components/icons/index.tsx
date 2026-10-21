@@ -48,6 +48,7 @@ import {
   Save,
   Command,
   Search,
+  Send,
   Settings,
   Sparkles,
   Strikethrough,
@@ -112,6 +113,7 @@ export const IconRedo = Redo2
 export const IconSave = Save
 export const IconCommand = Command
 export const IconSearch = Search
+export const IconSend = Send
 export const IconSettings = Settings
 export const IconSparkles = Sparkles
 export const IconTable = Table

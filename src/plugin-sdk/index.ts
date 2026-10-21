@@ -145,7 +145,8 @@ export const PLUGIN_SDK_JS = `(function () {
       toast: function (opts) { return call('ui', 'toast', [opts || {}]); },
       message: function (opts) { return call('ui', 'message', [opts || {}]); },
       alert: function (opts) { return call('ui', 'alert', [opts || {}]); },
-      locale: function () { return call('ui', 'locale'); }
+      locale: function () { return call('ui', 'locale'); },
+      publishState: function () { return call('ui', 'publishState'); }
     },
     statusBar: {
       update: function (id, patch) { return call('statusBar', 'update', [id, patch || {}]); },
@@ -258,6 +259,12 @@ export interface WuhApi {
      * wuh.on('locale', cb) 事件（payload { locale }）热切换文案
      */
     locale(): Promise<string>
+    /**
+     * 当前文档发布状态只读（20261020-feature-publish-interaction）：frontmatter
+     * `issue` 号 + 工作区 GitHub remote 拼出 Issue 链接；未发布/无文档返回 null。
+     * 发布成功后帧收 wuh.on('publish', cb) 事件，可重新拉取。
+     */
+    publishState(): Promise<{ issueNumber: number; url?: string } | null>
   }
   statusBar: {
     /** 更新 manifest 声明的状态项内容（未声明的 id 会被宿主拒绝） */

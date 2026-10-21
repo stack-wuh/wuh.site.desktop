@@ -21,7 +21,10 @@ const LEX = {
     emptyNoDoc: '打开一个文档后可编辑文档信息',
     emptyNoFm: '本文档暂无文档信息',
     create: '创建',
-    untitled: '未命名'
+    untitled: '未命名',
+    issue: '关联 Issue',
+    notPublished: '未发布',
+    viewIssue: '在 GitHub 上查看'
   },
   en: {
     title: 'Title',
@@ -36,7 +39,10 @@ const LEX = {
     emptyNoDoc: 'Open a document to edit its info',
     emptyNoFm: 'This document has no info yet',
     create: 'Create',
-    untitled: 'Untitled'
+    untitled: 'Untitled',
+    issue: 'Linked issue',
+    notPublished: 'Not published',
+    viewIssue: 'View on GitHub'
   },
   ja: {
     title: 'タイトル',
@@ -51,7 +57,10 @@ const LEX = {
     emptyNoDoc: 'ドキュメントを開すと情報を編集できます',
     emptyNoFm: 'このドキュメントに情報はありません',
     create: '作成',
-    untitled: '無題'
+    untitled: '無題',
+    issue: '関連 Issue',
+    notPublished: '未公開',
+    viewIssue: 'GitHub で表示'
   }
 }
 
@@ -68,6 +77,7 @@ let locale = 'zh'
 let draft = {}
 let hasDoc = false
 let hasFm = false
+let publish = null
 const inputs = new Map()
 
 function lex() {
@@ -117,6 +127,33 @@ function build() {
     row.appendChild(input)
     root.appendChild(row)
   }
+  // 关联 Issue 只读行（20261020-feature-publish-interaction）：issue 号来自
+  // frontmatter（发布身份），链接经宿主 ui.publishState 由工作区仓库拼出
+  const pubRow = document.createElement('div')
+  pubRow.className = 'fm-row'
+  const pubLabel = document.createElement('label')
+  pubLabel.textContent = lex().issue
+  pubRow.appendChild(pubLabel)
+  if (publish && publish.issueNumber) {
+    const link = document.createElement('button')
+    link.type = 'button'
+    link.className = 'fm-publish-link'
+    link.textContent = publish.url
+      ? `${lex().viewIssue} · #${publish.issueNumber}`
+      : `#${publish.issueNumber}`
+    link.disabled = !publish.url
+    link.addEventListener('click', () => {
+      if (publish && publish.url) void wuh.ui.openExternal(publish.url)
+    })
+    pubRow.appendChild(link)
+  } else {
+    const empty = document.createElement('span')
+    empty.className = 'fm-publish-empty'
+    empty.textContent = lex().notPublished
+    pubRow.appendChild(empty)
+  }
+  root.appendChild(pubRow)
+
   const actions = document.createElement('div')
   actions.className = 'fm-actions'
   const apply = document.createElement('button')
@@ -173,6 +210,11 @@ async function loadDoc() {
   // 仅在切换文件时重置草稿（编辑过程中保留用户输入由 loadDoc 触发时机保证）
   draft = data
   hasFm = Object.keys(data).length > 0
+  try {
+    publish = await wuh.ui.publishState()
+  } catch {
+    publish = null
+  }
   build()
 }
 
@@ -196,4 +238,5 @@ wuh.on('locale', (payload) => {
 build()
 wuh.on('doc.opened', () => void loadDoc())
 wuh.on('doc.closed', () => void loadDoc())
+wuh.on('publish', () => void loadDoc())
 await loadDoc()

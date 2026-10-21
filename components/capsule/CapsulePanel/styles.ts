@@ -83,7 +83,7 @@ export const Tiles = styled.div`
   padding: 12px 14px;
 `
 
-export const Tile = styled.button<{ $on?: boolean }>`
+export const Tile = styled.button<{ $on?: boolean; $wide?: boolean }>`
   position: relative;
   display: flex;
   flex-direction: column;
@@ -132,6 +132,45 @@ export const Tile = styled.button<{ $on?: boolean }>`
     }
   `
       : ''}
+
+  /* 通栏磁贴（发布，20261020）：整行横排，图标 + 标签 + 状态 + 目标 */
+  ${({ $wide }) =>
+    $wide
+      ? `
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    text-align: left;
+
+    &:disabled {
+      cursor: default;
+      opacity: 0.6;
+    }
+  `
+      : ''}
+`
+
+/* 通栏磁贴状态文本（右推、mono）与目标标签（GITHUB） */
+export const TileMeta = styled.span`
+  margin-left: auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--text-secondary);
+`
+
+export const TileTag = styled.span`
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
 `
 
 export const TileIcon = styled.span`
