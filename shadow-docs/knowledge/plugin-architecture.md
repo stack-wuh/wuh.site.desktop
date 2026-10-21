@@ -13,7 +13,7 @@ source:
   - changes/20261007-feature-frontmatter-editor-hide/brief.md
   - changes/20261015-feature-workbench-shell/brief.md
   - changes/archive/20261017-feature-app-layout-workbench/brief.md
-  - changes/20261020-feature-publish-interaction/brief.md
+  - changes/archive/20261020-feature-publish-interaction/brief.md
 verified: 2026-10-21
 verified-depth: unit
 verified-scope: 20261020 ui.publishState svcUi 免权限路由与 SDK 三方同步（frame-services 用例含 url 拼接/无号/无文档）；历史：components/plugins/PluginFrameHost/frameServices.ts, lib/panelTabs.ts, src/shared/plugin.ts, src/plugin-sdk/index.ts, plugins/git-history/plugin.json + logic/status.js（20261017 D5：views.area 去 dock 四方同步——plugin-manifest 39 用例含 dock 拒绝与迁移指引、plugin-extensions 10 用例含 dock kind 未声明报错、frame-services panelTabs context 流转、plugin-manifests-real 真 manifest 校验；全量 86 套件绿）
