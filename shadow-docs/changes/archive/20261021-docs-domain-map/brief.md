@@ -4,7 +4,7 @@
   "name": "20261021-docs-domain-map",
   "type": "docs",
   "scope": "shadow-docs",
-  "status": "published",
+  "status": "archived",
   "baseBranch": "main",
   "branch": null,
   "files": [
@@ -20,13 +20,13 @@
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "a54e92fb64cff0107d1971070c165c1891cb8f3b",
-    "verifiedAt": "2026-10-21T15:36:09.460Z"
+    "verifiedCommit": "29530a7769dbc6bbb97b7250dcf5f446dd2182b5",
+    "verifiedAt": "2026-10-21T23:51:47.991Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "pr:167",
-    "planHash": "3a079ead5385d2f2f537bfaf91d66593521aa8c35c574c08b9e76aaf99b8dba7",
+    "checkpoint": "merged-pr:167",
+    "planHash": "748941c82637adf1e91179a526e7de1bf744fca75957ccedfe9767c42b527d74",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
