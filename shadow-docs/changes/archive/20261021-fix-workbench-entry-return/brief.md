@@ -4,7 +4,7 @@
   "name": "20261021-fix-workbench-entry-return",
   "type": "fix",
   "scope": "app/(shell),lib/store,lib/routes,lib/i18n,tests",
-  "status": "published",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "fix/20261021-fix-workbench-entry-return",
   "files": [
@@ -24,13 +24,13 @@
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "a54e92fb64cff0107d1971070c165c1891cb8f3b",
-    "verifiedAt": "2026-10-21T16:03:18.327Z"
+    "verifiedCommit": "f2be3ff0abb12609ee8de118ec97f619d3a6733b",
+    "verifiedAt": "2026-10-21T23:51:03.847Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "pr:169",
-    "planHash": "c26d09bde1b152270944df54eb8b961a29e5cef85d537e5934c248b7f36da664",
+    "checkpoint": "merged-pr:169",
+    "planHash": "02995400d748c746b171671eea51a168c3706a7fe51a8a890fe0df70b6610b1b",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -42,7 +42,7 @@
         "fix"
       ]
     },
-    "worktree": "/Users/wuhong/shadow-desktop/worktrees/20261021-fix-workbench-entry-return",
+    "worktree": null,
     "release": {
       "files": [
         "app/(shell)/layout.tsx",
