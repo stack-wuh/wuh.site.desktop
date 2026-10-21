@@ -347,6 +347,7 @@ describe('发布磁贴（20261020-feature-publish-interaction）', () => {
     const tile = screen.getByTestId('publish-tile') as HTMLButtonElement
     expect(tile.disabled).toBe(false)
     expect(tile.textContent).toContain('已发布 #12')
+    expect(tile.getAttribute('aria-pressed')).toBe('true')
     act(() => {
       fireEvent.click(tile)
     })
@@ -360,5 +361,6 @@ describe('发布磁贴（20261020-feature-publish-interaction）', () => {
     const tile = screen.getByTestId('publish-tile') as HTMLButtonElement
     expect(tile.disabled).toBe(false)
     expect(tile.textContent).toContain('未发布')
+    expect(tile.getAttribute('aria-pressed')).toBe('false')
   })
 })

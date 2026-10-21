@@ -114,19 +114,44 @@ export const Body = styled.div`
   padding: 10px 12px 14px;
 `
 
-export const OutlineItem = styled.button`
+/* 大纲条目 = 文档题阶的面板缩放版（20261021-style-published-seal）：
+   衬线字体、按级缩进与字号，下缘线同源文档题阶（h1 渐隐墨线 / h2 短朱线 / h3 无线）；
+   当前章（activeHeading 同源书口）左缘 2px 朱线 + 满墨 */
+export const OutlineItem = styled.button<{ $level: number; $active?: boolean }>`
+  position: relative;
   display: flex;
+  align-items: baseline;
   gap: 8px;
   width: 100%;
-  padding: 5px 8px;
+  padding: 5px 8px 6px;
   border: none;
+  border-left: 2.5px solid ${(p) => (p.$active ? 'var(--primary-500)' : 'transparent')};
   border-radius: var(--border-radius-sm);
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: 12.5px;
-  font-family: var(--font-sans);
+  background: ${(p) => (p.$active ? 'color-mix(in oklab, var(--primary-500) 4%, transparent)' : 'transparent')};
+  padding-left: ${(p) => 8 + 10 * Math.max(0, Math.min(p.$level - 1, 2))}px;
+  color: ${(p) =>
+    p.$active ? 'var(--text-primary)' : p.$level >= 3 ? 'var(--text-muted)' : 'var(--text-secondary)'};
+  font-family: var(--font-serif);
+  font-size: ${(p) => (p.$level <= 1 ? '15px' : p.$level === 2 ? '13.5px' : '12.5px')};
+  line-height: 1.45;
   text-align: left;
   cursor: pointer;
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: ${(p) => 8 + 10 * Math.max(0, Math.min(p.$level - 1, 2))}px;
+    right: 8px;
+    bottom: 1px;
+    height: 1px;
+    pointer-events: none;
+    background: ${(p) =>
+      p.$level <= 1
+        ? 'linear-gradient(to right, color-mix(in oklab, var(--text-primary) 26%, transparent), transparent 60%)'
+        : p.$level === 2
+          ? 'linear-gradient(to right, color-mix(in oklab, var(--primary-500) 70%, transparent) 0 32px, transparent 32px)'
+          : 'transparent'};
+  }
 
   &:hover {
     background: var(--chrome-hover);

@@ -19,6 +19,7 @@ import { parseOutline } from '../../../lib/editor-info'
 import { publishEditorCommand } from '../../../lib/editor-commands'
 import { useWorkspaceStore } from '../../../lib/store'
 import { panelTabsStore, visiblePanelTabs } from '../../../lib/panelTabs'
+import { useEditorLiveState } from '../../../lib/editor-state'
 import { useLocale } from '../../../lib/i18n/context'
 import { PluginTabRowItem } from '../../capsule/CapsulePanel/PluginTabRows'
 import { TabRows, TabSection } from '../../capsule/CapsulePanel/styles'
@@ -43,6 +44,7 @@ export function SidePane(props: { open?: boolean }): React.JSX.Element {
   const { t } = useLocale()
   const router = useRouter()
   const doc = useWorkspaceStore()
+  const live = useEditorLiveState()
   useSyncExternalStore(panelTabsStore.subscribe, panelTabsStore.get, panelTabsStore.get)
   const [tab, setTab] = useState<ShellTab | string>('outline')
   const ctxTabs = visiblePanelTabs('context')
@@ -104,10 +106,13 @@ export function SidePane(props: { open?: boolean }): React.JSX.Element {
                 <OutlineItem
                   key={`${item.line}:${index}`}
                   type="button"
+                  $level={item.level}
+                  $active={index === live.activeHeading}
+                  aria-current={index === live.activeHeading ? 'true' : undefined}
+                  data-level={item.level}
                   title={item.text}
                   onClick={() => publishEditorCommand({ kind: 'scrollToHeading', index })}
                 >
-                  <OutlineTag>H{item.level}</OutlineTag>
                   <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.text}</span>
                 </OutlineItem>
               ))
