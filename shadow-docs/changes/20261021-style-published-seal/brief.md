@@ -4,7 +4,7 @@
   "name": "20261021-style-published-seal",
   "type": "style",
   "scope": "app/(shell)/editor,components/editor/SidePane,components/capsule/CapsulePanel",
-  "status": "reviewed",
+  "status": "published",
   "baseBranch": "main",
   "branch": "style/20261021-style-published-seal",
   "files": [
@@ -22,8 +22,8 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 164,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/164",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 168,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/168"
   },
   "review": {
     "conclusion": "passed",
@@ -32,7 +32,7 @@
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:164",
+    "checkpoint": "pr:168",
     "planHash": "d9939130a66334290f3c843bfa432d258ddd33a97a506216cc861f5512a4d602",
     "updatedAt": null,
     "lastError": null,
