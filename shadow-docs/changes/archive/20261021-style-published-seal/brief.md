@@ -4,7 +4,7 @@
   "name": "20261021-style-published-seal",
   "type": "style",
   "scope": "app/(shell)/editor,components/editor/SidePane,components/capsule/CapsulePanel",
-  "status": "published",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "style/20261021-style-published-seal",
   "files": [
@@ -27,13 +27,13 @@
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "a54e92fb64cff0107d1971070c165c1891cb8f3b",
-    "verifiedAt": "2026-10-21T15:52:14.498Z"
+    "verifiedCommit": "70a3510e157b078e25dfc2b62b2e189eea53eabc",
+    "verifiedAt": "2026-10-21T23:49:21.575Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "pr:168",
-    "planHash": "d9939130a66334290f3c843bfa432d258ddd33a97a506216cc861f5512a4d602",
+    "checkpoint": "merged-pr:168",
+    "planHash": "31d03c9496f41d626010bff55c0941b310a634bcbb3293dce900fac8d1863828",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -66,7 +66,7 @@
   "knowledge": {
     "action": "更新",
     "target": "shadow-docs/knowledge/editor.md",
-    "reason": "骑缝（已发布页缘叠口染朱 + 首次发布落色）与书耳大纲同源题阶/activeHeading 联动 → editor.md；磁贴已发布 $on 激活为既有语言复用，不单独起卡"
+    "reason": "同原审查结论（骑缝 + 书耳题阶）；HEAD 前移后归档门禁要求重跑，结论不变"
   }
 }
 ---

@@ -82,3 +82,6 @@
 | 20261015-feature-workbench-shell | ✅ 完成 | shadow-docs/changes/archive/20261015-feature-workbench-shell/brief.md |
 | 20261017-feature-app-layout-workbench | ✅ 完成 | shadow-docs/changes/archive/20261017-feature-app-layout-workbench/brief.md |
 | 20261020-feature-publish-interaction | ✅ 完成 | shadow-docs/changes/archive/20261020-feature-publish-interaction/brief.md |
+| 20261021-docs-domain-map | published | shadow-docs/changes/20261021-docs-domain-map/brief.md |
+| 20261021-fix-workbench-entry-return | published | shadow-docs/changes/20261021-fix-workbench-entry-return/brief.md |
+| 20261021-style-published-seal | ✅ 完成 | shadow-docs/changes/archive/20261021-style-published-seal/brief.md |
