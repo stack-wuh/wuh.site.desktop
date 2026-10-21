@@ -24,7 +24,7 @@ source:
   - changes/archive/20261014-feature-editor-paper-rebuild/brief.md
   - changes/archive/20261017-feature-app-layout-workbench/brief.md
   - changes/archive/20261020-feature-publish-interaction/brief.md
-  - changes/20261021-style-published-seal/brief.md
+  - changes/archive/20261021-style-published-seal/brief.md
 verified: 2026-10-21
 verified-depth: runtime
 verified-scope: 20261021 骑缝与书耳题阶（editor-page 骑缝显隐双用例 + sidebar 题干/aria-current 用例 + capsule-render aria-pressed；全量 88 套件/824 用例 + 三 tsconfig + 真机走查四主题）；20261020 发布磁贴（CLI 优先双通道 + frontmatter issue 身份回写）：publish-cli/publish-logic/publish-frontmatter/capsule-render/frame-services 五探针 68 用例绿 + 三 tsconfig 绿 + 修复前全量 88 套件/818 用例绿（修复后因本机 139 未全量复跑，由目标探针覆盖）+ 真机走查（create→update→改标题仍 update→面板关联行外开、鉴权失败可读提示）；20261014 素笺手记（随 v1.0.0 合入，PR #156）：合并后 86 套件/925 用例逐批全绿 + 三 tsconfig 绿 + assert-first 新增纯逻辑（spineTicks/spineDistance/findCardLine/selectionUrl/cmInsertCard/cmConsumeSlashLine/applyMarkdownInsert-del/linkMeta）与笺条三态行为用例先红后绿 + 用户实机走查（发现并修复：悬浮顶栏压书耳页签、CM 聚焦虚线框显形）；20261015 工作台：editor-center/focus-mode/editor-context-sidebar/settings-appearance 套件绿（单挂载拓扑/专注 chrome 退场 data-chrome/侧栏三页签/外观三控件写穿）+ drafts-editor-dom 迁移到 /editor 页真 CM6 链路绿；历史：editor-page + i18n + saveas-flow 用例绿（草稿态 saveAs、三语 key 锁定、原生保存链共存）；20260927-feature-editor-interactions：L 级完整 TDD（先红 23 失败→绿，交互纯逻辑 26 + 组件行为用例，真实 EditorView 驱动点击）+ 全量 66 文件/581 用例 + 三 tsconfig 绿；20261007-feature-frontmatter-editor-hide：frontmatter 隐藏 11 用例 + 装饰族回归 80 绿 + 全量 74 文件/672 用例 + Electron 实机截图；20261008-feature-image-upload-choice：完整 TDD（19 新用例先红后绿）+ 全量 75 文件/687 用例 + electron-vite build + 用户实机走查
