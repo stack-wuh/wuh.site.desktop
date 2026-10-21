@@ -7,8 +7,8 @@
 - 权重: 2
 - 深度: runtime
 - 域/scope: 本机工具链 · 验证执行
-- 证据: 20261007-style-scrollbars-virtual-projects-list（swap 9.2G 用 8.7G 时连 pnpm/wait-on 二进制本身都段错误；清理失控 dev 实例后一次重试全过）；renderer-virtual-list 卡「本机注意」同源
-- 命中: 2（最近 2026-10-08）
+- 证据: 20261007-style-scrollbars-virtual-projects-list（swap 9.2G 用 8.7G 时连 pnpm/wait-on 二进制本身都段错误；清理失控 dev 实例后一次重试全过）；renderer-virtual-list 卡「本机注意」同源；20261021-fix-workbench-entry-return（tsconfig.next/focus-mode 在 node22 139，node20/jitless 绕行通过）
+- 命中: 3（最近 2026-10-22）
 - 退役条件: 换机或内存常态余量 >50% 且连续一个月无复现
 
 ## SGN-2 · 后台化 `next dev` 必须挂持久 stdin（`< /dev/zero`），裸 nohup/& 必静默自杀
@@ -28,3 +28,12 @@
 - 证据: 20261007-style-scrollbars-virtual-projects-list（release plan 首轮自动绑到另一会话未提交的 feature 分支，若不复核会把两条线混进同一 PR；切回 main + branch execute 后正常）
 - 命中: 1（最近 2026-10-08）
 - 退役条件: shadow-dev CLI 自身在 plan 阶段拒绝非本 change 分支（升级后验证）
+
+## SGN-4 · fresh worktree 需真实 node_modules 与 dist/next/dev/types，否则 Turbopack / tsconfig.next 失败
+- 方向: positive
+- 权重: 2
+- 深度: runtime
+- 域/scope: apps/desktop · worktree 引导 · 验证执行
+- 证据: 20261021-fix-workbench-entry-return（node_modules 外链符号链接被 Turbopack 拒绝：`Symlink [project]/node_modules is invalid`；hard-link copy 后 next dev Ready；tsconfig.next 缺 dist/next/dev/types 时 exit 139，复制已构建 checkout 的类型文件后通过）
+- 命中: 1（最近 2026-10-22）
+- 退役条件: Turbopack 支持外链 node_modules，或 worktree 引导自动生成 dist/next/dev/types

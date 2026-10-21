@@ -3,6 +3,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import ShellLayout from '../app/(shell)/layout'
 import AppProviders from '../components/AppProviders'
+import { workspaceStore } from '../lib/store'
 import { resetRenderEnv } from './helpers/dom-env'
 
 /**
@@ -40,6 +41,7 @@ beforeAll(() => {
 describe('工作台壳层骨架', () => {
   beforeEach(() => {
     resetRenderEnv()
+    workspaceStore.closeDoc()
     nav.pathname = '/'
     nav.push.mockClear()
   })
@@ -102,5 +104,41 @@ describe('工作台壳层骨架', () => {
     const view = renderShell()
     expect(screen.getByRole('button', { name: '设置' }).getAttribute('aria-current')).toBe('page')
     expect(screen.getByRole('button', { name: '新建博客' }).getAttribute('aria-current')).toBeNull()
+  })
+
+  it('有活动文档且不在编辑页：首项回 /editor 且不动文档会话', () => {
+    workspaceStore.openDoc('posts/a.md', '# A')
+    nav.pathname = '/plugin/git-history/git'
+    renderShell()
+    const before = workspaceStore.get()
+    fireEvent.click(screen.getByRole('button', { name: '回到编辑' }))
+    expect(nav.push).toHaveBeenCalledWith('/editor')
+    expect(workspaceStore.get().content).toBe(before.content)
+    expect(workspaceStore.get().activePath).toBe('posts/a.md')
+    expect(workspaceStore.get().dirty).toBe(before.dirty)
+  })
+
+  it('已在编辑页：首项回 / 且文档会话保留', () => {
+    workspaceStore.openDoc('posts/b.md', '# B')
+    nav.pathname = '/editor'
+    renderShell()
+    fireEvent.click(screen.getByRole('button', { name: '新建博客' }))
+    expect(nav.push).toHaveBeenCalledWith('/')
+    expect(workspaceStore.get().content).toBe('# B')
+    expect(workspaceStore.get().activePath).toBe('posts/b.md')
+  })
+
+  it('无活动文档：首项回 /', () => {
+    nav.pathname = '/plugin/git-history/git'
+    renderShell()
+    fireEvent.click(screen.getByRole('button', { name: '新建博客' }))
+    expect(nav.push).toHaveBeenCalledWith('/')
+  })
+
+  it('首项目标为 /editor 时不冒充 home 激活', () => {
+    workspaceStore.openDoc('posts/c.md', '# C')
+    nav.pathname = '/'
+    renderShell()
+    expect(screen.getByRole('button', { name: '回到编辑' }).getAttribute('aria-current')).toBeNull()
   })
 })

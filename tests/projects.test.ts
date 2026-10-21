@@ -9,7 +9,7 @@ import {
   toggleExpandedGroup,
   toggleNodeKey
 } from '../lib/projects'
-import { routeKeyFromPathname } from '../lib/routes'
+import { routeKeyFromPathname, workbenchEntryTarget } from '../lib/routes'
 
 /**
  * 项目纯逻辑（20260924-feature-projects-editor-page）：
@@ -152,5 +152,24 @@ describe('routeKeyFromPathname 扩展', () => {
     expect(routeKeyFromPathname('/')).toBe('home')
     expect(routeKeyFromPathname('/drafts')).toBe('drafts')
     expect(routeKeyFromPathname('/settings')).toBe('settings')
+  })
+})
+
+describe('workbenchEntryTarget 书脊首项', () => {
+  it('有活动文档且不在编辑页 → /editor', () => {
+    expect(workbenchEntryTarget('/', true)).toBe('/editor')
+    expect(workbenchEntryTarget('/plugin/git-history/git', true)).toBe('/editor')
+    expect(workbenchEntryTarget('/drafts', true)).toBe('/editor')
+    expect(workbenchEntryTarget('/settings', true)).toBe('/editor')
+  })
+
+  it('已在编辑页 → /（上下文切换回首页）', () => {
+    expect(workbenchEntryTarget('/editor', true)).toBe('/')
+    expect(workbenchEntryTarget('/editor', false)).toBe('/')
+  })
+
+  it('无活动文档 → /', () => {
+    expect(workbenchEntryTarget('/', false)).toBe('/')
+    expect(workbenchEntryTarget('/plugin/git-history/git', false)).toBe('/')
   })
 })

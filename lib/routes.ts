@@ -21,3 +21,11 @@ export function routeKeyFromPathname(pathname: string): string {
   }
   return 'home'
 }
+
+/**
+ * 书脊首项（写作入口）目标：有活动文档且不在编辑页 → 回 `/editor`；
+ * 已在编辑页或无文档 → 回 `/`（首页 = 新建博客）。
+ */
+export function workbenchEntryTarget(pathname: string, hasActiveDoc: boolean): '/' | '/editor' {
+  return hasActiveDoc && !pathname.startsWith('/editor') ? '/editor' : '/'
+}

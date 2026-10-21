@@ -1,7 +1,7 @@
 ---
 title: Renderer 工作台壳层布局与 App Router 路由约定
 domain: renderer-ui
-keywords: [首页, 设置页, 项目页, 编辑页, 路由, App Router, 路由段, 工作台, rail, 图标列, 上下文面板, 文档树, 项目树, main 容器, 浮窗, FloatLayer, 面板切换, 插件视图, 静态导出, 专注模式, 命令面板, palette, 胶囊, Dock, 停靠, data-chrome]
+keywords: [首页, 设置页, 项目页, 编辑页, 路由, App Router, 路由段, 工作台, rail, 图标列, 上下文面板, 文档树, 项目树, main 容器, 浮窗, FloatLayer, 面板切换, 插件视图, 静态导出, 专注模式, 命令面板, palette, 胶囊, Dock, 停靠, data-chrome, 回到编辑, 写作入口, 首项, 上下文切换, workbenchEntryTarget]
 scope: [app, components, lib]
 status: active
 source:
@@ -29,9 +29,10 @@ source:
   - changes/20260925-build-pin-node22/brief.md
   - changes/20261015-feature-workbench-shell/brief.md
   - changes/archive/20261017-feature-app-layout-workbench/brief.md
-verified: 2026-10-18
+  - changes/20261021-fix-workbench-entry-return/brief.md
+verified: 2026-10-22
 verified-depth: runtime
-verified-scope: 20261017 书脊案面：书脊/案面/浮笺三层实机（目次 64px 锚点、书耳默认收起、Sheet 画芯、Shell overflow:clip 禁壳滚、rail 项目钮=目次开关互斥插件 popover、⌘B 语义）；workbench-layout/rail/context-panel/home-workbench/focus-mode/editor-page 套件绿 + 全量 86 套件；20261015 工作台范式 764+ 用例历史绿
+verified-scope: 20261021 书脊首项上下文切换：workbench-layout 集成用例（有文档→/editor 且 content/activePath/dirty 不变、/editor→/ 且 content 保留、无文档→/、目标 editor 时无 home 激活）+ projects 纯逻辑 + i18n 三语 + 三 tsconfig + 用户实机走查；20261017 书脊案面：书脊/案面/浮笺三层实机（目次 64px 锚点、书耳默认收起、Sheet 画芯、Shell overflow:clip 禁壳滚、rail 项目钮=目次开关互斥插件 popover、⌘B 语义）；workbench-layout/rail/context-panel/home-workbench/focus-mode/editor-page 套件绿 + 全量 86 套件；20261015 工作台范式 764+ 用例历史绿
 ---
 
 # Renderer 壳层两栏布局与 App Router 路由约定
@@ -57,7 +58,7 @@ verified-scope: 20261017 书脊案面：书脊/案面/浮笺三层实机（目�
 
 **壳层 i18n（2026-09-22 起）**：`lib/i18n/locales.ts` 三语字典（zh/en/ja flat key，`{name}` 占位符）+ `lib/i18n/context.tsx` 的 `LocaleProvider`/`useT()`，持久化键 `wd.locale`（与 `wd.theme` 同模式）。**两段式渲染**：首帧固定 zh 与导出 HTML 一致（防 hydration mismatch），mount 后切存储 locale——启动切换的中文闪帧由 splash 窗覆盖，运行时切换即时。字典 key 集合一致性由 `tests/i18n.test.ts` 锁定；**缺键会静默回落为 key 本身（UI 直接显示裸 key，如 `menu.projects`）**，故同文件另有「源码引用键 ⊆ 字典」覆盖扫描（字面量 `t()` 直调 + 按命名空间识别的字面量扫描，覆盖三元/映射表等间接传键）——新增文案键必须三语齐配，否则测试红。范围边界：仅壳层 chrome 文案；插件 manifest 标题与插件帧内容不在此机制内。
 
-**导航结构（20261015 工作台起）**：`ctxOpen`（上下文面板开合）是 layout 内的客户端状态；菜单项 id 与路由段一一对应（`lib/routes.ts` 的 `pluginPanelKey` / `routeKeyFromPathname` 负责互转，`account` 为独立路由 key）。**Rail**（`components/rail/`，恒 48px 禁展开）——主导航项（首页/项目/草稿箱：左缘激活指示条 + 徽标 + `data-tip` tooltip）+【插件】条目（**popover** 呈现 main 视图导航行与浮窗开关行，复用 `components/menu/PluginTree.tsx`，点行导航/开关即收起；点外关 target 归属守卫 + Esc，20260924-fix-capsule-self-close 先例）+ 底部【用户/设置】两项（纯导航直达 `/account` 与 `/settings`）。主题/外观/语言三入口随 SideMenu 退役**迁入设置页「外观与语言」区段**（`components/settings/AppearanceSection.tsx`；review 修复回归：曾一度全仓无 setFamily/setScheme/setLocale 消费方）。文字导航职责整体让位 **⌘K 命令面板**（`components/palette/`）。**Dock**（`components/dock/`）渲染于 Body 与 StatusBar 之间：停靠态任务中心（胶囊 chip 兼开关）或插件 dock 页签，空态不渲染不占高。`FloatLayer` 常驻 main 容器叠加其上（浮窗与中央页面**共存**，切换页面不卸载）。
+**导航结构（20261015 工作台起）**：`ctxOpen`（上下文面板开合）是 layout 内的客户端状态；菜单项 id 与路由段一一对应（`lib/routes.ts` 的 `pluginPanelKey` / `routeKeyFromPathname` 负责互转，`account` 为独立路由 key）。**Rail**（`components/rail/`，恒 48px 禁展开）——主导航项（首项=写作入口（上下文切换）/项目/草稿箱：左缘激活指示条 + 徽标 + `data-tip` tooltip；首项目标由 `lib/routes.ts` 的 `workbenchEntryTarget` 派生——有活动文档且不在 `/editor` → `/editor`，否则 → `/`；图标/标题随目标切换；目标为 `/editor` 时取消 home 激活；布局只订阅 `useHasActiveDoc` 布尔快照）+【插件】条目（**popover** 呈现 main 视图导航行与浮窗开关行，复用 `components/menu/PluginTree.tsx`，点行导航/开关即收起；点外关 target 归属守卫 + Esc，20260924-fix-capsule-self-close 先例）+ 底部【用户/设置】两项（纯导航直达 `/account` 与 `/settings`）。主题/外观/语言三入口随 SideMenu 退役**迁入设置页「外观与语言」区段**（`components/settings/AppearanceSection.tsx`；review 修复回归：曾一度全仓无 setFamily/setScheme/setLocale 消费方）。文字导航职责整体让位 **⌘K 命令面板**（`components/palette/`）。**Dock**（`components/dock/`）渲染于 Body 与 StatusBar 之间：停靠态任务中心（胶囊 chip 兼开关）或插件 dock 页签，空态不渲染不占高。`FloatLayer` 常驻 main 容器叠加其上（浮窗与中央页面**共存**，切换页面不卸载）。
 
 **上下文面板 = 目次浮笺**（20261017 D3 浮笺化；`components/contextpanel/` 承载 `ProjectsTree fill` 形态）：absolute slip-card 浮于案面左缘（Body 内 `left:64px` = 书脊 48 + 呼吸 16——**不遮书脊**），默认收起，呼出入口 = rail 项目钮 / ⌘B / 头部旋钮；显隐走 opacity/visibility 滑出（220ms ease-out-soft、reduced-motion 瞬切）+ `data-open` 稳定属性，**保挂载**（树缓存/展开态不丢）。一级 = 项目节点（当前工作区置顶带「当前」徽标，其余最近项目），二级起 = 文件夹/`.md` 递归树（`pruneMarkdownTree` 只留含 .md 分支）；项目节点懒加载（首次展开才 `readTree(root)`），失效项目呈「无法访问」且再次点击重试；**点文件与 `/projects` 页共用 `openProjectFile`**（脏确认 → 非当前项目先 `openWorkspaceByPath` 切工作区 → `readFile` → `openDoc`），随后 `router.push('/editor')`——打开流单点收口，两处 UI 不得各写一份。清单数据走 `window.api.readTree(root?)`：**显式 root 校验目录存在后按该根构树、不切换当前工作区**；缺省 = `requireRoot()` 现行为（契约见 `src/shared/types.ts`，主进程实现与测试见 workspace 域）。**大仓库虚拟化（20261007 起，工作台沿用）**：全部行压平进固定行高 `VirtualList`（26px），只渲染可见窗口；面板形态传 `fill`（根容器即滚动容器 `height:100%`，通栏撑满面板）——约束全量见 [固定行高虚拟列表卡片](renderer-virtual-list.md)。
 
@@ -73,6 +74,7 @@ verified-scope: 20261017 书脊案面：书脊/案面/浮笺三层实机（目�
 
 - 新增/拆分渲染层组件按**域内文件夹化**落位：`组件名/index.tsx` 对外（含原具名导出的 re-export）+ 子单元文件 + styles；**路由段页面**用变体：`page.tsx` 留薄入口 + 同目录 Page 组件 + styles；拆分必须逐字搬移仅调整 import/export，由全量绿灯测试 + 三 tsconfig typecheck 护航（vitest 运行时宽松解析不报相对路径错，tsc 门禁不可省）。职责单一的过线文件（自包含可视化/样式库/单树件）不强拆。
 - 新增中央页面 = 新增 `app/(shell)/<segment>/page.tsx` 路由段；禁止塞回 Rail/上下文面板（导航列纯导航不承载内容）。
+- 书脊首项（写作入口）的目标唯一事实源 = `lib/routes.ts` 的 `workbenchEntryTarget(pathname, hasActiveDoc)`：有活动文档且不在 `/editor` → `/editor`，否则 → `/`；布局只订阅 `useHasActiveDoc()` 布尔快照，禁止直接 `useWorkspaceStore()`（键入会重渲染整壳）；目标为 `/editor` 时首项不冒充 home 激活。
 - 壳层 chrome 元素（TitleBar/Rail/上下文面板/Dock/StatusBar）必须带 `data-chrome` 稳定属性：专注模式退场、自动化断言都依赖它；新增 chrome 容器漏标即专注模式残留。
 - 插件视图路由统一走 `/plugin/<id>/<view>` 段；新增视图一律走 manifest `views.area` 声明（`main` 右栏页面 | `float` 浮窗），`sidebar` 已废弃（validateManifest 拒绝并指引迁移 main）。
 - 插件 main 视图动态路由若新增**运行时**来源，必须同步改 `generateStaticParams` 或在页面内退化到 client 渲染，否则静态导出缺页。
@@ -91,6 +93,7 @@ verified-scope: 20261017 书脊案面：书脊/案面/浮笺三层实机（目�
 ## 验证方式
 
 - 读 `app/(shell)/layout.tsx` 与 `lib/routes.ts`：路由段 ↔ 菜单项映射、Cmd+, 切换、FloatLayer 常驻。
+- 书脊首项：`vitest run tests/workbench-layout.test.tsx tests/projects.test.ts tests/i18n.test.ts`（上下文切换、会话字段不变、三语 key）；实机走查：插件页 → 首项回文档 → 再点回首页；无文档 → 首页。
 - Node 环境经仓库根 `mise.toml` 钉定（22.23.2）；`pnpm typecheck`（node 侧 + tsconfig.next.json）+ `pnpm test` 回归（tsc + vitest）；项目/编辑面专项：`tests/projects.test.ts`（分组/树剪枝纯逻辑）、`tests/projects-render.test.tsx`、`tests/projects-tree.test.tsx`（懒加载/失效重试/点击流转）、`tests/editor-page.test.tsx`（happy-dom，零 React 告警）、`tests/i18n.test.ts`（三语 parity + 源码键覆盖）。
 - `pnpm dev` 手动路径：启动默认 Home（左栏可见）→ 左栏切设置/插件 main 视图 → `Ctrl+,` 切换设置 ↔ 首页 → 浮窗 toggle 开合、切页后浮窗仍在、Esc 关浮窗；左栏展开/收起瞬时切换；展开【项目】旋钮 → 点树内 `.md` 直达 `/editor`、跨项目打开自动切工作区、失效项目「无法访问」可重试。
 - 生产加载路径：`app://shell/index.html` 仅在**打包产物**（`pnpm dist`）中生效；未打包 `electron .` 恒走 dev 路径（wait-on next dev）。splash 人工走查：启动即现品牌标 splash → 主窗带样式切换无白屏/乱序；`tests/splash.test.ts` 锁定 splash 静态契约。

@@ -6,7 +6,7 @@
 
 | 技术域 | 关键词 | 应查阅 |
 |--------|--------|--------|
-| 渲染层导航/壳层 | 页面 视图 路由 路由段 App Router 设置 导航 工作台 rail 图标列 上下文面板 文档树 收起 快捷键 命令面板 palette ⌘K 专注模式 focus 用户入口 用户中心 /account 通知条 main 容器 浮窗 FloatLayer toggle 首页 任务流 问候语 热力图 静态导出 export next 拆分 文件夹化 组件组织 data-chrome | knowledge/renderer-shell-routing.md |
+| 渲染层导航/壳层 | 页面 视图 路由 路由段 App Router 设置 导航 工作台 rail 图标列 上下文面板 文档树 收起 快捷键 命令面板 palette ⌘K 专注模式 focus 用户入口 用户中心 /account 通知条 main 容器 浮窗 FloatLayer toggle 首页 任务流 问候语 热力图 静态导出 export next 拆分 文件夹化 组件组织 data-chrome 回到编辑 写作入口 首项 上下文切换 workbenchEntryTarget | knowledge/renderer-shell-routing.md |
 | 壳层 chrome / 图标 | 图标 图标注册表 AppIcon Icon 品牌标 IconLogo Dock 图标 icon.svg 应用图标 ico 任务栏 rail 书脊 spine-ink spine-paper 朱砂装订线 StatusBar 状态栏 徽标 tooltip 描边 主题 token styled-components CSP 外观与语言 语言切换 SegmentedControl 分段控件 案面 Sheet 浮笺画芯 paperSurface 专注浮条 z 分带 层叠 | knowledge/shell-chrome-design.md |
 | 用户中心 / GitHub 授权 | 用户中心 account 授权 OAuth Device Flow GitHub 登录 token 凭证 身份 头像 identity 仓库列表 默认站点仓库 PAT scopes 失效 | knowledge/renderer-shell-routing.md, knowledge/shell-chrome-design.md |
 | 构建/工具链 | Next next.config 静态导出 app 协议 electron-vite 双进程 dev workspace pnpm 打包 electron-builder tsconfig vitest README | knowledge/renderer-shell-routing.md, knowledge/shell-chrome-design.md |
