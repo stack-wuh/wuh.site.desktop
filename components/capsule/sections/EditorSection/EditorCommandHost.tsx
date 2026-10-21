@@ -8,10 +8,19 @@
  */
 import { useEffect, useRef, useState } from 'react'
 import { uiConfirm } from '../../../ui/Dialog'
-import { workspaceStore } from '../../../../lib/store'
+import { documentEvents, workspaceStore } from '../../../../lib/store'
 import { consumeDraft } from '../../../../lib/drafts'
 import { message, toast } from '../../../../lib/feedback'
 import { publishEditorCommand, subscribeEditorCommands } from '../../../../lib/editor-commands'
+import {
+  buildBuiltinRequest,
+  isPublishAuthError,
+  publishBusy,
+  publishPreflight,
+  shouldFallbackToBuiltin,
+  type PublishBlockReason
+} from '../../../../lib/publish'
+import { setFrontmatterField } from '@shared/frontmatter'
 import { applyWorkspaceSwitch } from '../../../plugins/PluginFrameHost'
 import { workspaceRelativePath } from '../../../../src/shared/types'
 import { getEditorLiveState, publishEditorLiveState } from '../../../../lib/editor-state'
@@ -100,6 +109,107 @@ export function EditorCommandHost(): React.JSX.Element | null {
     }
   }
   runSaveAsRef.current = runSaveAs
+
+  /**
+   * 发布当前文档（20261020-feature-publish-interaction）：保存（CLI 读盘）→ CLI 优先
+   * （publishViaCli）→ 不可用降级内置 publisher → frontmatter issue 回写并落盘 →
+   * Message 横幅 + documentEvents('publish')。执行阶段错误不降级（防同一文档双建）。
+   */
+  const runPublish = async (): Promise<void> => {
+    if (publishBusy.get()) return
+    const pre = publishPreflight(workspaceStore.get())
+    if (!pre.ok) {
+      const key: Record<PublishBlockReason, string> = {
+        'no-doc': 'capsule.publishNoDoc',
+        'no-path': 'capsule.publishNoPath',
+        'no-title': 'capsule.publishNoTitle'
+      }
+      toast({ text: t(key[pre.reason ?? 'no-doc']), kind: 'info' })
+      return
+    }
+    publishBusy.set(true)
+    try {
+      const cur = workspaceStore.get()
+      // CLI 读盘发布：脏缓冲先落盘，保证「所见即所发」与身份回写一致
+      if (cur.dirty) await workspaceStore.saveActive()
+      const saved = workspaceStore.get()
+      const filePath = saved.activePath
+      if (!filePath || saved.content == null) return
+
+      let issueNumber: number | null = null
+      let url: string | undefined
+      let created = false
+      const cli = await window.api.publishViaCli({ filePath }).catch((err: unknown) => ({
+        ok: false as const,
+        available: true,
+        error: err instanceof Error ? err.message : String(err),
+        code: undefined as string | undefined
+      }))
+      if (cli.ok) {
+        issueNumber = cli.issueNumber ?? null
+        url = cli.url
+        created = Boolean(cli.created)
+      } else if (shouldFallbackToBuiltin(cli)) {
+        const req = buildBuiltinRequest(saved.content, filePath)
+        if (!req) throw new Error(t('capsule.publishNoTitle'))
+        const res = await window.api.publish(req)
+        if (!res.ok) {
+          throw new Error(
+            isPublishAuthError(undefined, res.error)
+              ? t('capsule.publishAuthFailed')
+              : (res.error ?? t('capsule.publishFailed'))
+          )
+        }
+        issueNumber = res.issueNumber ?? null
+        url = res.url
+        created = Boolean(res.created)
+      } else {
+        throw new Error(
+          isPublishAuthError(cli.code, cli.error)
+            ? t('capsule.publishAuthFailed')
+            : (cli.error ?? t('capsule.publishFailed'))
+        )
+      }
+
+      // 身份回写：frontmatter issue（有号幂等）。取发布完成时的最新缓冲，避免
+      // 覆盖发布期间的用户输入；若期间已切换文档，则直接回写原文件不误伤当前文档
+      if (issueNumber) {
+        const fresh = workspaceStore.get()
+        if (fresh.activePath === filePath && fresh.content != null) {
+          const next = setFrontmatterField(fresh.content, 'issue', String(issueNumber))
+          if (next !== fresh.content) {
+            workspaceStore.setContent(next)
+            await workspaceStore.saveActive()
+          }
+        } else {
+          try {
+            const disk = await window.api.readFile(filePath)
+            const next = setFrontmatterField(disk.content, 'issue', String(issueNumber))
+            if (next !== disk.content) await window.api.writeFile(filePath, next)
+          } catch {
+            // 回写失败不掩盖发布成功：Issue 已创建，号可在 Frontmatter 面板手动补
+          }
+        }
+      }
+      documentEvents.emit('publish', { path: filePath, issueNumber, url })
+
+      const key = created ? 'capsule.publishCreated' : 'capsule.publishUpdated'
+      void message({
+        title: t('capsule.publishTitle'),
+        text: t(key, { n: issueNumber ?? '' }),
+        kind: 'success',
+        actions: url
+          ? [{ id: 'view', label: t('capsule.publishView'), variant: 'primary' as const }]
+          : undefined
+      }).then((actionId) => {
+        if (actionId === 'view' && url) void window.api.openExternal(url)
+      })
+    } catch (err) {
+      toast({ text: err instanceof Error ? err.message : String(err), kind: 'error' })
+    } finally {
+      publishBusy.set(false)
+    }
+  }
 
   const openTransfer = (): void => {
     setTransferSrc(workspaceStore.get().activePath ?? '')
@@ -246,6 +356,10 @@ export function EditorCommandHost(): React.JSX.Element | null {
         }
         case 'transferDoc': {
           if (cur.activePath) openTransfer()
+          return true
+        }
+        case 'publishDoc': {
+          void runPublish()
           return true
         }
         case 'toggleFocus': {

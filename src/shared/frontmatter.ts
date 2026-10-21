@@ -104,3 +104,34 @@ export function toPublishFields(raw: string): {
 }
 
 export type { PublishRequest }
+
+/**
+ * 在文档头中设置单键（发布身份回写用，20261020-feature-publish-interaction）：
+ * 有键就地替换该行、无键插入闭合栅栏前；无合法头块时原样返回（不造头——发布
+ * 入口已要求 title 存在于头块）。逐行改，保序保格式，不做整块 yaml 重序列化
+ * （其余键与正文零改动）；目标行已是期望值时返回原字符串（幂等）。
+ */
+export function setFrontmatterField(content: string, key: string, value: string): string {
+  const range = frontmatterLineRange(content)
+  if (!range) return content
+  const bom = content.startsWith('\uFEFF') ? '\uFEFF' : ''
+  const text = bom ? content.slice(1) : content
+  const headEnd = text.indexOf('\n') + 1
+  const closeIdx = text.indexOf('\n---', 3)
+  if (headEnd <= 0 || closeIdx < headEnd) return content
+  const lines = text.slice(headEnd, closeIdx).split('\n')
+  let end = lines.length
+  while (end > 0 && lines[end - 1].trim() === '') end--
+  const desired = `${key}: ${value}`
+  // 只认顶层键（不匹配缩进的嵌套子键），规避误改 YAML 嵌套结构
+  const keyPattern = new RegExp(`^${key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*:`)
+  for (let i = 0; i < end; i++) {
+    if (keyPattern.test(lines[i])) {
+      if (lines[i].trim() === desired) return content
+      lines[i] = desired
+      return bom + text.slice(0, headEnd) + lines.join('\n') + text.slice(closeIdx)
+    }
+  }
+  lines.splice(end, 0, desired)
+  return bom + text.slice(0, headEnd) + lines.join('\n') + text.slice(closeIdx)
+}

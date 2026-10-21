@@ -65,3 +65,33 @@ body {
   border-color: var(--primary-color);
   color: var(--background-color);
 }
+
+/* 关联 Issue 只读行（20261020-feature-publish-interaction）：issue 号 = 发布身份 */
+.fm-publish-link {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  text-align: left;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--primary-color);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fm-publish-link:hover {
+  text-decoration: underline;
+}
+
+.fm-publish-link:disabled {
+  color: var(--text-secondary);
+  cursor: default;
+}
+
+.fm-publish-empty {
+  flex: 1;
+  color: var(--text-muted);
+}

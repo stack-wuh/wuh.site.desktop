@@ -1,7 +1,7 @@
 ---
 title: 插件系统架构（loader/批准/重载）
 domain: plugin
-keywords: [插件, plugin, manifest, loader, 启用, 停用, 批准, approvals, resolveApproval, reload, 重载, revealDir, plugin-state, broker, 沙箱, 帧, 握手, ready, corsEnabled, 协议注册, locale, ui.locale, views.area, dock, context, panelTabs, commands, 命令面板, contribution, 装配]
+keywords: [插件, plugin, manifest, loader, 启用, 停用, 批准, approvals, resolveApproval, reload, 重载, revealDir, plugin-state, broker, 沙箱, 帧, 握手, ready, corsEnabled, 协议注册, locale, ui.locale, views.area, dock, context, panelTabs, commands, 命令面板, contribution, 装配, ui.publishState, 发布状态]
 scope: [src/main/plugins, src/main/schemes.ts, src/shared/plugin.ts, src/plugin-sdk, src/preload/index.ts, components/plugins/PluginFrameHost]
 status: active
 source:
@@ -13,9 +13,10 @@ source:
   - changes/20261007-feature-frontmatter-editor-hide/brief.md
   - changes/20261015-feature-workbench-shell/brief.md
   - changes/archive/20261017-feature-app-layout-workbench/brief.md
-verified: 2026-10-18
+  - changes/20261020-feature-publish-interaction/brief.md
+verified: 2026-10-21
 verified-depth: unit
-verified-scope: components/plugins/PluginFrameHost/frameServices.ts, lib/panelTabs.ts, src/shared/plugin.ts, src/plugin-sdk/index.ts, plugins/git-history/plugin.json + logic/status.js（20261017 D5：views.area 去 dock 四方同步——plugin-manifest 39 用例含 dock 拒绝与迁移指引、plugin-extensions 10 用例含 dock kind 未声明报错、frame-services panelTabs context 流转、plugin-manifests-real 真 manifest 校验；全量 86 套件绿）
+verified-scope: 20261020 ui.publishState svcUi 免权限路由与 SDK 三方同步（frame-services 用例含 url 拼接/无号/无文档）；历史：components/plugins/PluginFrameHost/frameServices.ts, lib/panelTabs.ts, src/shared/plugin.ts, src/plugin-sdk/index.ts, plugins/git-history/plugin.json + logic/status.js（20261017 D5：views.area 去 dock 四方同步——plugin-manifest 39 用例含 dock 拒绝与迁移指引、plugin-extensions 10 用例含 dock kind 未声明报错、frame-services panelTabs context 流转、plugin-manifests-real 真 manifest 校验；全量 86 套件绿）
 ---
 
 # 插件系统架构（loader/批准/重载）
@@ -27,7 +28,7 @@ verified-scope: components/plugins/PluginFrameHost/frameServices.ts, lib/panelTa
 **工作台挂点（20261015-feature-workbench-shell 引入；20261017-feature-app-layout-workbench D5 收窄）**：`views.area` = **`main|float|context`**（原 `dock` 值随 Dock 退役移除——validateManifest 拒绝并指引「迁移 main 或 context」，sidebar 同拒；context = 编辑器书耳页签，**每插件 ≤1**，容量护栏在 `validateManifest`）。运行时上报走帧服务 `panelTabs`（host 直接服务，方法 `update/remove`，参数 `(kind, tabId, payload)`，**kind 词表收窄为 `context`**——'dock' 上报未声明报错）→ 注册表 `lib/panelTabs.ts`（与 capsule/tasks 同构快照 store；section/row 护栏解析统一收敛到 `lib/tabSections.ts` 的 `parseTabSections` 纯函数——capsule tabs 与本服务**同源共享**：≤3×≤8、序列化 ≤4KB、icon 白名单、row.viewId 归属本插件 main 视图）；消费端 = `components/editor/SidePane/`（书耳页签追加）。SDK 面 `wuh.panelTab.update('context', id, payload)/remove('context', id)`（三方同步同既有约定：shared 类型 ↔ SDK 字符串 ↔ frameServices 裁决）。**commands 贡献点**：manifest 顶层 `commands: [{id,title,viewId}]`（每插件 ≤8，`viewId` 必填且须为本插件 main 视图——v1 语义 = 命令面板的视图快捷命令，协议级命令执行留 v2），bootstrap/启用时经 `lib/contributions.ts` 的 `wirePluginContributions(manifest, navigate)` 注册进 `lib/commands.ts`（命令面板注册表，`<pluginId>:<commandId>` 命名），停用 `unwirePluginContributions` 整组清除（panelTabs 一并）；导航经 `lib/navigate.ts` 壳层单例桥（layout 注入 router.push）。声明注册的页签**默认 hidden**（首次上报才可见——不出幽灵页签）。内置示范：git-history 贡献 context 页签（逻辑帧与胶囊 Tab 同源上报；原 dock-panel 视图已随 D5 从 manifest 与 logic 上报路径双双移除，能力由胶囊 Git tab + main 视图承接）+ commands；image-host 保持 main；preview-markdown 保持 float。
 插件 = 目录 + `plugin.json` manifest（经 `src/shared/plugin.ts` 的 `validateManifest` 严格校验）。主进程 loader（`src/main/plugins/loader.ts`）扫描双目录——内置 `app.getAppPath()/plugins/` 与 `userData/plugins/`（第三方），先扫到的同 id 保留，校验失败目录进 `problems`。
 
-**宿主语言通道（20261007-feature-frontmatter-editor-hide）**：帧服务 `ui.locale`（invoke 只读，返回渲染层 `storedLocale()`）与 `ui.toast/confirm` 同族——svcUi 层免权限能力，**不进主进程 CAPABILITY_METHODS broker 白名单**（该表白名单只管 cap 服务的 DesktopApi 方法）。语言切换广播复用 `documentEvents` 既有透传通道：`LocaleProvider.setLocale → documentEvents.emit('locale', { locale })` → wireHostOnce 自动 `broadcast` 到全部帧 → SDK `wuh.on('locale', cb)`；`DocEventName` 联合（lib/store.ts）是事件名唯一注册点，插件帧按事件名隔离消费。新增非敏感宿主只读状态一律走此 svcUi + documentEvents 模式，禁止为单插件开特例通道。
+**宿主语言通道（20261007-feature-frontmatter-editor-hide）**：帧服务 `ui.locale`（invoke 只读，返回渲染层 `storedLocale()`）与 `ui.toast/confirm` 同族——svcUi 层免权限能力，**不进主进程 CAPABILITY_METHODS broker 白名单**（该表白名单只管 cap 服务的 DesktopApi 方法）。语言切换广播复用 `documentEvents` 既有透传通道：`LocaleProvider.setLocale → documentEvents.emit('locale', { locale })` → wireHostOnce 自动 `broadcast` 到全部帧 → SDK `wuh.on('locale', cb)`；`DocEventName` 联合（lib/store.ts）是事件名唯一注册点，插件帧按事件名隔离消费。新增非敏感宿主只读状态一律走此 svcUi + documentEvents 模式，禁止为单插件开特例通道。**发布状态（20261020）**：`ui.publishState` 返回当前文档 frontmatter `issue` 号 + 工作区 GitHub remote 拼出的 `{issueNumber,url}|null`（svcUi 免权限；发布成功经 documentEvents `'publish'` 广播刷新，SDK 三方同步：shared 类型 ↔ SDK 字符串 ↔ frameServices）。
 
 **状态单一源**：`userData/plugin-state.json` = `{ disabled: string[], approvals: Record<插件id, 权限快照[]> }`。
 
@@ -50,7 +51,7 @@ verified-scope: components/plugins/PluginFrameHost/frameServices.ts, lib/panelTa
 - 新增插件能力必须先进 `CAPABILITY_METHODS` 白名单并绑定权限词表，禁止为单插件开特例通道
 - manifest `logic` 约定为经典脚本语义（顶层 await 允许；运行于沙箱 allow-scripts 不透明源帧）
 - 消息协议 kind（hello/ready/invoke/result/event/request/response）变更须同步 shared 类型、SDK 字符串与帧宿主三方
-- 宿主只读状态类帧能力（如 ui.locale）走 svcUi 免权限通道 + documentEvents 广播（事件名先入 `DocEventName`），不进 CAPABILITY_METHODS（那是主进程 broker 专属），不为单插件开特例
+- 宿主只读状态类帧能力（如 ui.locale）走 svcUi 免权限通道 + documentEvents 广播（事件名先入 `DocEventName`），不进 CAPABILITY_METHODS（那是主进程 broker 专属），不为单插件开特例（`ui.publishState` 同族，20261020）
 - 受特权 scheme 表（`src/main/schemes.ts`）是协议能力的唯一声明点：改特权位（尤其 `corsEnabled`）必须同步 `tests/plugin-schemes.test.ts`，并回到帧内实机验证握手是否就绪
 - `protocol.handle` 的 scheme 不得带尾冒号；插件视图 HTML 必须自带 sdk 脚本标签；逻辑帧走经典脚本对 + 绝对逻辑入口 URL；帧握手定时器随 closeFrame 取消且只关自己（2026-09-25 三层修复，见「协议注册与 SDK 下发」段）
 - 工作台页签/命令贡献三处同步点：manifest 类型（`src/shared/plugin.ts`）↔ SDK 字符串（`src/plugin-sdk/index.ts`）↔ 帧服务/注册表（`frameServices.ts` + `lib/panelTabs.ts` + `lib/commands.ts`）——改任一必须同步其余；section/row 护栏解析唯一事实源 = `lib/tabSections.ts`，禁止在 capsule 或 panelTabs 侧各写一份

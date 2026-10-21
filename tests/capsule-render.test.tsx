@@ -8,6 +8,7 @@ import { Capsule } from '../components/capsule/Capsule'
 import { EditorSection } from '../components/capsule/sections/EditorSection'
 import { registerManifestCapsule, removeCapsuleTab, updateCapsule, updateCapsuleTab } from '../lib/capsule'
 import { registerManifestTasks, upsertTask } from '../lib/tasks'
+import { subscribeEditorCommands } from '../lib/editor-commands'
 import { workspaceStore } from '../lib/store'
 import { LocaleProvider } from '../lib/i18n/context'
 import type { PluginManifest } from '@shared/plugin'
@@ -305,5 +306,59 @@ describe('胶囊 chip 开合与点外关语义（20260924-fix-capsule-self-close
     expect(chip.getAttribute('aria-expanded')).toBe('false')
     unmount()
     cleanup()
+  })
+})
+
+describe('发布磁贴（20261020-feature-publish-interaction）', () => {
+  it('无文档：禁用并显示「无文档」', () => {
+    workspaceStore.closeDoc()
+    renderWithLocale(<CapsulePanel onClose={() => undefined} />)
+    const tile = screen.getByTestId('publish-tile') as HTMLButtonElement
+    expect(tile.disabled).toBe(true)
+    expect(tile.textContent).toContain('无文档')
+    expect(tile.textContent).toContain('GITHUB')
+  })
+
+  it('未保存草稿（有内容无路径）：禁用并提示先保存', () => {
+    workspaceStore.startDraft()
+    workspaceStore.setContent('---\ntitle: T\n---\n\nbody')
+    renderWithLocale(<CapsulePanel onClose={() => undefined} />)
+    const tile = screen.getByTestId('publish-tile') as HTMLButtonElement
+    expect(tile.disabled).toBe(true)
+    expect(tile.textContent).toContain('先保存文档')
+  })
+
+  it('缺 title：禁用并提示缺少 title', () => {
+    workspaceStore.openDoc('notes/b.md', '---\nlabels: [x]\n---\n\nbody')
+    renderWithLocale(<CapsulePanel onClose={() => undefined} />)
+    const tile = screen.getByTestId('publish-tile') as HTMLButtonElement
+    expect(tile.disabled).toBe(true)
+    expect(tile.textContent).toContain('缺少 title')
+  })
+
+  it('已发布文档：显示已发布 #N，点击经命令通道发布 publishDoc', () => {
+    workspaceStore.openDoc('notes/a.md', '---\ntitle: A\nissue: 12\n---\n\nbody')
+    const seen: string[] = []
+    const off = subscribeEditorCommands((cmd) => {
+      seen.push(cmd.kind)
+      return true
+    })
+    renderWithLocale(<CapsulePanel onClose={() => undefined} />)
+    const tile = screen.getByTestId('publish-tile') as HTMLButtonElement
+    expect(tile.disabled).toBe(false)
+    expect(tile.textContent).toContain('已发布 #12')
+    act(() => {
+      fireEvent.click(tile)
+    })
+    expect(seen).toContain('publishDoc')
+    off()
+  })
+
+  it('未发布文档：显示未发布态并可点击', () => {
+    workspaceStore.openDoc('notes/c.md', '---\ntitle: C\n---\n\nbody')
+    renderWithLocale(<CapsulePanel onClose={() => undefined} />)
+    const tile = screen.getByTestId('publish-tile') as HTMLButtonElement
+    expect(tile.disabled).toBe(false)
+    expect(tile.textContent).toContain('未发布')
   })
 })

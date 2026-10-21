@@ -1,7 +1,7 @@
 ---
 title: 主编辑器（CodeMirror 6）、素笺即时渲染与书口/呼墨/笔帘/笺条
 domain: renderer-ui
-keywords: [主编辑器, MarkdownEditor, CodeMirror, CM6, 预览, renderPipeline, 命令通道, editor-commands, 双通道, 防回环, 图片粘贴, 图片上传, 远程链接, 本地链接, 切换图片链接形态, MenuPopover, 大纲, 字数, 主题桥接, HighlightStyle, 即时渲染, livePreview, 装饰层, reconfigure, 沉浸编辑页, /editor, 面包屑, breadcrumb, 改名, 迁移, 复制, docTransfer, transferDoc, renameDoc, assets, frontmatter, 文档头隐藏, 素笺, 书口, Spine, 笺条, CardWidget, 呼墨, SlashMenu, 斜杠菜单, 笔帘, SelectionToolbar, 落笔印, 空态, linkMeta, 衬线题阶, font-serif, findCardLine, spineTicks, cmInsertCard, 书耳, SidePane 浮笺, cmOpenAnchor, 开文档锚点, paperSurface, 素笺本体, D7 焦点环]
+keywords: [主编辑器, MarkdownEditor, CodeMirror, CM6, 预览, renderPipeline, 命令通道, editor-commands, 双通道, 防回环, 图片粘贴, 图片上传, 远程链接, 本地链接, 切换图片链接形态, MenuPopover, 大纲, 字数, 主题桥接, HighlightStyle, 即时渲染, livePreview, 装饰层, reconfigure, 沉浸编辑页, /editor, 面包屑, breadcrumb, 改名, 迁移, 复制, docTransfer, transferDoc, renameDoc, assets, frontmatter, 文档头隐藏, 素笺, 书口, Spine, 笺条, CardWidget, 呼墨, SlashMenu, 斜杠菜单, 笔帘, SelectionToolbar, 落笔印, 空态, linkMeta, 衬线题阶, font-serif, findCardLine, spineTicks, cmInsertCard, 书耳, SidePane 浮笺, cmOpenAnchor, 开文档锚点, paperSurface, 素笺本体, D7 焦点环, 发布, publishDoc, 发布磁贴, issue 回写, publishViaCli, 双通道发布, 关联 Issue]
 scope: [components/editor, components/editor/Spine, components/editor/SlashMenu, components/editor/SelectionToolbar, app/(shell)/editor, lib/editor-cm, lib/editor-commands, lib/editor-info, lib/editor-image-mapping, lib/editor-state, components/ui/MenuPopover, src/main/linkMeta, src/shared/docTransfer, src/shared/frontmatter]
 status: active
 source:
@@ -23,9 +23,10 @@ source:
   - changes/archive/20261015-feature-workbench-shell/brief.md
   - changes/archive/20261014-feature-editor-paper-rebuild/brief.md
   - changes/archive/20261017-feature-app-layout-workbench/brief.md
-verified: 2026-10-18
+  - changes/20261020-feature-publish-interaction/brief.md
+verified: 2026-10-21
 verified-depth: runtime
-verified-scope: 20261014 素笺手记（随 v1.0.0 合入，PR #156）：合并后 86 套件/925 用例逐批全绿 + 三 tsconfig 绿 + assert-first 新增纯逻辑（spineTicks/spineDistance/findCardLine/selectionUrl/cmInsertCard/cmConsumeSlashLine/applyMarkdownInsert-del/linkMeta）与笺条三态行为用例先红后绿 + 用户实机走查（发现并修复：悬浮顶栏压书耳页签、CM 聚焦虚线框显形）；20261015 工作台：editor-center/focus-mode/editor-context-sidebar/settings-appearance 套件绿（单挂载拓扑/专注 chrome 退场 data-chrome/侧栏三页签/外观三控件写穿）+ drafts-editor-dom 迁移到 /editor 页真 CM6 链路绿；历史：editor-page + i18n + saveas-flow 用例绿（草稿态 saveAs、三语 key 锁定、原生保存链共存）；20260927-feature-editor-interactions：L 级完整 TDD（先红 23 失败→绿，交互纯逻辑 26 + 组件行为用例，真实 EditorView 驱动点击）+ 全量 66 文件/581 用例 + 三 tsconfig 绿；20261007-feature-frontmatter-editor-hide：frontmatter 隐藏 11 用例 + 装饰族回归 80 绿 + 全量 74 文件/672 用例 + Electron 实机截图；20261008-feature-image-upload-choice：完整 TDD（19 新用例先红后绿）+ 全量 75 文件/687 用例 + electron-vite build + 用户实机走查
+verified-scope: 20261020 发布磁贴（CLI 优先双通道 + frontmatter issue 身份回写）：publish-cli/publish-logic/publish-frontmatter/capsule-render/frame-services 五探针 68 用例绿 + 三 tsconfig 绿 + 修复前全量 88 套件/818 用例绿（修复后因本机 139 未全量复跑，由目标探针覆盖）+ 真机走查（create→update→改标题仍 update→面板关联行外开、鉴权失败可读提示）；20261014 素笺手记（随 v1.0.0 合入，PR #156）：合并后 86 套件/925 用例逐批全绿 + 三 tsconfig 绿 + assert-first 新增纯逻辑（spineTicks/spineDistance/findCardLine/selectionUrl/cmInsertCard/cmConsumeSlashLine/applyMarkdownInsert-del/linkMeta）与笺条三态行为用例先红后绿 + 用户实机走查（发现并修复：悬浮顶栏压书耳页签、CM 聚焦虚线框显形）；20261015 工作台：editor-center/focus-mode/editor-context-sidebar/settings-appearance 套件绿（单挂载拓扑/专注 chrome 退场 data-chrome/侧栏三页签/外观三控件写穿）+ drafts-editor-dom 迁移到 /editor 页真 CM6 链路绿；历史：editor-page + i18n + saveas-flow 用例绿（草稿态 saveAs、三语 key 锁定、原生保存链共存）；20260927-feature-editor-interactions：L 级完整 TDD（先红 23 失败→绿，交互纯逻辑 26 + 组件行为用例，真实 EditorView 驱动点击）+ 全量 66 文件/581 用例 + 三 tsconfig 绿；20261007-feature-frontmatter-editor-hide：frontmatter 隐藏 11 用例 + 装饰族回归 80 绿 + 全量 74 文件/672 用例 + Electron 实机截图；20261008-feature-image-upload-choice：完整 TDD（19 新用例先红后绿）+ 全量 75 文件/687 用例 + electron-vite build + 用户实机走查
 ---
 
 # 主编辑器（CodeMirror 6）、素笺即时渲染与书口/呼墨/笔帘/笺条
@@ -68,6 +69,8 @@ verified-scope: 20261014 素笺手记（随 v1.0.0 合入，PR #156）：合并�
 
 **文档头 frontmatter 渲染态隐藏（20261007-feature-frontmatter-editor-hide）**：编辑器即时渲染态把闭合的 frontmatter 块**整块完全隐藏**（`FrontmatterHiddenWidget` 零尺寸块替换，无占位条），展示与修改由 Frontmatter 助手插件视图承担。边界唯一事实源是 `src/shared/frontmatter.ts` 的 `frontmatterLineRange`（口径与 `parseFrontmatter` 严格同源：剥 BOM、首行恰为 `---`、闭合取首个 `\n---`、**YAML 不合法不隐藏**——与 renderPipeline 剥离口径一致）；parseBlocks 新 BlockKind `'frontmatter'` 仅认文档起始块，未闭合/中部 `---` 一律回退源码态（中部仍按 hr）。替换区间必须**吞掉闭合行的换行符**（`Math.min(last.to + 1, doc.length)`）——不吞则残留空 view-line 成视觉空行；纯装饰零字节改动（字节保真不破），光标触及头部行浮现源码（「光标行源码态」设计语义）、纯源码态（⌘/）完整可见、widget replace 进 atomicSubset 子集。
 
+**发布（20261020-feature-publish-interaction）**：编辑完成后经控制中心「发布磁贴」（`publishDoc` 命令）一键发布/更新为 GitHub Issue——编排归 EditorCommandHost（保存 → CLI 优先 → 不可用降级内置 publisher → 回写 → 横幅），磁贴只发布命令、状态从 store 派生。**发布身份 = frontmatter `issue` 字段**：有号 update、无号 create；成功后经 `setFrontmatterField` 回写（仅文档头、正文零改动、有号幂等、只认顶层键）并立即落盘——这是「显示层零字节改写」的**显式例外**（经用户裁决的身份模型）。CLI 通道经主进程 `publishViaCli`（shadow-dev blog publish plan/execute，v1.8.0+；ELECTRON_RUN_AS_NODE 拉起、token 仅 env 注入、CURRENT 指针解析、执行错误不降级防双建）；鉴权失败映射为可读提示。`documentEvents` 增 `'publish'` 事件供插件帧刷新。
+
 ## 执行约束
 
 - 内核与命令语义变更必须保持：双通道防回环（pushedRef 比对）、命令通道消费契约（EditorSection/呼墨/笔帘只经 editor-commands 与编辑器交互）。
@@ -88,6 +91,8 @@ verified-scope: 20261014 素笺手记（随 v1.0.0 合入，PR #156）：合并�
 - 编辑器引擎选型必须满足**字节保真**（缓冲区/磁盘字节即事实源，渲染层只改显示不改内容）；禁止引入 parse→re-serialize 型引擎（Milkdown/Vditor 类）作为可保存编辑面。实证与翻写率见 `changes/archive/20260925-chore-milkdown-editor-poc/report.md`（上游行为观察哨测试与 devDep 已于 20260927-style-editor-render-language 经用户批准移除——本约束本身即护栏，如再议 Milkdown 须重跑 PoC）。
 - 渲染态交互改写源码（任务点选、图片链接远程↔本地切换、呼墨查询行消费、插卡）必须经 `lib/editor-cm.ts` 纯函数计算再 dispatch，禁止在 widget/handler 内手拼事务；位置反查（链接定位/折叠区间/卡片判定）同层实现同层测试。折叠域与 livePreview 域各自的 atomicRanges 都只供 widget replace 子集（20260924-fix-cm-selection-atomic 契约）。链接/笺条打开仅 http/https 经 `window.api.openExternal`；浮层类交互（lightbox）必须复用 `data-dialog-overlay` 让位机制并尊重 reduced-motion。
 - **浮层件纪律（20261014）**：呼墨/笔帘/书口的状态机与 live state 同源驱动（doc/selection 事务），呼墨 Esc 后须抑制重开直到查询行形态解除；笔帘动作经 format 词表发布、按钮 mousedown 阻断默认保选区；书口点击跳章只经 `scrollToHeading` 词表。
+
+- 发布一律经 `publishDoc` 命令通道由 EditorCommandHost 编排（CLI 优先、仅 CLI 不可用才降级内置；执行错误不降级）；身份只认 frontmatter `issue`（回写经 `setFrontmatterField` 保序幂等、只动文档头、回写后立即落盘，发布期间切换文档时直写原文件），不得另建本地映射或按标题匹配更新；发布互斥经 `lib/publish.ts` 的 publishBusy 单状态源。
 
 ## 适用边界
 

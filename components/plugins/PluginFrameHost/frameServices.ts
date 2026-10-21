@@ -17,6 +17,7 @@ import { uiConfirm } from '../../ui/Dialog'
 import { alert, message, toast } from '../../../lib/feedback'
 import { storedLocale } from '../../../lib/i18n/locales'
 import { workspaceStore } from '../../../lib/store'
+import { parseFrontmatter } from '@shared/frontmatter'
 import {
   removeStatusItem,
   updateStatusItem,
@@ -90,6 +91,21 @@ async function svcUi(_pluginId: string, method: string, args: unknown[]): Promis
   // 与 ui.toast 等同为免权限能力；语言切换经 documentEvents('locale') 自动广播
   if (method === 'locale') {
     return storedLocale()
+  }
+  // 发布状态只读（20261020-feature-publish-interaction）：当前文档 frontmatter issue 号
+  // + 工作区 GitHub remote → { issueNumber, url }；无号/无 repo/无文档返回 null。
+  // 免权限（同 ui.locale：宿主只读状态，非敏感信息）。
+  if (method === 'publishState') {
+    const content = currentDocState().content
+    if (content == null) return null
+    const { data } = parseFrontmatter(content)
+    const n = Number(String(data.issue ?? '').trim())
+    if (!Number.isInteger(n) || n <= 0) return null
+    const ws = await Promise.resolve(window.api?.getWorkspace?.() ?? null).catch(() => null)
+    const github = ws?.github
+    return github
+      ? { issueNumber: n, url: `https://github.com/${github.owner}/${github.repo}/issues/${n}` }
+      : { issueNumber: n }
   }
   // 反馈提示三方法（toast/message/alert）：与宿主共用 lib/feedback 总线；
   // 入参经 shared 校验器钳制，频率护栏全 kind 共享额度（防插件刷屏）

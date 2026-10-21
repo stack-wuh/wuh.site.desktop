@@ -39,6 +39,8 @@ export type EditorCommand =
   | { kind: 'renameDoc'; newName: string }
   /** 打开目标文件夹选择器：宿主承载 Dialog，迁移/复制当前文档（复制停留原文） */
   | { kind: 'transferDoc' }
+  /** 发布当前文档为 GitHub Issue（CLI 优先、内置 publisher 降级；宿主认领，20261020-feature-publish-interaction） */
+  | { kind: 'publishDoc' }
   | { kind: 'focus' }
 
 export type InsertSnippetName = 'table' | 'codeBlock' | 'hr'

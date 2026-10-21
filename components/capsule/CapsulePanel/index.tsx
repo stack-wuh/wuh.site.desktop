@@ -21,7 +21,7 @@ import { useLocale } from '../../../lib/i18n/context'
 import { EditorSection } from '../sections/EditorSection'
 import { SectionLabel } from '../modules'
 import { ModuleBig, ModuleCard, ModuleGrid, ModuleHead, ModuleIcon, ModulePanel, ModuleSub } from '../modules'
-import { GitSection, TilesGrid, TypesetSection } from './ControlSections'
+import { GitSection, PublishTile, TilesGrid, TypesetSection } from './ControlSections'
 import { Pop, PopHead, PopCount, Sections, Sect, SectHead, MonoMeta, TabRows, PluginNote, ToneDot } from './styles'
 import { PluginTabRowItem } from './PluginTabRows'
 import { TaskCenterBody } from './TaskCenterBody'
@@ -125,6 +125,8 @@ export function CapsulePanel(props: { onClose: () => void }): React.JSX.Element 
       </PopHead>
 
       <TilesGrid />
+
+      <PublishTile />
 
       <Sections>
         <Sect aria-label={t('capsule.sectTasks')}>

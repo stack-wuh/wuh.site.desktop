@@ -36,6 +36,8 @@ export type DocEventName =
   | 'doc.closed'
   | 'workspace'
   | 'locale'
+  /** 发布成功（20261020-feature-publish-interaction）：插件帧（Frontmatter 面板）刷新关联 Issue 行 */
+  | 'publish'
 type DocEventListener = (name: DocEventName, payload: Record<string, unknown>) => void
 
 const docListeners = new Set<DocEventListener>()

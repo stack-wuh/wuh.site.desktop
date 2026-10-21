@@ -70,6 +70,7 @@ const api: DesktopApi = {
   githubDeleteLabel: (n) => invoke('githubDeleteLabel', n),
   githubUpsertIssue: (req) => invoke('githubUpsertIssue', req),
   publish: (req) => invoke('publish', req),
+  publishViaCli: (req) => invoke('publishViaCli', req),
   uploadImage: (abs) => invoke('uploadImage', abs),
   getAboutActivity: () => invoke('getAboutActivity'),
   getSettings: () => invoke('getSettings'),

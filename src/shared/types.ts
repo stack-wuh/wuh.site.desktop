@@ -211,6 +211,24 @@ export interface PublishResult {
   error?: string
 }
 
+// ---------- Publish（CLI 通道：shadow-dev blog publish，20261020-feature-publish-interaction） ----------
+export interface PublishViaCliRequest {
+  /** 工作区相对路径（CLI 以工作区根为 cwd，相对路径参与 planHash 重算） */
+  filePath: string
+}
+
+export interface PublishViaCliResult {
+  ok: boolean
+  /** false = CLI 不可用（未安装 / 版本缺少 blog 能力），渲染层据此降级内置通道；true = 已实际尝试 */
+  available: boolean
+  issueNumber?: number
+  url?: string
+  created?: boolean
+  error?: string
+  /** CLI 错误码（如 GITHUB_API_ERROR），供渲染层做可读映射 */
+  code?: string
+}
+
 // ---------- Upload ----------
 export interface UploadResult {
   ok: boolean
@@ -447,6 +465,8 @@ export interface DesktopApi {
   /** 供插件 publisher 执行发布：创建或更新 Issue，metadata 尾注由主进程拼装 */
   githubUpsertIssue(req: PublishRequest): Promise<PublishResult>
   publish(req: PublishRequest): Promise<PublishResult>
+  /** 经本机 shadow-dev CLI（blog publish，v1.8.0+）发布；不可用时 available:false 供渲染层降级 */
+  publishViaCli(req: PublishViaCliRequest): Promise<PublishViaCliResult>
   uploadImage(absPath: string): Promise<UploadResult>
   /** 首页热力图：拉取站点综合活动（5min 内存缓存，失败回退过期缓存） */
   getAboutActivity(): Promise<AboutActivityHeatmap>

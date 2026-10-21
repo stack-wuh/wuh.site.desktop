@@ -121,6 +121,27 @@ describe('ui 服务与反馈护栏', () => {
     expect(await handleFrameInvoke('demo', 'ui', 'locale', [])).toBe('zh')
   })
 
+  it('ui.publishState：frontmatter issue 号 → { issueNumber }（无工作区 api 时不带 url）（20261020-feature-publish-interaction）', async () => {
+    await bootstrap()
+    workspaceStore.openDoc('a.md', '---\ntitle: T\nissue: 5\n---\n\nbody')
+    await expect(handleFrameInvoke('demo', 'ui', 'publishState', [])).resolves.toEqual({ issueNumber: 5 })
+  })
+
+  it('ui.publishState：工作区 GitHub remote 在时拼出 url；无号/无文档返回 null', async () => {
+    await bootstrap()
+    const w = (globalThis as unknown as { window: { api?: unknown } }).window
+    w.api = { getWorkspace: () => Promise.resolve({ github: { owner: 'o', repo: 'r' } }) }
+    workspaceStore.openDoc('c.md', '---\ntitle: T\nissue: 9\n---\n\nbody')
+    await expect(handleFrameInvoke('demo', 'ui', 'publishState', [])).resolves.toEqual({
+      issueNumber: 9,
+      url: 'https://github.com/o/r/issues/9'
+    })
+    workspaceStore.openDoc('d.md', '---\ntitle: T\n---\n\nbody')
+    await expect(handleFrameInvoke('demo', 'ui', 'publishState', [])).resolves.toBeNull()
+    workspaceStore.closeDoc()
+    await expect(handleFrameInvoke('demo', 'ui', 'publishState', [])).resolves.toBeNull()
+  })
+
   it('频率护栏：10s 窗口内超限的 toast 被拒（额度全 kind 共享，含本文件前序用例消耗）', async () => {
     await bootstrap()
     let rejected = false
