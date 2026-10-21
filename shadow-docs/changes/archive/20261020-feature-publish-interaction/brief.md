@@ -4,7 +4,7 @@
   "name": "20261020-feature-publish-interaction",
   "type": "feature",
   "scope": "publish",
-  "status": "published",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20261020-feature-publish-interaction",
   "files": [
@@ -42,13 +42,13 @@
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "5d6916088f90c80fb88c655bedee72ccca9b7830",
-    "verifiedAt": "2026-10-21T00:39:34.202Z"
+    "verifiedCommit": "fd2bdd76b2a0b1d8ed927d2a02f8918efc568191",
+    "verifiedAt": "2026-10-21T00:43:59.522Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "pr:163",
-    "planHash": "9787eca7e0510d6170dfaf3a465ef00ec02954917d396e574a9749ddc982b913",
+    "checkpoint": "merged-pr:163",
+    "planHash": "f4cae4143add8164ecad18796c83a0ede7116f13ac87eb007691810c9c83171a",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -101,7 +101,7 @@
   "knowledge": {
     "action": "更新",
     "target": "shadow-docs/knowledge/editor.md",
-    "reason": "publishDoc 命令词表新增与发布身份回写（显式例外）→ editor.md；ui.publishState 为 svcUi 免权限只读新样本 → plugin-architecture.md；控制中心新增通栏发布磁贴 → shell-chrome-design.md"
+    "reason": "publishDoc 命令词表与发布身份回写（显式例外）→ editor.md；ui.publishState → plugin-architecture.md；通栏发布磁贴 → shell-chrome-design.md（同前次结论，HEAD 对齐合并后重跑）"
   }
 }
 ---
