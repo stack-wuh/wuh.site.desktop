@@ -4,7 +4,7 @@
   "name": "20261021-docs-domain-map",
   "type": "docs",
   "scope": "shadow-docs",
-  "status": "reviewed",
+  "status": "published",
   "baseBranch": "main",
   "branch": null,
   "files": [
@@ -15,8 +15,8 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 166,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/166",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 167,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/167"
   },
   "review": {
     "conclusion": "passed",
@@ -25,7 +25,7 @@
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "issue:166",
+    "checkpoint": "pr:167",
     "planHash": "3a079ead5385d2f2f537bfaf91d66593521aa8c35c574c08b9e76aaf99b8dba7",
     "updatedAt": null,
     "lastError": null,
