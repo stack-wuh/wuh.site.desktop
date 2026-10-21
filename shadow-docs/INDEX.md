@@ -80,5 +80,5 @@
 | 20261014-feature-editor-paper-rebuild | ✅ 完成 | shadow-docs/changes/archive/20261014-feature-editor-paper-rebuild/brief.md |
 | 20261015-chore-release-v1.0.0 | published | shadow-docs/changes/20261015-chore-release-v1.0.0/brief.md |
 | 20261015-feature-workbench-shell | ✅ 完成 | shadow-docs/changes/archive/20261015-feature-workbench-shell/brief.md |
-| 20261017-feature-app-layout-workbench | published | shadow-docs/changes/20261017-feature-app-layout-workbench/brief.md |
+| 20261017-feature-app-layout-workbench | ✅ 完成 | shadow-docs/changes/archive/20261017-feature-app-layout-workbench/brief.md |
 | 20261020-feature-publish-interaction | ✅ 完成 | shadow-docs/changes/archive/20261020-feature-publish-interaction/brief.md |

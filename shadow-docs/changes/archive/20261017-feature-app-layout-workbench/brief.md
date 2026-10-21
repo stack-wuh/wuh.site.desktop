@@ -4,7 +4,7 @@
   "name": "20261017-feature-app-layout-workbench",
   "type": "feature",
   "scope": "shell",
-  "status": "published",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20261017-feature-app-layout-workbench",
   "files": [
@@ -66,13 +66,13 @@
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "cfe7f651c567d0033a7b85b93d86bfa41a6ef115",
-    "verifiedAt": "2026-10-18T07:38:11.097Z"
+    "verifiedCommit": "12eed0f45881b88a8ddd4557acec2be16f4ef326",
+    "verifiedAt": "2026-10-21T00:47:56.878Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "pr:159",
-    "planHash": "4d2ecf556b11cf0b419d88f2724bbd4f4677cf84af99fdad59c65e310a25bc69",
+    "checkpoint": "merged-pr:159",
+    "planHash": "4aa35f2a3235ea1d9f2d77fced0726a1461fbbfd7b892c203fbb1e004ce86ad6",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -151,8 +151,8 @@
   },
   "knowledge": {
     "action": "更新",
-    "target": "shadow-docs/knowledge/shell-chrome-design.md, shadow-docs/knowledge/renderer-shell-routing.md, shadow-docs/knowledge/plugin-architecture.md, shadow-docs/knowledge/editor.md, shadow-docs/menu.md",
-    "reason": "壳层形态与插件挂点契约双双换代：书脊化 Rail（spine-ink 双主题恒深墨）/案面/浮笺画芯载体/控制中心（磁贴+分区，胶囊双形态退役）/目次书耳浮笺化/Dock 退役（views.area 去 dock 四方同步+git-history manifest 迁移）/data-chrome 四处/z 带修订；实机走查修复一并记录（书脊暗色倒置被用户裁决否决、D6/D7 系 PR #157 滞留修复重落、frontmatter 开文档光标锚点 cmOpenAnchor）"
+    "target": "shadow-docs/knowledge/shell-chrome-design.md",
+    "reason": "同 20261017 原审查结论（书脊案面 D1-D8 与知识四卡已闭环）；HEAD 前移后归档门禁要求重跑，结论不变"
   }
 }
 ---
