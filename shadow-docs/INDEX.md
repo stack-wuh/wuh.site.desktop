@@ -85,3 +85,4 @@
 | 20261021-docs-domain-map | ✅ 完成 | shadow-docs/changes/archive/20261021-docs-domain-map/brief.md |
 | 20261021-fix-workbench-entry-return | ✅ 完成 | shadow-docs/changes/archive/20261021-fix-workbench-entry-return/brief.md |
 | 20261021-style-published-seal | ✅ 完成 | shadow-docs/changes/archive/20261021-style-published-seal/brief.md |
+| 20261022-refactor-renderer-import-alias | ✅ 完成 | shadow-docs/changes/archive/20261022-refactor-renderer-import-alias/brief.md |

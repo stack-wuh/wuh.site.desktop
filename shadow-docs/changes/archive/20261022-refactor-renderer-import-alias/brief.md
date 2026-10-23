@@ -4,7 +4,7 @@
   "name": "20261022-refactor-renderer-import-alias",
   "type": "refactor",
   "scope": "renderer-ui",
-  "status": "published",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "refactor/20261022-refactor-renderer-import-alias",
   "files": [
@@ -82,13 +82,13 @@
   },
   "review": {
     "conclusion": "passed",
-    "verifiedCommit": "23231af68611150cf55d245186413d89cc52b857",
-    "verifiedAt": "2026-10-23T00:23:15.093Z"
+    "verifiedCommit": "c36c0373bba3b91c02265c536b469568d16e824a",
+    "verifiedAt": "2026-10-23T00:52:05.104Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "pr:170",
-    "planHash": "4331799a5e884cad58e0a6c5690f0429a611adc43ffcdef9bc7685690e26b1bb",
+    "checkpoint": "merged-pr:170",
+    "planHash": "7ac32077a9970355a514be66510405124977dc53598ffb7499881667b9fcb2c1",
     "updatedAt": null,
     "lastError": null,
     "release": {
@@ -170,7 +170,7 @@
   "knowledge": {
     "action": "更新",
     "target": "apps/desktop/shadow-docs/knowledge/renderer-shell-routing.md",
-    "reason": "渲染层导入别名收敛落地为长期工程约定：≥2 级相对导入全灭（275 处收敛，grep 零残留观察点），tests/import-boundary.test.mjs 守卫固化层数≤1 级口径；Next 读根 tsconfig、node 套经 tests import 图解析渲染层需 @/* paths 两点链路事实入卡；verified-depth: unit（守卫红绿自检 + 三套 tsc + next build 静态导出）。写卡在 release 执行。"
+    "reason": "merge 后 HEAD（c36c037）复核：tree 与被审分支一致，结论不变。渲染层导入别名收敛为长期工程约定，知识卡已在 release 原位更新（verified-depth: unit）。"
   }
 }
 ---
