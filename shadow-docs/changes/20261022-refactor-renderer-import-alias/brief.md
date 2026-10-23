@@ -4,7 +4,7 @@
   "name": "20261022-refactor-renderer-import-alias",
   "type": "refactor",
   "scope": "renderer-ui",
-  "status": "reviewed",
+  "status": "published",
   "baseBranch": "main",
   "branch": "refactor/20261022-refactor-renderer-import-alias",
   "files": [
@@ -77,8 +77,8 @@
     "repository": null,
     "issue": null,
     "issueUrl": null,
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 170,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/170"
   },
   "review": {
     "conclusion": "passed",
@@ -87,7 +87,7 @@
   },
   "workflow": {
     "operation": null,
-    "checkpoint": null,
+    "checkpoint": "pr:170",
     "planHash": "4331799a5e884cad58e0a6c5690f0429a611adc43ffcdef9bc7685690e26b1bb",
     "updatedAt": null,
     "lastError": null,
