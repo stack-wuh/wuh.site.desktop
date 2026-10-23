@@ -9,10 +9,10 @@
 import { useEffect, useState } from 'react'
 import styled from 'styled-components'
 import type { FileNode } from '@shared/types'
-import { collectMarkdownFiles, filterMarkdownFiles, workspaceStore } from '../../lib/store'
+import { collectMarkdownFiles, filterMarkdownFiles, workspaceStore } from '@/lib/store'
 import { Input } from '../ui/Input'
 import { uiConfirm } from '../ui/Dialog'
-import { useLocale } from '../../lib/i18n/context'
+import { useLocale } from '@/lib/i18n/context'
 import { ErrorText, Muted, Row, RowList, RowPath, errText } from './PickerShell'
 
 const SearchInput = styled(Input)`

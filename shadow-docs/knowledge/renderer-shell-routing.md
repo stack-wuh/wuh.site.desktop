@@ -1,7 +1,7 @@
 ---
 title: Renderer 工作台壳层布局与 App Router 路由约定
 domain: renderer-ui
-keywords: [首页, 设置页, 项目页, 编辑页, 路由, App Router, 路由段, 工作台, rail, 图标列, 上下文面板, 文档树, 项目树, main 容器, 浮窗, FloatLayer, 面板切换, 插件视图, 静态导出, 专注模式, 命令面板, palette, 胶囊, Dock, 停靠, data-chrome, 回到编辑, 写作入口, 首项, 上下文切换, workbenchEntryTarget]
+keywords: [首页, 设置页, 项目页, 编辑页, 路由, App Router, 路由段, 工作台, rail, 图标列, 上下文面板, 文档树, 项目树, main 容器, 浮窗, FloatLayer, 面板切换, 插件视图, 静态导出, 专注模式, 命令面板, palette, 胶囊, Dock, 停靠, data-chrome, 回到编辑, 写作入口, 首项, 上下文切换, workbenchEntryTarget, 导入别名, 相对路径, import boundary, tsconfig paths]
 scope: [app, components, lib]
 status: active
 source:
@@ -30,9 +30,10 @@ source:
   - changes/20261015-feature-workbench-shell/brief.md
   - changes/archive/20261017-feature-app-layout-workbench/brief.md
   - changes/archive/20261021-fix-workbench-entry-return/brief.md
-verified: 2026-10-22
+  - changes/20261022-refactor-renderer-import-alias/brief.md
+verified: 2026-10-23
 verified-depth: runtime
-verified-scope: 20261021 书脊首项上下文切换：workbench-layout 集成用例（有文档→/editor 且 content/activePath/dirty 不变、/editor→/ 且 content 保留、无文档→/、目标 editor 时无 home 激活）+ projects 纯逻辑 + i18n 三语 + 三 tsconfig + 用户实机走查；20261017 书脊案面：书脊/案面/浮笺三层实机（目次 64px 锚点、书耳默认收起、Sheet 画芯、Shell overflow:clip 禁壳滚、rail 项目钮=目次开关互斥插件 popover、⌘B 语义）；workbench-layout/rail/context-panel/home-workbench/focus-mode/editor-page 套件绿 + 全量 86 套件；20261015 工作台范式 764+ 用例历史绿
+verified-scope: 20261022 导入别名：守卫红绿自检（注入 2 级导入守卫红、撤销后绿）+ 三套 tsc + vitest 832/833 + next build 静态导出（unit 级）；20261021 书脊首项上下文切换：workbench-layout 集成用例（有文档→/editor 且 content/activePath/dirty 不变、/editor→/ 且 content 保留、无文档→/、目标 editor 时无 home 激活）+ projects 纯逻辑 + i18n 三语 + 三 tsconfig + 用户实机走查；20261017 书脊案面：书脊/案面/浮笺三层实机（目次 64px 锚点、书耳默认收起、Sheet 画芯、Shell overflow:clip 禁壳滚、rail 项目钮=目次开关互斥插件 popover、⌘B 语义）；workbench-layout/rail/context-panel/home-workbench/focus-mode/editor-page 套件绿 + 全量 86 套件；20261015 工作台范式 764+ 用例历史绿
 ---
 
 # Renderer 壳层两栏布局与 App Router 路由约定
@@ -70,9 +71,12 @@ verified-scope: 20261021 书脊首项上下文切换：workbench-layout 集成�
 
 **Node 工具链钉定（20260925-build-pin-node22；20260927 修订）**：仓库根 `mise.toml` 精确钉定 `node = "22.23.2"`（major 与父仓库 CI `ci-cd.yml` 的 `node-version: '22'` 一致），`package.json` `engines: { "node": "22" }` 供非 mise 环境提示。根因：node 24.19 的 V8（并发 GC/CodeSerializer）高负载下随机 SIGSEGV（exit 139）——20260925 实测波及 shadow-dev CLI/tsc 三 tsconfig/vitest，且 139 与真实失败混淆会污染验证结论。**20260927 修订：「22.23.2 零崩溃」不再成立**——本机（Intel Mac）在更大编译负载（tsconfig.next 全量图、tsc 长事务）下同样确定性 SIGSEGV，崩溃报告定位 `v8::internal::ConcurrentMarking`，且崩溃点随旗标漂移（禁并发标记后移向 JIT 路径），属 V8 多线程 GC/JIT 家族性不稳。**绕行配方（20260927 二次修订，实测稳定）**：根因是 V8 线程池后台 GC job 线程崩溃（Scavenger/ConcurrentMarking），`--single-threaded` 并不能关掉 node DefaultPlatform 的 job worker。稳定配方 = `node --v8-pool-size=0 --no-concurrent-marking --no-concurrent-sweeping`（保留 JIT 供 WASM，GC 全部落主线程）；fork 子进程经 `NODE_OPTIONS='--v8-pool-size=0'` 环境继承（CLI 旗标不传子进程，`--no-concurrent-*` 不在 NODE_OPTIONS 白名单）；vitest 另加 `--no-file-parallelism`。tsc 场景 `--jitless --single-threaded` 亦有效但慢，同配方可统一。所有 dev/test/typecheck/dist 命令默认应运行在钉定 node 上（历史注：82a86b1 曾以 dist 脚本包装缓解打包段，随 renderer-nextjs 丢失，本钉定以环境级方案取代）。
 
+**渲染层导入别名（20261022-refactor-renderer-import-alias 起）**：渲染层（app/components/lib）相对导入**层数 ≤1 级**——`./` 同目录与单级 `../` 域内互引（对齐「入口级互引」理念）合法，≥2 级一律走 `@/`（仓库根）或 `@shared/`（`src/shared/`）别名；`tests/import-boundary.test.mjs` 守卫在 vitest 全量中静态锁定（正则 `(?:\.\./){2,}`，违规报 文件:语句）。**别名解析链路三点事实**：Next.js 只读**根 `tsconfig.json`** 的 paths（三 references 子配置各带自己的 paths，根 tsconfig 的 `compilerOptions.paths` 是 Next/IDE 的唯一入口）；node 套 `tsconfig.node.json` 因 tests 的 import 图会解析渲染层文件，同样需要 `@/*` paths（相对路径时代隐式等价，别名化后显式必需）；vitest `resolve.alias` 中 `@shared` 必须排在 `@` 之前（前缀匹配顺序）。别名气与目录对齐：`@/components/…`、`@/lib/…`，**禁止 `@/plugins/…` 指渲染层**（与根级内置 `plugins/` 歧义，插件帧宿主写 `@/components/plugins/…`）。
+
 ## 执行约束
 
 - 新增/拆分渲染层组件按**域内文件夹化**落位：`组件名/index.tsx` 对外（含原具名导出的 re-export）+ 子单元文件 + styles；**路由段页面**用变体：`page.tsx` 留薄入口 + 同目录 Page 组件 + styles；拆分必须逐字搬移仅调整 import/export，由全量绿灯测试 + 三 tsconfig typecheck 护航（vitest 运行时宽松解析不报相对路径错，tsc 门禁不可省）。职责单一的过线文件（自包含可视化/样式库/单树件）不强拆。
+- 渲染层新增 import 遵守「相对导入 ≤1 级」口径：跨目录/跨域引用写 `@/components/…`、`@/lib/…`、`@shared/…`，不新增 ≥2 级相对路径（守卫 `tests/import-boundary.test.mjs` 随 vitest 全量执行，新增即红）。
 - 新增中央页面 = 新增 `app/(shell)/<segment>/page.tsx` 路由段；禁止塞回 Rail/上下文面板（导航列纯导航不承载内容）。
 - 书脊首项（写作入口）的目标唯一事实源 = `lib/routes.ts` 的 `workbenchEntryTarget(pathname, hasActiveDoc)`：有活动文档且不在 `/editor` → `/editor`，否则 → `/`；布局只订阅 `useHasActiveDoc()` 布尔快照，禁止直接 `useWorkspaceStore()`（键入会重渲染整壳）；目标为 `/editor` 时首项不冒充 home 激活。
 - 壳层 chrome 元素（TitleBar/Rail/上下文面板/Dock/StatusBar）必须带 `data-chrome` 稳定属性：专注模式退场、自动化断言都依赖它；新增 chrome 容器漏标即专注模式残留。
@@ -94,6 +98,7 @@ verified-scope: 20261021 书脊首项上下文切换：workbench-layout 集成�
 
 - 读 `app/(shell)/layout.tsx` 与 `lib/routes.ts`：路由段 ↔ 菜单项映射、Cmd+, 切换、FloatLayer 常驻。
 - 书脊首项：`vitest run tests/workbench-layout.test.tsx tests/projects.test.ts tests/i18n.test.ts`（上下文切换、会话字段不变、三语 key）；实机走查：插件页 → 首项回文档 → 再点回首页；无文档 → 首页。
+- 导入别名守卫：`vitest run tests/import-boundary.test.mjs`（渲染层 ≥2 级相对导入全量扫描，应 2 passed）。
 - Node 环境经仓库根 `mise.toml` 钉定（22.23.2）；`pnpm typecheck`（node 侧 + tsconfig.next.json）+ `pnpm test` 回归（tsc + vitest）；项目/编辑面专项：`tests/projects.test.ts`（分组/树剪枝纯逻辑）、`tests/projects-render.test.tsx`、`tests/projects-tree.test.tsx`（懒加载/失效重试/点击流转）、`tests/editor-page.test.tsx`（happy-dom，零 React 告警）、`tests/i18n.test.ts`（三语 parity + 源码键覆盖）。
 - `pnpm dev` 手动路径：启动默认 Home（左栏可见）→ 左栏切设置/插件 main 视图 → `Ctrl+,` 切换设置 ↔ 首页 → 浮窗 toggle 开合、切页后浮窗仍在、Esc 关浮窗；左栏展开/收起瞬时切换；展开【项目】旋钮 → 点树内 `.md` 直达 `/editor`、跨项目打开自动切工作区、失效项目「无法访问」可重试。
 - 生产加载路径：`app://shell/index.html` 仅在**打包产物**（`pnpm dist`）中生效；未打包 `electron .` 恒走 dev 路径（wait-on next dev）。splash 人工走查：启动即现品牌标 splash → 主窗带样式切换无白屏/乱序；`tests/splash.test.ts` 锁定 splash 静态契约。

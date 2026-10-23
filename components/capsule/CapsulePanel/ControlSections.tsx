@@ -8,7 +8,7 @@
  * 本文件不触碰编辑器实例；颜色只写语义 token。
  */
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from 'react'
-import { AppIcon } from '../../ui/AppIcon'
+import { AppIcon } from '@/components/ui/AppIcon'
 import {
   IconImage,
   IconLanguages,
@@ -19,16 +19,16 @@ import {
   IconSend,
   IconSparkles,
   IconSunMoon
-} from '../../icons'
+} from '@/components/icons'
 import type { UploadMode } from '@shared/types'
-import { publishEditorCommand } from '../../../lib/editor-commands'
-import { publishEditorLiveState, useEditorLiveState } from '../../../lib/editor-state'
-import { publishBusy, publishPreflight, publishStateOf } from '../../../lib/publish'
-import { useWorkspaceStore } from '../../../lib/store'
-import { useLocale } from '../../../lib/i18n/context'
-import type { Locale } from '../../../lib/i18n/locales'
-import { useTheme, type SchemeSetting } from '../../theme/ThemeProvider'
-import { toast } from '../../../lib/feedback'
+import { publishEditorCommand } from '@/lib/editor-commands'
+import { publishEditorLiveState, useEditorLiveState } from '@/lib/editor-state'
+import { publishBusy, publishPreflight, publishStateOf } from '@/lib/publish'
+import { useWorkspaceStore } from '@/lib/store'
+import { useLocale } from '@/lib/i18n/context'
+import type { Locale } from '@/lib/i18n/locales'
+import { useTheme, type SchemeSetting } from '@/components/theme/ThemeProvider'
+import { toast } from '@/lib/feedback'
 import { GitGrow, GitMono, GitMsgInput, GBtn, GitRow, Sect, SectHead, Tile, TileIcon, TileMeta, TileTag, Tiles } from './styles'
 
 /** 磁贴：方印图标 + 标签；on 传值即带激活态（朱底方印 + 状态点 + 朱边 + aria-pressed） */

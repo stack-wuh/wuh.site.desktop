@@ -7,7 +7,7 @@
  */
 import { useEffect, useState } from 'react'
 import styled from 'styled-components'
-import { useLocale } from '../../lib/i18n/context'
+import { useLocale } from '@/lib/i18n/context'
 
 export interface SettingsNavItem {
   id: string

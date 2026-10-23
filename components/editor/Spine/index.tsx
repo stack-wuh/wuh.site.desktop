@@ -9,17 +9,17 @@
  * 纯显示层：不接触编辑器实例、不写 workspaceStore；无大纲（未出标题）整柱隐藏。
  */
 import { useMemo, useState } from 'react'
-import { useWorkspaceStore } from '../../../lib/store'
-import { publishEditorCommand } from '../../../lib/editor-commands'
+import { useWorkspaceStore } from '@/lib/store'
+import { publishEditorCommand } from '@/lib/editor-commands'
 import {
   countWords,
   estimateReadingMinutes,
   parseOutline,
   spineDistance,
   spineTicks
-} from '../../../lib/editor-info'
-import { useEditorLiveState } from '../../../lib/editor-state'
-import { useLocale } from '../../../lib/i18n/context'
+} from '@/lib/editor-info'
+import { useEditorLiveState } from '@/lib/editor-state'
+import { useLocale } from '@/lib/i18n/context'
 import { Meta, Rail, Tick, TickLabel, TickPoint, Wrap } from './styles'
 
 export function Spine(): React.JSX.Element | null {

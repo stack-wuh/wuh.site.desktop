@@ -26,8 +26,8 @@ import { closeSearchPanel, openSearchPanel, search, searchKeymap } from '@codemi
 import { syntaxHighlighting } from '@codemirror/language'
 import { markdown, markdownKeymap } from '@codemirror/lang-markdown'
 import type { SavedImage } from '@shared/types'
-import { workspaceStore, useWorkspaceStore } from '../../../lib/store'
-import { publishEditorCommand, subscribeEditorCommands, type EditorCommand } from '../../../lib/editor-commands'
+import { workspaceStore, useWorkspaceStore } from '@/lib/store'
+import { publishEditorCommand, subscribeEditorCommands, type EditorCommand } from '@/lib/editor-commands'
 import {
   cmApplyFormat,
   cmConsumeSlashLine,
@@ -40,13 +40,13 @@ import {
   findLinkTargetAt,
   rewriteImageRef,
   selectionUrl
-} from '../../../lib/editor-cm'
+} from '@/lib/editor-cm'
 import {
   entryForRemote,
   rememberImageLink,
   remoteForLocalRef,
   resolveRefRelPath
-} from '../../../lib/editor-image-mapping'
+} from '@/lib/editor-image-mapping'
 import { foldField, livePreviewField } from '../decorations'
 import { SlashMenu, type SlashKind, type SlashMenuHandle } from '../SlashMenu'
 import { SelectionToolbar } from '../SelectionToolbar'
@@ -54,9 +54,9 @@ import {
   loadPersistedEditorState,
   publishEditorLiveState,
   useEditorLiveState
-} from '../../../lib/editor-state'
-import { useLocale } from '../../../lib/i18n/context'
-import { message } from '../../../lib/feedback'
+} from '@/lib/editor-state'
+import { useLocale } from '@/lib/i18n/context'
+import { message } from '@/lib/feedback'
 import 'katex/dist/katex.min.css'
 import { editorHighlight, editorTheme } from './renderTheme'
 import { EditorMount, Lightbox, LightboxCap, Notice } from './styles'

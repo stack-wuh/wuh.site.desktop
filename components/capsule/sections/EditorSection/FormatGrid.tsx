@@ -7,10 +7,10 @@
  * 图片钮（20261008-feature-image-upload-choice）为共享 MenuPopover 下拉——与编辑区
  * 工具条同一动作集（快速操作落位胶囊），可用性经 imageSwitchAvailable 纯逻辑判定。
  */
-import { AppIcon } from '../../../ui/AppIcon'
-import { MenuPopover } from '../../../ui/MenuPopover'
-import { useEditorLiveState } from '../../../../lib/editor-state'
-import { imageSwitchAvailable } from '../../../../lib/editor-image-mapping'
+import { AppIcon } from '@/components/ui/AppIcon'
+import { MenuPopover } from '@/components/ui/MenuPopover'
+import { useEditorLiveState } from '@/lib/editor-state'
+import { imageSwitchAvailable } from '@/lib/editor-image-mapping'
 import {
   IconBold,
   IconCode,
@@ -29,11 +29,11 @@ import {
   IconRedo,
   IconTable,
   IconUndo
-} from '../../../icons'
-import type { IconComponent } from '../../../ui/AppIcon'
-import { useWorkspaceStore, type MarkdownInsertAction } from '../../../../lib/store'
-import { publishEditorCommand } from '../../../../lib/editor-commands'
-import { useLocale } from '../../../../lib/i18n/context'
+} from '@/components/icons'
+import type { IconComponent } from '@/components/ui/AppIcon'
+import { useWorkspaceStore, type MarkdownInsertAction } from '@/lib/store'
+import { publishEditorCommand } from '@/lib/editor-commands'
+import { useLocale } from '@/lib/i18n/context'
 import { IconBtn, IconRow } from './styles'
 
 export type SubPanelKind = 'none' | 'outline' | 'workspace' | 'file' | 'typeset' | 'kbd'

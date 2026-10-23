@@ -4,11 +4,11 @@
 
 ## SGN-1 · tsc/vitest/pnpm 随机 SIGSEGV（exit 139）先查 swap 水位与失控进程再重试
 - 方向: positive
-- 权重: 2
+- 权重: 3
 - 深度: runtime
 - 域/scope: 本机工具链 · 验证执行
-- 证据: 20261007-style-scrollbars-virtual-projects-list（swap 9.2G 用 8.7G 时连 pnpm/wait-on 二进制本身都段错误；清理失控 dev 实例后一次重试全过）；renderer-virtual-list 卡「本机注意」同源；20261021-fix-workbench-entry-return（tsconfig.next/focus-mode 在 node22 139，node20/jitless 绕行通过）
-- 命中: 3（最近 2026-10-22）
+- 证据: 20261007-style-scrollbars-virtual-projects-list（swap 9.2G 用 8.7G 时连 pnpm/wait-on 二进制本身都段错误；清理失控 dev 实例后一次重试全过）；renderer-virtual-list 卡「本机注意」同源；20261021-fix-workbench-entry-return（tsconfig.next/focus-mode 在 node22 139，node20/jitless 绕行通过）；20261022-refactor-renderer-import-alias（三个失控 pnpm dev 进程各 90% CPU + load 11 时连发 139；清进程 + node22 直跑 tsc.js/vitest.mjs + 逐套重试全部拿到绿；观察：pnpm exec wrapper 链比直跑 .js 入口更易崩；139 不得计入结论、绿才算，与 renderer-shell-routing 卡工具链钉定段一致）
+- 命中: 4（最近 2026-10-23）
 - 退役条件: 换机或内存常态余量 >50% 且连续一个月无复现
 
 ## SGN-2 · 后台化 `next dev` 必须挂持久 stdin（`< /dev/zero`），裸 nohup/& 必静默自杀

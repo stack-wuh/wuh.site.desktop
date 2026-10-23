@@ -14,11 +14,11 @@ import { IconCommand, IconSearch } from '../icons'
 import {
   getEditorLiveState,
   publishEditorLiveState
-} from '../../lib/editor-state'
-import { publishEditorCommand } from '../../lib/editor-commands'
-import { paletteCommandsStore } from '../../lib/commands'
-import { closePalette, paletteStore } from '../../lib/palette'
-import { useLocale } from '../../lib/i18n/context'
+} from '@/lib/editor-state'
+import { publishEditorCommand } from '@/lib/editor-commands'
+import { paletteCommandsStore } from '@/lib/commands'
+import { closePalette, paletteStore } from '@/lib/palette'
+import { useLocale } from '@/lib/i18n/context'
 import { Box, Empty, Group, InputRow, Item, ItemKbd, List, Overlay } from './styles'
 
 type Query = string

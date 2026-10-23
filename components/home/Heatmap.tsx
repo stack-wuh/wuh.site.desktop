@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import styled from 'styled-components'
 import { getMonthPositions, type HeatmapViewData } from './heatmapData'
-import { useLocale } from '../../lib/i18n/context'
+import { useLocale } from '@/lib/i18n/context'
 
 /**
  * 综合活动热力图（自持组件，结构与站点 @wuh.site/components/heatmap 同构）：

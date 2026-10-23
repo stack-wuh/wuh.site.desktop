@@ -6,10 +6,10 @@
  */
 import { useRouter } from 'next/navigation'
 import styled from 'styled-components'
-import { AppIcon } from '../../ui/AppIcon'
-import { pluginIcon } from '../../icons'
+import { AppIcon } from '@/components/ui/AppIcon'
+import { pluginIcon } from '@/components/icons'
 import type { PluginIconName } from '@shared/plugin'
-import type { CapsuleTabRow } from '../../../lib/capsule'
+import type { CapsuleTabRow } from '@/lib/capsule'
 import { ToneDot } from './styles'
 
 const PluginTabRow = styled.button`

@@ -7,11 +7,11 @@
  * 在 ./TransferDialog。保持壳层 layout 单实例（不随胶囊开关）。
  */
 import { useEffect, useRef, useState } from 'react'
-import { uiConfirm } from '../../../ui/Dialog'
-import { documentEvents, workspaceStore } from '../../../../lib/store'
-import { consumeDraft } from '../../../../lib/drafts'
-import { message, toast } from '../../../../lib/feedback'
-import { publishEditorCommand, subscribeEditorCommands } from '../../../../lib/editor-commands'
+import { uiConfirm } from '@/components/ui/Dialog'
+import { documentEvents, workspaceStore } from '@/lib/store'
+import { consumeDraft } from '@/lib/drafts'
+import { message, toast } from '@/lib/feedback'
+import { publishEditorCommand, subscribeEditorCommands } from '@/lib/editor-commands'
 import {
   buildBuiltinRequest,
   isPublishAuthError,
@@ -19,11 +19,11 @@ import {
   publishPreflight,
   shouldFallbackToBuiltin,
   type PublishBlockReason
-} from '../../../../lib/publish'
+} from '@/lib/publish'
 import { setFrontmatterField } from '@shared/frontmatter'
-import { applyWorkspaceSwitch } from '../../../plugins/PluginFrameHost'
-import { workspaceRelativePath } from '../../../../src/shared/types'
-import { getEditorLiveState, publishEditorLiveState } from '../../../../lib/editor-state'
+import { applyWorkspaceSwitch } from '@/components/plugins/PluginFrameHost'
+import { workspaceRelativePath } from '@shared/types'
+import { getEditorLiveState, publishEditorLiveState } from '@/lib/editor-state'
 import { assetsDirNameFor } from '@shared/imagePlan'
 import {
   buildRenamePath,
@@ -33,8 +33,8 @@ import {
   validateDocName,
   type DirOption
 } from '@shared/docTransfer'
-import { useLocale } from '../../../../lib/i18n/context'
-import { errText } from '../../../workspace/PickerShell'
+import { useLocale } from '@/lib/i18n/context'
+import { errText } from '@/components/workspace/PickerShell'
 import { TransferDialog } from './TransferDialog'
 
 /** 纯函数：正文首个标题行 → 建议文件名主干（无标题返回 null，由 i18n 兜底） */

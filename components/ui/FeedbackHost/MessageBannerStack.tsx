@@ -6,12 +6,12 @@
  * 可带 ≤3 操作按钮（点击 → dismissMessage(id, actionId)）。
  */
 import styled from 'styled-components'
-import type { FeedbackKind } from '../../../lib/feedback'
-import { dismissMessage, useFeedback } from '../../../lib/feedback'
+import type { FeedbackKind } from '@/lib/feedback'
+import { dismissMessage, useFeedback } from '@/lib/feedback'
 import { Button } from '../Button'
 import { AppIcon } from '../AppIcon'
-import { IconClose } from '../../icons'
-import { useLocale } from '../../../lib/i18n/context'
+import { IconClose } from '@/components/icons'
+import { useLocale } from '@/lib/i18n/context'
 import { KIND_COLOR, KIND_ICON } from './styles'
 
 /* ---------- Message 横幅栈（内容区顶部，文档流内） ---------- */

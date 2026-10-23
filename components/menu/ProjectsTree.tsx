@@ -22,14 +22,14 @@ import {
   pruneMarkdownTree,
   toggleNodeKey,
   type ProjectGroup
-} from '../../lib/projects'
-import { openProjectFile } from '../../lib/projectOpen'
-import { useWorkspaceStore } from '../../lib/store'
+} from '@/lib/projects'
+import { openProjectFile } from '@/lib/projectOpen'
+import { useWorkspaceStore } from '@/lib/store'
 import { errText } from '../workspace/PickerShell'
 import { AppIcon } from '../ui/AppIcon'
 import { VirtualList } from '../ui/VirtualList'
 import { IconChevronRight, IconFile, IconFolderOpen } from '../icons'
-import { useLocale } from '../../lib/i18n/context'
+import { useLocale } from '@/lib/i18n/context'
 
 /** 固定行高：与 VirtualList itemHeight 严格一致，NodeRow/NoteRow CSS 同步收敛到该值 */
 const ROW_HEIGHT = 26

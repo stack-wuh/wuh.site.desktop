@@ -13,15 +13,15 @@
  * 格式网格见 ./FormatGrid，排版/快捷键/导出见 ./PanelsExport，样式原子见 ./styles。
  */
 import { useMemo, useState } from 'react'
-import { AppIcon } from '../../../ui/AppIcon'
-import { IconClose, IconFile, IconFilePlus, IconPlus, IconSave } from '../../../icons'
-import { useWorkspaceStore } from '../../../../lib/store'
-import { publishEditorCommand } from '../../../../lib/editor-commands'
-import { useEditorLiveState } from '../../../../lib/editor-state'
-import { countWords, estimateReadingMinutes, parseOutline } from '../../../../lib/editor-info'
-import { useLocale } from '../../../../lib/i18n/context'
-import { FilePanelContent } from '../../../workspace/FilePicker'
-import { WorkspacePanelContent } from '../../../workspace/WorkspacePicker'
+import { AppIcon } from '@/components/ui/AppIcon'
+import { IconClose, IconFile, IconFilePlus, IconPlus, IconSave } from '@/components/icons'
+import { useWorkspaceStore } from '@/lib/store'
+import { publishEditorCommand } from '@/lib/editor-commands'
+import { useEditorLiveState } from '@/lib/editor-state'
+import { countWords, estimateReadingMinutes, parseOutline } from '@/lib/editor-info'
+import { useLocale } from '@/lib/i18n/context'
+import { FilePanelContent } from '@/components/workspace/FilePicker'
+import { WorkspacePanelContent } from '@/components/workspace/WorkspacePicker'
 import {
   ModuleGrid,
   ModuleHead,
@@ -33,7 +33,7 @@ import {
   SectionLabel,
   CenterSection,
   SubPanel
-} from '../../modules'
+} from '@/components/capsule/modules'
 import { ActionMini, OutlineEmpty, OutlineItem, OutlineList } from './styles'
 import { FormatGrid, type SubPanelKind } from './FormatGrid'
 import { PanelsExport } from './PanelsExport'

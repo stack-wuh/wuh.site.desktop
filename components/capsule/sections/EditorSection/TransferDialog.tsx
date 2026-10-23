@@ -7,10 +7,10 @@
  * （20260924-feature-breadcrumb-doc-ops）
  */
 import styled from 'styled-components'
-import { Button } from '../../../ui/Button'
-import { Dialog } from '../../../ui/Dialog'
+import { Button } from '@/components/ui/Button'
+import { Dialog } from '@/components/ui/Dialog'
 import type { DirOption } from '@shared/docTransfer'
-import { useLocale } from '../../../../lib/i18n/context'
+import { useLocale } from '@/lib/i18n/context'
 
 const DialogError = styled.p`
   margin: 8px 0 0;
