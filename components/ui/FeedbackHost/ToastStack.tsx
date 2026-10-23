@@ -6,10 +6,10 @@
  * aria-live 区域常驻（空态也挂），保证首条播报不被「区域刚创建」吞掉。
  */
 import styled, { keyframes } from 'styled-components'
-import type { FeedbackKind } from '../../../lib/feedback'
-import { useFeedback } from '../../../lib/feedback'
+import type { FeedbackKind } from '@/lib/feedback'
+import { useFeedback } from '@/lib/feedback'
 import { AppIcon } from '../AppIcon'
-import { useLocale } from '../../../lib/i18n/context'
+import { useLocale } from '@/lib/i18n/context'
 import { KIND_COLOR, KIND_ICON } from './styles'
 
 /* ---------- Toast 栈 ---------- */

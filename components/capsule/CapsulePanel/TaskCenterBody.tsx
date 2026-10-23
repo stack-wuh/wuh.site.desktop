@@ -12,8 +12,8 @@ import {
   tasksStore,
   visibleTasks,
   removeTask
-} from '../../../lib/tasks'
-import { useLocale } from '../../../lib/i18n/context'
+} from '@/lib/tasks'
+import { useLocale } from '@/lib/i18n/context'
 import {
   FilterRow,
   FilterChip,

@@ -11,8 +11,8 @@ import { SettingRow } from '../ui/SettingRow'
 import { SegmentedControl } from '../ui/SegmentedControl'
 import { SettingSection } from './SettingSection'
 import { useTheme } from '../theme/ThemeProvider'
-import { useLocale } from '../../lib/i18n/context'
-import { localeLabels, localeOrder, type Locale } from '../../lib/i18n/locales'
+import { useLocale } from '@/lib/i18n/context'
+import { localeLabels, localeOrder, type Locale } from '@/lib/i18n/locales'
 
 const FAMILIES = ['wine', 'plain'] as const
 

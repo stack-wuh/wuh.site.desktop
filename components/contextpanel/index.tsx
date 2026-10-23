@@ -11,8 +11,8 @@
 import { useEffect, useState } from 'react'
 import { AppIcon } from '../ui/AppIcon'
 import { IconChevronLeft } from '../icons'
-import { useLocale } from '../../lib/i18n/context'
-import { useWorkspaceStore } from '../../lib/store'
+import { useLocale } from '@/lib/i18n/context'
+import { useWorkspaceStore } from '@/lib/store'
 import { ProjectsTree } from '../menu/ProjectsTree'
 import { Body, CollapseBtn, CurrentBadge, Head, Panel, ProjectName } from './styles'
 

@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync, existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import type { PluginManifest } from '@shared/plugin'
-import { PluginMainView } from '../../../../components/plugins/PluginMainView'
+import { PluginMainView } from '@/components/plugins/PluginMainView'
 
 /**
  * 插件 main 视图路由段（/plugin/<pluginId>/<viewId>）。

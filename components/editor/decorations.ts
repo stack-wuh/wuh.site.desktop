@@ -26,8 +26,8 @@ import {
   parseBlocks,
   scanInlineMarks,
   selectionLineSet
-} from '../../lib/editor-cm'
-import { workspaceStore } from '../../lib/store'
+} from '@/lib/editor-cm'
+import { workspaceStore } from '@/lib/store'
 import {
   CardWidget,
   CommentWidget,
@@ -42,7 +42,7 @@ import {
   TaskToggleWidget,
   wdFoldEffect
 } from './widgets'
-import { isTableDelim } from '../../lib/editor-cm'
+import { isTableDelim } from '@/lib/editor-cm'
 
 const hidden = Decoration.mark({ class: 'cm-live-hidden' })
 const lineCls = (cls: string): Decoration => Decoration.line({ class: cls })

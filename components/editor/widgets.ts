@@ -9,8 +9,8 @@ import { EditorState, StateEffect } from '@codemirror/state'
 import { EditorView, WidgetType } from '@codemirror/view'
 import { isExternalRef, toFileUrl } from '@shared/url'
 import type { LinkMeta } from '@shared/types'
-import { toggleTaskLine } from '../../lib/editor-cm'
-import { storedLocale, translateText } from '../../lib/i18n/locales'
+import { toggleTaskLine } from '@/lib/editor-cm'
+import { storedLocale, translateText } from '@/lib/i18n/locales'
 
 /** 标题折叠状态效果（fold StateField 消费； widgets 层定义避免与 decorations 循环依赖） */
 export const wdFoldEffect = StateEffect.define<{ line: number; fold: boolean }>()

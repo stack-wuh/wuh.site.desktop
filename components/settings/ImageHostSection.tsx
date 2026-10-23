@@ -19,7 +19,7 @@ import { Button } from '../ui/Button'
 import { SettingRow } from '../ui/SettingRow'
 import { SegmentedControl } from '../ui/SegmentedControl'
 import { SettingSection } from './SettingSection'
-import { useLocale } from '../../lib/i18n/context'
+import { useLocale } from '@/lib/i18n/context'
 
 const EMPTY_OSS: OssSettings = { endpoint: '', bucket: '', customDomain: null, prefixTemplate: null }
 

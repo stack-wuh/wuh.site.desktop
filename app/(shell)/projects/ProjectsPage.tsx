@@ -20,18 +20,18 @@ import {
   initialExpandedGroups,
   toggleExpandedGroup,
   type ProjectGroup
-} from '../../../lib/projects'
-import { collectMarkdownFiles, filterMarkdownFiles } from '../../../lib/store'
-import { openProjectFile } from '../../../lib/projectOpen'
-import { AppIcon } from '../../../components/ui/AppIcon'
-import { Button } from '../../../components/ui/Button'
-import { Empty } from '../../../components/ui/Empty'
-import { Input } from '../../../components/ui/Input'
-import { PageTopbar } from '../../../components/ui/PageTopbar'
-import { VirtualList } from '../../../components/ui/VirtualList'
-import { IconChevronDown, IconFolderOpen } from '../../../components/icons'
-import { useLocale } from '../../../lib/i18n/context'
-import { errText } from '../../../components/workspace/PickerShell'
+} from '@/lib/projects'
+import { collectMarkdownFiles, filterMarkdownFiles } from '@/lib/store'
+import { openProjectFile } from '@/lib/projectOpen'
+import { AppIcon } from '@/components/ui/AppIcon'
+import { Button } from '@/components/ui/Button'
+import { Empty } from '@/components/ui/Empty'
+import { Input } from '@/components/ui/Input'
+import { PageTopbar } from '@/components/ui/PageTopbar'
+import { VirtualList } from '@/components/ui/VirtualList'
+import { IconChevronDown, IconFolderOpen } from '@/components/icons'
+import { useLocale } from '@/lib/i18n/context'
+import { errText } from '@/components/workspace/PickerShell'
 import {
   Chevron,
   Count,

@@ -11,7 +11,7 @@
  */
 import { useEffect } from 'react'
 import type { DesktopApi } from '@shared/types'
-import { configureSystemNotify } from '../../../lib/feedback'
+import { configureSystemNotify } from '@/lib/feedback'
 import { ToastStack } from './ToastStack'
 import { MessageBannerStack } from './MessageBannerStack'
 import { AlertHost } from './AlertHost'

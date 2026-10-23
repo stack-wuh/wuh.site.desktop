@@ -7,7 +7,7 @@
  * 页壳、组卡（头部/徽标/路径/旋钮/文件行/空态/不可达）、搜索框与整页空态。
  */
 import styled, { keyframes } from 'styled-components'
-import { Input } from '../../../components/ui/Input'
+import { Input } from '@/components/ui/Input'
 
 const pageEnter = keyframes`
   from { opacity: 0; transform: translateY(6px); }

@@ -21,8 +21,8 @@ import { AppearanceSection } from './AppearanceSection'
 import { PluginManagerSection } from './PluginManagerSection'
 import { ImageHostSection } from './ImageHostSection'
 import { IconCheck, IconLogo } from '../icons'
-import { useLocale } from '../../lib/i18n/context'
-import { BUILD_TIME, formatBuildTime } from '../../lib/buildInfo'
+import { useLocale } from '@/lib/i18n/context'
+import { BUILD_TIME, formatBuildTime } from '@/lib/buildInfo'
 
 // 构建期内联应用版本（next.config.ts env），不走 preload/broker 通道
 const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? '0.0.0'

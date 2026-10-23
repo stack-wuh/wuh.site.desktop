@@ -11,14 +11,14 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { DraftMeta } from '@shared/drafts'
-import { refreshDrafts, useDrafts } from '../../../lib/drafts'
-import { useWorkspaceStore, workspaceStore } from '../../../lib/store'
-import { uiConfirm } from '../../../components/ui/Dialog'
-import { AppIcon } from '../../../components/ui/AppIcon'
-import { Empty } from '../../../components/ui/Empty'
-import { PageTopbar } from '../../../components/ui/PageTopbar'
-import { IconInbox, IconTrash } from '../../../components/icons'
-import { useLocale } from '../../../lib/i18n/context'
+import { refreshDrafts, useDrafts } from '@/lib/drafts'
+import { useWorkspaceStore, workspaceStore } from '@/lib/store'
+import { uiConfirm } from '@/components/ui/Dialog'
+import { AppIcon } from '@/components/ui/AppIcon'
+import { Empty } from '@/components/ui/Empty'
+import { PageTopbar } from '@/components/ui/PageTopbar'
+import { IconInbox, IconTrash } from '@/components/icons'
+import { useLocale } from '@/lib/i18n/context'
 import {
   Count,
   ErrorText,

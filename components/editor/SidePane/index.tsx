@@ -11,18 +11,18 @@
  */
 import { useMemo, useState, useSyncExternalStore } from 'react'
 import { useRouter } from 'next/navigation'
-import { AppIcon } from '../../ui/AppIcon'
-import { IconFile, pluginIcon } from '../../icons'
+import { AppIcon } from '@/components/ui/AppIcon'
+import { IconFile, pluginIcon } from '@/components/icons'
 import type { PluginIconName } from '@shared/plugin'
 import { parseFrontmatter } from '@shared/frontmatter'
-import { parseOutline } from '../../../lib/editor-info'
-import { publishEditorCommand } from '../../../lib/editor-commands'
-import { useWorkspaceStore } from '../../../lib/store'
-import { panelTabsStore, visiblePanelTabs } from '../../../lib/panelTabs'
-import { useEditorLiveState } from '../../../lib/editor-state'
-import { useLocale } from '../../../lib/i18n/context'
-import { PluginTabRowItem } from '../../capsule/CapsulePanel/PluginTabRows'
-import { TabRows, TabSection } from '../../capsule/CapsulePanel/styles'
+import { parseOutline } from '@/lib/editor-info'
+import { publishEditorCommand } from '@/lib/editor-commands'
+import { useWorkspaceStore } from '@/lib/store'
+import { panelTabsStore, visiblePanelTabs } from '@/lib/panelTabs'
+import { useEditorLiveState } from '@/lib/editor-state'
+import { useLocale } from '@/lib/i18n/context'
+import { PluginTabRowItem } from '@/components/capsule/CapsulePanel/PluginTabRows'
+import { TabRows, TabSection } from '@/components/capsule/CapsulePanel/styles'
 import {
   Body,
   EmptyText,

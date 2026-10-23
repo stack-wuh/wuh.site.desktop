@@ -14,7 +14,7 @@ import styled from 'styled-components'
 import { hostGeneration, listMainViews, PluginView, usePluginsReady } from './PluginFrameHost'
 import { Empty } from '../ui/Empty'
 import { PageTopbar } from '../ui/PageTopbar'
-import { useLocale } from '../../lib/i18n/context'
+import { useLocale } from '@/lib/i18n/context'
 
 const Shell = styled.section`
   display: flex;

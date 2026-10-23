@@ -7,14 +7,14 @@
  * 全部由宿主 AccountPage 持有并注入。
  */
 import type { AppSettings, GitIdentityDefault, RepoSummary } from '@shared/types'
-import { Button } from '../../ui/Button'
-import { Input } from '../../ui/Input'
-import { AppIcon } from '../../ui/AppIcon'
-import { ErrorText, HintText } from '../../ui/Text'
-import { SettingRow } from '../../ui/SettingRow'
-import { SettingSection } from '../../settings/SettingSection'
-import { IconSearch } from '../../icons'
-import { useLocale } from '../../../lib/i18n/context'
+import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
+import { AppIcon } from '@/components/ui/AppIcon'
+import { ErrorText, HintText } from '@/components/ui/Text'
+import { SettingRow } from '@/components/ui/SettingRow'
+import { SettingSection } from '@/components/settings/SettingSection'
+import { IconSearch } from '@/components/icons'
+import { useLocale } from '@/lib/i18n/context'
 import {
   Intro,
   KindTag,

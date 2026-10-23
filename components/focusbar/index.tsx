@@ -6,10 +6,10 @@
  * 状态全部来自 workspaceStore / editor-state 总线快照，退出经 focusMode 总线
  * （与 ⌘⇧F、编辑器内 Esc 同一出口，编辑页顶栏淡出语义不受影响）。
  */
-import { useWorkspaceStore } from '../../lib/store'
-import { publishEditorLiveState } from '../../lib/editor-state'
-import { countWords } from '../../lib/editor-info'
-import { useLocale } from '../../lib/i18n/context'
+import { useWorkspaceStore } from '@/lib/store'
+import { publishEditorLiveState } from '@/lib/editor-state'
+import { countWords } from '@/lib/editor-info'
+import { useLocale } from '@/lib/i18n/context'
 import { AppIcon } from '../ui/AppIcon'
 import { IconMaximize2 } from '../icons'
 import { BarBox, DocTitle, ExitBtn, SaveState, WordCount } from './styles'

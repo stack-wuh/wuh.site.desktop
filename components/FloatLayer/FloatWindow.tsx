@@ -13,11 +13,11 @@ import {
   moveFloat,
   resizeFloat,
   type FloatState
-} from '../../lib/floats'
+} from '@/lib/floats'
 import { PluginView } from '../plugins/PluginFrameHost'
 import { AppIcon } from '../ui/AppIcon'
 import { IconChevronDown, IconClose, pluginIcon } from '../icons'
-import { useLocale } from '../../lib/i18n/context'
+import { useLocale } from '@/lib/i18n/context'
 import { nextGeometry, RESIZE_DIRS, viewportOf, type DragContext, type ResizeDir } from './geometry'
 import { Actions, Header, ResizeHandle, WinBody, WinBtn, Window, WinTitle } from './styles'
 

@@ -8,10 +8,10 @@
  * 显隐与定位由 MarkdownEditor 装配（选区稳定 300ms 浮现、Esc/选区消失即收，
  * 焦点恒留编辑器）；按钮 mousedown 阻断默认行为保住编辑器选区。
  */
-import { AppIcon } from '../../ui/AppIcon'
-import { IconBold, IconCode, IconFile, IconItalic, IconLink, IconStrikethrough } from '../../icons'
-import { useLocale } from '../../../lib/i18n/context'
-import type { MarkdownInsertAction } from '../../../lib/store'
+import { AppIcon } from '@/components/ui/AppIcon'
+import { IconBold, IconCode, IconFile, IconItalic, IconLink, IconStrikethrough } from '@/components/icons'
+import { useLocale } from '@/lib/i18n/context'
+import type { MarkdownInsertAction } from '@/lib/store'
 import { Bar, BarButton, Sep } from './styles'
 
 export interface SelectionToolbarProps {

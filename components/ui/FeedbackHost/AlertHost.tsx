@@ -6,12 +6,12 @@
  * Esc/点遮罩不关闭，仅按钮收敛（resolveAlert）；按钮 label 缺省回退 common.ok。
  */
 import styled from 'styled-components'
-import type { FeedbackKind } from '../../../lib/feedback'
-import { resolveAlert, useFeedback } from '../../../lib/feedback'
+import type { FeedbackKind } from '@/lib/feedback'
+import { resolveAlert, useFeedback } from '@/lib/feedback'
 import { Button } from '../Button'
 import { AppIcon } from '../AppIcon'
 import { Dialog } from '../Dialog'
-import { useLocale } from '../../../lib/i18n/context'
+import { useLocale } from '@/lib/i18n/context'
 import { KIND_COLOR, KIND_ICON } from './styles'
 
 /* ---------- Alert 模态（串行队列，必须明确响应） ---------- */

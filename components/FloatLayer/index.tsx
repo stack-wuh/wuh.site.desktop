@@ -11,10 +11,10 @@
  * `components/FloatLayer` 具名导出 FloatLayer。
  */
 import { useEffect, useRef, useSyncExternalStore } from 'react'
-import { closeFloat, floatsStore, restoreFloat, topFloat } from '../../lib/floats'
+import { closeFloat, floatsStore, restoreFloat, topFloat } from '@/lib/floats'
 import { AppIcon } from '../ui/AppIcon'
 import { pluginIcon } from '../icons'
-import { useLocale } from '../../lib/i18n/context'
+import { useLocale } from '@/lib/i18n/context'
 import type { DragContext } from './geometry'
 import { FloatWindow } from './FloatWindow'
 import { Chip, Chips, Layer } from './styles'

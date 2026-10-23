@@ -12,7 +12,7 @@
 import { useEffect, useRef } from 'react'
 import { AppIcon, type IconComponent } from '../ui/AppIcon'
 import { IconLogo, IconPuzzle, IconSettings } from '../icons'
-import { useLocale } from '../../lib/i18n/context'
+import { useLocale } from '@/lib/i18n/context'
 import { PluginTree, type PluginTreeViewRef } from '../menu/PluginTree'
 import { Badge, BottomGroup, Nav, PluginsWrap, PopCard, RailBtn } from './styles'
 

@@ -12,7 +12,7 @@ import { useCallback, useEffect, useState } from 'react'
 import type { RecentWorkspace, WorkspaceInfo } from '@shared/types'
 import { Button } from '../ui/Button'
 import { applyWorkspaceSwitch } from '../plugins/PluginFrameHost'
-import { useLocale } from '../../lib/i18n/context'
+import { useLocale } from '@/lib/i18n/context'
 import { ErrorText, Muted, PanelLabel, PanelTitle, Row, RowList, RowPath, errText } from './PickerShell'
 
 export function WorkspacePanelContent(): React.JSX.Element {

@@ -7,9 +7,9 @@
  * 的微展示组件 SavedFlash（保存成功瞬时反馈）。
  */
 import styled, { keyframes } from 'styled-components'
-import { AppIcon } from '../../ui/AppIcon'
-import { IconCheck } from '../../icons'
-import { useLocale } from '../../../lib/i18n/context'
+import { AppIcon } from '@/components/ui/AppIcon'
+import { IconCheck } from '@/components/icons'
+import { useLocale } from '@/lib/i18n/context'
 
 const pageEnter = keyframes`
   from { opacity: 0; transform: translateY(6px); }

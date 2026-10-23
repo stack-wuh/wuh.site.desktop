@@ -6,11 +6,11 @@
  * 与导出状态（exportMsg/runExport）内聚本组件；面板开合由宿主持有并注入。
  */
 import { useState } from 'react'
-import { AppIcon } from '../../../ui/AppIcon'
-import { IconCopy, IconExternalLink } from '../../../icons'
-import { publishEditorLiveState, useEditorLiveState, type EditorTypography } from '../../../../lib/editor-state'
-import { copyAsHtml, exportHtmlFile } from '../../../../lib/editor-export'
-import { useLocale } from '../../../../lib/i18n/context'
+import { AppIcon } from '@/components/ui/AppIcon'
+import { IconCopy, IconExternalLink } from '@/components/icons'
+import { publishEditorLiveState, useEditorLiveState, type EditorTypography } from '@/lib/editor-state'
+import { copyAsHtml, exportHtmlFile } from '@/lib/editor-export'
+import { useLocale } from '@/lib/i18n/context'
 import {
   KbdTable,
   ModuleCard,
@@ -23,7 +23,7 @@ import {
   Stepper,
   StepperLine,
   SubPanel
-} from '../../modules'
+} from '@/components/capsule/modules'
 import type { SubPanelKind } from './FormatGrid'
 
 /** 排版步进定义：字号 ±1（12-18）、行距 ±0.1（1.5-2.2）、行宽循环（满幅→宽→中→窄） */

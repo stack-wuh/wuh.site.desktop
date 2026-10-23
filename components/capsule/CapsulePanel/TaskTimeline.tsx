@@ -7,10 +7,10 @@
  */
 import { useRouter } from 'next/navigation'
 import styled, { css, keyframes } from 'styled-components'
-import { AppIcon } from '../../ui/AppIcon'
-import { IconCheck } from '../../icons'
-import type { TaskState, TaskStatus } from '../../../lib/tasks'
-import { useLocale } from '../../../lib/i18n/context'
+import { AppIcon } from '@/components/ui/AppIcon'
+import { IconCheck } from '@/components/icons'
+import type { TaskState, TaskStatus } from '@/lib/tasks'
+import { useLocale } from '@/lib/i18n/context'
 
 const rowFadeIn = keyframes`
   from {

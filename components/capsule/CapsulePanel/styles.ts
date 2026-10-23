@@ -7,7 +7,7 @@
  * data-capsule-panel 判定）。视觉稿 .cc 无损移植；行级样式内聚各自子单元文件。
  */
 import styled from 'styled-components'
-import type { CapsuleModuleState } from '../../../lib/capsule'
+import type { CapsuleModuleState } from '@/lib/capsule'
 
 export const Pop = styled.div`
   /* 贴 chip（TitleBar 右侧，垂直居中）下缘向下弹出：panel 顶约落在 TitleBar

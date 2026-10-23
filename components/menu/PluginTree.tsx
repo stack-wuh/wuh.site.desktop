@@ -11,10 +11,10 @@
 import { useRouter, usePathname } from 'next/navigation'
 import styled from 'styled-components'
 import type { PluginIconName } from '@shared/plugin'
-import { pluginPanelKey } from '../../lib/routes'
+import { pluginPanelKey } from '@/lib/routes'
 import { AppIcon } from '../ui/AppIcon'
 import { IconCheck, pluginIcon } from '../icons'
-import { useLocale } from '../../lib/i18n/context'
+import { useLocale } from '@/lib/i18n/context'
 
 export interface PluginTreeViewRef {
   pluginId: string

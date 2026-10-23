@@ -8,7 +8,7 @@
  * 落墨与查询行消费（cmConsumeSlashLine，纯函数）由 MarkdownEditor 装配。
  */
 import { forwardRef, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import { AppIcon } from '../../ui/AppIcon'
+import { AppIcon } from '@/components/ui/AppIcon'
 import {
   IconCode,
   IconImage,
@@ -16,8 +16,8 @@ import {
   IconMinus,
   IconQuote,
   IconTable
-} from '../../icons'
-import { useLocale } from '../../../lib/i18n/context'
+} from '@/components/icons'
+import { useLocale } from '@/lib/i18n/context'
 import { Empty, EscChip, Head, Item, ItemDesc, ItemIcon, ItemLabel, ItemText, Panel, Sep } from './styles'
 
 export type SlashKind = 'hr' | 'table' | 'card' | 'image' | 'codeBlock' | 'quote'

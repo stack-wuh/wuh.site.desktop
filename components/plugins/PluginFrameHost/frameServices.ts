@@ -13,21 +13,21 @@ import {
   sanitizeMessageArgs,
   sanitizeToastArgs
 } from '@shared/plugin'
-import { uiConfirm } from '../../ui/Dialog'
-import { alert, message, toast } from '../../../lib/feedback'
-import { storedLocale } from '../../../lib/i18n/locales'
-import { workspaceStore } from '../../../lib/store'
+import { uiConfirm } from '@/components/ui/Dialog'
+import { alert, message, toast } from '@/lib/feedback'
+import { storedLocale } from '@/lib/i18n/locales'
+import { workspaceStore } from '@/lib/store'
 import { parseFrontmatter } from '@shared/frontmatter'
 import {
   removeStatusItem,
   updateStatusItem,
   type StatusItemPatch
-} from '../../../lib/statusItems'
-import { removeTask, upsertTask, type TaskPatch } from '../../../lib/tasks'
-import { removeCapsule, removeCapsuleTab, updateCapsule, updateCapsuleTab } from '../../../lib/capsule'
-import { removePanelTab, updatePanelTab } from '../../../lib/panelTabs'
-import { publishEvent, publishPluginEvent, subscribePlugin, unsubscribePlugin } from '../../../lib/events'
-import { renderService } from '../../../lib/renderPipeline'
+} from '@/lib/statusItems'
+import { removeTask, upsertTask, type TaskPatch } from '@/lib/tasks'
+import { removeCapsule, removeCapsuleTab, updateCapsule, updateCapsuleTab } from '@/lib/capsule'
+import { removePanelTab, updatePanelTab } from '@/lib/panelTabs'
+import { publishEvent, publishPluginEvent, subscribePlugin, unsubscribePlugin } from '@/lib/events'
+import { renderService } from '@/lib/renderPipeline'
 import { currentDocState, requirePermission, sessionOf } from './frameProtocol'
 
 /** 插件反馈频率护栏（全 kind 共享额度：10s 内 5 条；宿主内部调用不经此闸） */

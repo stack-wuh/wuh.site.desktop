@@ -6,8 +6,8 @@
  * 为三个 Host 共用；各 Host 的专属 styled 内聚在各自文件。
  */
 import type { IconComponent } from '../AppIcon'
-import { IconCircleAlert, IconCircleCheck, IconInfo, IconTriangleAlert } from '../../icons'
-import type { FeedbackKind } from '../../../lib/feedback'
+import { IconCircleAlert, IconCircleCheck, IconInfo, IconTriangleAlert } from '@/components/icons'
+import type { FeedbackKind } from '@/lib/feedback'
 
 export const KIND_ICON: Record<FeedbackKind, IconComponent> = {
   info: IconInfo,
