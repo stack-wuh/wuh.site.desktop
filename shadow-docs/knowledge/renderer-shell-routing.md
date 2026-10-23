@@ -30,7 +30,7 @@ source:
   - changes/20261015-feature-workbench-shell/brief.md
   - changes/archive/20261017-feature-app-layout-workbench/brief.md
   - changes/archive/20261021-fix-workbench-entry-return/brief.md
-  - changes/20261022-refactor-renderer-import-alias/brief.md
+  - changes/archive/20261022-refactor-renderer-import-alias/brief.md
 verified: 2026-10-23
 verified-depth: runtime
 verified-scope: 20261022 导入别名：守卫红绿自检（注入 2 级导入守卫红、撤销后绿）+ 三套 tsc + vitest 832/833 + next build 静态导出（unit 级）；20261021 书脊首项上下文切换：workbench-layout 集成用例（有文档→/editor 且 content/activePath/dirty 不变、/editor→/ 且 content 保留、无文档→/、目标 editor 时无 home 激活）+ projects 纯逻辑 + i18n 三语 + 三 tsconfig + 用户实机走查；20261017 书脊案面：书脊/案面/浮笺三层实机（目次 64px 锚点、书耳默认收起、Sheet 画芯、Shell overflow:clip 禁壳滚、rail 项目钮=目次开关互斥插件 popover、⌘B 语义）；workbench-layout/rail/context-panel/home-workbench/focus-mode/editor-page 套件绿 + 全量 86 套件；20261015 工作台范式 764+ 用例历史绿
