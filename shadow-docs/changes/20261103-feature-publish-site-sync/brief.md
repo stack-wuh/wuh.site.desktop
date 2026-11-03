@@ -4,7 +4,7 @@
   "name": "20261103-feature-publish-site-sync",
   "type": "feature",
   "scope": "src/main,src/shared,publish",
-  "status": "committed",
+  "status": "published",
   "baseBranch": "main",
   "branch": "feature/20261103-feature-publish-site-sync",
   "files": [
@@ -21,8 +21,8 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 171,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/171",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 176,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/176"
   },
   "review": {
     "conclusion": "pending",
@@ -31,8 +31,8 @@
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "66cd8d6046557d5a049809819244f7596e6d3c87",
-    "planHash": "ef9051e80142b687da35e3f5eb55f2973b034ca8a9c41793bb5ba870777c70da",
+    "checkpoint": "pr:176",
+    "planHash": "7da5769213ce38f1e8e71b050de4162cf17d273fcced95795b8e74b2141e0483",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
