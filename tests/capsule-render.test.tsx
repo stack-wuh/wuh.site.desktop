@@ -364,3 +364,40 @@ describe('发布磁贴（20261020-feature-publish-interaction）', () => {
     expect(tile.getAttribute('aria-pressed')).toBe('false')
   })
 })
+
+describe('胶囊 pod 标签触发面（20261103-feature-capsule-task-surface）', () => {
+  it('active：标签直显最近 in_progress 任务的 detail（阶段名 n/total）', () => {
+    upsertTask('acme', 'job', {
+      title: '发布文章',
+      status: 'in_progress',
+      progress: { current: 2, total: 4 },
+      detail: '发布中 2/4'
+    })
+    const { container } = renderWithLocale(<Capsule />)
+    expect(screen.getByText('发布中 2/4')).toBeTruthy()
+    expect(container.querySelector('[data-testid="capsule-more-tasks"]')).toBeNull()
+  })
+
+  it('并发：多个 in_progress 叠加 +N 徽标，标签取最近更新的任务', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(1000)
+    upsertTask('acme', 'job-a', { title: 'A', status: 'in_progress', detail: 'A 1/2' })
+    vi.setSystemTime(2000)
+    upsertTask('acme', 'job-b', { title: 'B', status: 'in_progress', detail: 'B 2/2' })
+    vi.useRealTimers()
+    const { container } = renderWithLocale(<Capsule />)
+    expect(screen.getByText('B 2/2')).toBeTruthy()
+    const badge = container.querySelector('[data-testid="capsule-more-tasks"]')
+    expect(badge?.textContent).toBe('+1')
+  })
+
+  it('缺 detail 回退任务 title；无 in_progress 回退聚合计数', () => {
+    upsertTask('acme', 'job', { title: '裸任务', status: 'in_progress' })
+    const first = renderWithLocale(<Capsule />)
+    expect(screen.getByText('裸任务')).toBeTruthy()
+    first.unmount()
+    upsertTask('acme', 'job', { status: 'done' })
+    renderWithLocale(<Capsule />)
+    expect(screen.getByText(/0\/1|1\/1/)).toBeTruthy()
+  })
+})

@@ -18,7 +18,7 @@
  */
 import { useEffect, useRef, useSyncExternalStore } from 'react'
 import styled, { css, keyframes } from 'styled-components'
-import { taskAggregate, tasksStore } from '@/lib/tasks'
+import { taskAggregate, tasksStore, visibleTasks, type TaskState } from '@/lib/tasks'
 import { dockStore, setDockOpen, toggleDockOpen } from '@/lib/dock'
 import { useWorkspaceStore } from '@/lib/store'
 import { useLocale } from '@/lib/i18n/context'
@@ -175,6 +175,18 @@ const Label = styled.span<{ $tone: 'idle' | 'active' | 'done' }>`
   text-overflow: ellipsis;
 `
 
+/** 并发任务徽标：语言无关 +N 计数，随 active 标签同色系 */
+const MoreBadge = styled.span`
+  margin-left: 2px;
+  padding: 0 5px;
+  border-radius: 999px;
+  border: 1px solid var(--border-color, rgba(128, 128, 128, 0.35));
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 15px;
+  color: var(--primary-color);
+`
+
 const Chevron = styled.span<{ $open: boolean }>`
   display: inline-flex;
   align-items: center;
@@ -211,6 +223,15 @@ export function Capsule(): React.JSX.Element {
           : 'progressing'
   const labelTone: 'idle' | 'active' | 'done' =
     agg.active > 0 ? 'active' : agg.total > 0 && agg.done === agg.total ? 'done' : 'idle'
+  // 任务触发面（20261103-feature-capsule-task-surface）：active 态标签直显最近
+  // in_progress 任务的 detail（「阶段名 n/总」，与时间线同源），并发叠加 +N 徽标；
+  // 缺 detail 回退 title；无进行中回退既有聚合计数。不自动展开面板（写作不干扰）。
+  const activeTasks = visibleTasks().filter(task => task.status === 'in_progress')
+  const latestActive = activeTasks.reduce<TaskState | null>(
+    (latest, task) => (latest == null || task.updatedAt > latest.updatedAt ? task : latest),
+    null
+  )
+  const activeLabel = latestActive ? (latestActive.detail || latestActive.title) : null
 
   // Esc/点外关收面板：target 在胶囊内（chip 或面板）一律忽略——不能用传播时序判断，
   // React 18 离散事件会同步刷 passive effects，打开面板的那次点击仍会
@@ -246,12 +267,16 @@ export function Capsule(): React.JSX.Element {
       >
         <ProgressRing mode={mode} ratio={agg.total > 0 ? agg.done / agg.total : 0} />
         <Label $tone={labelTone}>
-          {agg.total > 0
-            ? t('capsule.tasks', { done: agg.done, total: agg.total })
-            : hasDoc
-              ? t('capsule.editorSection')
-              : t('capsule.ready')}
+          {activeLabel ??
+            (agg.total > 0
+              ? t('capsule.tasks', { done: agg.done, total: agg.total })
+              : hasDoc
+                ? t('capsule.editorSection')
+                : t('capsule.ready'))}
         </Label>
+        {activeTasks.length > 1 && (
+          <MoreBadge data-testid="capsule-more-tasks">+{activeTasks.length - 1}</MoreBadge>
+        )}
         <Chevron $open={open} aria-hidden="true">
           <AppIcon icon={IconChevronDown} size="xs" decorative />
         </Chevron>
