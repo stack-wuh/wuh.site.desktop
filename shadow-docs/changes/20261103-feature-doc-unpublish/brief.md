@@ -4,7 +4,7 @@
   "name": "20261103-feature-doc-unpublish",
   "type": "feature",
   "scope": "publish,capsule",
-  "status": "committed",
+  "status": "published",
   "baseBranch": "main",
   "branch": "feature/20261103-feature-doc-unpublish",
   "files": [
@@ -26,8 +26,8 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 173,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/173",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 179,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/179"
   },
   "review": {
     "conclusion": "pending",
@@ -36,8 +36,8 @@
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "30db81bae257dda5a9dcecf15dcdac5b7b0d898f",
-    "planHash": "313c0efdaf5d8b61cfd1f8ae44bbda84c8c612f74ccf01398c21980ac74d3aad",
+    "checkpoint": "pr:179",
+    "planHash": "e6b5f7be0c14fbd7bcf5595cad71fa9e084327e6a3463d9033ec46ca1523b21a",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
