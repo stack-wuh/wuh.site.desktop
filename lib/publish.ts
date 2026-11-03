@@ -94,3 +94,40 @@ export const publishBusy = {
     publishingListeners.forEach((listener) => listener())
   }
 }
+
+// ---------- 发布任务进度（20261103-feature-async-task-progress） ----------
+// 发布链作为任务胶囊时间线的首个宿主消费者：四阶段 = 渲染层可见编排步——
+// CLI plan/execute 在主进程单 IPC（publishViaCli）内不可细分，故不设独立阶段。
+import type { TaskPatch } from './tasks'
+
+export const PUBLISH_TASK_NS = 'host'
+export const PUBLISH_TASK_ID = 'publish'
+
+/** 渲染层可见编排阶段（i18n 键，顺序即进度方向） */
+export const PUBLISH_STAGES = [
+  'capsule.publishStageSave',
+  'capsule.publishStagePublish',
+  'capsule.publishStageWriteback',
+  'capsule.publishStageSync'
+] as const
+
+/** 阶段补丁：单调推进 progress，detail = 「阶段名 n/总」（pod 标签与时间线同源） */
+export function publishStagePatch(stageIndex: number, stageLabel: string): TaskPatch {
+  if (!Number.isInteger(stageIndex) || stageIndex < 0 || stageIndex >= PUBLISH_STAGES.length) {
+    throw new Error(`发布阶段下标越界: ${String(stageIndex)}`)
+  }
+  return {
+    status: 'in_progress',
+    progress: { current: stageIndex + 1, total: PUBLISH_STAGES.length },
+    detail: `${stageLabel} ${stageIndex + 1}/${PUBLISH_STAGES.length}`
+  }
+}
+
+export function publishTaskDonePatch(): TaskPatch {
+  return { status: 'done' }
+}
+
+/** 失败降级 pending + 原因（既有任务语义：失败回 pending 供时间线呈现） */
+export function publishTaskFailedPatch(reason: string): TaskPatch {
+  return { status: 'pending', detail: reason }
+}
