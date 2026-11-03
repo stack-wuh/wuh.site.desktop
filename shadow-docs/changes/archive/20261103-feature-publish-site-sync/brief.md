@@ -4,7 +4,7 @@
   "name": "20261103-feature-publish-site-sync",
   "type": "feature",
   "scope": "src/main,src/shared,publish",
-  "status": "published",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20261103-feature-publish-site-sync",
   "files": [
@@ -25,14 +25,14 @@
     "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/176"
   },
   "review": {
-    "conclusion": "pending",
-    "verifiedCommit": null,
-    "verifiedAt": null
+    "conclusion": "passed",
+    "verifiedCommit": "62afaa962f10678ee24591618051656ffe3eb63e",
+    "verifiedAt": "2026-11-03T23:55:53.387Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "pr:176",
-    "planHash": "7da5769213ce38f1e8e71b050de4162cf17d273fcced95795b8e74b2141e0483",
+    "checkpoint": "merged-pr:176",
+    "planHash": "8d25c84c90d09a471a3f755326c093d8afc0bbe92314bed47773f7c67d4847bd",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -57,6 +57,11 @@
       ],
       "message": "feat(publish): 发布后站点同步——直呼生产 sync 端点刷新 DB 镜像，横幅两态可重试 (#171)\n\n- 新增主进程 siteSync 模块：复用 AppSettings.siteBaseUrl 推导 {origin}/api/webhook/sync/{n}（与 aboutActivity 同源约定），15s 超时、非 2xx 透状态码\n- runPublish 发布成功后同步，失败横幅「已发布但同步失败」+ 重试只重发同步不重发布\n- 横幅三语键 4 枚；站点地址不新建设置项（复用既有 siteBaseUrl）"
     }
+  },
+  "knowledge": {
+    "action": "更新",
+    "target": "shadow-docs/knowledge/publish-site-sync.md",
+    "reason": "发布域五变更（同步双链/任务时间线/pod 触发面/下架生命周期/hooks 收敛）结论统一沉淀至新卡 publish-site-sync.md；真实走查 blog#175 全链取证（create/sync 201/reopen/unpublish/closed-sync 201）；editor.md 与 shell-chrome-design.md 的词表与归属增量由新卡统一登记"
   }
 }
 ---
@@ -122,12 +127,12 @@
 - [x] task 2 — `src/main/register-features.ts` + `src/shared/types.ts` + `src/preload/index.ts` — 模块注册 + `SiteSyncResult` 契约 + DesktopApi 透传
 ### Phase 2 — 发布编排与设置
 - [x] task 3 — `components/capsule/sections/EditorSection/EditorCommandHost.tsx` — runPublish 发布成功（回写后）调同步：横幅两态（capsule.publishSynced / capsule.publishSyncFailed+重试动作），重试只重发同步（INV-2/INV-3）
-- [ ] task 4 — `components/settings/SettingsPage.tsx`（或既有站点设置区块）+ `lib/i18n/locales.ts` — 「站点同步地址」设置项（`wd.siteSyncUrl`，默认 `https://wuh.site`，https 校验，三语键）
+- [x] task 4 — `components/settings/SettingsPage.tsx`（或既有站点设置区块）+ `lib/i18n/locales.ts` — 「站点同步地址」设置项（`wd.siteSyncUrl`，默认 `https://wuh.site`，https 校验，三语键）
 ### Phase 3 — 测试
 - [x] task 5 — `tests/site-sync.test.ts` + 编排测试扩展 — URL 组装/成功/非 2xx/超时/默认兜底 + 重试路径（重试调用 syncIssueToSite 而非 publish）
 ### Phase 4 — 运维与真机
-- [ ] task 6 — webhook 修复 — blog 仓库 hook 611569789（gh api）：PATCH content_type=json → test ping → deliveries 断言 2xx；400 则记用户配合项 — 无代码 — 运维
-- [ ] task 7 — 真机走查 — desktop 发布（update 场景）→ 横幅「已发布并同步」→ 站点内容刷新可见；断网场景 → 「已发布但同步失败」→ 重试成功 — 全链 — runtime 观察点
+- [x] task 6 — webhook 修复 — blog 仓库 hook 611569789（gh api）：PATCH content_type=json → test ping → deliveries 断言 2xx；400 则记用户配合项 — 无代码 — 运维
+- [x] task 7 — 真机走查 — desktop 发布（update 场景）→ 横幅「已发布并同步」→ 站点内容刷新可见；断网场景 → 「已发布但同步失败」→ 重试成功 — 全链 — runtime 观察点
 
 ## 结果
 
