@@ -4,7 +4,7 @@
   "name": "20261103-refactor-shared-hooks-sweep",
   "type": "refactor",
   "scope": "lib,components",
-  "status": "committed",
+  "status": "published",
   "baseBranch": "main",
   "branch": "refactor/20261103-refactor-shared-hooks-sweep",
   "files": [
@@ -21,8 +21,8 @@
     "repository": "stack-wuh/wuh.site.desktop",
     "issue": 175,
     "issueUrl": "https://github.com/stack-wuh/wuh.site.desktop/issues/175",
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 180,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/180"
   },
   "review": {
     "conclusion": "pending",
@@ -31,8 +31,8 @@
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "21c7c6f1694000cd9084ef8d0b501dd21f66a174",
-    "planHash": "82c6e61fcb33f9fab998de7bd00b4c4f8e635c0f0c04ee791c8d9355c52ef0b4",
+    "checkpoint": "pr:180",
+    "planHash": "d4654321916fc4dd54cdcba9ae0fae33a205c9bac38b55b1009405b77d07f287",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
