@@ -44,7 +44,8 @@ export function Palette(): React.JSX.Element | null {
     const doc = [
       { id: 'shell:new', title: t('palette.newDoc'), keywords: 'new draft', run: (): void => { publishEditorCommand({ kind: 'newDraft' }); void router.push('/editor') } },
       // publishEditorCommand 返回 boolean 消费标记，命令 run 语义为 void
-      { id: 'shell:save', title: t('palette.save'), keywords: 'save ⌘s', run: (): void => { publishEditorCommand({ kind: 'save' }) } }
+      { id: 'shell:save', title: t('palette.save'), keywords: 'save ⌘s', run: (): void => { publishEditorCommand({ kind: 'save' }) } },
+      { id: 'shell:unpublish', title: t('palette.unpublish'), keywords: 'unpublish unpublish', run: (): void => { publishEditorCommand({ kind: 'unpublishDoc' }) } }
     ]
     const mode = [
       {

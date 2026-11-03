@@ -72,7 +72,7 @@ describe('resolveCliEntry（CURRENT 指针解析）', () => {
 
 describe('参数组装（plan/execute 同源，filePath 参与 planHash）', () => {
   it('无工作区仓库：不传 --repository', () => {
-    expect(buildPlanArgs('posts/a.md', null)).toEqual([
+    expect(buildPlanArgs('publish', 'posts/a.md', null)).toEqual([
       'blog',
       'publish',
       'plan',
@@ -83,7 +83,7 @@ describe('参数组装（plan/execute 同源，filePath 参与 planHash）', () 
   })
 
   it('有工作区仓库：plan/execute 都携带同一 --repository（--json 末位）', () => {
-    expect(buildPlanArgs('posts/a.md', 'stack-wuh/blog')).toEqual([
+    expect(buildPlanArgs('publish', 'posts/a.md', 'stack-wuh/blog')).toEqual([
       'blog',
       'publish',
       'plan',
@@ -93,7 +93,7 @@ describe('参数组装（plan/execute 同源，filePath 参与 planHash）', () 
       'stack-wuh/blog',
       '--json'
     ])
-    expect(buildExecuteArgs('posts/a.md', 'stack-wuh/blog', 'hash-1')).toEqual([
+    expect(buildExecuteArgs('publish', 'posts/a.md', 'stack-wuh/blog', 'hash-1')).toEqual([
       'blog',
       'publish',
       'execute',

@@ -60,6 +60,8 @@ const handlers: {
   publish: () => { throw new Error('not implemented') },
   publishViaCli: () => { throw new Error('not implemented') },
   syncIssueToSite: () => { throw new Error('not implemented') },
+  unpublishViaCli: () => { throw new Error('not implemented') },
+  githubSetIssueState: () => { throw new Error('not implemented') },
   uploadImage: () => { throw new Error('not implemented') },
   getAboutActivity: () => { throw new Error('not implemented') },
   getSettings: () => { throw new Error('not implemented') },
