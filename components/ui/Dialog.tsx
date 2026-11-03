@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useDismissable } from '@/lib/hooks/useDismissable'
 import styled from 'styled-components'
 import { Button } from './Button'
 import { useLocale } from '@/lib/i18n/context'
@@ -62,14 +63,9 @@ interface Props {
 export function Dialog(props: Props): React.JSX.Element | null {
   const { open, title, onClose, footer, children } = props
 
-  useEffect(() => {
-    if (!open) return
-    const handler = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [open, onClose])
+  // Esc 关闭收敛到 useDismissable（20261103-refactor-shared-hooks-sweep）；
+  // 点外关闭走 Overlay 本地 onMouseDown，不经 window 监听（原语义不变）
+  useDismissable({ open, onClose })
 
   if (!open) return null
 

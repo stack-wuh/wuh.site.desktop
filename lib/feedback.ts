@@ -16,7 +16,7 @@
  * OS 通知由主进程按窗口焦点裁决（Phase 3 经 configureSystemNotify 接线）；
  * toast/message 不触发；notifier 抛错不影响应用内 Alert 入队。
  */
-import { useSyncExternalStore } from 'react'
+import { useStore } from './hooks/useStore'
 
 export type FeedbackKind = 'info' | 'success' | 'warning' | 'error'
 
@@ -299,7 +299,7 @@ export function subscribeFeedback(fn: () => void): () => void {
 
 /** 组件侧标准消费口（Toast 栈 / 横幅 / 模态宿主共用） */
 export function useFeedback(): FeedbackSnapshot {
-  return useSyncExternalStore(subscribeFeedback, getFeedbackSnapshot, getFeedbackSnapshot)
+  return useStore({ get: getFeedbackSnapshot, subscribe: subscribeFeedback })
 }
 
 export function resetFeedbackForTests(): void {

@@ -8,6 +8,7 @@
  * 首个可用项、关闭时归还触发钮；颜色只写语义 token，动效仅颜色类且响应 reduced-motion。
  */
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useDismissable } from '@/lib/hooks/useDismissable'
 import styled from 'styled-components'
 
 export interface MenuPopoverOption {
@@ -116,25 +117,16 @@ export function MenuPopover(props: {
   const itemRefs = useRef(new Map<string, HTMLButtonElement>())
   const wasOpen = useRef(false)
 
-  // 开合期监听只在 open 时挂（避免常驻 window 监听的时序坑，见壳层点外关契约）
-  useEffect(() => {
-    if (!open) return
-    const onDown = (event: Event): void => {
-      const root = wrapRef.current
-      if (root && !root.contains(event.target as Node)) setOpen(false)
-    }
-    const onKey = (event: KeyboardEvent): void => {
-      if (event.key !== 'Escape') return
-      event.stopPropagation()
-      setOpen(false)
-    }
-    window.addEventListener('mousedown', onDown)
-    window.addEventListener('keydown', onKey, true)
-    return () => {
-      window.removeEventListener('mousedown', onDown)
-      window.removeEventListener('keydown', onKey, true)
-    }
-  }, [open])
+  // 开合期监听收敛到 useDismissable（20261103-refactor-shared-hooks-sweep）：
+  // mousedown 点外 + capture 阶段 Esc + stopPropagation 语义经选项透传，行为等价
+  useDismissable({
+    open,
+    onClose: () => setOpen(false),
+    rootRef: wrapRef,
+    pointerEvent: 'mousedown',
+    escCapture: true,
+    escStopPropagation: true
+  })
 
   // 焦点管理：打开移入首个可用项；关闭归还触发钮（仅当焦点不在触发钮上）
   useEffect(() => {
