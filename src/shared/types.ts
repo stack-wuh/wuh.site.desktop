@@ -229,6 +229,13 @@ export interface PublishViaCliResult {
   code?: string
 }
 
+export interface SiteSyncResult {
+  ok: boolean
+  /** 同步端点 HTTP 状态码（2xx = 已受理） */
+  status?: number
+  error?: string
+}
+
 // ---------- Upload ----------
 export interface UploadResult {
   ok: boolean
@@ -467,6 +474,8 @@ export interface DesktopApi {
   publish(req: PublishRequest): Promise<PublishResult>
   /** 经本机 shadow-dev CLI（blog publish，v1.8.0+）发布；不可用时 available:false 供渲染层降级 */
   publishViaCli(req: PublishViaCliRequest): Promise<PublishViaCliResult>
+  /** 发布成功后直呼生产同步端点刷新 DB 镜像（站点地址取 AppSettings.siteBaseUrl，负载只有 issue 号） */
+  syncIssueToSite(issueNumber: number): Promise<SiteSyncResult>
   uploadImage(absPath: string): Promise<UploadResult>
   /** 首页热力图：拉取站点综合活动（5min 内存缓存，失败回退过期缓存） */
   getAboutActivity(): Promise<AboutActivityHeatmap>

@@ -193,17 +193,36 @@ export function EditorCommandHost(): React.JSX.Element | null {
       }
       documentEvents.emit('publish', { path: filePath, issueNumber, url })
 
-      const key = created ? 'capsule.publishCreated' : 'capsule.publishUpdated'
-      void message({
-        title: t('capsule.publishTitle'),
-        text: t(key, { n: issueNumber ?? '' }),
-        kind: 'success',
-        actions: url
-          ? [{ id: 'view', label: t('capsule.publishView'), variant: 'primary' as const }]
-          : undefined
-      }).then((actionId) => {
-        if (actionId === 'view' && url) void window.api.openExternal(url)
-      })
+      // 站点同步（发布成功后直呼，负载只有 issue 号）：失败不掩盖发布成功，
+      // 横幅明示并提供「重试同步」——重试只重发同步请求，绝不重新发布（防双建）
+      const syncNow = async (n: number): Promise<boolean> => {
+        try {
+          return (await window.api.syncIssueToSite(n)).ok
+        } catch {
+          return false
+        }
+      }
+      let synced = issueNumber != null ? await syncNow(issueNumber) : false
+      const showPublishBanner = (): void => {
+        void message({
+          title: t('capsule.publishTitle'),
+          text: synced
+            ? t(created ? 'capsule.publishSyncCreated' : 'capsule.publishSyncUpdated', { n: issueNumber ?? '' })
+            : t('capsule.publishSyncFailed', { n: issueNumber ?? '' }),
+          kind: synced ? 'success' : 'warning',
+          actions: [
+            ...(url ? [{ id: 'view', label: t('capsule.publishView'), variant: 'primary' as const }] : []),
+            ...(!synced ? [{ id: 'retrySync', label: t('capsule.publishRetrySync'), variant: 'ghost' as const }] : [])
+          ]
+        }).then(async (actionId) => {
+          if (actionId === 'view' && url) void window.api.openExternal(url)
+          if (actionId === 'retrySync') {
+            synced = issueNumber != null ? await syncNow(issueNumber) : false
+            showPublishBanner()
+          }
+        })
+      }
+      showPublishBanner()
     } catch (err) {
       toast({ text: err instanceof Error ? err.message : String(err), kind: 'error' })
     } finally {
