@@ -236,6 +236,27 @@ export interface SiteSyncResult {
   error?: string
 }
 
+export interface UnpublishViaCliRequest {
+  /** 工作区相对路径（CLI 以工作区根为 cwd，相对路径参与 planHash 重算） */
+  filePath: string
+}
+
+export interface UnpublishViaCliResult {
+  ok: boolean
+  /** false = CLI 不可用（未安装 / 版本缺少 unpublish 能力），渲染层据此降级内置通道 */
+  available: boolean
+  issueNumber?: number
+  url?: string
+  error?: string
+  code?: string
+}
+
+export interface SetIssueStateResult {
+  ok: boolean
+  url?: string
+  error?: string
+}
+
 // ---------- Upload ----------
 export interface UploadResult {
   ok: boolean
@@ -476,6 +497,10 @@ export interface DesktopApi {
   publishViaCli(req: PublishViaCliRequest): Promise<PublishViaCliResult>
   /** 发布成功后直呼生产同步端点刷新 DB 镜像（站点地址取 AppSettings.siteBaseUrl，负载只有 issue 号） */
   syncIssueToSite(issueNumber: number): Promise<SiteSyncResult>
+  /** 经本机 shadow-dev CLI（blog unpublish，v1.9.0+）下架；不可用时 available:false 供渲染层降级 */
+  unpublishViaCli(req: UnpublishViaCliRequest): Promise<UnpublishViaCliResult>
+  /** 内置降级通道：直接 PATCH issue state（close 即下架，open=重新上架） */
+  githubSetIssueState(issueNumber: number, state: 'open' | 'closed'): Promise<SetIssueStateResult>
   uploadImage(absPath: string): Promise<UploadResult>
   /** 首页热力图：拉取站点综合活动（5min 内存缓存，失败回退过期缓存） */
   getAboutActivity(): Promise<AboutActivityHeatmap>

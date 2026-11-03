@@ -14,19 +14,24 @@ import { message, toast } from '@/lib/feedback'
 import { publishEditorCommand, subscribeEditorCommands } from '@/lib/editor-commands'
 import {
   buildBuiltinRequest,
+  clearUnpublished,
   isPublishAuthError,
+  markUnpublished,
   PUBLISH_STAGES,
   PUBLISH_TASK_ID,
   PUBLISH_TASK_NS,
   publishBusy,
   publishPreflight,
   publishStagePatch,
+  publishStateOf,
   publishTaskDonePatch,
   publishTaskFailedPatch,
   shouldFallbackToBuiltin,
-  type PublishBlockReason
+  unpublishPreflight,
+  type PublishBlockReason,
+  type UnpublishBlockReason
 } from '@/lib/publish'
-import { taskKey, upsertTask, visibleTasks } from '@/lib/tasks'
+import { taskKey, upsertTask, visibleTasks, type TaskPatch } from '@/lib/tasks'
 import { setFrontmatterField } from '@shared/frontmatter'
 import { applyWorkspaceSwitch } from '@/components/plugins/PluginFrameHost'
 import { workspaceRelativePath } from '@shared/types'
@@ -247,6 +252,7 @@ export function EditorCommandHost(): React.JSX.Element | null {
           }
         })
       }
+      if (filePath) clearUnpublished(filePath)
       showPublishBanner()
       upsertTask(PUBLISH_TASK_NS, PUBLISH_TASK_ID, publishTaskDonePatch())
     } catch (err) {
@@ -255,6 +261,70 @@ export function EditorCommandHost(): React.JSX.Element | null {
         PUBLISH_TASK_ID,
         publishTaskFailedPatch(err instanceof Error ? err.message : String(err))
       )
+      toast({ text: err instanceof Error ? err.message : String(err), kind: 'error' })
+    } finally {
+      publishBusy.set(false)
+    }
+  }
+
+  // 下架（20261103-feature-doc-unpublish）：close 即下架——CLI 优先、内置
+  // githubSetIssueState 降级；载荷只有 state（绝不携带 title/body 防误改内容）。
+  // frontmatter issue 号保留不动（重新上架=再发布 update）；会话内下架态供磁贴呈现。
+  const runUnpublish = async (): Promise<void> => {
+    if (publishBusy.get()) return
+    const pre = unpublishPreflight(workspaceStore.get())
+    if (!pre.ok) {
+      const key: Record<UnpublishBlockReason, string> = {
+        'no-doc': 'capsule.publishNoDoc',
+        'no-path': 'capsule.publishNoPath',
+        'not-published': 'capsule.unpublishNotPublished'
+      }
+      toast({ text: t(key[pre.reason ?? 'no-doc']), kind: 'info' })
+      return
+    }
+    const saved = workspaceStore.get()
+    const filePath = saved.activePath
+    const issueNumber = saved.content != null ? publishStateOf(saved.content).issueNumber : null
+    if (!filePath || issueNumber == null) return
+    publishBusy.set(true)
+    const taskExists = visibleTasks().some(task => task.key === taskKey('host', 'unpublish'))
+    const upsertUnpublishTask = (patch: TaskPatch): void => {
+      upsertTask('host', 'unpublish', { ...(taskExists ? {} : { title: t('capsule.unpublishTaskTitle') }), ...patch })
+    }
+    upsertUnpublishTask({ status: 'in_progress', detail: t('capsule.unpublishStageClosing') })
+    try {
+      const cli = await window.api.unpublishViaCli({ filePath }).catch((err: unknown) => ({
+        ok: false as const,
+        available: true,
+        issueNumber: undefined as number | undefined,
+        url: undefined as string | undefined,
+        error: err instanceof Error ? err.message : String(err),
+        code: undefined as string | undefined
+      }))
+      let url: string | undefined
+      if (cli.ok) {
+        url = cli.url
+      } else if (shouldFallbackToBuiltin(cli)) {
+        const res = await window.api.githubSetIssueState(issueNumber, 'closed')
+        if (!res.ok) throw new Error(res.error ?? t('capsule.unpublishFailed'))
+        url = res.url
+      } else {
+        throw new Error(
+          isPublishAuthError(cli.code, cli.error)
+            ? t('capsule.publishAuthFailed')
+            : (cli.error ?? t('capsule.unpublishFailed'))
+        )
+      }
+      markUnpublished(filePath)
+      documentEvents.emit('publish', { path: filePath, issueNumber, url, state: 'closed' })
+      upsertUnpublishTask({ status: 'done' })
+      void message({
+        title: t('capsule.unpublishTitle'),
+        text: t('capsule.unpublished', { n: issueNumber }),
+        kind: 'success'
+      })
+    } catch (err) {
+      upsertUnpublishTask({ status: 'pending', detail: err instanceof Error ? err.message : String(err) })
       toast({ text: err instanceof Error ? err.message : String(err), kind: 'error' })
     } finally {
       publishBusy.set(false)
@@ -410,6 +480,10 @@ export function EditorCommandHost(): React.JSX.Element | null {
         }
         case 'publishDoc': {
           void runPublish()
+          return true
+        }
+        case 'unpublishDoc': {
+          void runUnpublish()
           return true
         }
         case 'toggleFocus': {

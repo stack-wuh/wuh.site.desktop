@@ -131,3 +131,38 @@ export function publishTaskDonePatch(): TaskPatch {
 export function publishTaskFailedPatch(reason: string): TaskPatch {
   return { status: 'pending', detail: reason }
 }
+
+// ---------- 下架（20261103-feature-doc-unpublish） ----------
+// close 即下架：frontmatter issue 号为唯一身份，无号=未发布不可下架；下架成功后
+// 号保留（重新上架=再发布 update），会话内已下架态经单状态源供磁贴呈现。
+import { createStore } from './createStore'
+
+export type UnpublishBlockReason = 'no-doc' | 'no-path' | 'not-published'
+
+export interface UnpublishPreflightResult {
+  ok: boolean
+  reason?: UnpublishBlockReason
+}
+
+export function unpublishPreflight(state: { activePath: string | null; content: string | null }): UnpublishPreflightResult {
+  if (state.content == null) return { ok: false, reason: 'no-doc' }
+  if (state.activePath == null) return { ok: false, reason: 'no-path' }
+  if (publishStateOf(state.content).issueNumber == null) return { ok: false, reason: 'not-published' }
+  return { ok: true }
+}
+
+/** 会话内已下架文档（路径集合）：命令宿主写、磁贴读；发布成功时清除（身份复用） */
+export const publishUnpublished = createStore<ReadonlySet<string>>(new Set<string>())
+
+export function markUnpublished(path: string): void {
+  const next = new Set(publishUnpublished.get())
+  next.add(path)
+  publishUnpublished.commit(next)
+}
+
+export function clearUnpublished(path: string): void {
+  if (!publishUnpublished.get().has(path)) return
+  const next = new Set(publishUnpublished.get())
+  next.delete(path)
+  publishUnpublished.commit(next)
+}

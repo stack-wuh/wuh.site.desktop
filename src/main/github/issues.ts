@@ -8,7 +8,8 @@ import type {
   IssueSummary,
   LabelInfo,
   PublishRequest,
-  PublishResult
+  PublishResult,
+  SetIssueStateResult
 } from '@shared/types'
 
 async function client(): Promise<{ octokit: Octokit; owner: string; repo: string }> {
@@ -156,6 +157,17 @@ implement('githubUpsertIssue', async ([req]): Promise<PublishResult> => {
       labels: req.labels
     })
     return { ok: true, url: res.data.html_url, issueNumber: res.data.number, created: true }
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) }
+  }
+})
+
+/** 内置降级通道：直接 PATCH issue state（close 即下架，open=重新上架；CLI 不可用时由渲染层调用） */
+implement('githubSetIssueState', async ([issueNumber, state]): Promise<SetIssueStateResult> => {
+  const { octokit, owner, repo } = await client()
+  try {
+    const res = await octokit.issues.update({ owner, repo, issue_number: issueNumber, state })
+    return { ok: true, url: res.data.html_url }
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) }
   }

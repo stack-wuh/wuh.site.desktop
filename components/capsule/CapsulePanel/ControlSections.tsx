@@ -16,6 +16,7 @@ import {
   IconMaximize,
   IconPalette,
   IconSearch,
+  IconChevronDown,
   IconSend,
   IconSparkles,
   IconSunMoon
@@ -23,7 +24,8 @@ import {
 import type { UploadMode } from '@shared/types'
 import { publishEditorCommand } from '@/lib/editor-commands'
 import { publishEditorLiveState, useEditorLiveState } from '@/lib/editor-state'
-import { publishBusy, publishPreflight, publishStateOf } from '@/lib/publish'
+import { publishBusy, publishPreflight, publishStateOf, publishUnpublished } from '@/lib/publish'
+import { MenuPopover } from '@/components/ui/MenuPopover'
 import { useWorkspaceStore } from '@/lib/store'
 import { useLocale } from '@/lib/i18n/context'
 import type { Locale } from '@/lib/i18n/locales'
@@ -293,6 +295,10 @@ export function PublishTile(): React.JSX.Element {
   const { t } = useLocale()
   const doc = useWorkspaceStore()
   const busy = useSyncExternalStore(publishBusy.subscribe, publishBusy.get, publishBusy.get)
+  // 会话内已下架态（20261103-feature-doc-unpublish）：下架后磁贴转灰示「已下架 #N」，
+  // 点击发布 = 重新上架（frontmatter issue 号保留，update 自动重开）
+  const unpublishedPaths = useSyncExternalStore(publishUnpublished.subscribe, publishUnpublished.get, publishUnpublished.get)
+  const isUnpublished = doc.activePath != null && unpublishedPaths.has(doc.activePath)
   const state = publishStateOf(doc.content)
   const pre = publishPreflight({ activePath: doc.activePath, content: doc.content })
   const status = busy
@@ -305,19 +311,21 @@ export function PublishTile(): React.JSX.Element {
               ? 'capsule.publishNoPath'
               : 'capsule.publishNoTitle'
         )
-      : state.issueNumber
-        ? t('capsule.publishPublished', { n: state.issueNumber })
-        : t('capsule.publishReady')
+      : isUnpublished
+        ? t('capsule.unpublishedTile', { n: state.issueNumber ?? '' })
+        : state.issueNumber
+          ? t('capsule.publishPublished', { n: state.issueNumber })
+          : t('capsule.publishReady')
   return (
     <Tiles role="group" aria-label={t('capsule.publishAria')}>
       <Tile
         $wide
-        $on={state.issueNumber != null}
+        $on={state.issueNumber != null && !isUnpublished}
         type="button"
         data-testid="publish-tile"
         disabled={!pre.ok || busy}
         aria-busy={busy || undefined}
-        aria-pressed={state.issueNumber != null}
+        aria-pressed={state.issueNumber != null && !isUnpublished}
         title={status}
         onClick={() => publishEditorCommand({ kind: 'publishDoc' })}
       >
@@ -328,6 +336,18 @@ export function PublishTile(): React.JSX.Element {
         <TileMeta>{status}</TileMeta>
         <TileTag>GITHUB</TileTag>
       </Tile>
+      <MenuPopover
+        ariaLabel={t('capsule.publishMenuAria')}
+        icon={<AppIcon icon={IconChevronDown} size="xs" decorative />}
+        options={[
+          {
+            id: 'unpublish',
+            label: t('capsule.unpublishMenu'),
+            disabled: busy || state.issueNumber == null || isUnpublished,
+            onSelect: () => publishEditorCommand({ kind: 'unpublishDoc' })
+          }
+        ]}
+      />
     </Tiles>
   )
 }

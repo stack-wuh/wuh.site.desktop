@@ -5,7 +5,7 @@ import { join } from 'node:path'
 import { implement } from './ipc'
 import { getToken } from './credentials'
 import { getWorkspace, safeJoin } from './workspace'
-import type { PublishViaCliRequest, PublishViaCliResult } from '@shared/types'
+import type { PublishViaCliRequest, PublishViaCliResult, UnpublishViaCliRequest, UnpublishViaCliResult } from '@shared/types'
 
 /**
  * CLI 发布桥（20261020-feature-publish-interaction）：把「当前文档 → GitHub Issue」
@@ -45,16 +45,16 @@ export function resolveCliEntry(root: string = CLI_ROOT): string | null {
   }
 }
 
-/** plan/execute 参数组装：filePath 保持工作区相对（参与 planHash 重算）；--json 恒在末位 */
-export function buildPlanArgs(filePath: string, repository: string | null): string[] {
-  const args = ['blog', 'publish', 'plan', '--file', filePath]
+/** plan/execute 参数组装：verb = publish|unpublish（blog 域二级词）；filePath 保持工作区相对（参与 planHash 重算）；--json 恒在末位 */
+export function buildPlanArgs(verb: 'publish' | 'unpublish', filePath: string, repository: string | null): string[] {
+  const args = ['blog', verb, 'plan', '--file', filePath]
   if (repository) args.push('--repository', repository)
   args.push('--json')
   return args
 }
 
-export function buildExecuteArgs(filePath: string, repository: string | null, planHash: string): string[] {
-  const args = ['blog', 'publish', 'execute', '--file', filePath, '--plan-hash', planHash, '--confirm']
+export function buildExecuteArgs(verb: 'publish' | 'unpublish', filePath: string, repository: string | null, planHash: string): string[] {
+  const args = ['blog', verb, 'execute', '--file', filePath, '--plan-hash', planHash, '--confirm']
   if (repository) args.push('--repository', repository)
   args.push('--json')
   return args
@@ -127,15 +127,24 @@ function runProcess(
 }
 
 /** 能力断言缓存：entry 路径含版本目录，版本切换即失效重探 */
-let capability: { entry: string; ok: boolean } | null = null
+interface CliCapabilities {
+  blog: boolean
+  /** blog unpublish 自 v1.9.0 起提供，旧版 CLI 无此能力 */
+  unpublish: boolean
+}
+let capability: { entry: string; caps: CliCapabilities } | null = null
 
-async function cliSupportsBlog(entry: string, env: NodeJS.ProcessEnv): Promise<boolean> {
-  if (capability?.entry === entry) return capability.ok
+async function resolveCapabilities(entry: string, env: NodeJS.ProcessEnv): Promise<CliCapabilities> {
+  if (capability?.entry === entry) return capability.caps
   const out = await runProcess(entry, ['help', 'blog', '--json'], homedir(), env)
   const envelope = parseCliOutput(out.stdout)
-  const ok = !out.spawnError && out.code === 0 && Boolean(envelope?.ok)
-  capability = { entry, ok }
-  return ok
+  const helpText = typeof envelope?.data?.help === 'string' ? envelope.data.help : ''
+  const caps: CliCapabilities = {
+    blog: !out.spawnError && out.code === 0 && Boolean(envelope?.ok),
+    unpublish: !out.spawnError && out.code === 0 && Boolean(envelope?.ok) && helpText.includes('unpublish')
+  }
+  capability = { entry, caps }
+  return caps
 }
 
 function cliErrorText(envelope: CliEnvelope | null, out: CliRunOutcome, fallback: string): string {
@@ -158,7 +167,7 @@ async function publishViaCli(req: PublishViaCliRequest): Promise<PublishViaCliRe
   }
   const token = await getToken().catch(() => null)
   const env = cliEnv(token)
-  if (!(await cliSupportsBlog(entry, env))) {
+  if (!(await resolveCapabilities(entry, env)).blog) {
     return { ok: false, available: false, error: '本机 CLI 版本缺少 blog 发布能力（需 v1.8.0+）' }
   }
   let abs: string
@@ -170,7 +179,7 @@ async function publishViaCli(req: PublishViaCliRequest): Promise<PublishViaCliRe
   if (!existsSync(abs)) return { ok: false, available: true, error: `文件不存在：${req.filePath}` }
   const repository = ws.github ? `${ws.github.owner}/${ws.github.repo}` : null
 
-  const plan = await runProcess(entry, buildPlanArgs(req.filePath, repository), ws.root, env)
+  const plan = await runProcess(entry, buildPlanArgs('publish', req.filePath, repository), ws.root, env)
   if (plan.spawnError) return { ok: false, available: true, error: redactSecret(plan.spawnError, token) }
   const planEnvelope = parseCliOutput(plan.stdout)
   if (!planEnvelope?.ok || !planEnvelope.planHash) {
@@ -184,7 +193,7 @@ async function publishViaCli(req: PublishViaCliRequest): Promise<PublishViaCliRe
 
   const exec = await runProcess(
     entry,
-    buildExecuteArgs(req.filePath, repository, planEnvelope.planHash),
+    buildExecuteArgs('publish', req.filePath, repository, planEnvelope.planHash),
     ws.root,
     env
   )
@@ -207,3 +216,63 @@ async function publishViaCli(req: PublishViaCliRequest): Promise<PublishViaCliRe
 }
 
 implement('publishViaCli', async ([req]) => publishViaCli(req))
+
+/** 下架（20261103-feature-doc-unpublish）：blog unpublish plan→execute 链，
+ * 语义与 publishViaCli 同构——available:false 降级内置 githubSetIssueState，
+ * 执行阶段错误原样上抛（close 是确定操作，重试幂等但绝不静默换通道）。 */
+async function unpublishViaCli(req: UnpublishViaCliRequest): Promise<UnpublishViaCliResult> {
+  const ws = getWorkspace()
+  if (!ws?.root) return { ok: false, available: true, error: '当前没有工作区' }
+  const entry = resolveCliEntry()
+  if (!entry) {
+    return { ok: false, available: false, error: '未找到 shadow-dev CLI（~/.local/share/shadow-dev-cli/CURRENT）' }
+  }
+  const token = await getToken().catch(() => null)
+  const env = cliEnv(token)
+  if (!(await resolveCapabilities(entry, env)).unpublish) {
+    return { ok: false, available: false, error: '本机 CLI 版本缺少下架能力（需 v1.9.0+）' }
+  }
+  let abs: string
+  try {
+    abs = safeJoin(ws.root, req.filePath)
+  } catch {
+    return { ok: false, available: true, error: '文档路径越界' }
+  }
+  if (!existsSync(abs)) return { ok: false, available: true, error: `文件不存在：${req.filePath}` }
+  const repository = ws.github ? `${ws.github.owner}/${ws.github.repo}` : null
+
+  const plan = await runProcess(entry, buildPlanArgs('unpublish', req.filePath, repository), ws.root, env)
+  if (plan.spawnError) return { ok: false, available: true, error: redactSecret(plan.spawnError, token) }
+  const planEnvelope = parseCliOutput(plan.stdout)
+  if (!planEnvelope?.ok || !planEnvelope.planHash) {
+    return {
+      ok: false,
+      available: true,
+      error: redactSecret(cliErrorText(planEnvelope, plan, '下架预览失败'), token),
+      code: planEnvelope?.error?.code
+    }
+  }
+
+  const exec = await runProcess(
+    entry,
+    buildExecuteArgs('unpublish', req.filePath, repository, planEnvelope.planHash),
+    ws.root,
+    env
+  )
+  if (exec.spawnError) return { ok: false, available: true, error: redactSecret(exec.spawnError, token) }
+  const execEnvelope = parseCliOutput(exec.stdout)
+  if (!execEnvelope?.ok) {
+    return {
+      ok: false,
+      available: true,
+      error: redactSecret(cliErrorText(execEnvelope, exec, '下架失败'), token),
+      code: execEnvelope?.error?.code
+    }
+  }
+  const data = execEnvelope.data as { issue?: { number?: number; url?: string } } | undefined
+  const issueNumber = typeof data?.issue?.number === 'number' ? data.issue.number : undefined
+  if (!issueNumber) return { ok: false, available: true, error: 'CLI 返回缺少 issue 号' }
+  return { ok: true, available: true, issueNumber, url: data?.issue?.url }
+}
+
+implement('unpublishViaCli', async ([req]) => unpublishViaCli(req))
