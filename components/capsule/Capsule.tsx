@@ -20,6 +20,7 @@ import { useEffect, useRef, useSyncExternalStore } from 'react'
 import styled, { css, keyframes } from 'styled-components'
 import { taskAggregate, tasksStore, visibleTasks, type TaskState } from '@/lib/tasks'
 import { dockStore, setDockOpen, toggleDockOpen } from '@/lib/dock'
+import { useDismissable } from '@/lib/hooks/useDismissable'
 import { useWorkspaceStore } from '@/lib/store'
 import { useLocale } from '@/lib/i18n/context'
 import { AppIcon } from '../ui/AppIcon'
@@ -233,26 +234,10 @@ export function Capsule(): React.JSX.Element {
   )
   const activeLabel = latestActive ? (latestActive.detail || latestActive.title) : null
 
-  // Esc/点外关收面板：target 在胶囊内（chip 或面板）一律忽略——不能用传播时序判断，
-  // React 18 离散事件会同步刷 passive effects，打开面板的那次点击仍会
-  // 冒泡到 window（20260924-fix-capsule-self-close）
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') setDockOpen(false)
-    }
-    const onClick = (e: MouseEvent): void => {
-      const el = wrapRef.current
-      if (el && e.target instanceof Node && el.contains(e.target)) return
-      setDockOpen(false)
-    }
-    window.addEventListener('keydown', onKey)
-    window.addEventListener('click', onClick)
-    return () => {
-      window.removeEventListener('keydown', onKey)
-      window.removeEventListener('click', onClick)
-    }
-  }, [open])
+  // Esc/点外关收面板收敛到 useDismissable（20261103-refactor-shared-hooks-sweep）：
+  // 归属豁免语义不变——target 在胶囊内（chip 或面板）一律忽略，同帧时序坑由
+  // hook 统一承载（20260924-fix-capsule-self-close）
+  useDismissable({ open, onClose: () => setDockOpen(false), rootRef: wrapRef, pointerEvent: 'click' })
 
   return (
     <Wrap ref={wrapRef}>

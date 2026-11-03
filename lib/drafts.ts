@@ -7,6 +7,7 @@
  * - consumeDraft：另存为成功后删除对应草稿并刷新列表
  */
 import { useSyncExternalStore } from 'react'
+import { useStore } from './hooks/useStore'
 import type { DraftMeta } from '@shared/drafts'
 import type { DesktopApi } from '../src/shared/types'
 import { documentEvents, workspaceStore } from './store'
@@ -56,8 +57,8 @@ export const draftsStore = {
 }
 
 export function useDrafts(): DraftsSnapshot {
-  // 第三参沿用同一快照：模块级纯内存状态，服务端预渲染与客户端取值一致
-  return useSyncExternalStore(draftsStore.subscribe, draftsStore.get, draftsStore.get)
+  // useStore 收敛三参样板（20261103-refactor-shared-hooks-sweep）；纯内存状态第三参同快照
+  return useStore(draftsStore)
 }
 
 /** 拉取草稿列表（失败保留旧快照并标记已加载，不阻塞 UI；失败有 warn 可见） */
