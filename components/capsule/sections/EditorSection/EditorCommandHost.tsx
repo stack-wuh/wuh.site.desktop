@@ -15,11 +15,18 @@ import { publishEditorCommand, subscribeEditorCommands } from '@/lib/editor-comm
 import {
   buildBuiltinRequest,
   isPublishAuthError,
+  PUBLISH_STAGES,
+  PUBLISH_TASK_ID,
+  PUBLISH_TASK_NS,
   publishBusy,
   publishPreflight,
+  publishStagePatch,
+  publishTaskDonePatch,
+  publishTaskFailedPatch,
   shouldFallbackToBuiltin,
   type PublishBlockReason
 } from '@/lib/publish'
+import { taskKey, upsertTask, visibleTasks } from '@/lib/tasks'
 import { setFrontmatterField } from '@shared/frontmatter'
 import { applyWorkspaceSwitch } from '@/components/plugins/PluginFrameHost'
 import { workspaceRelativePath } from '@shared/types'
@@ -115,6 +122,16 @@ export function EditorCommandHost(): React.JSX.Element | null {
    * （publishViaCli）→ 不可用降级内置 publisher → frontmatter issue 回写并落盘 →
    * Message 横幅 + documentEvents('publish')。执行阶段错误不降级（防同一文档双建）。
    */
+  // 任务胶囊时间线（20261103-feature-async-task-progress）：发布链写 host:publish，
+  // title 仅首报携带（已存在任务携带 title 被注册表拒绝——重试复用同一任务不重建）
+  const upsertPublishTask = (stageIndex: number): void => {
+    const exists = visibleTasks().some(task => task.key === taskKey(PUBLISH_TASK_NS, PUBLISH_TASK_ID))
+    upsertTask(PUBLISH_TASK_NS, PUBLISH_TASK_ID, {
+      ...(exists ? {} : { title: t('capsule.publishTaskTitle') }),
+      ...publishStagePatch(stageIndex, t(PUBLISH_STAGES[stageIndex]))
+    })
+  }
+
   const runPublish = async (): Promise<void> => {
     if (publishBusy.get()) return
     const pre = publishPreflight(workspaceStore.get())
@@ -129,13 +146,19 @@ export function EditorCommandHost(): React.JSX.Element | null {
     }
     publishBusy.set(true)
     try {
+      upsertPublishTask(0)
       const cur = workspaceStore.get()
       // CLI 读盘发布：脏缓冲先落盘，保证「所见即所发」与身份回写一致
       if (cur.dirty) await workspaceStore.saveActive()
       const saved = workspaceStore.get()
       const filePath = saved.activePath
-      if (!filePath || saved.content == null) return
+      if (!filePath || saved.content == null) {
+        // 极端竞态（发布期间文档被切走）：任务降级 pending，不悬挂在 in_progress
+        upsertTask(PUBLISH_TASK_NS, PUBLISH_TASK_ID, publishTaskFailedPatch(t('capsule.publishNoDoc')))
+        return
+      }
 
+      upsertPublishTask(1)
       let issueNumber: number | null = null
       let url: string | undefined
       let created = false
@@ -173,6 +196,7 @@ export function EditorCommandHost(): React.JSX.Element | null {
 
       // 身份回写：frontmatter issue（有号幂等）。取发布完成时的最新缓冲，避免
       // 覆盖发布期间的用户输入；若期间已切换文档，则直接回写原文件不误伤当前文档
+      upsertPublishTask(2)
       if (issueNumber) {
         const fresh = workspaceStore.get()
         if (fresh.activePath === filePath && fresh.content != null) {
@@ -202,6 +226,7 @@ export function EditorCommandHost(): React.JSX.Element | null {
           return false
         }
       }
+      upsertPublishTask(3)
       let synced = issueNumber != null ? await syncNow(issueNumber) : false
       const showPublishBanner = (): void => {
         void message({
@@ -223,7 +248,13 @@ export function EditorCommandHost(): React.JSX.Element | null {
         })
       }
       showPublishBanner()
+      upsertTask(PUBLISH_TASK_NS, PUBLISH_TASK_ID, publishTaskDonePatch())
     } catch (err) {
+      upsertTask(
+        PUBLISH_TASK_NS,
+        PUBLISH_TASK_ID,
+        publishTaskFailedPatch(err instanceof Error ? err.message : String(err))
+      )
       toast({ text: err instanceof Error ? err.message : String(err), kind: 'error' })
     } finally {
       publishBusy.set(false)

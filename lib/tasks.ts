@@ -17,6 +17,9 @@ export type TaskStatus = 'pending' | 'in_progress' | 'done'
 /** 每插件并发可见任务上限（承接原 manifest ≤8 声明上限的注入面收敛职责） */
 export const MAX_VISIBLE_TASKS_PER_PLUGIN = 8
 
+/** 宿主长任务保留归属（20261103-feature-async-task-progress）：插件帧一律不得以此 id 写任务 */
+export const RESERVED_HOST_TASK_NAMESPACE = 'host'
+
 export interface TaskProgress {
   current: number
   total: number

@@ -252,3 +252,16 @@ describe('ui 服务与反馈护栏', () => {
     }
   })
 })
+
+describe('宿主保留归属守卫（20261103-feature-async-task-progress）', () => {
+  it('插件帧以 host 归属写任务一律拒绝（宿主直写不经帧通道）', async () => {
+    await expect(
+      handleFrameInvoke('host', 'tasks', 'upsert', ['publish', { title: '冒认' }])
+    ).rejects.toThrow('host 为宿主任务保留归属')
+    expect(visibleTasks().find(t => t.key === 'host:冒认' || t.pluginId === 'host')).toBeUndefined()
+  })
+
+  it('host 归属的 remove 同样拒绝', async () => {
+    await expect(handleFrameInvoke('host', 'tasks', 'remove', ['publish'])).rejects.toThrow('保留归属')
+  })
+})

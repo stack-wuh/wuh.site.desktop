@@ -23,7 +23,7 @@ import {
   updateStatusItem,
   type StatusItemPatch
 } from '@/lib/statusItems'
-import { removeTask, upsertTask, type TaskPatch } from '@/lib/tasks'
+import { removeTask, upsertTask, RESERVED_HOST_TASK_NAMESPACE, type TaskPatch } from '@/lib/tasks'
 import { removeCapsule, removeCapsuleTab, updateCapsule, updateCapsuleTab } from '@/lib/capsule'
 import { removePanelTab, updatePanelTab } from '@/lib/panelTabs'
 import { publishEvent, publishPluginEvent, subscribePlugin, unsubscribePlugin } from '@/lib/events'
@@ -149,6 +149,11 @@ async function svcTasks(pluginId: string, method: string, args: unknown[]): Prom
   // 任务状态单一写方 = 插件 SDK（视图帧与逻辑帧同链路），无额外权限。
   // 声明制退役为可选预置：未声明 id 首报 title 即动态创建（≤8/插件护栏在注册表）。
   // 写穿后内转 tasks:* 事件供订阅者观察（信封归属 = 任务所属插件）。
+  if (pluginId === RESERVED_HOST_TASK_NAMESPACE) {
+    // 宿主保留归属（20261103-feature-async-task-progress）：宿主直写注册表不经本通道，
+    // 插件帧冒认 host 归属一律拒绝（INV-1）
+    throw new Error('host 为宿主任务保留归属，插件不得写入')
+  }
   if (method === 'upsert') {
     const [taskId, patch] = args as [string, TaskPatch]
     const id = String(taskId)
