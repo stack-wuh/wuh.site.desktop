@@ -9,8 +9,9 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.event_name == 'release' && format('desktop-release-{0}', github.ref_name) || 'desktop-quality' }}
-  # release 构建不可取消；门（PR/push/dispatch）新 run 掐旧 run 省 minutes
+  # 分道：release 按 tag 独占不可取消；PR/主推送/dispatch 各自独立成组
+  # （dispatch 与门共用组会把正在跑的演练取消——20261105 实测）
+  group: ${{ github.event_name == 'release' && format('desktop-release-{0}', github.ref_name) || format('desktop-{0}-{1}', github.event_name, github.ref) }}
   cancel-in-progress: ${{ github.event_name != 'release' }}
 
 defaults:
