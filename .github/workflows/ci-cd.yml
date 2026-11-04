@@ -54,6 +54,9 @@ jobs:
   build-release:
     if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
     needs: [quality-gate]
+    # release 资产上传需要 contents:write（403 实测：默认 token 只读）
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
