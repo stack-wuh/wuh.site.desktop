@@ -4,7 +4,7 @@
   "name": "20261104-chore-release-v110",
   "type": "chore",
   "scope": "package.json",
-  "status": "published",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "chore/20261104-chore-release-v110",
   "files": [
@@ -18,14 +18,14 @@
     "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/181"
   },
   "review": {
-    "conclusion": "pending",
-    "verifiedCommit": null,
-    "verifiedAt": null
+    "conclusion": "passed",
+    "verifiedCommit": "bcd0b113489956b7a2bdc688851d4dd72e59da6b",
+    "verifiedAt": "2026-11-04T00:15:32.785Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "pr:181",
-    "planHash": "5c3d52854ef806bd4f54a379c2de8530eff6f3947552e418586e81324af9ccb7",
+    "checkpoint": "merged-pr:181",
+    "planHash": "411b77affa4275fe732c8e6960d874ade09246b227d436cd00e866d9e7f8cbcb",
     "updatedAt": null,
     "lastError": null,
     "commit": {
@@ -34,6 +34,11 @@
       ],
       "message": "chore(release): v1.1.0 版本 bump——发布域五变更进版本轨"
     }
+  },
+  "knowledge": {
+    "action": "无需变更",
+    "target": null,
+    "reason": "版本轨操作，无新契约"
   }
 }
 ---
@@ -65,7 +70,7 @@
 
 ### Phase 1
 - [x] version 1.0.0 → 1.1.0 — `package.json` — 编辑
-- [ ] tag v1.1.0 于合并后 main 头 — git tag — 发版
+- [x] tag v1.1.0 于合并后 main 头 — git tag — 发版
 
 ## 结果
 
