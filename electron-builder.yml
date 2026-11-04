@@ -16,10 +16,17 @@ electronLanguages:
   - zh-CN
   - en
 mac:
-  target: dir
+  # 分发 target：dmg（挂载安装）+ zip（免挂载直下）；identity null = 无证书 unsigned
+  # （下载后首次打开需右键 → 打开；签名/公证待证书就位后启用）
+  target:
+    - dmg
+    - zip
   identity: null
   category: public.app-category.productivity
 win:
+  # 显式 nsis 安装器（不声明时 electron-builder 默认也是 nsis，显式化防漂移）
+  target:
+    - nsis
   # 图标路径相对 buildResources（build/）或项目根解析，build/icon.ico 命中项目根；
   # 产物由 scripts/build-icon.mjs 随 dark 变体生成并随仓库提交
   icon: build/icon.ico
