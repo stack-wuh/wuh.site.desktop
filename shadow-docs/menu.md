@@ -18,6 +18,7 @@
 | 插件系统 | 插件 manifest loader 启用 停用 批准 approvals resolveApproval reload 重载 revealDir plugin-state broker 沙箱 帧 握手 ready 协议注册 corsEnabled problems locale 语言 三语 文案 ui.locale views.area panelTabs context 页签 commands 命令贡献 装配 wire | knowledge/plugin-architecture.md |
 | 渲染层列表性能 | 虚拟列表 虚拟滚动 VirtualList 大列表 项目树 滚动卡顿 列表渲染 展开状态 行高 | knowledge/renderer-virtual-list.md |
 | 博客发布域 | 发布 publish unpublish 下架 同步 site sync webhook issue 号 发布磁贴 任务时间线 host 归属 胶囊触发面 create-or-update | knowledge/publish-site-sync.md |
+| 交付链 | CI CD workflow quality gate 质量门 release 构建 dmg nsis electron-builder 分支保护 required checks frozen-lockfile 版本权威 资产上传 | knowledge/ci-release-pipeline.md |
 
 ## 查阅流程
 
