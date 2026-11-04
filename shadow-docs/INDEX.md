@@ -92,5 +92,6 @@
 | 20261103-feature-publish-site-sync | ✅ 完成 | shadow-docs/changes/archive/20261103-feature-publish-site-sync/brief.md |
 | 20261103-refactor-shared-hooks-sweep | ✅ 完成 | shadow-docs/changes/archive/20261103-refactor-shared-hooks-sweep/brief.md |
 | 20261104-chore-release-v110 | ✅ 完成 | shadow-docs/changes/archive/20261104-chore-release-v110/brief.md |
-| 20261104-feature-ci-release-pipeline | committed | shadow-docs/changes/20261104-feature-ci-release-pipeline/brief.md |
+| 20261104-feature-ci-release-pipeline | ✅ 完成 | shadow-docs/changes/archive/20261104-feature-ci-release-pipeline/brief.md |
+| 20261105-chore-release-v111 | published | shadow-docs/changes/20261105-chore-release-v111/brief.md |
 | 20261105-feature-gate-expansion | ✅ 完成 | shadow-docs/changes/archive/20261105-feature-gate-expansion/brief.md |

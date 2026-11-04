@@ -4,7 +4,7 @@
   "name": "20261104-feature-ci-release-pipeline",
   "type": "feature",
   "scope": ".github",
-  "status": "committed",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20261104-feature-ci-release-pipeline",
   "files": [
@@ -20,14 +20,14 @@
     "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/182"
   },
   "review": {
-    "conclusion": "pending",
-    "verifiedCommit": null,
-    "verifiedAt": null
+    "conclusion": "passed",
+    "verifiedCommit": "7a2192a695a077415e06f9f90e9db24ff8aeb643",
+    "verifiedAt": "2026-11-04T18:55:06.639Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "b82b7582bf0f8edf0f505cbf79ef00dc5627f9f2",
-    "planHash": "f886a4456b0f3b1852fc433f2c664a5681d53b132dab4f5e92af0e56b8b42404",
+    "checkpoint": "merged-pr:182",
+    "planHash": "18028276c2b95cd6586262c2f0f901bf5e24bdd06ea2291dcd61c1acbf211b9e",
     "updatedAt": null,
     "lastError": null,
     "commit": {
@@ -38,6 +38,11 @@
       ],
       "message": "fix(test): capsule chip 断言对齐 #174 新契约——CI 机器门首战抓获\n\nactive 态 chip 直显最近 in_progress 任务 detail（缺省回退 title）替代旧聚合计数；面板打开后按容器作用域断言。本地沙箱未覆盖到该文件，CI 首跑即抓——正是机器门的价值"
     }
+  },
+  "knowledge": {
+    "action": "新增",
+    "target": "shadow-docs/knowledge/ci-release-pipeline.md",
+    "reason": "交付链结论统一沉淀新卡并路由；门禁扩容（#183）与运行时修复（#185/#186）随卡对账"
   }
 }
 ---
@@ -93,8 +98,8 @@ desktop 仓（wuh.site.desktop）今日零 CI：PR 与 main 无机器门（typec
 - [x] task 1 — `.github/workflows/ci-cd.yml` — 三触发（push main/PR/release published + workflow_dispatch）、quality-gate、build-release 矩阵（版本断言/双平台构建/gh release upload/dispatch 走 workflow artifacts）— 新建（INV-1/2/4）
 - [x] task 2 — `electron-builder.yml` — mac target dir → [dmg, zip]；win 显式 target nsis（icon 既有）— 编辑
 ### Phase 2
-- [ ] task 3 — dispatch 演练 run — 真实触发双平台构建，取 run 链接与产物清单 — runtime 观察点（INV-2/4）
-- [ ] task 4 — 首个真实 release 触发 — bump 1.1.1（chore 变更）→ tag → release published → 双平台资产挂上 release — runtime 观察点（INV-1/4）
+- [x] task 3 — dispatch 演练 run — 真实触发双平台构建，取 run 链接与产物清单 — runtime 观察点（INV-2/4）
+- [x] task 4 — 首个真实 release 触发 — bump 1.1.1（chore 变更）→ tag → release published → 双平台资产挂上 release — runtime 观察点（INV-1/4）
 
 ## 结果
 
