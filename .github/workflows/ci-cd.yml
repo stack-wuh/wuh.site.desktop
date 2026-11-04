@@ -1,0 +1,107 @@
+name: CI-CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  release:
+    types: [ published ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.event_name == 'release' && format('desktop-release-{0}', github.ref_name) || 'desktop-quality' }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    # windows runner 的 pwsh 语法差异是跨平台工作流头号坑（CLI 仓 CI 先例），统一 bash
+    shell: bash
+
+jobs:
+  quality-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: '10.23.0'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - run: pnpm install
+
+      - name: TypeScript type check (node / next / tests)
+        run: npm run typecheck
+
+      - name: Tests (vitest)
+        run: npm run test
+
+  # ── release published → 双平台远程构建并上传资产到同 tag Release ──
+  build-release:
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    needs: [quality-gate]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ macos-latest, windows-latest ]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: '10.23.0'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - run: pnpm install
+
+      # 版本权威（INV-1）：release 事件下 tag 去 v 必须等于 package.json.version（沿 CLI 仓 VERSION_AUTHORITY 语义）；
+      # workflow_dispatch 无 tag，跳过断言（演练构建）
+      - name: Assert version authority (tag == package.json)
+        if: github.event_name == 'release'
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          LOCAL=$(node -pe 'require("./package.json").version')
+          if [ "$TAG" != "$LOCAL" ]; then
+            echo "::error::VERSION_AUTHORITY: package.json $LOCAL != tag $TAG"
+            exit 1
+          fi
+
+      - name: Build renderer (next) and main (electron-vite)
+        # 单 worker 由 next.config.ts experimental.cpus 固化（规避 V8 并发 GC 崩溃，本地/CI 同构）
+        run: |
+          node_modules/.bin/next build
+          node_modules/.bin/electron-vite build
+
+      - name: Package (electron-builder, per-OS targets from config)
+        run: node_modules/.bin/electron-builder --publish never
+
+      # dispatch 演练：产物仅入 workflow artifacts，不触 GitHub Release
+      - name: Upload workflow artifacts (dispatch dry-run)
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-packages-${{ matrix.os }}
+          path: |
+            dist/*.dmg
+            dist/*.zip
+            dist/*.exe
+          if-no-files-found: error
+
+      # release：产物上传到同 tag 的 GitHub Release（INV-4）
+      - name: Upload release assets
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "$GITHUB_REF_NAME" dist/*.dmg dist/*.zip dist/*.exe --clobber --repo "$GITHUB_REPOSITORY"
