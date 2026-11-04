@@ -4,7 +4,7 @@
   "name": "20261104-chore-release-v110",
   "type": "chore",
   "scope": "package.json",
-  "status": "committed",
+  "status": "published",
   "baseBranch": "main",
   "branch": "chore/20261104-chore-release-v110",
   "files": [
@@ -14,8 +14,8 @@
     "repository": null,
     "issue": null,
     "issueUrl": null,
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 181,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/181"
   },
   "review": {
     "conclusion": "pending",
@@ -24,8 +24,8 @@
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "089a2674e81e87295f909e737e861c60a3ddb478",
-    "planHash": "383662eff5286a21f5683f61bbfa0ce3e1292ba8d5c68b4a0a5bf2c70f561336",
+    "checkpoint": "pr:181",
+    "planHash": "5c3d52854ef806bd4f54a379c2de8530eff6f3947552e418586e81324af9ccb7",
     "updatedAt": null,
     "lastError": null,
     "commit": {
