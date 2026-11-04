@@ -95,6 +95,10 @@ jobs:
       - name: Package (electron-builder, per-OS targets from config)
         run: node_modules/.bin/electron-builder --publish never
 
+      - name: List dist contents (diagnostics)
+        if: always()
+        run: ls -la dist/ || true
+
       # dispatch 演练：产物仅入 workflow artifacts，不触 GitHub Release
       - name: Upload workflow artifacts (dispatch dry-run)
         if: github.event_name == 'workflow_dispatch'
