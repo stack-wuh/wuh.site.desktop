@@ -4,7 +4,7 @@
   "name": "20261105-chore-release-v111",
   "type": "chore",
   "scope": "package.json",
-  "status": "committed",
+  "status": "published",
   "baseBranch": "main",
   "branch": "chore/20261105-chore-release-v111",
   "files": [
@@ -14,8 +14,8 @@
     "repository": null,
     "issue": null,
     "issueUrl": null,
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 184,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/184"
   },
   "review": {
     "conclusion": "pending",
@@ -24,8 +24,8 @@
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "1e9196264e2f9afd0e42ad9a693ada74fe4fff58",
-    "planHash": "b44db254f55f3d94d14170aeabee50c7a07a9615fbad35d55a207adfbaca01e2",
+    "checkpoint": "pr:184",
+    "planHash": "5984d82e0794fcf4a3a976e1b6330b62fecfe68ecb26fac8552c44df45b64058",
     "updatedAt": null,
     "lastError": null,
     "commit": {
