@@ -4,12 +4,13 @@
   "name": "20261104-feature-ci-release-pipeline",
   "type": "feature",
   "scope": ".github",
-  "status": "published",
+  "status": "committed",
   "baseBranch": "main",
   "branch": "feature/20261104-feature-ci-release-pipeline",
   "files": [
     ".github/workflows/ci-cd.yml",
-    "electron-builder.yml"
+    "electron-builder.yml",
+    "tests/capsule-dock-forms.test.tsx"
   ],
   "github": {
     "repository": null,
@@ -25,16 +26,17 @@
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "pr:182",
-    "planHash": "c6dd709254e37674be9a180175cc7f0405c68388803d2b45a94d6d8c490574fb",
+    "checkpoint": "b82b7582bf0f8edf0f505cbf79ef00dc5627f9f2",
+    "planHash": "f886a4456b0f3b1852fc433f2c664a5681d53b132dab4f5e92af0e56b8b42404",
     "updatedAt": null,
     "lastError": null,
     "commit": {
       "files": [
         ".github/workflows/ci-cd.yml",
-        "electron-builder.yml"
+        "electron-builder.yml",
+        "tests/capsule-dock-forms.test.tsx"
       ],
-      "message": "feat(ci): CI/CD 质量门 + release 远程构建 mac/win 包 (#182)\n\n- 单文件两段式（同构父仓）：quality-gate（PR/main：三 tsc + vitest 全量）+ build-release（release published + dispatch 演练）\n- 矩阵 macos/windows 互不遮蔽；版本权威断言（tag==package.json）沿 CLI 仓语义；job 级 bash shell 防 windows pwsh 坑\n- electron-builder target：mac dir→dmg+zip（unsigned）、win 显式 nsis；产物 gh release upload 同 tag"
+      "message": "fix(test): capsule chip 断言对齐 #174 新契约——CI 机器门首战抓获\n\nactive 态 chip 直显最近 in_progress 任务 detail（缺省回退 title）替代旧聚合计数；面板打开后按容器作用域断言。本地沙箱未覆盖到该文件，CI 首跑即抓——正是机器门的价值"
     }
   }
 }
