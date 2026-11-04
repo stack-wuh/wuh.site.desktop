@@ -89,12 +89,16 @@ describe('胶囊单形态（控制中心下拉）', () => {
     expect(screen.queryByTestId('capsule-panel')).not.toBeNull()
   })
 
-  it('有任务时 chip 显 mono 聚合计数，面板任务分区同名呈现', () => {
+  it('有任务时 chip 直显进行中任务（缺 detail 回退 title），面板任务分区同名呈现', () => {
     upsertTask('git-history', 't1', { title: '提交推送', status: 'in_progress', progress: { current: 1, total: 2 } })
     upsertTask('git-history', 't2', { title: '拉取', status: 'done' })
     renderCapsule()
-    expect(screen.getByTestId('capsule').textContent).toContain('1/2')
+    // 新契约（20261103-feature-capsule-task-surface）：active 态 chip 直显最近
+    // in_progress 任务的 detail（缺省回退 title）；聚合计数回落面板与空态
+    expect(screen.getByTestId('capsule').textContent).toContain('提交推送')
     fireEvent.click(screen.getByTestId('capsule'))
-    expect(screen.getByText('提交推送')).toBeTruthy()
+    // chip（active 直显）与面板时间线同名并存：按面板容器作用域断言
+    const panel = document.querySelector('[data-testid="capsule-panel"]')!
+    expect(panel.textContent).toContain('提交推送')
   })
 })
