@@ -86,7 +86,7 @@
 | 20261021-fix-workbench-entry-return | ✅ 完成 | shadow-docs/changes/archive/20261021-fix-workbench-entry-return/brief.md |
 | 20261021-style-published-seal | ✅ 完成 | shadow-docs/changes/archive/20261021-style-published-seal/brief.md |
 | 20261022-refactor-renderer-import-alias | ✅ 完成 | shadow-docs/changes/archive/20261022-refactor-renderer-import-alias/brief.md |
-| 20261103-feature-async-task-progress | reviewed | shadow-docs/changes/20261103-feature-async-task-progress/brief.md |
+| 20261103-feature-async-task-progress | ✅ 完成 | shadow-docs/changes/archive/20261103-feature-async-task-progress/brief.md |
 | 20261103-feature-capsule-task-surface | reviewed | shadow-docs/changes/20261103-feature-capsule-task-surface/brief.md |
 | 20261103-feature-doc-unpublish | reviewed | shadow-docs/changes/20261103-feature-doc-unpublish/brief.md |
 | 20261103-feature-publish-site-sync | ✅ 完成 | shadow-docs/changes/archive/20261103-feature-publish-site-sync/brief.md |
