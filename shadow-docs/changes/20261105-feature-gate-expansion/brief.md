@@ -4,7 +4,7 @@
   "name": "20261105-feature-gate-expansion",
   "type": "feature",
   "scope": ".github",
-  "status": "committed",
+  "status": "published",
   "baseBranch": "main",
   "branch": "feature/20261105-feature-gate-expansion",
   "files": [
@@ -15,8 +15,8 @@
     "repository": null,
     "issue": null,
     "issueUrl": null,
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 183,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/183"
   },
   "review": {
     "conclusion": "pending",
@@ -25,8 +25,8 @@
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "0507d18c05021d08d08a5c1556488373e4ef7aad",
-    "planHash": "6ef2c80aebe904478dbb64d9c683f98219e788bc0727f7605e5f74ed1516dc9a",
+    "checkpoint": "pr:183",
+    "planHash": "abf8729eebeac83291ef8cf438cafcd61f63e7a090baab89c4de1949e7bef1cc",
     "updatedAt": null,
     "lastError": null,
     "commit": {
