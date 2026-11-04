@@ -4,7 +4,7 @@
   "name": "20261103-refactor-shared-hooks-sweep",
   "type": "refactor",
   "scope": "lib,components",
-  "status": "published",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "refactor/20261103-refactor-shared-hooks-sweep",
   "files": [
@@ -25,14 +25,14 @@
     "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/180"
   },
   "review": {
-    "conclusion": "pending",
-    "verifiedCommit": null,
-    "verifiedAt": null
+    "conclusion": "passed",
+    "verifiedCommit": "593a6cce83adce153c41a892879c256fecf37e1b",
+    "verifiedAt": "2026-11-04T00:12:53.322Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "pr:180",
-    "planHash": "d4654321916fc4dd54cdcba9ae0fae33a205c9bac38b55b1009405b77d07f287",
+    "checkpoint": "merged-pr:180",
+    "planHash": "a3022d80393dc8ef6b72c5275ab3a0fce955bdfe06b7ea386b485611658e4049",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -57,7 +57,8 @@
       ],
       "message": "refactor(hooks): useDismissable + useStore 收敛三处弹层监听与三参样板 (#175)\n\n- 新建 lib/hooks/useDismissable：Esc+点外关统一承载（pointerEvent/escCapture/escStopPropagation 选项化），归属豁免与同帧时序坑（20260924-fix-capsule-self-close）单一实现\n- 新建 lib/hooks/useStore：useSyncExternalStore 三参样板收敛\n- 迁移：Dialog（Esc）/MenuPopover（mousedown+capture）/Capsule（click+豁免）+ useFeedback/useDrafts 示范\n- 行为等价：四套受影响渲染套件 35 绿 ×2 连跑；测试 4 枚（Esc/点外/豁免/变体透传）"
     }
-  }
+  },
+  "knowledge": null
 }
 ---
 
@@ -115,7 +116,7 @@
 - [x] task 3 — `lib/feedback.ts` + `lib/drafts.ts` — useStore 示范迁移（useFeedback/useDrafts 内部）— 重构
 ### Phase 3
 - [x] task 4 — 既有交互/DOM 测试回归（dialog/popover/capsule 相关套件）+ 新 hook 单测 — 验证
-- [ ] task 5 — 盘点结论落知识卡（剩余内联监听清单 + hook 使用规范）— 治理
+- [x] task 5 — 盘点结论落知识卡（剩余内联监听清单 + hook 使用规范）— 治理
 
 ## 结果
 

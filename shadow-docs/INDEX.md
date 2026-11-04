@@ -90,4 +90,4 @@
 | 20261103-feature-capsule-task-surface | ✅ 完成 | shadow-docs/changes/archive/20261103-feature-capsule-task-surface/brief.md |
 | 20261103-feature-doc-unpublish | ✅ 完成 | shadow-docs/changes/archive/20261103-feature-doc-unpublish/brief.md |
 | 20261103-feature-publish-site-sync | ✅ 完成 | shadow-docs/changes/archive/20261103-feature-publish-site-sync/brief.md |
-| 20261103-refactor-shared-hooks-sweep | reviewed | shadow-docs/changes/20261103-refactor-shared-hooks-sweep/brief.md |
+| 20261103-refactor-shared-hooks-sweep | ✅ 完成 | shadow-docs/changes/archive/20261103-refactor-shared-hooks-sweep/brief.md |
