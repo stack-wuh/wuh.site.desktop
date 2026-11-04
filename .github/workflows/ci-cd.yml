@@ -9,8 +9,9 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.event_name == 'release' && format('desktop-release-{0}', github.ref_name) || 'desktop-quality' }}
-  # release 构建不可取消；门（PR/push/dispatch）新 run 掐旧 run 省 minutes
+  # 分道：release 按 tag 独占不可取消；PR/主推送/dispatch 各自独立成组
+  # （dispatch 与门共用组会把正在跑的演练取消——20261105 实测）
+  group: ${{ github.event_name == 'release' && format('desktop-release-{0}', github.ref_name) || format('desktop-{0}-{1}', github.event_name, github.ref) }}
   cancel-in-progress: ${{ github.event_name != 'release' }}
 
 defaults:
@@ -106,10 +107,18 @@ jobs:
             dist/*.exe
           if-no-files-found: error
 
-      # release：产物上传到同 tag 的 GitHub Release（INV-4）
+      # release：产物上传到同 tag 的 GitHub Release（INV-4）。
+      # nullglob 数组：windows 无 dmg/zip、mac 无 exe——未匹配的 glob 不能按字面量传给 gh；
+      # 零匹配硬失败 = 资产存在性守卫
       - name: Upload release assets
         if: github.event_name == 'release'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload "$GITHUB_REF_NAME" dist/*.dmg dist/*.zip dist/*.exe --clobber --repo "$GITHUB_REPOSITORY"
+          shopt -s nullglob
+          files=(dist/*.dmg dist/*.zip dist/*.exe)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "::error::no packages found in dist/"
+            exit 1
+          fi
+          gh release upload "$GITHUB_REF_NAME" "${files[@]}" --clobber --repo "$GITHUB_REPOSITORY"
