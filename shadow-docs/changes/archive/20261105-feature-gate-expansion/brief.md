@@ -4,7 +4,7 @@
   "name": "20261105-feature-gate-expansion",
   "type": "feature",
   "scope": ".github",
-  "status": "published",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20261105-feature-gate-expansion",
   "files": [
@@ -19,14 +19,14 @@
     "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/183"
   },
   "review": {
-    "conclusion": "pending",
-    "verifiedCommit": null,
-    "verifiedAt": null
+    "conclusion": "passed",
+    "verifiedCommit": "d915aedc3b3f4d5565554e18f6076663c30c0620",
+    "verifiedAt": "2026-11-04T17:03:42.839Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "pr:183",
-    "planHash": "abf8729eebeac83291ef8cf438cafcd61f63e7a090baab89c4de1949e7bef1cc",
+    "checkpoint": "merged-pr:183",
+    "planHash": "f503ff32b53be6004a0d74b1462588ed24aceedd8ba84ffa4522d5ad1533d429",
     "updatedAt": null,
     "lastError": null,
     "commit": {
@@ -36,6 +36,11 @@
       ],
       "message": "feat(ci): 门禁扩容——next build + oxlint 进门、frozen-lockfile、PR 并发取消 (#183)\n\n- install --frozen-lockfile：lockfile 与 package.json 漂移即红（INV-2）\n- next build 编译完整性进机器门 + oxlint 1.91.0（npx 钉版本，零依赖变更——规避父 workspace 上下文 pnpm 锁写不可靠的实测坑）\n- 门并发 cancel-in-progress（release 构建保持不可取消）\n- 门即全部校验权威：本机不再承担任何校验（用户 directive）"
     }
+  },
+  "knowledge": {
+    "action": "无需变更",
+    "target": null,
+    "reason": "门扩容属 ci-release-pipeline 卡面增量，卡在后续归档时统一建"
   }
 }
 ---
@@ -87,9 +92,9 @@
 ## 任务
 
 ### Phase 1
-- [ ] task 1 — `.github/workflows/ci-cd.yml` — frozen-lockfile / lint / next build / 并发取消 — 编辑（INV-1/2）
-- [ ] task 2 — `package.json` — lint 脚本（npx 钉版本） — 编辑
-- [ ] task 3 — 本 PR 的 CI run 即门自证：全步骤绿 — runtime 观察点（INV-1/2/3）
+- [x] task 1 — `.github/workflows/ci-cd.yml` — frozen-lockfile / lint / next build / 并发取消 — 编辑（INV-1/2）
+- [x] task 2 — `package.json` — lint 脚本（npx 钉版本） — 编辑
+- [x] task 3 — 本 PR 的 CI run 即门自证：全步骤绿 — runtime 观察点（INV-1/2/3）
 
 ## 结果
 
