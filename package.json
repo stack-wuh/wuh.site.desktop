@@ -15,6 +15,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.next.json && tsc --noEmit -p tsconfig.tests.json",
     "test": "vitest run",
     "test:watch": "vitest",
+    "lint": "npx -y oxlint@1.91.0 components lib app src tests",
     "dist": "next build && electron-vite build && electron-builder --dir",
     "dist:mac": "next build && electron-vite build && electron-builder --mac --dir"
   },

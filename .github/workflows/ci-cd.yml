@@ -10,7 +10,8 @@ on:
 
 concurrency:
   group: ${{ github.event_name == 'release' && format('desktop-release-{0}', github.ref_name) || 'desktop-quality' }}
-  cancel-in-progress: false
+  # release 构建不可取消；门（PR/push/dispatch）新 run 掐旧 run 省 minutes
+  cancel-in-progress: ${{ github.event_name != 'release' }}
 
 defaults:
   run:
@@ -33,10 +34,17 @@ jobs:
           node-version: '22'
           cache: 'pnpm'
 
-      - run: pnpm install
+      - run: pnpm install --frozen-lockfile
+
+      - name: Lint (oxlint)
+        run: npm run lint
 
       - name: TypeScript type check (node / next / tests)
         run: npm run typecheck
+
+      # 编译完整性进门（20261104 门禁扩容）：构建校验全部归机器门，本机不再跑
+      - name: Build renderer (next)
+        run: node_modules/.bin/next build
 
       - name: Tests (vitest)
         run: npm run test
