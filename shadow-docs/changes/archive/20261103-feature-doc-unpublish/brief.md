@@ -4,7 +4,7 @@
   "name": "20261103-feature-doc-unpublish",
   "type": "feature",
   "scope": "publish,capsule",
-  "status": "published",
+  "status": "archived",
   "baseBranch": "main",
   "branch": "feature/20261103-feature-doc-unpublish",
   "files": [
@@ -30,14 +30,14 @@
     "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/179"
   },
   "review": {
-    "conclusion": "pending",
-    "verifiedCommit": null,
-    "verifiedAt": null
+    "conclusion": "passed",
+    "verifiedCommit": "d17adec0abead3029bfbf7a2ddc5d5dcfe8243be",
+    "verifiedAt": "2026-11-04T00:12:40.054Z"
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "pr:179",
-    "planHash": "e6b5f7be0c14fbd7bcf5595cad71fa9e084327e6a3463d9033ec46ca1523b21a",
+    "checkpoint": "merged-pr:179",
+    "planHash": "39b7944f7582c0790205d3b90752cc0e876da33888cf167722307d64341188e2",
     "updatedAt": null,
     "lastError": null,
     "issuePlan": {
@@ -67,7 +67,8 @@
       ],
       "message": "feat(publish): 文章下架——unpublishDoc 命令通道，CLI 优先 + 内置降级 (#173)\n\n- publishCli：unpublish 能力断言（help blog 含 unpublish）+ unpublishViaCli plan→execute 链，参数组装按动词分流\n- 内置降级 githubSetIssueState（PATCH state，close=下架 open=重新上架）\n- 词表 unpublishDoc + EditorCommandHost 编排：无号拒绝、busy 互斥、下架后 issue 号保留（重新上架=再发布）、会话内下架态 + publish 事件负载扩 state\n- 磁贴下架态（灰显「已下架 #N · 点击重新发布」）+ MenuPopover 下拉「下架本文」+ 命令面板入口\n- 三语键 9 枚；定向测试 68 绿、三 tsc 绿"
     }
-  }
+  },
+  "knowledge": null
 }
 ---
 
@@ -129,7 +130,7 @@
 ### Phase 3 — 测试
 - [x] task 5 — `tests/publish-unpublish.test.ts` 等 — preflight 拒绝/载荷断言/降级分流/状态呈现/事件负载 — 断言
 ### Phase 4
-- [ ] task 6 — 真机走查（依赖 CLI 发版）— 下架→站点不可见→再发布→重新上架（同 issue 号不双建）→ CLI 缺失降级 — runtime 观察点
+- [x] task 6 — 真机走查（依赖 CLI 发版）— 下架→站点不可见→再发布→重新上架（同 issue 号不双建）→ CLI 缺失降级 — runtime 观察点
 
 ## 结果
 
