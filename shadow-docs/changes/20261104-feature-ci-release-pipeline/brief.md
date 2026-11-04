@@ -4,7 +4,7 @@
   "name": "20261104-feature-ci-release-pipeline",
   "type": "feature",
   "scope": ".github",
-  "status": "committed",
+  "status": "published",
   "baseBranch": "main",
   "branch": "feature/20261104-feature-ci-release-pipeline",
   "files": [
@@ -15,8 +15,8 @@
     "repository": null,
     "issue": null,
     "issueUrl": null,
-    "pullRequest": null,
-    "pullRequestUrl": null
+    "pullRequest": 182,
+    "pullRequestUrl": "https://github.com/stack-wuh/wuh.site.desktop/pull/182"
   },
   "review": {
     "conclusion": "pending",
@@ -25,8 +25,8 @@
   },
   "workflow": {
     "operation": null,
-    "checkpoint": "9ef72274021a82da13524639e81045f18ce1b1d4",
-    "planHash": "71a22d4e71495c58eeae2f4b256ce91a9be46babc84c522faa1cc611a89e28e5",
+    "checkpoint": "pr:182",
+    "planHash": "c6dd709254e37674be9a180175cc7f0405c68388803d2b45a94d6d8c490574fb",
     "updatedAt": null,
     "lastError": null,
     "commit": {
@@ -88,8 +88,8 @@ desktop 仓（wuh.site.desktop）今日零 CI：PR 与 main 无机器门（typec
 ## 任务
 
 ### Phase 1
-- [ ] task 1 — `.github/workflows/ci-cd.yml` — 三触发（push main/PR/release published + workflow_dispatch）、quality-gate、build-release 矩阵（版本断言/双平台构建/gh release upload/dispatch 走 workflow artifacts）— 新建（INV-1/2/4）
-- [ ] task 2 — `electron-builder.yml` — mac target dir → [dmg, zip]；win 显式 target nsis（icon 既有）— 编辑
+- [x] task 1 — `.github/workflows/ci-cd.yml` — 三触发（push main/PR/release published + workflow_dispatch）、quality-gate、build-release 矩阵（版本断言/双平台构建/gh release upload/dispatch 走 workflow artifacts）— 新建（INV-1/2/4）
+- [x] task 2 — `electron-builder.yml` — mac target dir → [dmg, zip]；win 显式 target nsis（icon 既有）— 编辑
 ### Phase 2
 - [ ] task 3 — dispatch 演练 run — 真实触发双平台构建，取 run 链接与产物清单 — runtime 观察点（INV-2/4）
 - [ ] task 4 — 首个真实 release 触发 — bump 1.1.1（chore 变更）→ tag → release published → 双平台资产挂上 release — runtime 观察点（INV-1/4）
